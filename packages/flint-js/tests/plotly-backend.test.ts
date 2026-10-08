@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { describe, it, expect } from 'vitest';
-import { assemblePlotly, plGetTemplateDef, plAllTemplateDefs } from '../src';
+import { assemblePlotly, assembleVegaLite, plGetTemplateDef, plAllTemplateDefs } from '../src';
 import { genPlotlyCoreTests, genPlotlyFacetTests } from '../src/test-data';
 
 const SALES = [
@@ -49,6 +49,37 @@ function assertNoFunctions(node: any, path = '$'): void {
     }
   }
 }
+
+describe('Plotly band labels, as Vega-Lite lays them out', () => {
+  const products = ['Laptop', 'Phone', 'Tablet', 'Desktop', 'Monitor', 'Keyboard', 'Mouse', 'Audio'];
+
+  it('gives a grouped axis one step per category and every name, straight', () => {
+    const rows = products.flatMap((Category) => [1, 2, 3, 4].map((g) => ({ Category, g: String(g), Value: g * 10 })));
+    const spec = input('Grouped Bar Chart', { x: { field: 'Category' }, y: { field: 'Value' }, group: { field: 'g' } }, rows,
+      { Category: 'Category', Value: 'Quantity', g: 'Category' });
+    const fig = assemblePlotly(spec);
+    const vl: any = assembleVegaLite(spec);
+    const plot = fig.layout.width - fig.layout.margin.l - fig.layout.margin.r;
+    expect(plot).toBeGreaterThanOrEqual(vl.width.step * products.length - 1);
+    expect(fig.layout.xaxis.tickangle).toBe(0);
+    expect(fig.layout.xaxis.tickvals ?? fig.layout.xaxis.categoryarray).toHaveLength(products.length);
+  });
+
+  it('wraps long names onto lines rather than turning them', () => {
+    const names = ['North American retail', 'European wholesale', 'Asia Pacific online', 'Latin American partners'];
+    const fig = assemblePlotly(input('Bar Chart', { x: { field: 'segment' }, y: { field: 'revenue' } },
+      names.map((segment, index) => ({ segment, revenue: 100 + index })), { segment: 'Category', revenue: 'Amount' }));
+    expect(fig.layout.xaxis.tickangle).toBe(0);
+    expect(fig.layout.xaxis.ticktext.some((text: string) => text.includes('<br>'))).toBe(true);
+  });
+
+  it('turns crowded names the way Vega-Lite does and cuts the longest', () => {
+    const rows = Array.from({ length: 60 }, (_, index) => ({ item: `Component assembly ${index}`, count: index }));
+    const fig = assemblePlotly(input('Bar Chart', { x: { field: 'item' }, y: { field: 'count' } }, rows, { item: 'Category', count: 'Count' }));
+    expect(fig.layout.xaxis.tickangle).toBeLessThan(0);
+    expect(fig.layout.xaxis.ticktext.some((text: string) => text.endsWith('…'))).toBe(true);
+  });
+});
 
 describe('Plotly backend', () => {
   it('registers the acceptance templates plus the expressive tranche', () => {

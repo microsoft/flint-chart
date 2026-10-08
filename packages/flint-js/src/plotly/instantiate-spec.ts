@@ -22,6 +22,7 @@
 
 import type {
     InstantiateContext,
+    LayoutResult,
     ChartWarning,
 } from '../core/types';
 
@@ -33,37 +34,97 @@ const AXIS_TITLE_STANDOFF = 16;
 // builds, which keeps the current behavior rather than regressing.
 const TICK_LABEL_STANDOFF = 7;
 
+/** Average glyph width as a share of the font size, as the layout pass estimates it. */
+const GLYPH = 0.62;
+
+/** The plot length a banded axis takes: one step per band, as Vega-Lite's `{ step }` width gives it. */
+export function bandedSpan(context: InstantiateContext, channel: 'x' | 'y'): number | undefined {
+    const { layout } = context;
+    const field = context.channelSemantics[channel]?.field;
+    const count = (channel === 'x' ? layout.xStepUnit : layout.yStepUnit) === 'group'
+        ? (field ? new Set(context.table.map((row) => String(row[field]))).size : 0)
+        : (channel === 'x'
+            ? layout.xNominalCount || layout.xContinuousAsDiscrete
+            : layout.yNominalCount || layout.yContinuousAsDiscrete) || 0;
+    return count > 0 ? (channel === 'x' ? layout.xStep : layout.yStep) * count : undefined;
+}
+
+function clipLabel(text: string, limit: number, fontSize: number): string {
+    const glyph = fontSize * GLYPH;
+    if (!(limit > 0) || text.length * glyph <= limit) return text;
+    return `${text.slice(0, Math.max(1, Math.floor(limit / glyph) - 1)).trimEnd()}…`;
+}
+
+/**
+ * Write the layout's label decision onto every cartesian axis: its font, its angle, and on
+ * a banded axis the names wrapped onto their lines and cut at the label limit, as Vega-Lite
+ * draws them. Plotly has no label limit, and turns crowded labels on its own unless told.
+ */
+export function plApplyBandLabels(
+    figure: any,
+    layout: LayoutResult,
+    options: { fit?: boolean; temporal?: (channel: 'x' | 'y') => boolean } = {},
+): void {
+    for (const [key, ax] of Object.entries<any>(figure.layout ?? {})) {
+        const match = /^([xy])axis\d*$/.exec(key);
+        if (!match || !ax || typeof ax !== 'object') continue;
+        const channel = match[1] as 'x' | 'y';
+        const sizing = channel === 'x' ? layout.xLabel : layout.yLabel;
+        if (!sizing) continue;
+        if (sizing.fontSize) ax.tickfont = { ...(ax.tickfont || {}), size: sizing.fontSize };
+        if (options.fit === false) continue;
+        // A date cut short no longer names its day.
+        const limit = options.temporal?.(channel) ? Infinity : sizing.labelLimit || Infinity;
+        const banded = ax.type === 'category' && Array.isArray(ax.categoryarray) && ax.categoryarray.length > 0;
+        const fontSize = sizing.fontSize ?? 10;
+        let angle = sizing.labelAngle;
+        // Names the layout set straight but that overrun their band turn, then stand on end.
+        if (match[1] === 'x' && banded && !angle && !sizing.labelLines && layout.xStep > 0) {
+            const widest = Math.max(...ax.categoryarray.map((name: unknown) =>
+                Math.min(String(name).length * fontSize * GLYPH, limit)));
+            if (widest + 4 > layout.xStep) angle = layout.xStep >= fontSize * 1.2 / Math.SQRT1_2 + 2 ? -45 : -90;
+        }
+        if (match[1] === 'x' && (banded || angle != null)) ax.tickangle = angle ?? 0;
+        if (!banded || ax.tickvals != null) continue;
+        const lines = new Map((sizing.labelValues ?? []).map((value, index) => [value, sizing.labelLines?.[index]]));
+        const names = ax.categoryarray.map(String);
+        const text = names.map((name: string) => (lines.get(name) ?? [name])
+            .map((line) => clipLabel(line, limit, fontSize)).join('<br>'));
+        if (text.every((label: string, index: number) => label === names[index])) continue;
+        ax.tickmode = 'array';
+        ax.tickvals = ax.categoryarray;
+        ax.ticktext = text;
+    }
+}
+
+/** The widest label line an axis prints, capped at its limit, and how many lines a label takes. */
+function labelExtent(ax: any, sizing: LayoutResult['xLabel'] | undefined): { width: number; rows: number } | undefined {
+    const texts = Array.isArray(ax?.ticktext) ? ax.ticktext : Array.isArray(ax?.categoryarray) ? ax.categoryarray : undefined;
+    if (!texts) return undefined;
+    const fontSize = sizing?.fontSize ?? 10;
+    const lines = texts.map((text: unknown) => String(text).split('<br>'));
+    return {
+        width: Math.min(sizing?.labelLimit ?? 100,
+            Math.max(0, ...lines.flat().map((line: string) => line.length * fontSize * 0.6))),
+        rows: Math.max(1, ...lines.map((parts: string[]) => parts.length)),
+    };
+}
+
 function reserveCartesianMargins(figure: any, context: InstantiateContext): void {
     const { layout } = context;
     const hasXAxis = !!figure.layout.xaxis;
     const hasYAxis = !!figure.layout.yaxis;
     if (!hasXAxis && !hasYAxis) return;
 
-    const xCategories = figure.layout.xaxis?.categoryarray;
     const xFontSize = layout.xLabel?.fontSize ?? 10;
-    const maxXLabelWidth = Array.isArray(xCategories)
-        ? Math.min(layout.xLabel?.labelLimit ?? 100, Math.max(0, ...xCategories.map((value: unknown) => String(value).length * xFontSize * 0.6)))
-        : 0;
-    const xBandWidth = Array.isArray(xCategories) && xCategories.length > 0
-        ? layout.subplotWidth / xCategories.length
-        : Number.POSITIVE_INFINITY;
-    if (figure.layout.xaxis && Array.isArray(xCategories) && xCategories.length <= 6) {
-        figure.layout.xaxis.tickangle = 0;
-        const desiredPlotWidth = xCategories.length * Math.max(48, maxXLabelWidth + 16);
-        figure._width += Math.max(0, desiredPlotWidth - layout.subplotWidth);
-    } else if (figure.layout.xaxis && figure.layout.xaxis.tickangle == null && maxXLabelWidth > xBandWidth) {
-        figure.layout.xaxis.tickangle = 45;
-    }
-    const xAngle = Math.abs(figure.layout.xaxis?.tickangle ?? layout.xLabel?.labelAngle ?? 0) * Math.PI / 180;
-    const rotatedXDepth = Math.ceil(maxXLabelWidth * Math.sin(xAngle));
-    const bottom = hasXAxis ? Math.max(xAngle > 0 ? 96 : 56, 40 + rotatedXDepth) : 24;
+    const x = labelExtent(figure.layout.xaxis, layout.xLabel) ?? { width: 0, rows: 1 };
+    const xAngle = Math.abs(figure.layout.xaxis?.tickangle ?? 0) * Math.PI / 180;
+    const xDepth = xAngle > 0
+        ? Math.ceil(x.width * Math.sin(xAngle) + xFontSize * Math.cos(xAngle))
+        : (x.rows - 1) * Math.ceil(xFontSize * 1.2);
+    const bottom = hasXAxis ? Math.max(xAngle > 0 ? 96 : 56, 40 + xDepth) : 24;
 
-    const yCategories = figure.layout.yaxis?.categoryarray;
-    const yFontSize = layout.yLabel?.fontSize ?? 10;
-    const maxYLabelWidth = Array.isArray(yCategories)
-        ? Math.min(layout.yLabel?.labelLimit ?? 100, Math.max(0, ...yCategories.map((value: unknown) => String(value).length * yFontSize * 0.6)))
-        : 28;
-    const left = hasYAxis ? Math.max(64, 36 + maxYLabelWidth) : 24;
+    const left = hasYAxis ? Math.max(64, 36 + (labelExtent(figure.layout.yaxis, layout.yLabel)?.width ?? 28)) : 24;
     const hasColorbar = (figure.data ?? []).some((trace: any) => trace.colorbar || trace.marker?.colorbar);
     const right = hasColorbar ? 96 : 32;
 
@@ -148,16 +209,14 @@ export function plApplyLayoutToSpec(
         let plotWidth: number;
         let plotHeight: number;
 
-        if (xIsDiscrete && layout.xStepUnit !== 'group') {
-            const xItemCount = layout.xNominalCount || layout.xContinuousAsDiscrete || 0;
-            plotWidth = xItemCount > 0 ? layout.xStep * xItemCount : (layout.subplotWidth || canvasSize.width);
+        if (xIsDiscrete) {
+            plotWidth = bandedSpan(context, 'x') ?? (layout.subplotWidth || canvasSize.width);
         } else {
             plotWidth = layout.subplotWidth || canvasSize.width;
         }
 
-        if (yIsDiscrete && layout.yStepUnit !== 'group') {
-            const yItemCount = layout.yNominalCount || layout.yContinuousAsDiscrete || 0;
-            plotHeight = yItemCount > 0 ? layout.yStep * yItemCount : (layout.subplotHeight || canvasSize.height);
+        if (yIsDiscrete) {
+            plotHeight = bandedSpan(context, 'y') ?? (layout.subplotHeight || canvasSize.height);
         } else {
             plotHeight = layout.subplotHeight || canvasSize.height;
         }
@@ -167,28 +226,14 @@ export function plApplyLayoutToSpec(
         figure._height = plotHeight + PADDING;
     }
 
-    // ── X-axis label rotation and font sizing ────────────────────────────
-    if (layout.xLabel) {
-        if (!figure.layout.xaxis) figure.layout.xaxis = {};
-        if (layout.xLabel.labelAngle && layout.xLabel.labelAngle !== 0) {
-            figure.layout.xaxis.tickangle = Math.abs(layout.xLabel.labelAngle);
-        }
-        if (layout.xLabel.fontSize) {
-            figure.layout.xaxis.tickfont = {
-                ...(figure.layout.xaxis.tickfont || {}),
-                size: layout.xLabel.fontSize,
-            };
-        }
-    }
-
-    // ── Y-axis label font sizing ─────────────────────────────────────────
-    if (layout.yLabel?.fontSize) {
-        if (!figure.layout.yaxis) figure.layout.yaxis = {};
-        figure.layout.yaxis.tickfont = {
-            ...(figure.layout.yaxis.tickfont || {}),
-            size: layout.yLabel.fontSize,
-        };
-    }
+    // ── Tick labels: font, angle, wrapped and cut names ──────────────────
+    if (layout.xLabel && !figure.layout.xaxis) figure.layout.xaxis = {};
+    if (layout.yLabel?.fontSize && !figure.layout.yaxis) figure.layout.yaxis = {};
+    // A bar table lays out its own name column.
+    plApplyBandLabels(figure, layout, {
+        fit: context.chartType !== 'Bar Table',
+        temporal: (channel) => context.channelSemantics[channel]?.type === 'temporal',
+    });
 
     // ── Axis title + legend fonts — canvas-adaptive header sizes ─────────
     for (const key of Object.keys(figure.layout)) {

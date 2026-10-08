@@ -51,11 +51,13 @@ import type {
     LayoutResult,
     AssembleOptions,
     ChannelBudgets,
+    InstantiateContext,
 } from './types';
 import { resolveThemeSpec } from './theme/presets';
 import type { ThemeCompileDefaults } from './theme/types';
 import {
     computeAxisStep,
+    computeBandLabelLayout,
     computeGasPressure,
     computeLabelSizing,
     computeFontSizing,
@@ -173,6 +175,60 @@ export function resolveStretchCaps(options: AssembleOptions): { x: number; y: nu
 
 /** Default base (target) chart size in pixels when the spec omits `baseSize`. */
 export const DEFAULT_BASE_SIZE = { width: 400, height: 320 } as const;
+
+/** The widest a band label runs before it is cut, as Vega draws it by default. */
+export const AXIS_LABEL_LIMIT = 180;
+
+/**
+ * Names on a banded axis read straight: wrapped onto two lines, with the band widened
+ * within the stretch budget to hold them, when that reads better than turning or cutting
+ * them. Updates the layout's step and label sizing in place; `skip` leaves a channel alone.
+ */
+export function planBandLabels(
+    context: InstantiateContext,
+    options: { fontSize?: number; skip?: (channel: 'x' | 'y') => boolean } = {},
+): void {
+    const { layout, canvasSize, channelSemantics } = context;
+    const assembleOptions = context.assembleOptions ?? {};
+    const caps = resolveStretchCaps(assembleOptions);
+    for (const channel of ['x', 'y'] as const) {
+        const semantics = channelSemantics[channel];
+        const discrete = channel === 'x' ? layout.xNominalCount > 0 : layout.yNominalCount > 0;
+        if (!discrete || !semantics?.field || !['nominal', 'ordinal'].includes(semantics.type)) continue;
+        if (options.skip?.(channel)) continue;
+        const labels = [...new Set(context.table.map((row) => row[semantics.field!])
+            .filter((value) => value != null).map(String))];
+        if (!labels.length || labels.every((label) => label.trim() !== '' && Number.isFinite(Number(label)))) continue;
+        const sizing = channel === 'x' ? layout.xLabel : layout.yLabel;
+        const step = channel === 'x' ? layout.xStep : layout.yStep;
+        const panels = channel === 'x' ? layout.facet?.columns ?? 1 : layout.facet?.rows ?? 1;
+        const fixed = channel === 'x' ? assembleOptions.facetFixedPadding?.width ?? 0 : assembleOptions.facetFixedPadding?.height ?? 0;
+        const canvasSpan = channel === 'x' ? canvasSize.width : canvasSize.height;
+        const subplotSpan = channel === 'x' ? layout.subplotWidth : layout.subplotHeight;
+        const maxSpan = (canvasSpan * caps[channel] - fixed) / panels - layout.effectiveFacetGap;
+        const baseSpan = Math.min(subplotSpan, (canvasSpan - fixed) / panels - layout.effectiveFacetGap);
+        const fontSize = options.fontSize ?? sizing.fontSize;
+        const fit = computeBandLabelLayout({
+            labels, axis: channel, fontSize, step,
+            baseSpan, maxSpan, gutterLimit: Math.max(AXIS_LABEL_LIMIT, Math.min(canvasSize.width, layout.subplotWidth) / 4),
+            baselineLimit: sizing.labelLimit,
+            elasticity: assembleOptions.elasticity ?? 0.5,
+        });
+        if (!fit) continue;
+        if (channel === 'x') layout.xStep = fit.step;
+        else layout.yStep = fit.step;
+        Object.assign(sizing, {
+            fontSize,
+            labelAngle: 0,
+            labelAlign: channel === 'x' ? 'center' : 'right',
+            labelBaseline: channel === 'x' ? 'top' : 'middle',
+            labelLimit: Math.ceil(fit.width) + 2,
+            labelValues: labels,
+            labelLines: fit.lines,
+            labelLineHeight: fit.lineHeight,
+        });
+    }
+}
 
 /**
  * Default axis stretch cap used when the spec pins no `canvasSize` ceiling.

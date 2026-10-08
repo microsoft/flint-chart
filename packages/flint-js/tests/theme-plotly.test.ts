@@ -409,6 +409,25 @@ describe('furniture is not a series', () => {
     });
 });
 
+describe('an outlined house on bars too thin to hold the outline', () => {
+    const grouped = (groups: number): any => assemblePlotly({
+        data: { values: ['A', 'B', 'C', 'D'].flatMap((Node) => Array.from({ length: groups }, (_, g) => ({ Node, g, Value: 10 + g }))) },
+        semantic_types: { Node: 'Category', g: 'Quantity', Value: 'Quantity' },
+        chart_spec: { chartType: 'Grouped Bar Chart', encodings: { x: 'Node', y: 'Value', group: 'g' }, baseSize: { width: 400, height: 300 } },
+        theme_spec: THEME_PRESETS.pop.spec,
+    } as any) as any;
+
+    it('leaves them unbordered, so their colour shows', () => {
+        const fig = grouped(50);
+        expect(fig.data.every((t: any) => t.marker?.line == null)).toBe(true);
+        expect(fig._theme.report.some((r: any) => r.path === 'marks.outline')).toBe(true);
+    });
+
+    it('keeps the outline on bars wide enough to hold it', () => {
+        expect(grouped(2).data[0].marker.line.width).toBeGreaterThan(0);
+    });
+});
+
 describe('a banded axis measured against the room it has', () => {
     it('keeps the template\'s turned labels where straight ones will not fit', () => {
         const narrow = monthlyLine(theme({ axes: { label: { angle: 0 } } } as any), 260);

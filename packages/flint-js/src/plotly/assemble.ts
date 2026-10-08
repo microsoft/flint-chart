@@ -42,13 +42,13 @@ import { plGetTemplateDef } from './templates';
 import { resolveChannelSemantics, convertTemporalData, repairEncodingSorts } from '../core/resolve-semantics';
 import { computeZeroDecision } from '../core/semantic-types';
 import { filterOverflow } from '../core/filter-overflow';
-import { computeLayout, computeChannelBudgets, deriveStretchCaps, resolveBaseSize, resolveFacetColumnsOption } from '../core/compute-layout';
+import { computeLayout, computeChannelBudgets, deriveStretchCaps, planBandLabels, resolveBaseSize, resolveFacetColumnsOption } from '../core/compute-layout';
 import { decideColorMaps } from '../core/color-decisions';
-import { plApplyCartesianAxisSpacing, plApplyLayoutToSpec, plApplyTooltips, plApplyAxisProperties } from './instantiate-spec';
+import { bandedSpan, plApplyBandLabels, plApplyCartesianAxisSpacing, plApplyLayoutToSpec, plApplyTooltips, plApplyAxisProperties } from './instantiate-spec';
 import { plCombineFacetPanels, niceBounds, type PlotlyFacetPanel } from './facet';
 import { normalizeStaticSeries } from '../core/static-series';
 import { normalizeChartProperties } from '../core/normalize-properties';
-import { groundTheme, resolveChartDefaults, resolveCompileDefaults } from '../core/theme/ground';
+import { groundTheme, resolveChartDefaults, resolveCompileDefaults, resolveThemeFontSize } from '../core/theme/ground';
 import { resolveThemeSpec } from '../core/theme/presets';
 import {
     realizeThemePlotly, realizeValueLabelsPlotly, plCollectMarkTypes, plCollectPositional, fitPlotlyTitle,
@@ -310,6 +310,13 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
             background: 'light',
         }),
     };
+    if (chartType !== 'Bar Table') {
+        planBandLabels(instantiateContext, {
+            fontSize: themeSpec
+                ? resolveThemeFontSize(themeSpec, themeSpec.type?.axisLabel?.size, 10, layoutResult.subplotWidth || canvasSize.width)
+                : undefined,
+        });
+    }
 
     const colField = channelSemantics.column?.field;
     const rowField = channelSemantics.row?.field;
@@ -377,15 +384,13 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
         const yIsDiscrete = layoutResult.yNominalCount > 0 || layoutResult.yContinuousAsDiscrete > 0;
         let panelWidth: number;
         let panelHeight: number;
-        if (xIsDiscrete && layoutResult.xStepUnit !== 'group') {
-            const n = layoutResult.xNominalCount || layoutResult.xContinuousAsDiscrete || 0;
-            panelWidth = n > 0 ? layoutResult.xStep * n : (layoutResult.subplotWidth || canvasSize.width);
+        if (xIsDiscrete) {
+            panelWidth = bandedSpan(instantiateContext, 'x') ?? (layoutResult.subplotWidth || canvasSize.width);
         } else {
             panelWidth = layoutResult.subplotWidth || canvasSize.width;
         }
-        if (yIsDiscrete && layoutResult.yStepUnit !== 'group') {
-            const n = layoutResult.yNominalCount || layoutResult.yContinuousAsDiscrete || 0;
-            panelHeight = n > 0 ? layoutResult.yStep * n : (layoutResult.subplotHeight || canvasSize.height);
+        if (yIsDiscrete) {
+            panelHeight = bandedSpan(instantiateContext, 'y') ?? (layoutResult.subplotHeight || canvasSize.height);
         } else {
             panelHeight = layoutResult.subplotHeight || canvasSize.height;
         }
@@ -436,19 +441,10 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
             ),
         });
 
-        // Apply the shared x-label rotation / font decisions to every panel axis.
-        if (layoutResult.xLabel) {
-            for (const key of Object.keys(figure.layout)) {
-                if (!/^xaxis\d*$/.test(key)) continue;
-                const ax = figure.layout[key];
-                if (layoutResult.xLabel.labelAngle) {
-                    ax.tickangle = Math.abs(layoutResult.xLabel.labelAngle);
-                }
-                if (layoutResult.xLabel.fontSize) {
-                    ax.tickfont = { ...(ax.tickfont || {}), size: layoutResult.xLabel.fontSize };
-                }
-            }
-        }
+        // Apply the shared label rotation / wrapping / font decisions to every panel axis.
+        plApplyBandLabels(figure, layoutResult, {
+            temporal: (channel) => channelSemantics[channel]?.type === 'temporal',
+        });
         plApplyCartesianAxisSpacing(figure);
         plApplyAxisProperties(figure, instantiateContext);
         if (addTooltipsOpt) plApplyTooltips(figure);

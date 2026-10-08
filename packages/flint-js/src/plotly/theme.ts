@@ -663,15 +663,28 @@ function thinDenseCategoryTicks(figure: any, d: DesignDecisions, say: Say): void
     for (const key of axisKeys(layout, 'x')) {
         const ax = layout[key];
         const categories = Array.isArray(ax?.categoryarray) ? ax.categoryarray : [];
-        if (ax?.type !== 'category' || categories.length < 2 || ax.tickvals != null) continue;
+        if (ax?.type !== 'category' || categories.length < 2) continue;
         const domain = Array.isArray(ax.domain) && ax.domain.length === 2
             ? Math.abs(Number(ax.domain[1]) - Number(ax.domain[0]))
             : 1;
         const band = plotWidth * (Number.isFinite(domain) ? domain : 1);
         const chars = Math.min(18, Math.max(3, ...categories.map((c: any) => String(c).length)));
-        const each = chars * fontSize * 0.58 + 8;
-        const fits = Math.max(2, Math.floor(band / each));
-        if (categories.length <= fits) continue;
+        // A turned label takes its line height along the axis, not its length.
+        const footprint = (degrees: number): number => degrees > 0
+            ? fontSize * 1.2 / Math.sin(degrees * Math.PI / 180) + 2
+            : chars * fontSize * 0.58 + 8;
+        const fitsAt = (degrees: number): number => Math.max(2, Math.floor(band / footprint(degrees)));
+        let degrees = Math.abs(Number(ax.tickangle) || 0);
+        if (categories.length <= fitsAt(degrees)) continue;
+        // In the house's type, turned names may crowd again: stand them on end before dropping any.
+        if (degrees > 0 && degrees < 90) {
+            degrees = degrees < 45 && categories.length <= fitsAt(45) ? 45 : 90;
+            ax.tickangle = -degrees;
+            say('axes.label.angle', `\`${key}\` turns its names to ${degrees}° — at the house's size they crowd at less`);
+            if (categories.length <= fitsAt(degrees)) continue;
+        }
+        if (ax.tickvals != null) continue;
+        const fits = fitsAt(degrees);
         const step = (categories.length - 1) / (fits - 1);
         const picked = [...new Set(Array.from(
             { length: fits },
@@ -984,7 +997,9 @@ function labelsFitStraight(ax: any, key: string, a: ResolvedAxis, width: number,
         ? Math.abs(Number(ax.domain[1]) - Number(ax.domain[0]))
         : 1;
     const band = (width * (Number.isFinite(span) ? span : 1)) / cats.length;
-    const longest = Math.max(...cats.map((c: any) => String(c).length));
+    // Wrapped names are as wide as their widest line.
+    const printed = Array.isArray(ax.ticktext) ? ax.ticktext.flatMap((t: any) => String(t).split('<br>')) : cats;
+    const longest = Math.max(...printed.map((c: any) => String(c).length));
     // Names need air between them, or 'JanFebMar' reads as one word.
     return longest * (a.label.fontSize ?? 11) * 0.58 + 5 <= band;
 }
@@ -1069,6 +1084,8 @@ function applyAxis(
         if (a.label.angle != null) {
             if (labelsFitStraight(ax, key, a, width, cats)) ax.tickangle = a.label.angle;
             else {
+                // Turned as the layout turns names that will not fit, as Vega-Lite does.
+                if (!ax.tickangle) ax.tickangle = -45;
                 say(
                     'axes.label.angle',
                     `\`${key}\` keeps its turned labels — straight they would not fit the panel`,
@@ -1416,6 +1433,27 @@ function dotDiameter(trace: any, figure: any, wanted: number, strokeWidth: numbe
     return Math.max(2, Math.round(Math.min(wanted, strokeWidth * 3.5, spacing * 0.55)));
 }
 
+/** One bar's drawn width: its band less the gap, shared among the bars grouped in it. */
+function drawnBarWidth(figure: any, bars: any[]): number {
+    if (!bars.length) return Infinity;
+    const layout = figure.layout ?? {};
+    const horizontal = bars[0].orientation === 'h';
+    const ax = layout[horizontal ? 'yaxis' : 'xaxis'] ?? {};
+    const bands = Array.isArray(ax.categoryarray) && ax.categoryarray.length
+        ? ax.categoryarray.length
+        : new Set(bars.flatMap((t: any) => t[horizontal ? 'y' : 'x'] ?? []).map(String)).size;
+    const margin = layout.margin ?? {};
+    const span = horizontal
+        ? (Number(layout.height) || 300) - (margin.t ?? 0) - (margin.b ?? 0)
+        : (Number(layout.width) || 400) - (margin.l ?? 0) - (margin.r ?? 0);
+    const domain = Array.isArray(ax.domain) && ax.domain.length === 2 ? Math.abs(ax.domain[1] - ax.domain[0]) : 1;
+    const grouped = (layout.barmode ?? 'group') === 'group'
+        ? bars.filter((t: any) => (t.xaxis ?? 'x') === (bars[0].xaxis ?? 'x')).length
+        : 1;
+    return span * domain / Math.max(1, bands) * (1 - (layout.bargap ?? 0.2))
+        / Math.max(1, grouped) * (grouped > 1 ? 1 - (layout.bargroupgap ?? 0) : 1);
+}
+
 function applyMarks(figure: any, d: DesignDecisions, table: any[], say: Say): void {
     const layout = figure.layout;
     const m = d.marks;
@@ -1433,6 +1471,8 @@ function applyMarks(figure: any, d: DesignDecisions, table: any[], say: Say): vo
         layout.bargap = Math.max(0, Math.min(0.9, 1 - m.bandFraction));
         if (layout.barmode === 'group' && bars.length > 1) layout.bargroupgap = 0.05;
     }
+    const barWidth = drawnBarWidth(figure, bars);
+    let saidThinOutline = false;
 
     for (const [index, trace] of traces.entries()) {
         if (CHROME_TRACES.has(String(trace?.type))) continue;
@@ -1466,10 +1506,18 @@ function applyMarks(figure: any, d: DesignDecisions, table: any[], say: Say): vo
 
         if (fams.includes('bar') || fams.includes('arc')) {
             if (m.outline && !isContextTrace(trace)) {
-                trace.marker = {
-                    ...(trace.marker ?? {}),
-                    line: { color: m.outline.color, width: m.outline.width },
-                };
+                if (trace.type === 'bar' && barWidth < 2 * m.outline.width) {
+                    if (!saidThinOutline) {
+                        say('marks.outline',
+                            `bars are ${barWidth.toFixed(1)}px — too thin to hold a ${m.outline.width}px outline, which would paint over them; left unbordered`);
+                        saidThinOutline = true;
+                    }
+                } else {
+                    trace.marker = {
+                        ...(trace.marker ?? {}),
+                        line: { color: m.outline.color, width: m.outline.width },
+                    };
+                }
             }
             if (m.cornerRadius != null && trace.type === 'bar' && trace.marker?.cornerradius == null) {
                 trace.marker = { ...(trace.marker ?? {}), cornerradius: m.cornerRadius };

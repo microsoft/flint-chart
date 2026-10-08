@@ -23,8 +23,7 @@ import type {
 } from '../core/types';
 import { formatSpecToLabelExpr } from './format';
 import { snapToBoundHeuristic } from '../core/field-semantics';
-import { computeBandLabelLayout } from '../core/decisions';
-import { resolveStretchCaps } from '../core/compute-layout';
+import { AXIS_LABEL_LIMIT, planBandLabels } from '../core/compute-layout';
 import {
     timeMillisecond, timeSecond, timeMinute, timeHour, timeDay, timeWeek, timeMonth, timeYear,
     utcMillisecond, utcSecond, utcMinute, utcHour, utcDay, utcWeek, utcMonth, utcYear,
@@ -32,7 +31,7 @@ import {
 import { timeFormat, utcFormat } from 'd3-time-format';
 
 const DEFAULT_QUANTITATIVE_AXIS_FORMAT = ',.12~g';
-const VEGA_AXIS_LABEL_LIMIT = 180;
+const VEGA_AXIS_LABEL_LIMIT = AXIS_LABEL_LIMIT;
 
 interface LegendTextBox {
     width: number;
@@ -408,50 +407,15 @@ export function vlWrapLegendText(spec: any, context: InstantiateContext): void {
 }
 
 export function vlPlanBandLabels(context: InstantiateContext, template: any, themeFontSize?: number): void {
-    const { layout, canvasSize, channelSemantics } = context;
-    const options = context.assembleOptions ?? {};
-    const caps = resolveStretchCaps(options);
-    for (const channel of ['x', 'y'] as const) {
-        const semantics = channelSemantics[channel];
-        const discrete = channel === 'x' ? layout.xNominalCount > 0 : layout.yNominalCount > 0;
-        if (!discrete || !semantics?.field || !['nominal', 'ordinal'].includes(semantics.type)) continue;
-        const targets = [context.resolvedEncodings[channel], template.encoding?.[channel],
-            ...(template.layer ?? []).map((layer: any) => layer.encoding?.[channel])].filter(Boolean);
-        if (targets.some((encoding) => encoding.axis === null || encoding.axis === false
-            || encoding.axis?.labelExpr !== undefined || encoding.axis?.labelAngle !== undefined
-            || encoding.axis?.labelLimit !== undefined || encoding.axis?.format !== undefined)) continue;
-        const labels = [...new Set(context.table.map((row) => row[semantics.field!])
-            .filter((value) => value != null).map(String))];
-        if (!labels.length || labels.every((label) => label.trim() !== '' && Number.isFinite(Number(label)))) continue;
-        const sizing = channel === 'x' ? layout.xLabel : layout.yLabel;
-        const step = channel === 'x' ? layout.xStep : layout.yStep;
-        const panels = channel === 'x' ? layout.facet?.columns ?? 1 : layout.facet?.rows ?? 1;
-        const fixed = channel === 'x' ? options.facetFixedPadding?.width ?? 0 : options.facetFixedPadding?.height ?? 0;
-        const canvasSpan = channel === 'x' ? canvasSize.width : canvasSize.height;
-        const subplotSpan = channel === 'x' ? layout.subplotWidth : layout.subplotHeight;
-        const maxSpan = (canvasSpan * caps[channel] - fixed) / panels - layout.effectiveFacetGap;
-        const baseSpan = Math.min(subplotSpan, (canvasSpan - fixed) / panels - layout.effectiveFacetGap);
-        const fontSize = themeFontSize ?? sizing.fontSize;
-        const fit = computeBandLabelLayout({
-            labels, axis: channel, fontSize, step,
-            baseSpan, maxSpan, gutterLimit: Math.max(VEGA_AXIS_LABEL_LIMIT, Math.min(canvasSize.width, layout.subplotWidth) / 4),
-            baselineLimit: sizing.labelLimit,
-            elasticity: options.elasticity ?? 0.5,
-        });
-        if (!fit) continue;
-        if (channel === 'x') layout.xStep = fit.step;
-        else layout.yStep = fit.step;
-        Object.assign(sizing, {
-            fontSize,
-            labelAngle: 0,
-            labelAlign: channel === 'x' ? 'center' : 'right',
-            labelBaseline: channel === 'x' ? 'top' : 'middle',
-            labelLimit: Math.ceil(fit.width) + 2,
-            labelValues: labels,
-            labelLines: fit.lines,
-            labelLineHeight: fit.lineHeight,
-        });
-    }
+    // A template that states its own axis labels keeps them.
+    planBandLabels(context, {
+        fontSize: themeFontSize,
+        skip: (channel) => [context.resolvedEncodings[channel], template.encoding?.[channel],
+            ...(template.layer ?? []).map((layer: any) => layer.encoding?.[channel])].filter(Boolean)
+            .some((encoding) => encoding.axis === null || encoding.axis === false
+                || encoding.axis?.labelExpr !== undefined || encoding.axis?.labelAngle !== undefined
+                || encoding.axis?.labelLimit !== undefined || encoding.axis?.format !== undefined),
+    });
 }
 
 // ---------------------------------------------------------------------------
