@@ -159,7 +159,7 @@ Unless the user asks for commentary, return exactly one valid JSON object:
 | `brush-zoom` | Drags a rectangle; the chart zooms into it. | Zoom into detail with one gesture. | | navigation | double-click, escape |
 | `legend-toggle` | Clicks a legend item; its series hides or returns. | Reduce the series on view. | | discrete legend | none |
 | `drag-reorder` | Drags a discrete axis label; the categories reorder. | Rank by hand. | | reorderable axis | none |
-| `filter-controls` | Uses a row of filter controls per field under the chart; the rows that fail are removed (or muted with `mode: "highlight"`). | Narrow the data on view. | `fields`, `placement` | Vega-Lite on a scrolling category axis | Clear |
+| `filter-controls` | Picks values in a row of controls under the chart, one row per field; the rows that fail are removed (or muted with `mode: "highlight"`). | Narrow the data by a field the chart does not show. Only when asked; see below. | | | none |
 | `click-annotate` | Clicks a mark; an annotation pins with its value. | Note a value for the reader. | | elements | click-none, escape |
 | `context-activate` | Right-clicks or long-presses; the host receives a context target. | A context menu in the app. | | elements | none |
 | `long-press` | Holds a mark; it activates. | Touch-first activation. | | elements | click-none, escape |
@@ -198,6 +198,33 @@ and let a named preset in the user's words replace the default for its job.
 - **A chart other people read without a pointer** (accessibility, a screen
   reader, "keyboard"): `accessible-navigation`, beside any other entry.
 
+None of these is `filter-controls`. "Make it interactive" never adds it.
+
+### When to add `filter-controls`
+
+It puts real controls under the chart, takes room from the plot, and changes
+the data the chart shows. Add it only in these cases:
+
+- The request asks to filter, to pick a subset, or to switch what the chart
+  shows by a field: "filter by region", "show one year at a time",
+  "let me pick the group".
+- The data holds a field the chart does not encode, and each of its values is
+  a different version of the same chart: a year in a snapshot scatter, a
+  population group, a scenario. The reader picks one at a time.
+
+Then:
+
+- **List `fields`**, one or two of them, three at most. Do not leave the preset
+  to pick fields itself.
+- **Do not filter a field the chart already shows.** Use another preset for it:
+  a colour field gets `legend-toggle`, a continuous axis gets `brush-x` or
+  `navigate`, and a category on an axis gets `click-highlight`.
+- **Do not filter the measure** the chart plots unless the request names it.
+- **Use one entry per chart.**
+- **Do not use it to replace other choices.** A fixed subset belongs in the
+  data. A comparison of slices side by side is a facet (the
+  `flint-chart-author` skill). A static image or an export gets no controls.
+
 ### Ownership
 
 One trigger has one owner. Admission drops the later entry that asks for a
@@ -226,7 +253,7 @@ dropped at mount with a warning:
 - `filter-controls` in filter mode is skipped when the chart's categories scroll
   on a backend other than Vega-Lite. Without `fields` it picks up to four
   categorical, boolean, or temporal fields, skipping the ones a sibling preset
-  already filters. A field the chart needs to tell its rows apart (a year, a
+  already filters; list `fields` instead. A field the chart needs to tell its rows apart (a year, a
   population group) holds one value at a time, without All; set `all` on the field to choose.
 - `navigate` and `brush-zoom` need a continuous, unfaceted axis.
 - `drag-reorder` needs a discrete axis in the bound encodings.
