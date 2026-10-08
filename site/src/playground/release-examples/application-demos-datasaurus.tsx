@@ -29,6 +29,7 @@ const CHART_ID = 'app-demo-datasaurus';
 const MORPH_ID = 'morph';
 const JUMP_ID = 'jump';
 const PATH_INK = '#e07b39';
+const TWEEN_MS_PER_STATION = 180;
 
 const SHAPE_LABELS: Record<string, string> = {
   dino: 'Dinosaur',
@@ -165,7 +166,6 @@ const SPEC = {
   chart_spec: {
     chartType: 'Scatter Plot',
     title: 'Same statistics, different pictures',
-    subtitle: `${COUNT} points; drag the orange point along its path to morph the shape`,
     encodings: { x: 'x', y: 'y' },
     baseSize: { width: 420, height: 440 },
     chartProperties: { includeZero_x: true, includeZero_y: true },
@@ -177,8 +177,11 @@ const fixed = (value: number) => value.toFixed(2);
 export function DatasaurusDemo() {
   const chart = useRef<FlintChartHandle>(null);
   const [position, setPosition] = useState(START);
+  const positionRef = useRef(START);
+  const tween = useRef<number | null>(null);
 
   const apply = useCallback((next: number): ChartUpdate => {
+    positionRef.current = next;
     setPosition(next);
     return frameUpdate(next);
   }, []);
@@ -189,7 +192,12 @@ export function DatasaurusDemo() {
       eventSource: dragTrigger(14),
       affordances: { mark: { cursor: 'drag' } },
       handle(event) {
-        if (event.action !== 'drag' || event.phase === 'start' || event.phase === 'cancel') return null;
+        if (event.action !== 'drag' || event.phase === 'cancel') return null;
+        if (event.phase === 'start') {
+          if (tween.current !== null) cancelAnimationFrame(tween.current);
+          tween.current = null;
+          return null;
+        }
         const projection = event.geometry.projection;
         if (projection?.kind !== 'path') return null;
         const from = Number((projection.segment.start.value as { Shape?: unknown }).Shape);
@@ -205,10 +213,27 @@ export function DatasaurusDemo() {
     return [morph, jump];
   }, [apply]);
 
+  const send = useCallback((shape: number) => chart.current?.dispatch(JUMP_ID, { shape }).then((result) => {
+    if (result && result.status !== 'applied') console.warn(`${CHART_ID}: ${result.status}`, result);
+  }), []);
+
+  /** A shape button slides the handle along the path to its station, one frame at a time. */
   const pick = (shape: number) => {
-    void chart.current?.dispatch(JUMP_ID, { shape }).then((result) => {
-      if (result && result.status !== 'applied') console.warn(`${CHART_ID}: ${result.status}`, result);
-    });
+    if (tween.current !== null) cancelAnimationFrame(tween.current);
+    const from = positionRef.current;
+    const duration = TWEEN_MS_PER_STATION * Math.max(1, Math.abs(shape - from));
+    const started = performance.now();
+    let busy = false;
+    const step = (now: number) => {
+      const t = Math.min(1, (now - started) / duration);
+      const eased = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+      if (!busy) {
+        busy = true;
+        void send(t >= 1 ? shape : from + (shape - from) * eased)?.then(() => { busy = false; });
+      }
+      tween.current = t < 1 ? requestAnimationFrame(step) : null;
+    };
+    tween.current = requestAnimationFrame(step);
   };
 
   const stats = useMemo(() => statsOf(cloudAt(position)), [position]);

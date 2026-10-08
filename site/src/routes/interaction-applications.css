@@ -43,7 +43,8 @@
 }
 
 .ia-page .app-demo-pair {
-  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  align-items: stretch;
 }
 
 /* The draw stage fills the case width, with the same card rule as the other demos. */

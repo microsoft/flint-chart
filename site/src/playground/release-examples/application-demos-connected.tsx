@@ -70,10 +70,10 @@ const SCATTER_SPEC = {
     title: 'Training compute of notable AI models',
     subtitle: `${MODELS.length} models from ${COMPANIES.length} companies, by release date`,
     encodings: { x: 'Date', y: 'Training compute (FLOP)', color: 'Company', detail: 'Model' },
-    baseSize: { width: 430, height: 320 },
+    baseSize: { width: 470, height: 400 },
     chartProperties: { logScale_y: true },
   },
-  theme_spec: THEME,
+  theme_spec: { ...THEME, legend: { show: 'never' } },
 } as ChartAssemblyInput;
 
 /** One bar per company: the models among `models`, with every company kept so the bars never vanish. */
@@ -86,25 +86,34 @@ function countRows(models: readonly Model[]): Record<string, unknown>[] {
 const BARS_SPEC = {
   data: { values: countRows(MODELS) },
   semantic_types: { Company: 'Category', Models: 'Count' },
+  options: { defaultBandSize: 34, maxBandSize: 40 },
   chart_spec: {
     chartType: 'Bar Chart',
     title: 'Models per company',
     subtitle: 'In the brushed dates',
     encodings: { x: 'Models', y: { field: 'Company', sortBy: 'x', sortOrder: 'descending' }, color: 'Company' },
-    baseSize: { width: 330, height: 320 },
+    baseSize: { width: 280, height: 400 },
+    canvasSize: { width: 280, height: 400 },
   },
   theme_spec: THEME,
 } as ChartAssemblyInput;
 
 const SCATTER_INTERACTIONS: readonly InteractionDef[] = [
-  brushX({ id: WINDOW_ID, mode: 'stateful', dimOpacity: 0.25 }),
-  externalInteraction<{ models: string[] }>({
+  brushX({ id: WINDOW_ID, dimOpacity: 0.25 }),
+  externalInteraction<{ models: string[]; others: string[] }>({
     id: FROM_BARS,
-    handle: ({ models }) => ({
+    // The brush's own layer already mutes everything outside the window, so the
+    // company layer lights its models and fades the rest of the window explicitly;
+    // a second emphasis alone would merge into the brush's and change nothing.
+    handle: ({ models, others }) => ({
       id: COMPANY_ID,
       ops: models.length > 0
-        // The fill stays the company colour, which the bar carries too.
-        ? [{ op: 'set-style', targets: models.map((model): UpdateTarget => ({ select: { key: { Model: model } } })), value: { state: 'emphasized' } }]
+        ? [
+          { op: 'set-style', targets: models.map((model): UpdateTarget => ({ select: { key: { Model: model } } })), value: { state: 'emphasized' } },
+          ...(others.length > 0
+            ? [{ op: 'set-style' as const, targets: others.map((model): UpdateTarget => ({ select: { key: { Model: model } } })), value: { opacity: 0.25 } }]
+            : []),
+        ]
         : [{ op: 'set-style', targets: [], value: { state: 'normal' } }],
     }),
   }),
@@ -134,26 +143,38 @@ export function ConnectedModelsDemo() {
   const lightCompany = useCallback((name: string | null) => {
     const pool = windowRef.current ?? MODELS;
     const models = name ? pool.filter((row) => row.Company === name).map((row) => row.Model) : [];
-    void scatter.current?.dispatch(FROM_BARS, { models }).then((result) => {
+    const others = name ? pool.filter((row) => row.Company !== name).map((row) => row.Model) : [];
+    void scatter.current?.dispatch(FROM_BARS, { models, others }).then((result) => {
       if (result && result.status !== 'applied') console.warn(`${SCATTER_ID}: ${result.status}`, result);
     });
   }, []);
 
+  /** A reader's reset (click on the background, Escape) reports with no interaction and nothing selected. */
+  const cleared = (change: ChartChange) => change.source === 'reader' && !change.interactionId && change.state.selected.length === 0;
+
   const onScatterChange = useCallback((change: ChartChange) => {
-    if (change.phase !== 'commit' || change.interactionId !== WINDOW_ID) return;
+    if (change.phase !== 'commit' || (change.interactionId !== WINDOW_ID && !cleared(change))) return;
     const names = new Set(modelsOf(change));
     const inWindow = names.size > 0 ? MODELS.filter((row) => names.has(row.Model)) : null;
     windowRef.current = inWindow;
     setWindow(inWindow);
-    void bars.current?.dispatch(FROM_SCATTER, { models: inWindow ?? MODELS }).then((result) => {
+    void bars.current?.dispatch(FROM_SCATTER, { models: inWindow ?? MODELS }).then(async (result) => {
       if (result && result.status !== 'applied') console.warn(`${BARS_ID}: ${result.status}`, result);
+      // The click's emphasis resolved to the old bars; after set-data the marks
+      // are new, so the lit company is restated by key under the same layer.
+      if (companyRef.current) {
+        await bars.current?.applyUpdate({
+          id: COMPANY_ID,
+          ops: [{ op: 'set-style', targets: [{ select: { key: { Company: companyRef.current } } }], value: { state: 'emphasized' } }],
+        });
+      }
     });
     // A narrower window also narrows the lit company.
     if (companyRef.current) lightCompany(companyRef.current);
   }, [lightCompany]);
 
   const onBarsChange = useCallback((change: ChartChange) => {
-    if (change.phase !== 'commit' || change.interactionId !== COMPANY_ID) return;
+    if (change.phase !== 'commit' || (change.interactionId !== COMPANY_ID && !cleared(change))) return;
     const value = change.target?.elements[0]?.value as { Company?: unknown } | undefined;
     const name = typeof value?.Company === 'string' ? value.Company : null;
     companyRef.current = name;
@@ -164,7 +185,7 @@ export function ConnectedModelsDemo() {
   const status = useMemo(() => {
     const scope = window ? `${window.length} of ${MODELS.length} models in the brushed dates` : `All ${MODELS.length} models`;
     const lit = company ? `; ${company} lit on the scatter` : '';
-    return `${scope}${lit}. Drag across the dates to brush; click a bar to light a company; Escape clears either.`;
+    return `${scope}${lit}. Drag across the dates to brush; click a bar to light a company; click the background to clear.`;
   }, [company, window]);
 
   return <div className="app-demo-stack">

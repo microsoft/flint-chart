@@ -61,7 +61,7 @@ function spec(title: string | undefined, subtitle: string | undefined, height: n
 
 const DETAIL_SPEC = spec(
   `US regular gasoline, ${FIRST.slice(0, 4)}–${LAST.slice(0, 4)}`,
-  'Average retail price per gallon, by week. Drag across the strip below to frame the weeks shown here.',
+  undefined,
   DETAIL_HEIGHT,
 );
 const OVERVIEW_SPEC = spec(undefined, undefined, OVERVIEW_HEIGHT);
