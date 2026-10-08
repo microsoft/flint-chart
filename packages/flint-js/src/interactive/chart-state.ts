@@ -3,7 +3,7 @@ import { semanticElementRenderKeys } from '../core/interaction-semantics';
 import type { ChartChange, ChartChangeReport, ChartStateFacet } from './types';
 
 export const CHART_STATE_FACETS: readonly ChartStateFacet[] = [
-    'selected', 'hidden', 'viewport', 'windows', 'categoryOrder', 'annotations',
+    'selected', 'hidden', 'viewport', 'windows', 'categoryOrder', 'annotations', 'filters',
 ];
 
 function stableJson(value: unknown): string {
@@ -40,6 +40,7 @@ export function snapshotChartState(state: ChartState): ChartState {
         ...(state.windows ? { windows: { ...state.windows } } : {}),
         ...(state.categoryOrder ? { categoryOrder: [...state.categoryOrder] } : {}),
         ...(state.annotations ? { annotations: [...state.annotations] } : {}),
+        ...(state.filters ? { filters: { ...state.filters } } : {}),
     };
 }
 
@@ -58,6 +59,7 @@ export function chartStateKeys(state: ChartState): Record<ChartStateFacet, strin
             .map((annotation) => `${annotation.id}:${targetKey(annotation.target)}:${annotation.text ?? ''}`)
             .sort()
             .join(';'),
+        filters: stableJson(state.filters ?? {}),
     };
 }
 

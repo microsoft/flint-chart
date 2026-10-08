@@ -18,6 +18,20 @@ the entries below describe implemented changes, not the remaining checklist.
 
 ### Added
 
+- `filter-controls` (`filterControls`), a filter-only interaction preset. It
+  draws one row of muted controls per field under the chart (a segmented bar
+  to pick one of a few values, pills to pick several, a searchable dropdown for
+  many, a slider to pick one year or other ordered value, a range slider, or a
+  switch), and filters the rows (or mutes them with
+  `mode: "highlight"`); each filter re-lays the chart out for the rows left.
+  Values read as the chart writes them, from the field's semantic type
+  (`Aug 2015`, `$1.20`, `2007`).
+  `placement` is `auto` or `bottom` (under the chart) or `top`; under 280px
+  wide each label sits above its control. With `render: false` the host draws its own
+  controls and drives the preset through `dispatch`. The active filters appear
+  as `ChartState.filters`. Without `fields`, the preset skips fields that
+  `legend-toggle`, `navigate`, or `brush-zoom` already filter. A filtered chart
+  keeps its colors per category.
 - A reproducible Copilot Canvas plugin build (`npm run build:copilot-plugin`)
   bundles the current chart UI and authoring skill, aligns the plugin version
   with the npm packages, and pins the MCP server to that release.

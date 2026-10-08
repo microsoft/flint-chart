@@ -91,6 +91,15 @@ export interface VegaInteractionPlan {
     /** Mutable compiled inline source used by `set-data`. */
     mutableDataSource?: string;
     initialDataRows?: readonly Record<string, unknown>[];
+    /** Brings host rows into the compiled data's form (temporal values as the compiler writes them). */
+    prepareDataRows?: (rows: readonly Record<string, unknown>[]) => readonly Record<string, unknown>[];
+    /**
+     * Cuts the current rows (`set-data` rows, or the input rows when none) to the category window.
+     * Returns the same array while neither the rows nor the window change.
+     */
+    windowDataRows?: (rows: readonly Record<string, unknown>[] | undefined) => readonly Record<string, unknown>[];
+    /** Signal values the current rows call for, such as the band step the layout picks for them. */
+    dataSignals?: (rows: readonly Record<string, unknown>[] | undefined) => Record<string, number>;
     reorderAxis?: VegaReorderAxis;
     reorderAxes?: readonly VegaReorderAxis[];
     resolve?: ChartInteractionResolver;

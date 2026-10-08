@@ -325,6 +325,14 @@ export interface ChartAnnotation {
     readonly text?: string;
 }
 
+/**
+ * One field's filter: the values a reader keeps (`in`), or an inclusive range (`range`)
+ * whose ends compare as numbers or dates.
+ */
+export type FilterValue =
+    | { readonly in: readonly unknown[] }
+    | { readonly range: readonly [unknown, unknown] };
+
 /** What the chart shows now, in semantic terms. A host reads it; a preset reads its superset. */
 export interface ChartState {
     readonly chartType: string;
@@ -341,6 +349,8 @@ export interface ChartState {
     readonly categoryOrder?: readonly unknown[];
     /** The notes the chart shows now, previews included. */
     readonly annotations?: readonly ChartAnnotation[];
+    /** The active filter of each field, set by filter controls; absent fields show every value. */
+    readonly filters?: Readonly<Record<string, FilterValue>>;
 }
 
 export interface InteractionContext extends ChartState {

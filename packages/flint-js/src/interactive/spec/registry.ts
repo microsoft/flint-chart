@@ -21,8 +21,9 @@ import {
     longPress,
     navigate,
     select,
-    type CanvasInteractionDef,
+    type InteractionDef,
 } from '../interactions';
+import { filterControls } from '../filter-controls';
 import type { InteractionPresetOptions } from './types';
 import { INTERACTION_RESET_GESTURES, NAVIGATION_RESET, NO_RESET, SELECTION_RESET, type InteractionResetGesture } from '../reset';
 
@@ -42,7 +43,8 @@ export type InteractionGestureFamily =
     | 'context'
     | 'long-press'
     | 'double'
-    | 'keyboard';
+    | 'keyboard'
+    | 'widget';
 
 export interface InteractionPresetDefinition<T extends InteractionPresetType = InteractionPresetType> {
     readonly type: T;
@@ -55,7 +57,7 @@ export interface InteractionPresetDefinition<T extends InteractionPresetType = I
     readonly supportedReset: readonly InteractionResetGesture[];
     /** The list the factory applies when `reset` is absent; a test keeps it equal to the factory's. */
     readonly defaultReset: readonly InteractionResetGesture[];
-    create(options: InteractionPresetOptions[T]): CanvasInteractionDef;
+    create(options: InteractionPresetOptions[T]): InteractionDef;
 }
 
 /**
@@ -254,6 +256,15 @@ export const INTERACTION_PRESETS: { readonly [T in InteractionPresetType]: Inter
         supportedReset: NEVER,
         defaultReset: NEVER,
         create: accessibleNavigation,
+    },
+    'filter-controls': {
+        type: 'filter-controls',
+        label: 'Filter controls',
+        description: 'Checkboxes, a range, or a switch beside the chart narrow the rows it shows, or highlight them.',
+        gesture: 'widget',
+        supportedReset: NEVER,
+        defaultReset: NEVER,
+        create: filterControls,
     },
 };
 

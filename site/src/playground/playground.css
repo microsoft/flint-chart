@@ -209,3 +209,8 @@
     align-items: flex-start;
   }
 }
+/* Filter-controls cases: cards follow the preset gallery (cf-*); popovers must escape the card. */
+.fc-probe, .fc-probe .cf-stage { overflow: visible; }
+.fc-probe .cf-stage { padding: 12px 16px; }
+.fc-probe .cf-probe-event { border-radius: 0 0 8px 8px; }
+.fc-error { margin: 0; color: #b42318; font-size: 12px; white-space: pre-wrap; }

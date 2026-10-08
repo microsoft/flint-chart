@@ -13,6 +13,7 @@ import {
 import type { ChartAssemblyInput, ChartWarning } from '../core/types';
 import {
     isCanvasInteraction,
+    isFilterControls,
     mountChart,
     resolveInteractionSpec,
     type CanvasInteractionDef,
@@ -198,6 +199,8 @@ export const FlintChart = forwardRef<FlintChartHandle, FlintChartProps>(function
         // Presets keep the mounted instance: they may hold private state between gestures.
         const definitions = resolved.definitions.map((definition): InteractionDef => {
             if (!isCanvasInteraction(definition)) {
+                // A preset's handler reads the state its controls and bound rows hold, so it stays the mounted one.
+                if (isFilterControls(definition)) return definition;
                 const external: ExternalInteractionDef<unknown> = { ...definition, handle: (payload, context) => {
                     const latest = latestDefinitions.current.get(definition.id) ?? definition;
                     return isCanvasInteraction(latest) ? null : latest.handle(payload, context);

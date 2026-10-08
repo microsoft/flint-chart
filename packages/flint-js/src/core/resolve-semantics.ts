@@ -650,6 +650,7 @@ export function resolveChannelSemantics(
 // Re-export helpers needed by other modules
 export {
     analyzeTemporalField,
+    resolveTemporalFormat,
     computeDataVotes,
     pickBestLevel,
     levelToFormat,

@@ -170,6 +170,31 @@ await surface.dispatch('country-table', { Country: 'Japan' });
 
 Call `dispatch` from the table's row-selection handler. Targets use semantic data keys, not SVG paths or renderer-specific mark indices. The named field must be present in the chart's semantic data.
 
+## Filter the data with controls
+
+`filterControls` draws one row per field under the chart, each working in a single click or drag: for a categorical field with up to eight values, pills to pick several or a segmented bar to pick one (`select`); a searchable dropdown for more; a slider with the value beside it for a one-at-a-time field with many ordered values such as years (All is its first stop when the field allows it); a two-thumb range for temporal or numeric fields, and a switch for booleans. The default `mode: 'filter'` removes the rows that fail; `mode: 'highlight'` keeps them and mutes their marks. `placement: 'auto'` (or `bottom`) puts the rows under the chart and `top` above it. Beside a chart under 280px wide, each label sits above its control. For another layout, such as a sidebar, set `render: false` and draw your own controls. A categorical field gets checkboxes when its values pick out separate marks. In `filter` mode, a field the chart needs to tell its rows apart (each value is another version of the same marks, such as a year or a population group) gets buttons, a slider, or a list without All: it always holds one value, its `initial` value or else the first, and clearing the filters returns there. Set `all: true` or `all: false` on the field to choose. With Vega-Lite, each filter lays the chart out again for the rows left, as Flint would for that data: fewer categories get thicker bars (up to the usual cap) and a shorter chart. On a chart whose categories scroll, the filter narrows the rows first and the rail scrolls the categories that are left; the rail hides once they all fit.
+
+```ts
+import { mountChart, filterControls } from 'flint-chart/interactive';
+
+const surface = mountChart(container, input, {
+  backend: 'vegalite',
+  interactions: [
+    filterControls({
+      id: 'filters',
+      fields: ['Region', { field: 'Year', widget: 'range' }],
+      initial: { Region: { in: ['Europe', 'Asia'] } },
+    }),
+  ],
+});
+await surface.ready;
+surface.getState().filters; // { Region: { in: ['Europe', 'Asia'] } }
+await surface.dispatch('filters', { field: 'Year', value: { range: [2017, 2021] } });
+await surface.dispatch('filters', { reset: true });
+```
+
+With `render: false` the preset draws nothing; your application draws its own controls and calls `dispatch` with `{ field, value }`, `{ filters }`, or `{ reset: true }`. The preset is skipped, with a warning, on a chart that has viewports from `navigate` or `brush-zoom`.
+
 ## Update operators and host responses
 
 `set-style` controls emphasis or visibility, `set-annotation` adds or clears a label, and `set-viewport` changes the visible domains. Other operators reorder categories, add overlays, or replace data. A single handler can return multiple operators in one update.

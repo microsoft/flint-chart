@@ -21,6 +21,7 @@ import type {
     NavigateOptions,
     SelectOptions,
 } from '../interactions';
+import type { FilterControlsOptions } from '../filter-controls';
 
 /**
  * The options each preset type accepts in a spec. They are the factory option
@@ -49,6 +50,7 @@ export interface InteractionPresetOptions {
     'navigate': NavigateOptions;
     'drag-reorder': DragReorderOptions;
     'accessible-navigation': AccessibleNavigationOptions;
+    'filter-controls': FilterControlsOptions;
 }
 
 /**

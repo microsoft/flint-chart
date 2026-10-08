@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
-import { ArrowDown, ArrowLeftRight, Brush, Focus, GripVertical, Keyboard, LayoutGrid, MousePointerClick, Move, Pencil, Ruler, Scan, Table2, UserRound, ZoomIn } from 'lucide-react';
+import { ArrowDown, ArrowLeftRight, Brush, Focus, GripVertical, Keyboard, LayoutGrid, MousePointerClick, Move, Pencil, Ruler, Scan, SlidersHorizontal, Table2, UserRound, ZoomIn } from 'lucide-react';
 import { Navigate, useLocation, useParams } from 'react-router-dom';
 import type { CanvasInteractionAction } from 'flint-chart/interactive';
 import { CodeBlock } from '../components/CodeBlock';
@@ -10,6 +10,7 @@ import { siteTheme } from '../shared/theme';
 import '../playground/playground.css';
 import { ClickFocusLab } from '../playground/ClickFocusLab';
 import { ThemePicker } from '../playground/ThemePicker';
+import { FilterControlsGallery } from '../playground/FilterControlsGallery';
 import { ClimatePhaseStage } from '../playground/ClimatePhaseStage';
 import { RetailDrilldownStage } from '../playground/RetailDrilldownStage';
 import { YouDrawItStage } from '../playground/YouDrawItStage';
@@ -136,6 +137,11 @@ function InteractionMechanism() {
   </div>;
 }
 
+// Not an InteractionMode: its page is FilterControlsGallery, not a ClickFocusLab case set.
+const filterControlsMode = { value: 'filter-controls', label: 'Filter controls', icon: SlidersHorizontal } as const;
+type GalleryMode = InteractionMode | typeof filterControlsMode.value;
+const galleryModes = [...unitInteractionModes, ...compositionInteractionModes, filterControlsMode];
+
 const supportedGroups = [
   { label: 'Highlight', icon: MousePointerClick, description: 'Emphasize a mark, category, or related group.',
     modes: ['click-highlight', 'click-group-focus', 'hover-group-focus', 'long-press', 'double-activate'] },
@@ -147,14 +153,16 @@ const supportedGroups = [
     modes: ['inspect', 'inspect-index', 'annotate'] },
   { label: 'Change the view', icon: Move, description: 'Explore domains, reorder categories, or toggle series visibility.',
     modes: ['navigate', 'brush-zoom', 'drag-reorder', 'legend-toggle'] },
+  { label: 'Filter', icon: SlidersHorizontal, description: 'Narrow the data with checkboxes, ranges, and switches placed beside the chart.',
+    modes: ['filter-controls'] },
   { label: 'Keyboard & context', icon: Keyboard, description: 'Navigate chart elements accessibly and combine selection with host actions.',
     modes: ['accessible-navigation', 'keyboard-focus', 'select-context'] },
-] as const satisfies readonly { label: string; icon: typeof Move; description: string; modes: readonly InteractionMode[] }[];
+] as const satisfies readonly { label: string; icon: typeof Move; description: string; modes: readonly GalleryMode[] }[];
 
 const sections = supportedGroups.map(group => ({
   label: group.label,
   modes: group.modes.flatMap(value =>
-    [...unitInteractionModes, ...compositionInteractionModes].filter(item => item.value === value)),
+    galleryModes.filter(item => item.value === value)),
 }));
 
 const countryElectricityMix = {
@@ -569,7 +577,7 @@ const countryDetails: CanvasInteractionDef = {
                 <div>{group.modes.map((value, index) => <Fragment key={value}>
                   {index > 0 && <span aria-hidden="true"> / </span>}
                   <LocaleLink to={`/interactions/${value}`}>
-                    {[...unitInteractionModes, ...compositionInteractionModes].find(item => item.value === value)?.label}
+                    {galleryModes.find(item => item.value === value)?.label}
                   </LocaleLink>
                 </Fragment>)}</div>
               </dd>
@@ -595,7 +603,7 @@ export function InteractionGallery() {
   const { lp } = useLocale();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [themeId, setThemeId] = useState<string | undefined>(undefined);
-  const selected = [...unitInteractionModes, ...compositionInteractionModes].find(item => item.value === mode)
+  const selected = galleryModes.find(item => item.value === mode)
     ?? (!mode ? unitInteractionModes[0] : undefined);
   useEffect(() => { scrollRef.current?.scrollTo(0, 0); }, [mode]);
 
@@ -614,7 +622,7 @@ export function InteractionGallery() {
                 <h1>Interaction Gallery</h1>
                 <ThemePicker themeId={themeId} onTheme={setThemeId} />
               </div>
-              <p>This gallery showcases {unitInteractionModes.length + compositionInteractionModes.length} interaction presets that are reusable across chart types. The presets support {sections.length} families of common interactions: {sections.map(section => section.label).join(', ')}.</p>
+              <p>This gallery showcases {galleryModes.length} interaction presets that are reusable across chart types. The presets support {sections.length} families of common interactions: {sections.map(section => section.label).join(', ')}.</p>
               <p>You can use these presets directly in a declarative specification or through the functional API in your application. To create bespoke interactions, refer to the <LocaleLink to="/interactions/bespoke" className="site-text-link">Bespoke Interactions page</LocaleLink>.</p>
             </header>
             <nav className="cf-action-rail ig-action-rail" aria-label="Interaction navigation">
@@ -630,11 +638,13 @@ export function InteractionGallery() {
                 </Fragment>
               ))}
             </nav>
-            <ClickFocusLab key={selected.value} source="spec" mode={selected.value} embedded
-              headingLevel={2}
-              themeId={themeId} showThemePicker={false}
-              behaviors={behaviors[selected.value]}
-              eventActions={eventActions[selected.value]} eventDescriptions={eventDescriptions} />
+            {selected.value === filterControlsMode.value
+              ? <FilterControlsGallery themeId={themeId} />
+              : <ClickFocusLab key={selected.value} source="spec" mode={selected.value} embedded
+                headingLevel={2}
+                themeId={themeId} showThemePicker={false}
+                behaviors={behaviors[selected.value]}
+                eventActions={eventActions[selected.value]} eventDescriptions={eventDescriptions} />}
           </main>
         </div>
       </div>

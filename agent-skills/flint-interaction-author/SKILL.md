@@ -159,6 +159,7 @@ Unless the user asks for commentary, return exactly one valid JSON object:
 | `brush-zoom` | Drags a rectangle; the chart zooms into it. | Zoom into detail with one gesture. | | navigation | double-click, escape |
 | `legend-toggle` | Clicks a legend item; its series hides or returns. | Reduce the series on view. | | discrete legend | none |
 | `drag-reorder` | Drags a discrete axis label; the categories reorder. | Rank by hand. | | reorderable axis | none |
+| `filter-controls` | Uses a row of filter controls per field under the chart; the rows that fail are removed (or muted with `mode: "highlight"`). | Narrow the data on view. | `fields`, `placement` | Vega-Lite on a scrolling category axis | Clear |
 | `click-annotate` | Clicks a mark; an annotation pins with its value. | Note a value for the reader. | | elements | click-none, escape |
 | `context-activate` | Right-clicks or long-presses; the host receives a context target. | A context menu in the app. | | elements | none |
 | `long-press` | Holds a mark; it activates. | Touch-first activation. | | elements | click-none, escape |
@@ -222,6 +223,11 @@ Data conditions the chart type cannot promise; an entry that fails one is
 dropped at mount with a warning:
 
 - `legend-toggle` needs a colour field bound to a discrete legend.
+- `filter-controls` in filter mode is skipped when the chart's categories scroll
+  on a backend other than Vega-Lite. Without `fields` it picks up to four
+  categorical, boolean, or temporal fields, skipping the ones a sibling preset
+  already filters. A field the chart needs to tell its rows apart (a year, a
+  population group) holds one value at a time, without All; set `all` on the field to choose.
 - `navigate` and `brush-zoom` need a continuous, unfaceted axis.
 - `drag-reorder` needs a discrete axis in the bound encodings.
 - `inspect-index` needs the index axis; `seriesBy` names the series field

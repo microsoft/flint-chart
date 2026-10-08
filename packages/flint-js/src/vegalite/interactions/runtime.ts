@@ -348,6 +348,8 @@ export interface VegaInteractionController {
     setUpdates(updates: readonly ChartUpdate[]): Promise<readonly ChartUpdateResult[]>;
     clearUpdate(id: string): Promise<void>;
     refresh(): void;
+    /** Draws the retained updates again, as after a rail scroll moves the category window. */
+    rerender(): Promise<void>;
     destroy(): void;
 }
 
@@ -758,6 +760,17 @@ export function mountVegaInteractions(
         view, container, scales: plan.overlayScales ?? {}, coordinateSpace, containerLayoutSize,
     });
     const initialDataRows = plan.initialDataRows ?? plan.sourceRecords;
+    // Cached by identity: a retained update re-rendered must not swap in a fresh copy of the same rows.
+    const preparedDataRows = new WeakMap<readonly Record<string, unknown>[], readonly Record<string, unknown>[]>();
+    const preparedRows = (rows: readonly Record<string, unknown>[]): readonly Record<string, unknown>[] => {
+        if (!plan.prepareDataRows) return rows;
+        let prepared = preparedDataRows.get(rows);
+        if (!prepared) {
+            prepared = plan.prepareDataRows(rows);
+            preparedDataRows.set(rows, prepared);
+        }
+        return prepared;
+    };
     let renderedDataRows: readonly Record<string, unknown>[] = initialDataRows;
     const reorderResetControls = createReorderResetControls({
         container,
@@ -1091,6 +1104,7 @@ export function mountVegaInteractions(
         const overlays = new Map<string, ChartOverlaySpec>();
         const axisStyles: { value: AxisTargetValue; style: import('../../core/interaction-contracts').StyleSpec }[] = [];
         let dataRows = initialDataRows;
+        let hostRows: readonly Record<string, unknown>[] | undefined;
         let emptyEmphasisActive = false;
         const freeformOverlays = new Map<string, import('../../core/interaction-contracts').FreeformOverlaySpec>();
         selectedElements.clear();
@@ -1113,7 +1127,8 @@ export function mountVegaInteractions(
                     continue;
                 }
                 if (op.op === 'set-data') {
-                    dataRows = op.value.rows;
+                    hostRows = op.value.rows;
+                    dataRows = preparedRows(op.value.rows);
                     continue;
                 }
                 if (op.op === 'set-style' && op.value.visible === false) {
@@ -1214,7 +1229,10 @@ export function mountVegaInteractions(
         }
         else dragPreviewOverlay.clear();
         const keys = [...selectedKeys()];
+        // A windowed chart shows only the rows inside its category window, cut from whatever rows are current.
+        if (plan.windowDataRows) dataRows = preparedRows(plan.windowDataRows(hostRows));
         if (plan.mutableDataSource && dataRows !== renderedDataRows) {
+            for (const [name, value] of Object.entries(plan.dataSignals?.(hostRows) ?? {})) view.signal(name, value);
             view.change(
                 plan.mutableDataSource,
                 changeset().remove(() => true).insert([...dataRows]),
@@ -2992,11 +3010,12 @@ export function mountVegaInteractions(
         reportChange: notifyChange,
         applyUpdate: async (update, options) => {
             const result = await storeUpdate(update, retainedUpdates, null, options);
-            notifyChange({ phase: 'commit', source: 'host', interactionId: options?.interactionId });
+            notifyChange({ phase: 'commit', source: options?.source ?? 'host', interactionId: options?.interactionId });
             return result;
         },
         setUpdates: replaceUpdates,
         clearUpdate,
+        rerender: renderUpdates,
         refresh: () => {
             observeRenderer();
             syncOverlays();

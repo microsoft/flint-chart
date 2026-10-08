@@ -30,6 +30,8 @@ export interface ChartUpdateApplyOptions {
     transition?: ChartUpdateTransition;
     /** The external interaction behind the update, reported as the change's `interactionId`. */
     interactionId?: string;
+    /** Who asked for the update, reported as the change's `source`. Defaults to `host`. */
+    source?: ChartChangeSource;
 }
 
 export type ChartChangePhase = 'preview' | 'commit' | 'cancel';
@@ -38,7 +40,7 @@ export type ChartChangePhase = 'preview' | 'commit' | 'cancel';
 export type ChartChangeSource = 'reader' | 'host';
 
 /** The parts of `ChartState` a change can move. */
-export type ChartStateFacet = 'selected' | 'hidden' | 'viewport' | 'windows' | 'categoryOrder' | 'annotations';
+export type ChartStateFacet = 'selected' | 'hidden' | 'viewport' | 'windows' | 'categoryOrder' | 'annotations' | 'filters';
 
 /** One change to what the chart shows, reported after the render only when the state differs. */
 export interface ChartChange {
@@ -65,6 +67,8 @@ export interface InteractiveRenderer {
     viewports: CategoryViewport[];
     /** Admission warnings from the mount: spec interactions the chart could not honour. */
     readonly warnings?: readonly ChartWarning[];
+    /** The windows over the rows now shown; a renderer that has it lets a filter narrow what the rail scrolls. */
+    getViewports?(): CategoryViewport[];
     setViewports(starts: ViewportState): void | Promise<void>;
     getViewportGeometry?(channel: ViewportChannel): ViewportGeometry | undefined;
     getInteractionContext?(): InteractionContext;

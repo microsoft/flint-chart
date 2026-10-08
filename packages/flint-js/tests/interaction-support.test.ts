@@ -24,6 +24,7 @@ describe('supportedInteractionPresets', () => {
         expect(supportedInteractionPresets(def('KPI Card').interactionSupport)).toEqual([
             'click-highlight', 'click-group-focus', 'hover-group-focus', 'click-annotate',
             'context-activate', 'long-press', 'double-activate', 'inspect', 'accessible-navigation',
+            'filter-controls',
         ]);
         const pie = supportedInteractionPresets(def('Pie Chart').interactionSupport);
         expect(pie).toContain('brush-angle');

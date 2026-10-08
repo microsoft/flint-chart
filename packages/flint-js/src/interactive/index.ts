@@ -159,6 +159,16 @@ export {
     yBrushTrigger,
 } from './triggers';
 export { clampViewportStart, mountInteractiveChartSurface } from './surface';
+export { filterControls, isFilterControls, rowMatchesFilters, valueMatchesFilter } from './filter-controls';
+export type {
+    FilterControlsDef,
+    FilterControlsOptions,
+    FilterControlsPayload,
+    FilterFieldOptions,
+    FilterPlacement,
+    FilterValue,
+    FilterWidget,
+} from './filter-controls';
 export { INTERACTION_PRESET_TYPES } from '../core/interaction-spec';
 export type {
     InteractionEntry,
@@ -205,7 +215,8 @@ export function mountChart(
                         const { createVegaInteractiveRenderer } = await import('../vegalite/interactive');
                         return createVegaInteractiveRenderer({
                             renderer,
-                            interactions: canvasInteractions,
+                            // External definitions too: the renderer reports their state (filters).
+                            interactions,
                             enableSemanticUpdates: (options.semanticUpdates ?? true)
                                 || interactions.length > 0
                                 || (updates?.length ?? 0) > 0,

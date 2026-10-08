@@ -30,6 +30,7 @@ import { resolveEncodingSort } from '../core/resolve-semantics';
 import { assembleVegaLite } from '../vegalite/assemble';
 import { resolveInteractionSpec } from '../interactive/spec/resolve';
 import { admitInteractions } from '../interactive/spec/admission';
+import { isCanvasInteraction } from '../interactive/interactions';
 import { vlGetTemplateDef } from '../vegalite/templates';
 import { assembleECharts } from '../echarts/assemble';
 import { ecGetTemplateDef } from '../echarts/templates';
@@ -339,7 +340,7 @@ export function validateInteractionSpec(
     try {
         const resolved = resolveInteractionSpec(input.interaction_spec);
         const { _interactionSemantics: plan } = assembled as { _interactionSemantics: Parameters<typeof admitInteractions>[0] };
-        return [...admitInteractions(plan, resolved.interactions).warnings];
+        return [...admitInteractions(plan, resolved.interactions.filter(isCanvasInteraction)).warnings];
     } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         return [{ severity: 'error', code: 'invalid_interaction_spec', message }];

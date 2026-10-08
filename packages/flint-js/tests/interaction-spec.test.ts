@@ -64,7 +64,9 @@ describe('resolveInteractionSpec', () => {
             });
             expect(interactions).toHaveLength(1);
             expect(interactions[0].id).toBe(type);
-            expect(interactions[0].eventSource.type).toBeTruthy();
+            const created = interactions[0];
+            if ('external' in created) expect(type).toBe('filter-controls');
+            else expect(created.eventSource.type).toBeTruthy();
         }
     });
 
