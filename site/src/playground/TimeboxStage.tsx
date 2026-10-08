@@ -30,10 +30,8 @@ function loadWeatherData(): Promise<PreparedTimeboxData> {
     .then(async response => {
       if (!response.ok) throw new Error(`Weather data request failed (${response.status})`);
       const data = await response.json() as WeatherData;
-      return prepareTimeboxData(data.cities.flatMap(city => data.dates.flatMap((date, index) =>
-        index % 5 === 0 || index === data.dates.length - 1
-          ? [{ series: city.name, date, value: city.temperature[index] }]
-          : [])), { indexValues: false });
+      return prepareTimeboxData(data.cities.flatMap(city => data.dates.map((date, index) =>
+        ({ series: city.name, date, value: city.temperature[index] }))), { indexValues: false });
     })
     .catch(error => {
       weatherData = undefined;
@@ -68,7 +66,7 @@ function chartInput(prepared: PreparedTimeboxData): ChartAssemblyInput {
     chart_spec: {
       chartType: 'Line Chart',
       title: 'Daily mean temperature, 2023',
-      subtitle: '12 cities, sampled every 5 days; NASA POWER / MERRA-2 reanalysis',
+      subtitle: '12 cities, daily; NASA POWER / MERRA-2 reanalysis',
       encodings: { x: 'Date', y: 'Value', detail: 'Series' },
       baseSize: { width: VIEW_WIDTH, height: VIEW_HEIGHT },
       canvasSize: { width: VIEW_WIDTH, height: VIEW_HEIGHT },
@@ -207,7 +205,7 @@ export function TimeboxStage() {
               interactions={interactions}
               updates={updates}
               renderer="svg"
-              ariaLabel="Daily mean temperatures in Celsius for 12 cities in 2023, with an editable timebox over five-day samples"
+              ariaLabel="Daily mean temperatures in Celsius for 12 cities in 2023, with an editable timebox over the daily values"
               chartId="timebox-stage"
               onRender={() => {
                 setStatus('ready');
@@ -225,8 +223,8 @@ export function TimeboxStage() {
         {selection && filtered ? <>
           <strong>{retainedSymbols.length} of {totalCount} cities match</strong>
           <span>{retainedSymbols.length ? retainedSymbols.join(', ') : 'No matching cities.'}</span>
-          <span>{filtered.windowSampleCount.toLocaleString()} displayed samples checked in the selected interval.</span>
-        </> : prepared && <span>{totalCount} cities, {prepared.series[0].points.length} displayed samples per city.</span>}
+          <span>{filtered.windowSampleCount.toLocaleString()} daily values checked in the selected interval.</span>
+        </> : prepared && <span>{totalCount} cities, {prepared.series[0].points.length} daily values per city.</span>}
       </div>
     </div>
   );
