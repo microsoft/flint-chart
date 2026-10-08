@@ -1386,9 +1386,50 @@ const TEMPORAL_LEVELS = [
 
 interface TemporalTickPlan {
     values: string[];
+    labels: Record<string, string>;
     labelExpr: string;
     labelOverlap: false;
     labelFlush: false;
+}
+
+/** What a temporal axis needs besides its domain and pixel span to plan its ticks again at runtime. */
+export interface TemporalAxisPlanInputs {
+    semanticType: string | undefined;
+    utc: boolean;
+    vertical: boolean;
+    settings: Record<string, unknown>;
+    fontSize: number;
+}
+
+const TEMPORAL_PLAN_SETTING_KEYS = [
+    'labelFont', 'labelFontStyle', 'labelFontWeight', 'labelAngle', 'labelSeparation', 'labelLimit',
+] as const;
+
+function temporalPlanSettings(settings: Record<string, unknown>): Record<string, unknown> {
+    const kept: Record<string, unknown> = {};
+    for (const key of TEMPORAL_PLAN_SETTING_KEYS) if (settings[key] !== undefined) kept[key] = settings[key];
+    return kept;
+}
+
+function axisPropertiesOf({ labels: _labels, ...axis }: TemporalTickPlan): Omit<TemporalTickPlan, 'labels'> {
+    return axis;
+}
+
+export function temporalAxisPlanInputs(encoding: object): TemporalAxisPlanInputs | undefined {
+    return temporalAxisPlans.get(encoding)?.inputs;
+}
+
+/** Tick positions (ms) and label text for a temporal axis over `domain`, laid out across `span` pixels. */
+export function planTemporalTickValues(
+    domain: unknown[], span: number, inputs: TemporalAxisPlanInputs,
+): { values: number[]; labels: Record<string, string> } {
+    const start = +new Date(domain[0] as any);
+    const end = +new Date(domain[1] as any);
+    const plan = Number.isFinite(start) && Number.isFinite(end)
+        ? planTemporalTicks({ start, end, span, ...inputs })
+        : undefined;
+    if (!plan) return { values: [], labels: {} };
+    return { values: plan.values.map(value => +new Date(value)), labels: plan.labels };
 }
 
 interface TemporalTickLayout {
@@ -1404,6 +1445,7 @@ interface TemporalTickLayout {
 
 const temporalAxisPlans = new WeakMap<object, {
     start: number; end: number; semanticType: string | undefined; labelExpr: string;
+    inputs: TemporalAxisPlanInputs;
 }>();
 
 export function vlFinalizeTemporalAxes(spec: any, context: InstantiateContext): void {
@@ -1426,7 +1468,7 @@ export function vlFinalizeTemporalAxes(spec: any, context: InstantiateContext): 
                 utc: encoding.scale?.type === 'utc', span, vertical: channel === 'y', settings,
                 fontSize: settings.labelFontSize ?? (channel === 'x' ? context.layout.xLabel : context.layout.yLabel).fontSize,
             });
-            if (plan) Object.assign(encoding.axis, plan);
+            if (plan) Object.assign(encoding.axis, axisPropertiesOf(plan));
         }
         if (node.spec) visit(node.spec, plotWidth, plotHeight);
         for (const child of [...(node.layer ?? []), ...(node.vconcat ?? []), ...(node.hconcat ?? []), ...(node.concat ?? [])]) {
@@ -1613,6 +1655,8 @@ function planTemporalTicks({
     const labels = Object.fromEntries(selected.map(tick => [tick.value, true]));
     return {
         values: ticks.map(tick => new Date(tick.value).toISOString()),
+        labels: Object.fromEntries(selected.map(tick =>
+            [tick.value, format(fullMonthNames ? expandMonth(tick.pattern) : tick.pattern)(new Date(tick.value))])),
         labelExpr: `(${JSON.stringify(labels)})[toString(toNumber(datum.value))] ? ${formatter}(datum.value, ${pattern}) : ''`,
         labelOverlap: false,
         labelFlush: false,
@@ -1671,10 +1715,14 @@ function vlApplyDefaultAxisFormat(
                     start: earliest, end: latest,
                     semanticType,
                     labelExpr: plan.labelExpr,
+                    inputs: {
+                        semanticType, utc: enc.scale?.type === 'utc', vertical: ch === 'y',
+                        settings: temporalPlanSettings(formatting), fontSize,
+                    },
                 });
                 enc.axis = {
                     ...enc.axis,
-                    ...plan,
+                    ...axisPropertiesOf(plan),
                 };
             }
         }

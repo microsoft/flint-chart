@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { changeset, parse, View } from 'vega';
+import { expressionInterpreter } from 'vega-interpreter';
 import { compile } from 'vega-lite';
+import '../src/vegalite/interactive';
 import { assembleVegaLite } from '../src/vegalite/assemble';
 import { axisHighlight, brushAngle, brushX, brushZoom, clickAnnotate, clickHighlight, dragReorder, externalInteraction, inspect, legendToggle, navigate, select } from '../src/interactive/interactions';
 import type { CanvasInteractionDef, ClickHighlightOptions, RenderHit, SemanticElement, SemanticTarget } from '../src/interactive/interactions';
@@ -32,6 +34,7 @@ import {
     collectVegaAxisTargets,
     injectVegaInteractionStore,
     injectVegaNavigationSignals,
+    vegaLiteTemporalAxisPlans,
     injectVegaReorderSignal,
 } from '../src/vegalite/interactions/compile';
 import { angularSectorPath } from '../src/interactive/geometry/angular';
@@ -597,6 +600,48 @@ describe('Vega-Lite semantic interactions', () => {
         ]));
         expect(compiled.marks.filter((mark: any) => mark.type === 'symbol'))
             .toEqual(expect.arrayContaining([expect.objectContaining({ clip: true })]));
+    });
+
+    it('re-plans calendar ticks of a navigated time axis from the live domain', async () => {
+        const rows = Array.from({ length: 1500 }, (_, index) => ({
+            Week: new Date(Date.UTC(1990, 0, 1) + index * 7 * 864e5).toISOString().slice(0, 10),
+            Price: 1 + Math.sin(index / 50),
+        }));
+        const spec = assembleVegaLite({
+            chart_spec: { chartType: 'Line Chart', encodings: { x: { field: 'Week' }, y: { field: 'Price' } } },
+            semantic_types: { Week: 'Date', Price: 'Number' },
+            data: { values: rows },
+        }) as any;
+        const plan = addVegaLiteInteractions(spec, [navigate({ axes: 'x' })]);
+        const compiled = compile(spec).spec as any;
+        const axes = injectVegaNavigationSignals(compiled, plan!.navigationChannels, vegaLiteTemporalAxisPlans(spec));
+        const labelAxis = compiled.axes.find((axis: any) => axis.scale === 'x' && axis.encode?.labels);
+        expect(labelAxis.values).toEqual({ signal: '__flint_temporal_ticks_x.values' });
+        expect(labelAxis.encode.labels.update.text.signal).toContain('__flint_temporal_ticks_x.labels');
+        const xLabels = (view: View): string[] => {
+            const found: string[] = [];
+            const walk = (item: any): void => {
+                if (!item) return;
+                if (item.mark?.role === 'axis-label' && item.text && !(item.x < 0)) {
+                    found.push(item.text);
+                }
+                for (const child of item.items ?? []) walk(child);
+            };
+            walk((view.scenegraph() as any).root);
+            return found;
+        };
+        for (const expr of [undefined, expressionInterpreter]) {
+            const view = new View(parse(compiled, null, { ast: true } as any), { renderer: 'none', expr } as any);
+            await view.runAsync();
+            const full = xLabels(view);
+            expect(full).toEqual(['1990', '1995', '2000', '2005', '2010', '2015']);
+            view.signal(axes.x!.signal, [+new Date(2005, 0, 1), +new Date(2007, 0, 1)]);
+            await view.runAsync();
+            const window = xLabels(view);
+            expect(window.length).toBeGreaterThan(full.length);
+            expect(window).toContain('2005');
+            expect(window).toContain('July');
+        }
     });
 
     it('leaves reorder unwired when no reorder interaction is configured', () => {

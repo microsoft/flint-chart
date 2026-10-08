@@ -8,7 +8,7 @@ import { isCanvasInteraction, type ChartState, type InteractionContext, type Int
 import type { InteractiveRendererAdapter, TargetFeedbackOptions, ViewportState } from '../interactive/types';
 import { assembleVegaLite } from './assemble';
 import { canvasFurnitureMarkup, readCanvasFurniture } from './canvas-furniture';
-import { enableGuideLabelTooltips } from './instantiate-spec';
+import { enableGuideLabelTooltips, planTemporalTickValues } from './instantiate-spec';
 import {
     addVegaLiteInteractions,
     collectVegaAxisTargets,
@@ -18,6 +18,8 @@ import {
     injectVegaNavigationSignals,
     injectVegaReorderSignal,
     findVegaAxisScale,
+    TEMPORAL_TICKS_FUNCTION,
+    vegaLiteTemporalAxisPlans,
     withoutSemanticInteractionField,
 } from './interactions/compile';
 import { mountVegaInteractions } from './interactions/runtime';
@@ -40,7 +42,7 @@ export function mountedInteractionList(
 }
 import { INTERACTION_STORES } from './interactions/stores';
 import { compile } from 'vega-lite';
-import { Error as VegaError, parse, View } from 'vega';
+import { Error as VegaError, expressionFunction, parse, View } from 'vega';
 import { createDefaultStyle, DEFAULT_OPTIONS, Handler } from 'vega-tooltip';
 
 let tooltipSerial = 0;
@@ -201,6 +203,8 @@ function applyViewportSorts(node: unknown, viewports: CategoryViewport[]): void 
     for (const value of Object.values(record)) applyViewportSorts(value, viewports);
 }
 
+expressionFunction(TEMPORAL_TICKS_FUNCTION, planTemporalTickValues);
+
 export function createVegaInteractiveRenderer(
     options: VegaInteractiveRendererOptions = {},
 ): InteractiveRendererAdapter {
@@ -262,7 +266,9 @@ export function createVegaInteractiveRenderer(
                 }
                 interactionPlan.navigationAxes = interactionPlan.geoNavigation
                     ? injectVegaGeoNavigationSignals(vegaSpec, interactionPlan.navigationChannels)
-                    : injectVegaNavigationSignals(vegaSpec, interactionPlan.navigationChannels);
+                    : injectVegaNavigationSignals(
+                        vegaSpec, interactionPlan.navigationChannels, vegaLiteTemporalAxisPlans(vlSpec),
+                    );
                 if (interactionPlan.geoNavigation && interactionPlan.geoLevels) {
                     injectVegaGeoLevelFit(vegaSpec, interactionPlan.geoLevels);
                 }

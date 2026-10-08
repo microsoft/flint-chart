@@ -36,6 +36,7 @@ import {
     LEGEND_SELECTION_STORE,
     STYLE_SIGNAL,
 } from './stores';
+import { temporalAxisPlanInputs, type TemporalAxisPlanInputs } from '../instantiate-spec';
 import {
     GEO_AXIS_SCALES,
     GEO_EXTENT_SIGNAL,
@@ -574,9 +575,60 @@ export function injectVegaReorderSignal(
     return { ...reorderAxis, scale: scale.name, signal };
 }
 
+export const TEMPORAL_TICKS_FUNCTION = 'flintTemporalTicks';
+
+/** The planner inputs of each temporal axis Flint planned in a Vega-Lite spec, by channel. */
+export function vegaLiteTemporalAxisPlans(
+    vlSpec: Record<string, any>,
+): Partial<Record<'x' | 'y', TemporalAxisPlanInputs>> {
+    const result: Partial<Record<'x' | 'y', TemporalAxisPlanInputs>> = {};
+    const visit = (node: any): void => {
+        if (!node || typeof node !== 'object') return;
+        for (const channel of ['x', 'y'] as const) {
+            const encoding = node.encoding?.[channel];
+            const inputs = encoding && typeof encoding === 'object' ? temporalAxisPlanInputs(encoding) : undefined;
+            if (inputs && !result[channel]) result[channel] = inputs;
+        }
+        if (node.spec) visit(node.spec);
+        for (const child of [...(node.layer ?? []), ...(node.vconcat ?? []), ...(node.hconcat ?? []), ...(node.concat ?? [])]) {
+            visit(child);
+        }
+    };
+    visit(vlSpec);
+    return result;
+}
+
+/**
+ * A navigated temporal axis keeps Flint's calendar tick plan, re-planned from the live
+ * domain: a signal calls the planner whenever the scale domain changes, and the axis
+ * reads its tick values and label text from that signal.
+ */
+function bindTemporalAxisTicks(
+    vegaSpec: Record<string, any>,
+    channel: 'x' | 'y',
+    scale: Record<string, any>,
+    inputs: TemporalAxisPlanInputs,
+): void {
+    const signal = `__flint_temporal_ticks_${channel}`;
+    const span = channel === 'x' ? 'width' : 'height';
+    vegaSpec.signals = [...(vegaSpec.signals ?? []), {
+        name: signal,
+        update: `${TEMPORAL_TICKS_FUNCTION}(domain(${JSON.stringify(scale.name)}), ${span}, ${JSON.stringify(inputs)})`,
+    }];
+    for (const axis of vegaSpec.axes ?? []) {
+        if (axis.scale !== scale.name) continue;
+        axis.values = { signal: `${signal}.values` };
+        const text = axis.encode?.labels?.update?.text;
+        if (text && typeof text === 'object' && 'signal' in text) {
+            text.signal = `${signal}.labels[toString(toNumber(datum.value))] || ''`;
+        }
+    }
+}
+
 export function injectVegaNavigationSignals(
     vegaSpec: Record<string, any>,
     channels: readonly ('x' | 'y')[] = [],
+    temporalPlans: Partial<Record<'x' | 'y', TemporalAxisPlanInputs>> = {},
 ): Partial<Record<'x' | 'y', import('./contracts').VegaNavigationAxis>> {
     const result: Partial<Record<'x' | 'y', import('./contracts').VegaNavigationAxis>> = {};
     for (const channel of channels) {
@@ -587,6 +639,10 @@ export function injectVegaNavigationSignals(
         const signal = `__flint_navigation_${channel}_domain`;
         vegaSpec.signals = [...(vegaSpec.signals ?? []), { name: signal, value: null }];
         scale.domainRaw = { signal };
+        const inputs = temporalPlans[channel];
+        if (inputs && (scale.type === 'time' || scale.type === 'utc')) {
+            bindTemporalAxisTicks(vegaSpec, channel, scale, inputs);
+        }
         result[channel] = { scale: scale.name, signal, type: scale.type };
     }
     return result;
