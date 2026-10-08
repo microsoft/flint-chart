@@ -168,7 +168,7 @@ export function WarmingStripesDemo() {
         interactions={STRIPES_INTERACTIONS}
         chartId={STRIPES_ID}
         ariaLabel="Global temperature anomaly by year"
-        renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" fit="shrink"
+        renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%"
         onChange={onStripesChange}
       />
     </div>
@@ -180,7 +180,7 @@ export function WarmingStripesDemo() {
         updates={MOUNT_LABELS}
         chartId={MONTHS_ID}
         ariaLabel="Monthly anomalies of the picked year against the reference period"
-        renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" fit="shrink"
+        renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%"
       />
     </div>
   </div>;

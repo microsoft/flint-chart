@@ -198,7 +198,7 @@ export function ConnectedModelsDemo() {
           interactions={SCATTER_INTERACTIONS}
           chartId={SCATTER_ID}
           ariaLabel="Training compute of notable AI models"
-          renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" fit="shrink"
+          renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%"
           onChange={onScatterChange}
         />
       </div>
@@ -209,7 +209,7 @@ export function ConnectedModelsDemo() {
           interactions={BARS_INTERACTIONS}
           chartId={BARS_ID}
           ariaLabel="Models per company"
-          renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" fit="shrink"
+          renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%"
           onChange={onBarsChange}
         />
       </div>

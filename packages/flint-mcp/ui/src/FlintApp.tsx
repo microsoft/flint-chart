@@ -16,10 +16,11 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { createPortal } from 'react-dom';
 import type { ChartAssemblyInput, ChartOption, ChartUpdate, ChartWarning } from 'flint-chart';
 import { THEME_PRESETS, DEFAULT_THEME_ICON } from 'flint-chart';
-import { buildInteractiveChart } from 'flint-chart/interactive';
+import type { ChartChange } from 'flint-chart/interactive';
+import { FlintChart } from 'flint-chart/react';
 import { expressionInterpreter } from 'vega-interpreter';
 
-import { renderFlintSvg, withAppPreviewDefaults, type FlintRenderResult } from './render';
+import { assemblePreviewSpec, renderFlintSvg, usesAutoPreviewSize, withAppPreviewDefaults } from './render';
 import { chartIconFor } from './chart-icons';
 import { chartContext } from './chart-context';
 import {
@@ -737,13 +738,9 @@ export function FlintAppInner(props: {
 }) {
   const { app, input, updates = NO_UPDATES, hostContext } = props;
   const [current, setCurrent] = useState<ChartAssemblyInput>(input);
-  const [render, setRender] = useState<FlintRenderResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [surfaceWarnings, setSurfaceWarnings] = useState<readonly ChartWarning[]>([]);
-  const [surfaceError, setSurfaceError] = useState<string | null>(null);
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copying' | 'copied' | 'downloaded' | 'error'>('idle');
   const [copyError, setCopyError] = useState<string | null>(null);
-  const renderSeq = useRef(0);
   // The width the chart actually has. Rendering into the real width means the
   // finished SVG is shown at 1:1 rather than being scaled down to fit, which
   // is what otherwise shrinks every label below the app's own chrome. Height
@@ -784,25 +781,17 @@ export function FlintAppInner(props: {
     return () => window.clearTimeout(handle);
   }, [copyStatus]);
 
-  // Live render (debounced) whenever the working spec changes.
-  useEffect(() => {
-    const seq = ++renderSeq.current;
-    setCopyStatus('idle');
-    const handle = setTimeout(() => {
-      renderFlintSvg(current, undefined, chartWidth ? { width: chartWidth } : undefined)
-        .then((result) => {
-          if (seq === renderSeq.current) {
-            setRender(result);
-            setError(null);
-          }
-        })
-        .catch((err) => {
-          if (seq === renderSeq.current) {
-            setError(err instanceof Error ? err.message : String(err));
-          }
-        });
-    }, 100);
-    return () => clearTimeout(handle);
+  // A new spec clears the last export's feedback.
+  useEffect(() => setCopyStatus('idle'), [current]);
+
+  // The same assembly the chart and the export use, for what the frame shows around them.
+  const assembled = useMemo(() => {
+    try {
+      const spec = assemblePreviewSpec(current, chartWidth ? { width: chartWidth } : undefined);
+      return { spec, warnings: (spec._warnings as ChartWarning[] | undefined) ?? [], error: null };
+    } catch (err) {
+      return { spec: null, warnings: [], error: err instanceof Error ? err.message : String(err) };
+    }
   }, [current, chartWidth]);
 
   const model = useMemo(() => buildPanelModel(current), [current]);
@@ -820,8 +809,8 @@ export function FlintAppInner(props: {
   // deliberate. `background` is where the theme records its resolved surface,
   // so this follows houses that defer the decision to their host as well as
   // ones that make it themselves, and it needs no list of which is which.
-  const surface = typeof render?.vlSpec?.background === 'string'
-    ? render.vlSpec.background
+  const surface = typeof assembled.spec?.background === 'string'
+    ? assembled.spec.background
     : undefined;
 
   const canReset = useMemo(
@@ -832,13 +821,16 @@ export function FlintAppInner(props: {
   );
 
   const handleCopyPng = useCallback(async () => {
-    if (!render?.png) return;
     setCopyStatus('copying');
     setCopyError(null);
-    const png = render.png;
+    // The screen shows the live chart, so the image is rendered only when asked for.
+    const png = renderFlintSvg(current, undefined, chartWidth ? { width: chartWidth } : undefined)
+      .then((result) => result.png);
+    png.catch(() => undefined);
     let clipboardError: unknown;
     try {
       if (navigator.clipboard?.write && typeof ClipboardItem !== 'undefined') {
+        // A promised blob keeps the click's permission to write while the image renders.
         await navigator.clipboard.write([new ClipboardItem({ 'image/png': png })]);
         setCopyStatus('copied');
         return;
@@ -856,7 +848,7 @@ export function FlintAppInner(props: {
       return;
     }
     try {
-      const bytes = new Uint8Array(await png.arrayBuffer());
+      const bytes = new Uint8Array(await (await png).arrayBuffer());
       let binary = '';
       for (const byte of bytes) binary += String.fromCharCode(byte);
       const result = await app.downloadFile({
@@ -879,16 +871,24 @@ export function FlintAppInner(props: {
       setCopyError(err instanceof Error ? err.message : 'PNG export failed');
       setCopyStatus('error');
     }
-  }, [app, render]);
+  }, [app, current, chartWidth]);
 
-  const interactive = (current.interaction_spec?.interactions?.length ?? 0) > 0 || updates.length > 0;
-  const previewInput = useMemo(
-    () => withAppPreviewDefaults(current, chartWidth ? { width: chartWidth } : undefined),
-    [current, chartWidth],
-  );
-  const renderWarnings = render?.warnings ?? [];
-  const warnings = interactive ? [...renderWarnings, ...surfaceWarnings] : renderWarnings;
-  const shownError = error ?? (interactive ? surfaceError : null);
+  // The live chart takes the frame width itself: as the ceiling when the preview
+  // picks the size, scaled down when the spec states its own.
+  const autoSize = usesAutoPreviewSize(current);
+  const previewInput = useMemo(() => withAppPreviewDefaults(current), [current]);
+  // Each committed change replaces the model context, so the next user
+  // message sees what the chart shows now. A preview is too frequent for it.
+  const sendContext = useCallback((change: ChartChange) => {
+    if (change.phase !== 'commit') return;
+    const context = chartContext(change.state, previewInput, { action: change.action, geometry: change.geometry });
+    void app.updateModelContext({
+      content: [{ type: 'text', text: context.text }],
+      structuredContent: context.data,
+    }).catch((err) => console.warn('The host declined the chart context', err));
+  }, [app, previewInput]);
+  const warnings = [...assembled.warnings, ...surfaceWarnings];
+  const shownError = assembled.error;
 
   return (
     <main
@@ -914,19 +914,20 @@ export function FlintAppInner(props: {
             ref={measureChartBox}
             style={surface ? { background: surface } : undefined}
           >
-            {render
-              ? interactive
-                ? (
-                  <InteractiveChart
-                    app={app}
-                    input={previewInput}
-                    updates={updates}
-                    onWarnings={setSurfaceWarnings}
-                    onError={setSurfaceError}
-                  />
-                )
-                : <div className="chart-svg" dangerouslySetInnerHTML={{ __html: render.svg }} />
-              : <span className="chart-pending">Rendering…</span>}
+            {/* CSP-safe Vega: host webviews forbid eval. */}
+            <FlintChart
+              className="chart-interactive"
+              spec={previewInput}
+              updates={updates.length > 0 ? updates : undefined}
+              renderer="svg"
+              expressionInterpreter={expressionInterpreter}
+              chartId="flint-chart-view"
+              width="100%"
+              fit={autoSize ? 'relayout' : 'scale-down'}
+              fallback={<span className="chart-pending">Rendering…</span>}
+              onWarnings={setSurfaceWarnings}
+              onChange={sendContext}
+            />
           </div>
         )}
 
@@ -954,66 +955,6 @@ export function FlintAppInner(props: {
       />
     </main>
   );
-}
-
-/** The live chart when the call carries interaction_spec or updates: the preview input, mounted through the interactive surface. */
-function InteractiveChart({
-  app,
-  input,
-  updates,
-  onWarnings,
-  onError,
-}: {
-  app: App;
-  input: ChartAssemblyInput;
-  updates: readonly ChartUpdate[];
-  onWarnings: (warnings: readonly ChartWarning[]) => void;
-  onError: (message: string | null) => void;
-}) {
-  const mountRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const mount = mountRef.current;
-    if (!mount) return;
-    let live = true;
-    let surface: ReturnType<typeof buildInteractiveChart>;
-    try {
-      surface = buildInteractiveChart(mount, input, {
-        backend: 'vegalite',
-        renderer: 'svg',
-        expressionInterpreter,
-        chartId: 'flint-chart-view',
-        updates,
-      });
-    } catch (err) {
-      onError(err instanceof Error ? err.message : String(err));
-      return;
-    }
-    void surface.warnings.then((list) => {
-      if (live) onWarnings(list);
-    });
-    // Each committed change replaces the model context, so the next user
-    // message sees what the chart shows now. A preview is too frequent for it.
-    surface.onChange(({ phase, state, action, geometry }) => {
-      if (phase !== 'commit') return;
-      const context = chartContext(state, input, { action, geometry });
-      void app.updateModelContext({
-        content: [{ type: 'text', text: context.text }],
-        structuredContent: context.data,
-      }).catch((err) => console.warn('The host declined the chart context', err));
-    });
-    void surface.ready
-      .then(() => {
-        if (live) onError(null);
-      })
-      .catch((err) => {
-        if (live) onError(err instanceof Error ? err.message : String(err));
-      });
-    return () => {
-      live = false;
-      surface.destroy();
-    };
-  }, [app, input, updates, onWarnings, onError]);
-  return <div className="chart-svg chart-interactive" ref={mountRef} />;
 }
 
 const NO_UPDATES: readonly ChartUpdate[] = [];

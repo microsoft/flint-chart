@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
-import { assembleVegaLite } from 'flint-chart';
-import { VegaLiteView } from '../components/VegaLiteView';
+import type { ChartAssemblyInput } from 'flint-chart';
+import { FlintView } from '../components/FlintView';
 import { siteTheme } from '../shared/theme';
 
 /**
@@ -59,9 +59,9 @@ const REGIMES: Regime[] = [
   { key: 'full', title: 'Full  (country × gender)', note: 'maxPerBand = global → Auto: global', bands: FULL, seed: 37 },
 ];
 
-function boxplotSpec(bands: Record<string, string[]>, seed: number, dodge: Dodge): unknown {
+function boxplotInput(bands: Record<string, string[]>, seed: number, dodge: Dodge): ChartAssemblyInput {
   const rows = buildRows(bands, seed);
-  return assembleVegaLite({
+  return {
     data: { values: rows },
     semantic_types: { cat: 'Category', sub: 'Category', val: 'Quantity' },
     chart_spec: {
@@ -70,7 +70,7 @@ function boxplotSpec(bands: Record<string, string[]>, seed: number, dodge: Dodge
       chartProperties: { dodge },
       baseSize: { width: 260, height: 220 },
     },
-  } as never);
+  } as never;
 }
 
 const TOGGLE: { value: Dodge; label: string }[] = [
@@ -82,7 +82,7 @@ const TOGGLE: { value: Dodge; label: string }[] = [
 export function DodgeToggleFigure() {
   const [dodge, setDodge] = useState<Dodge>('auto');
   const specs = useMemo(
-    () => REGIMES.map((r) => ({ ...r, spec: boxplotSpec(r.bands, r.seed, dodge) })),
+    () => REGIMES.map((r) => ({ ...r, input: boxplotInput(r.bands, r.seed, dodge) })),
     [dodge],
   );
 
@@ -118,7 +118,7 @@ export function DodgeToggleFigure() {
               <span style={captionTitle}>{r.title}</span>
               <span style={captionNote}>{r.note}</span>
             </figcaption>
-            <VegaLiteView spec={r.spec} />
+            <FlintView spec={r.input} />
           </figure>
         ))}
       </div>

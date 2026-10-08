@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ChartAssemblyInput } from 'flint-chart';
-import { buildInteractiveChart } from 'flint-chart/interactive';
+import { FlintChart } from 'flint-chart/react';
 import { expressionInterpreter } from 'vega-interpreter';
 import { BACKENDS, getSupportedBackends, type PreviewBackend } from '../shared/supported-backends';
 import './overflow-viewport-lab.css';
@@ -58,28 +58,16 @@ function InteractiveBackendSurface({ input, backend, renderer = 'canvas' }: {
   backend: PreviewBackend;
   renderer?: 'canvas' | 'svg';
 }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    const surface = buildInteractiveChart(
-      container,
-      input,
-      {
-        backend,
-        renderer,
-        expressionInterpreter: backend === 'vegalite' ? expressionInterpreter : undefined,
-        ariaLabel: input.chart_spec.title,
-      },
-    );
-    void surface.ready.catch((error) => {
-      container.textContent = error instanceof Error ? error.message : String(error);
-    });
-    return () => surface.destroy();
-  }, [backend, input, renderer]);
-
-  return <div className="ov-interactive-mount" ref={containerRef} />;
+  return (
+    <FlintChart
+      className="ov-interactive-mount"
+      spec={input}
+      backend={backend}
+      renderer={renderer}
+      expressionInterpreter={backend === 'vegalite' ? expressionInterpreter : undefined}
+      ariaLabel={input.chart_spec.title}
+    />
+  );
 }
 
 function BackendPicker({

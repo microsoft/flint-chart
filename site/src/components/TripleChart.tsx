@@ -1,13 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { TestCase } from 'flint-chart/test-data';
 import { FlintView } from './FlintView';
-import { hasInteractionEntries } from './InteractiveVegaLiteView';
-import { EChartsView } from './EChartsView';
-import { ChartjsView } from './ChartjsView';
-import { PlotlyView } from './PlotlyView';
 import { testCaseToAssemblyInput } from '../shared/test-case-utils';
 import {
-  BACKENDS,
   BACKEND_LABELS,
   getSupportedBackends,
   type PreviewBackend,
@@ -41,15 +36,6 @@ export function TripleChart({
   }, [availableBackends, testCase.chartType]);
 
   const input = useMemo(() => testCaseToAssemblyInput(testCase), [testCase]);
-
-  const compiled = useMemo(() => {
-    if (backend === 'vegalite') return { ok: true as const, value: null };
-    try {
-      return { ok: true as const, value: BACKENDS[backend].assemble(input) };
-    } catch (err) {
-      return { ok: false as const, err };
-    }
-  }, [input, backend]);
 
   if (forcedBackend && !supportedBackends.includes(forcedBackend)) {
     return (
@@ -128,25 +114,13 @@ export function TripleChart({
           minHeight: 280,
         }}
       >
-        {compiled.ok ? (
-          <>
-            {backend === 'vegalite' && (
-              <FlintView
-                spec={input}
-                renderer={hasInteractionEntries(input) ? 'svg' : 'canvas'}
-                chartId={`triple-${testCase.chartType}`}
-                showWarnings={hasInteractionEntries(input)}
-              />
-            )}
-            {backend === 'echarts' && <EChartsView option={compiled.value} height={320} />}
-            {backend === 'chartjs' && <ChartjsView config={compiled.value} height={320} />}
-            {backend === 'plotly' && <PlotlyView figure={compiled.value} height={320} />}
-          </>
-        ) : (
-          <pre style={{ color: siteTheme.error, fontSize: 11, whiteSpace: 'pre-wrap', margin: 0 }}>
-            {String((compiled.err as Error)?.message ?? compiled.err)}
-          </pre>
-        )}
+        <FlintView
+          spec={input}
+          backend={backend}
+          renderer="svg"
+          chartId={`triple-${testCase.chartType}`}
+          showWarnings
+        />
       </div>
     </div>
   );

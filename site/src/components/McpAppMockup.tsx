@@ -187,24 +187,43 @@ const examples: Example[] = [
   { id: 'scatter', title: 'Scatter Plot', note: 'opacity slider · regression dropdown', input: scatterInput },
   { id: 'area', title: 'Area Chart', note: 'curve · stack', input: areaInput },
   { id: 'bar', title: 'Bar Chart', note: 'corners slider · sort', input: barInput },
+  {
+    id: 'line-interactive',
+    title: 'Line Chart, interactive',
+    note: 'hover a month, click a legend entry: the model context below updates',
+    input: { ...lineInput, interaction_spec: { interactions: [{ type: 'inspect-index' }, { type: 'legend-toggle' }] } },
+  },
+  {
+    id: 'scatter-interactive',
+    title: 'Scatter Plot, interactive',
+    note: 'drag to select cars: the model context below updates',
+    input: { ...scatterInput, interaction_spec: { interactions: [{ type: 'select' }] } },
+  },
   { id: 'sparkline', title: 'Sparkline', note: 'curve · shared Y · packed rows', input: sparklineInput },
 ];
 
-const mockApp = {
-  sendMessage: async () => undefined,
-};
-
-const frameWidths = [560, 680, 820, 940] as const;
+const frameWidths = [320, 440, 560, 680, 820, 940] as const;
 
 function ExampleCard(props: { example: Example; frameWidth: number }) {
   const { example, frameWidth } = props;
   const [copied, setCopied] = useState(false);
+  const [context, setContext] = useState<string | null>(null);
+  const [download, setDownload] = useState<string | null>(null);
+  // The host methods the app calls; each one shows what it received.
   const app = useMemo(
     () => ({
-      ...mockApp,
       sendMessage: async () => {
         setCopied(true);
         window.setTimeout(() => setCopied(false), 1200);
+      },
+      updateModelContext: async (params: { content: { type: string; text?: string }[] }) => {
+        setContext(params.content.map((part) => part.text ?? '').join('\n'));
+      },
+      getHostCapabilities: () => ({ downloadFile: {} }),
+      downloadFile: async (params: { contents: { resource: { uri: string; blob: string } }[] }) => {
+        const resource = params.contents[0]?.resource;
+        setDownload(resource ? `${resource.uri} (${Math.round((resource.blob.length * 3) / 4 / 1024)} KB)` : null);
+        return { isError: false };
       },
     }),
     [],
@@ -219,6 +238,12 @@ function ExampleCard(props: { example: Example; frameWidth: number }) {
       <div style={{ ...frameStyle, width: frameWidth }}>
         <FlintAppInner app={app as never} input={example.input} />
       </div>
+      {(context || download) && (
+        <pre style={hostLogStyle}>
+          {download ? `downloadFile: ${download}\n` : ''}
+          {context ? `updateModelContext:\n${context}` : ''}
+        </pre>
+      )}
     </div>
   );
 }
@@ -278,6 +303,18 @@ const cardsStyle: React.CSSProperties = {
 
 const cardStyle: React.CSSProperties = {
   maxWidth: '100%',
+};
+
+const hostLogStyle: React.CSSProperties = {
+  margin: '6px 0 0',
+  padding: '6px 8px',
+  maxHeight: 120,
+  overflow: 'auto',
+  border: `1px solid ${siteTheme.border}`,
+  color: siteTheme.textMuted,
+  fontSize: 11,
+  lineHeight: 1.45,
+  whiteSpace: 'pre-wrap',
 };
 
 const cardHeaderStyle: React.CSSProperties = {

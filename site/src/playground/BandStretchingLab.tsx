@@ -4,7 +4,7 @@
 import { useMemo, useState } from 'react';
 import { Check, Copy, RotateCcw } from 'lucide-react';
 import { THEME_PRESETS, assembleVegaLite, type ChartAssemblyInput } from 'flint-chart';
-import { VegaLiteView } from '../components/VegaLiteView';
+import { FlintView } from '../components/FlintView';
 import { ScaleToFit } from '../components/ScaleToFit';
 import { SiteRange } from '../components/SiteRange';
 import { siteTheme } from '../shared/theme';
@@ -21,7 +21,7 @@ interface LabSettings {
 }
 
 interface CellResult {
-  spec?: any;
+  input?: ChartAssemblyInput;
   error?: string;
   step: number;
   solid: number;
@@ -91,36 +91,23 @@ function findPaddingInner(node: any): number | undefined {
   return undefined;
 }
 
-function stripInternal(node: any): void {
-  if (!node || typeof node !== 'object') return;
-  if (Array.isArray(node)) {
-    node.forEach(stripInternal);
-    return;
-  }
-  for (const key of Object.keys(node)) {
-    if (/^_[^_]/.test(key)) delete node[key];
-    else stripInternal(node[key]);
-  }
-}
-
 function compile(settings: LabSettings, themeId: ThemeId, fit: number): CellResult {
   try {
-    const spec = assembleVegaLite(inputFor(settings, themeId, fit) as any) as any;
+    const input = inputFor(settings, themeId, fit);
+    // Compiled here only for the band readouts; the chart compiles itself.
+    const spec = assembleVegaLite(input as any) as any;
     const step = Number(spec.width?.step ?? 0);
     const padding = findPaddingInner(spec) ?? 0.2;
     const gap = step * padding;
     const solid = step - gap;
-    const result = {
-      spec,
+    return {
+      input,
       step,
       solid,
       gap,
       plotWidth: step * settings.count,
       plotHeight: Number(spec._height ?? settings.baseSize),
     };
-    stripInternal(spec);
-    delete spec.$schema;
-    return result;
   } catch (error) {
     return {
       error: String((error as Error)?.message ?? error),
@@ -199,7 +186,7 @@ function ThemeCell({
           <div style={{ padding: 16, color: siteTheme.error, fontSize: 11 }}>{built.error}</div>
         ) : (
           <ScaleToFit height={TILE_HEIGHT} padding={6}>
-            <VegaLiteView spec={built.spec} renderer="svg" />
+            <FlintView spec={built.input!} renderer="svg" compact />
           </ScaleToFit>
         )}
       </div>

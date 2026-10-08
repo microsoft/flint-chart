@@ -351,15 +351,16 @@ function valueFormatters(
     const grouping = pattern === '' ? !/^(Year|Decade)$/.test(semanticType) : pattern.includes(',');
     const wrap = (text: string): string => `${spec.prefix ?? ''}${text}${percent ? '%' : spec.suffix ?? ''}`;
     const scaled = (value: number): number => percent ? value * 100 : value;
+    // en-US, as the chart's axes are, whatever the browser's locale.
     const format = (value: unknown): string => typeof value === 'number'
-        ? wrap(scaled(value).toLocaleString(undefined, {
+        ? wrap(scaled(value).toLocaleString('en-US', {
             useGrouping: grouping && Math.abs(scaled(value)) >= 10000,
             minimumFractionDigits: digits && !pattern.includes('~') ? Number(digits) : 0,
             maximumFractionDigits: digits ? Number(digits) : 2,
         }))
         : String(value);
     const formatCompact = (value: unknown): string => typeof value === 'number' && Math.abs(scaled(value)) >= 10000 && grouping
-        ? wrap(scaled(value).toLocaleString(undefined, { notation: 'compact', maximumSignificantDigits: 3 }))
+        ? wrap(scaled(value).toLocaleString('en-US', { notation: 'compact', maximumSignificantDigits: 3 }))
         : format(value);
     return { format, formatCompact };
 }

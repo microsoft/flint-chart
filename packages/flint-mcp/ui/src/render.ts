@@ -48,8 +48,6 @@ const APP_PREVIEW_BASE_SIZE = { width: 360, height: 270 } as const;
 export const APP_PREVIEW_CANVAS_SIZE = { width: 588, height: 468 } as const;
 /** Below this a viewport reading is noise (a collapsed or unmounted box). */
 const MIN_VIEWPORT_WIDTH = 240;
-const APP_PREVIEW_MIN_STEP_PLOT_SIZE = { width: 220, height: 160 } as const;
-const APP_PREVIEW_MAX_AUTO_STEP = 96;
 const COPY_PNG_TARGET_LONG_EDGE = 1920;
 const COPY_PNG_MAX_SCALE = 4;
 
@@ -59,7 +57,7 @@ function copyPngScale(width: number, height: number): number {
   return Math.min(COPY_PNG_MAX_SCALE, Math.max(1, COPY_PNG_TARGET_LONG_EDGE / longEdge));
 }
 
-function usesAutoPreviewSize(input: ChartAssemblyInput): boolean {
+export function usesAutoPreviewSize(input: ChartAssemblyInput): boolean {
   return !input.chart_spec.baseSize && !input.chart_spec.canvasSize;
 }
 
@@ -121,83 +119,14 @@ export function withAppPreviewDefaults(
       },
       canvasSize: ceiling,
     },
+    // A sparse band chart spends the room it has: the layout widens its bands
+    // toward the ceiling before choosing label size and angle.
+    options: { ...input.options, bandStepFit: input.options?.bandStepFit ?? 1 },
   };
 }
 
-function encodingField(input: ChartAssemblyInput, channel: 'x' | 'y'): string | undefined {
-  const encoding = input.chart_spec.encodings[channel];
-  if (typeof encoding === 'string') return encoding;
-  if (encoding && typeof encoding === 'object' && !Array.isArray(encoding)) {
-    const field = (encoding as { field?: unknown }).field;
-    return typeof field === 'string' ? field : undefined;
-  }
-  return undefined;
-}
-
-function uniqueValueCount(input: ChartAssemblyInput, field: string | undefined): number {
-  if (!field) return 0;
-  const rows = input.data.values ?? [];
-  return new Set(rows.map((row) => row?.[field]).filter((value) => value != null)).size;
-}
-
 /**
- * A step-sized plot (one band per category) asks for only as much room as its
- * bands need, so five categories can leave half a wide frame empty. When the
- * preview knows how much room it has, it spends it: the bands grow until the
- * plot fills the frame, less an allowance for the axis, legend and title block
- * around it. `APP_PREVIEW_MAX_AUTO_STEP` still caps how fat a single band may
- * get, so a two-category chart does not become two enormous slabs.
- *
- * This runs after assembly, so it only moves the step — the labels keep the
- * size and angle chosen for the original one. That is why the cap matters:
- * widen far enough and the axis would keep labels rotated as though it were
- * still cramped. Letting the assembler size bands to the frame up front is the
- * real fix, and belongs in the layout rather than here.
- */
-const APP_PREVIEW_CHROME_ALLOWANCE = { width: 110, height: 170 } as const;
-
-function stepTarget(dimension: 'width' | 'height', ceiling: { width: number; height: number }): number {
-  return Math.max(
-    APP_PREVIEW_MIN_STEP_PLOT_SIZE[dimension],
-    ceiling[dimension] - APP_PREVIEW_CHROME_ALLOWANCE[dimension],
-  );
-}
-
-function applyStepMinimum(
-  node: unknown,
-  dimension: 'width' | 'height',
-  itemCount: number,
-  minPlotSize: number,
-): void {
-  if (!node || typeof node !== 'object' || itemCount <= 0) return;
-  const record = node as Record<string, unknown>;
-  const size = record[dimension];
-  if (size && typeof size === 'object') {
-    const stepSize = (size as { step?: unknown }).step;
-    if (typeof stepSize === 'number' && Number.isFinite(stepSize)) {
-      const desiredStep = Math.min(APP_PREVIEW_MAX_AUTO_STEP, Math.ceil(minPlotSize / itemCount));
-      if (stepSize < desiredStep) {
-        record[dimension] = { ...(size as Record<string, unknown>), step: desiredStep };
-      }
-    }
-  }
-  applyStepMinimum(record.spec, dimension, itemCount, minPlotSize);
-}
-
-function widenSmallStepPlotsForPreview(
-  vlSpec: Record<string, unknown>,
-  input: ChartAssemblyInput,
-  ceiling: { width: number; height: number },
-): void {
-  const xCount = uniqueValueCount(input, encodingField(input, 'x'));
-  const yCount = uniqueValueCount(input, encodingField(input, 'y'));
-  applyStepMinimum(vlSpec, 'width', xCount, stepTarget('width', ceiling));
-  applyStepMinimum(vlSpec, 'height', yCount, stepTarget('height', ceiling));
-}
-
-/**
- * Assemble the preview's Vega-Lite spec: give the chart the room the frame
- * actually has, then let step-sized plots spend it.
+ * Assemble the preview's Vega-Lite spec into the room the frame actually has.
  *
  * Split out from {@link renderFlintSvg} so the sizing can be exercised without
  * a browser canvas, which the PNG half of the render needs and Node has not.
@@ -206,11 +135,7 @@ export function assemblePreviewSpec(
   input: ChartAssemblyInput,
   viewport?: { width: number; height?: number },
 ): Record<string, unknown> {
-  const usePreviewDefaults = usesAutoPreviewSize(input);
-  const previewInput = withAppPreviewDefaults(input, viewport);
-  const spec = assembleVegaLite(previewInput) as Record<string, unknown>;
-  if (usePreviewDefaults) widenSmallStepPlotsForPreview(spec, previewInput, previewCanvasSize(viewport));
-  return spec;
+  return assembleVegaLite(withAppPreviewDefaults(input, viewport)) as Record<string, unknown>;
 }
 
 /**

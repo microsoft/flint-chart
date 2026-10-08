@@ -334,12 +334,18 @@ function tickDate(value: unknown): Date | undefined {
  * repeats each year. Each tick reads as its full date, at the precision the
  * ticks share: a year, a month, a day, or an hour.
  */
-function fullDateLabels<T extends { value: unknown }>(labels: readonly T[], utc: boolean): Map<T, string> {
+function fullDateLabels<T extends { value: unknown }>(labels: readonly T[], utcScale: boolean): Map<T, string> {
     const dated = labels
         .map((label) => ({ label, date: tickDate(label.value) }))
         .filter((entry): entry is { label: T; date: Date } => !!entry.date);
     const result = new Map<T, string>();
     if (dated.length === 0) return result;
+    // Ticks of date-only data sit on UTC midnights even on a local scale; read them on that calendar.
+    const atMidnight = (date: Date, inUtc: boolean) => inUtc
+        ? !date.getUTCHours() && !date.getUTCMinutes() && !date.getUTCSeconds()
+        : !date.getHours() && !date.getMinutes() && !date.getSeconds();
+    const utc = utcScale || (dated.every(({ date }) => atMidnight(date, true))
+        && !dated.every(({ date }) => atMidnight(date, false)));
     const part = (date: Date, unit: 'month' | 'date' | 'hours' | 'minutes' | 'seconds'): number => {
         switch (unit) {
             case 'month': return utc ? date.getUTCMonth() : date.getMonth();

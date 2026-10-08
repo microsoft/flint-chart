@@ -12,6 +12,8 @@ export interface InspectGuideOverlay extends GestureGuideController {
         point: { x: number; y: number },
         axes: 'x' | 'y' | 'xy',
         style: InspectGestureGuideStyle,
+        /** Names the position on a single index axis, at that axis's end of the guide. */
+        label?: string,
     ): void;
     renderSegment(
         start: { x: number; y: number },
@@ -80,17 +82,36 @@ export function createInspectGuideOverlay({
     const crossLine = document.createElement('div');
     const valueLines: HTMLDivElement[] = [];
     const valueLabels: HTMLDivElement[] = [];
+    const indexLabel = document.createElement('div');
+    let indexLabelBox: { left: number; top: number; width: number; height: number } | null = null;
     const baseStyle = {
         position: 'absolute', display: 'none', zIndex: '4', pointerEvents: 'none',
     } as const;
     Object.assign(line.style, baseStyle);
     Object.assign(crossLine.style, baseStyle);
+    Object.assign(indexLabel.style, baseStyle);
+    indexLabel.setAttribute('data-flint-inspect-index', '');
+    indexLabel.setAttribute('aria-hidden', 'true');
     if (getComputedStyle(container).position === 'static') container.style.position = 'relative';
-    container.append(line, crossLine);
+    container.append(line, crossLine, indexLabel);
 
     const hideValueGuides = (): void => {
         valueLines.forEach((valueLine) => { valueLine.style.display = 'none'; });
         valueLabels.forEach((valueLabel) => { valueLabel.style.display = 'none'; });
+    };
+    const hideIndexLabel = (): void => {
+        indexLabel.style.display = 'none';
+        indexLabelBox = null;
+    };
+
+    const plotBoundsInContainer = () => {
+        const space = coordinateSpace();
+        const frame = facetPlotBounds(view, { x: 0, y: 0, width: space.plotWidth, height: space.plotHeight });
+        const containerRect = container.getBoundingClientRect();
+        const layoutSize = containerLayoutSize();
+        const start = clientToLayoutPoint(plotToClientPoint({ x: frame.x, y: frame.y }, space), containerRect, layoutSize);
+        const end = clientToLayoutPoint(plotToClientPoint({ x: frame.x + frame.width, y: frame.y + frame.height }, space), containerRect, layoutSize);
+        return { left: start.x, top: start.y, width: end.x - start.x, height: end.y - start.y };
     };
 
     const haloShadow = (style: InspectGestureGuideStyle): string =>
@@ -134,11 +155,34 @@ export function createInspectGuideOverlay({
         point: { x: number; y: number },
         axes: 'x' | 'y' | 'xy',
         style: InspectGestureGuideStyle,
+        label?: string,
     ): void => {
         hideValueGuides();
+        hideIndexLabel();
         renderLine(line, axes === 'y' ? 'y' : 'x', axes === 'y' ? point.y : point.x, style);
         if (axes === 'xy') renderLine(crossLine, 'y', point.y, style);
         else crossLine.style.display = 'none';
+        if (!label || axes === 'xy') return;
+        indexLabel.textContent = label;
+        Object.assign(indexLabel.style, {
+            ...baseStyle, display: 'block', fontFamily: 'inherit', fontSize: '10px',
+            lineHeight: '14px', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap',
+            padding: '1px 4px', borderRadius: '2px', background: style.haloColor,
+            color: style.color, boxShadow: haloShadow(style),
+        });
+        // On the axis the guide reads: centred at the plot's foot for x, at its left edge for y.
+        const plot = plotBoundsInContainer();
+        const size = { width: indexLabel.offsetWidth, height: indexLabel.offsetHeight };
+        const along = axes === 'x' ? parseFloat(line.style.left) + style.width / 2 : parseFloat(line.style.top) + style.width / 2;
+        const left = axes === 'x'
+            ? Math.max(plot.left, Math.min(plot.left + plot.width - size.width, along - size.width / 2))
+            : plot.left + 2;
+        const top = axes === 'x'
+            ? plot.top + plot.height - size.height - 2
+            : Math.max(plot.top, Math.min(plot.top + plot.height - size.height, along - size.height / 2));
+        indexLabel.style.left = `${left}px`;
+        indexLabel.style.top = `${top}px`;
+        indexLabelBox = { left, top, ...size };
     };
 
     const renderSegment = (
@@ -171,17 +215,8 @@ export function createInspectGuideOverlay({
     ): void => {
         crossLine.style.display = 'none';
         valueLabels.forEach((valueLabel) => { valueLabel.style.display = 'none'; });
-        const occupied: { left: number; top: number; width: number; height: number }[] = [];
-        const space = coordinateSpace();
-        const frame = facetPlotBounds(view, { x: 0, y: 0, width: space.plotWidth, height: space.plotHeight });
-        const containerRect = container.getBoundingClientRect();
-        const layoutSize = containerLayoutSize();
-        const plotStart = clientToLayoutPoint(plotToClientPoint({ x: frame.x, y: frame.y }, space), containerRect, layoutSize);
-        const plotEnd = clientToLayoutPoint(plotToClientPoint({ x: frame.x + frame.width, y: frame.y + frame.height }, space), containerRect, layoutSize);
-        const plotBounds = {
-            left: plotStart.x, top: plotStart.y,
-            width: plotEnd.x - plotStart.x, height: plotEnd.y - plotStart.y,
-        };
+        const occupied: { left: number; top: number; width: number; height: number }[] = indexLabelBox ? [indexLabelBox] : [];
+        const plotBounds = plotBoundsInContainer();
         while (valueLines.length < coordinates.length) {
             const valueLine = document.createElement('div');
             Object.assign(valueLine.style, baseStyle);
@@ -237,10 +272,12 @@ export function createInspectGuideOverlay({
             line.style.display = 'none';
             crossLine.style.display = 'none';
             hideValueGuides();
+            hideIndexLabel();
         },
         destroy(): void {
             line.remove();
             crossLine.remove();
+            indexLabel.remove();
             valueLines.forEach((valueLine) => valueLine.remove());
             valueLabels.forEach((valueLabel) => valueLabel.remove());
             container.style.position = previousPosition;

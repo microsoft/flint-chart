@@ -51,8 +51,9 @@ function applyStyles(element: HTMLElement, styles: Partial<CSSStyleDeclaration>)
 
 function plainValue(value: unknown): string {
     // Years are the common small integer, and read wrong with a thousands separator.
+    // en-US, the chart's own locale, whatever the browser's.
     if (typeof value === 'number') {
-        return value.toLocaleString(undefined, { maximumFractionDigits: 2, useGrouping: Math.abs(value) >= 10000 });
+        return value.toLocaleString('en-US', { maximumFractionDigits: 2, useGrouping: Math.abs(value) >= 10000 });
     }
     if (value instanceof Date) return value.toISOString().slice(0, 10);
     return String(value);
@@ -81,7 +82,7 @@ function steadyText(candidates: readonly string[], align: 'start' | 'end' = 'sta
 /** A chip has little room, so a large number reads as 266K or 7.48M. */
 function compactValue(value: unknown): string {
     if (typeof value === 'number' && Math.abs(value) >= 10000) {
-        return value.toLocaleString(undefined, { notation: 'compact', maximumSignificantDigits: 3 });
+        return value.toLocaleString('en-US', { notation: 'compact', maximumSignificantDigits: 3 });
     }
     return plainValue(value);
 }

@@ -5,9 +5,6 @@ import { SiteShell } from '../components/SiteShell';
 import { JsonCodeMirror } from '../components/JsonCodeMirror';
 import { ResizeSplit } from '../components/ResizeSplit';
 import { FlintView } from '../components/FlintView';
-import { hasInteractionEntries } from '../components/InteractiveVegaLiteView';
-import { EChartsView } from '../components/EChartsView';
-import { ChartjsView } from '../components/ChartjsView';
 import { EXAMPLES } from './editor-examples';
 import { loadEditorPayload, readEditorCaseParam, readGalleryCaseParams } from '../shared/editor-payload';
 import { testCaseToAssemblyInput } from '../shared/test-case-utils';
@@ -175,7 +172,6 @@ export function Editor() {
             supportedBackends={supportedBackends}
             onBackendChange={setBackend}
             parsed={parsed}
-            compiled={activeCompiled}
           />
 
           <OutputPane
@@ -264,13 +260,11 @@ function PreviewPane({
   supportedBackends,
   onBackendChange,
   parsed,
-  compiled,
 }: {
   backend: Backend;
   supportedBackends: Backend[];
   onBackendChange: (b: Backend) => void;
   parsed: { ok: true; value: unknown } | { ok: false; err: unknown };
-  compiled: CompileResult<unknown> | null;
 }) {
   const { t } = useTranslation();
   return (
@@ -299,23 +293,15 @@ function PreviewPane({
           <pre style={{ color: siteTheme.error, fontSize: 13, whiteSpace: 'pre-wrap', margin: 0 }}>
             JSON error: {String((parsed.err as Error).message)}
           </pre>
-        ) : compiled?.ok ? (
-          <>
-            {backend === 'vegalite' && (
-              <FlintView
-                spec={parsed.value as ChartAssemblyInput}
-                renderer={hasInteractionEntries(parsed.value) ? 'svg' : 'canvas'}
-                chartId="editor-chart"
-                showWarnings={hasInteractionEntries(parsed.value)}
-              />
-            )}
-            {backend === 'echarts' && <EChartsView option={compiled.value} height={320} />}
-            {backend === 'chartjs' && <ChartjsView config={compiled.value} height={320} />}
-          </>
         ) : (
-          <pre style={{ color: siteTheme.error, fontSize: 13, whiteSpace: 'pre-wrap', margin: 0 }}>
-            Compile error: {String((compiled?.err as Error)?.message ?? compiled?.err ?? 'Unknown error')}
-          </pre>
+          <FlintView
+            spec={parsed.value as ChartAssemblyInput}
+            backend={backend}
+            renderer="svg"
+            chartId="editor-chart"
+            showWarnings
+            errorPrefix="Compile error:"
+          />
         )}
       </div>
     </div>

@@ -66,7 +66,7 @@ export function WorldCupScorersDemo() {
             spec={TEAMS_SPEC}
             chartId="world-cup-teams"
             ariaLabel="Goals by team"
-            renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" fit="shrink"
+            renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%"
             onChange={handleChange}
           />
         </section>

@@ -29,7 +29,7 @@ type ComposeOptions = Pick<
  * targeting policies come from the code when it sets them and from the spec
  * otherwise. A backend that runs no interactions renders the chart static and
  * drops every interaction with one warning: `info` when only the spec asked,
- * `warning` when the code did.
+ * `warning` when the code did. A malformed spec or a repeated code id throws.
  */
 export function composeInteractiveOptions(input: ComposeInput, options: ComposeOptions): ComposedInteractiveOptions {
     const resolved = resolveInteractionSpec(input.interaction_spec);

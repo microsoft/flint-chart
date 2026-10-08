@@ -19,7 +19,6 @@ import {
 } from 'flint-chart/test-data';
 import {
   accessibleNavigation,
-  buildInteractiveChart,
   brushAngle,
   brushX,
   brushY,
@@ -44,6 +43,7 @@ import {
   type InspectIndexShow,
 } from 'flint-chart/interactive';
 import { expressionInterpreter } from 'vega-interpreter';
+import { FlintChart, type FlintChartHandle } from 'flint-chart/react';
 import stringify from 'json-stringify-pretty-compact';
 import { flintChartCode, presetFactoryName } from '../shared/flint-chart-code';
 import { CodeBlock } from '../components/CodeBlock';
@@ -820,7 +820,7 @@ function InteractiveChart({
   const containerRef = useRef<HTMLDivElement>(null);
   const statusRef = useRef(onStatus);
   const semanticEventRef = useRef(onSemanticEvent);
-  const surfaceRef = useRef<ReturnType<typeof buildInteractiveChart> | null>(null);
+  const chartRef = useRef<FlintChartHandle>(null);
   const pointerRef = useRef({ x: 0, y: 0 });
   const selectionRef = useRef<FlintInteractionEventDetail['event']['target']>(null);
   const [contextMenu, setContextMenu] = useState<
@@ -830,80 +830,48 @@ function InteractiveChart({
   statusRef.current = onStatus;
   semanticEventRef.current = onSemanticEvent;
 
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    statusRef.current('loading');
-    const handleInteraction = (event: Event) => {
-      const detail = (event as CustomEvent<FlintInteractionEventDetail>).detail;
-      semanticEventRef.current(detail);
-      const { action, phase, target } = detail.event;
-      if ((action === 'select-region' || action === 'select-lasso') && phase === 'commit') {
-        selectionRef.current = target;
-      }
-      if (action !== 'context-element') return;
-      if (!target?.elements.length) {
-        setContextMenu(null);
-        return;
-      }
-      setContextMenu({ x: pointerRef.current.x, y: pointerRef.current.y, detail });
-    };
-    // Capture runs before the chart's own handler, so the menu opens at the pointer.
-    const captureContextPoint = (event: MouseEvent) => {
-      pointerRef.current = { x: event.clientX, y: event.clientY };
-    };
-    container.addEventListener('contextmenu', captureContextPoint, true);
-    container.addEventListener('flint-interaction', handleInteraction);
+  // The spec tab: behaviour comes from the JSON, nothing from the options.
+  const chartSpec = useMemo<ChartAssemblyInput>(() => {
     const themedInput = themeId ? { ...input, theme_spec: themeId } : input;
-    const detach = () => {
-      container.removeEventListener('contextmenu', captureContextPoint, true);
-      container.removeEventListener('flint-interaction', handleInteraction);
-      surfaceRef.current = null;
-      selectionRef.current = null;
-      setContextMenu(null);
-      setComment(null);
-    };
-    let surface: ReturnType<typeof buildInteractiveChart>;
-    try {
-      surface = spec
-        // The spec tab: behaviour comes from the JSON, nothing from the options.
-        ? buildInteractiveChart(container, { ...themedInput, interaction_spec: spec }, {
-          backend: 'vegalite',
-          renderer: 'svg',
-          expressionInterpreter,
-          ariaLabel: input.chart_spec.title,
-        })
-        : buildInteractiveChart(container, themedInput, {
-          backend: 'vegalite',
-          renderer: 'svg',
-          interactions: modeInteractions(mode, navigationAxes, navigationGuard, groupBy, indexInspection),
-          expressionInterpreter,
-          ariaLabel: input.chart_spec.title,
-          keyboardTargeting: mode === 'keyboard-focus',
-        });
-    } catch (error) {
-      // The resolver rejects a malformed spec before anything mounts.
-      statusRef.current('error', error instanceof Error ? error.message : String(error));
-      return detach;
+    if (spec) return { ...themedInput, interaction_spec: spec };
+    return mode === 'keyboard-focus'
+      ? { ...themedInput, interaction_spec: { interactions: [], keyboardTargeting: true } }
+      : themedInput;
+  }, [input, mode, spec, themeId]);
+  const interactions = useMemo(
+    () => (spec ? [] : modeInteractions(mode, navigationAxes, navigationGuard, groupBy, indexInspection)),
+    [groupBy, indexInspection, mode, navigationAxes, navigationGuard, spec],
+  );
+
+  useEffect(() => {
+    statusRef.current('loading');
+    selectionRef.current = null;
+    setContextMenu(null);
+    setComment(null);
+  }, [chartSpec, interactions, resetVersion]);
+
+  const handleInteraction = (detail: FlintInteractionEventDetail) => {
+    semanticEventRef.current(detail);
+    const { action, phase, target } = detail.event;
+    if ((action === 'select-region' || action === 'select-lasso') && phase === 'commit') {
+      selectionRef.current = target;
     }
-    surfaceRef.current = surface;
-    void surface.ready.then(async () => {
-      // A spec entry the chart cannot honour is dropped and reported, not thrown.
-      const warnings = spec ? await surface.warnings : [];
-      if (warnings.length > 0) {
-        statusRef.current('unsupported', warnings.map((warning) => warning.message).join('\n'), warnings);
-        return;
-      }
-      statusRef.current('ready');
-    }).catch((error) => {
-      const message = error instanceof Error ? error.message : String(error);
-      statusRef.current(message.includes('requires') || message.includes('support') ? 'unsupported' : 'error', message);
-    });
-    return () => {
-      detach();
-      surface.destroy();
-    };
-  }, [groupBy, input, mode, navigationAxes, navigationGuard, resetVersion, spec, themeId]);
+    if (action !== 'context-element') return;
+    if (!target?.elements.length) {
+      setContextMenu(null);
+      return;
+    }
+    setContextMenu({ x: pointerRef.current.x, y: pointerRef.current.y, detail });
+  };
+  // A spec entry the chart cannot honour is dropped and reported, not thrown.
+  const handleWarnings = (warnings: readonly ChartWarning[]) => {
+    const dropped = spec ? warnings : [];
+    if (dropped.length > 0) statusRef.current('unsupported', dropped.map((warning) => warning.message).join('\n'), dropped);
+    else statusRef.current('ready');
+  };
+  const handleError = (error: Error) => {
+    statusRef.current(error.message.includes('requires') || error.message.includes('support') ? 'unsupported' : 'error', error.message);
+  };
 
   const menuTarget = contextMenu?.detail.event.target ?? null;
   const menuElement = menuTarget?.elements[0];
@@ -926,11 +894,11 @@ function InteractiveChart({
   }, [contextMenu]);
 
   const addComment = () => {
-    const surface = surfaceRef.current;
-    if (!surface || !menuTarget || !menuElement) return;
+    const chart = chartRef.current;
+    if (!chart || !menuTarget || !menuElement) return;
     const text = summarizeElement(menuElement) ?? 'Comment';
     setComment(text);
-    void surface.applyUpdate({
+    void chart.applyUpdate({
       id: 'select-context',
       ops: [{
         op: 'set-annotation',
@@ -942,13 +910,31 @@ function InteractiveChart({
   };
   const clearComment = () => {
     setComment(null);
-    void surfaceRef.current?.clearUpdate('select-context');
+    void chartRef.current?.clearUpdate('select-context');
     setContextMenu(null);
   };
 
   return (
     <>
-      <div className="cf-mount" ref={containerRef} />
+      <div
+        className="cf-mount"
+        ref={containerRef}
+        // Capture runs before the chart's own handler, so the menu opens at the pointer.
+        onContextMenuCapture={(event) => { pointerRef.current = { x: event.clientX, y: event.clientY }; }}
+      >
+        <FlintChart
+          key={resetVersion}
+          ref={chartRef}
+          spec={chartSpec}
+          interactions={interactions}
+          renderer="svg"
+          expressionInterpreter={expressionInterpreter}
+          ariaLabel={input.chart_spec.title}
+          onInteraction={handleInteraction}
+          onWarnings={handleWarnings}
+          onError={handleError}
+        />
+      </div>
       {contextMenu && createPortal(
         <div
           className="cf-context-menu"

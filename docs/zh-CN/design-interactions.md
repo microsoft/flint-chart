@@ -113,7 +113,7 @@
 
 解析器 `resolveInteractionSpec()` 把 spec 变成定义并为每个打上 `origin: 'spec'`。它对图表一无所知。它拒绝格式错误：未知的 `type`、多余的键、非对象的 `options`、位于 `options` 内的 `id`、缺少 `groupBy` 等必需选项、未知或不支持的 `reset` 手势、重复 id、不属于这三个的顶层键（对曾经存在的 `dismiss` 与 `updates` 给出提示）。每条消息按索引和类型指出条目。
 
-`composeInteractiveOptions()` 把 spec 与代码传给 `mountChart()` 的内容合并：spec 条目在前，代码在后；两边共用一个 id 是错误；交互层策略由代码设置时取代码，否则取 spec；不运行交互的后端以一条 `info` 警告忽略 spec。
+`composeInteractiveOptions()` 把 spec 与代码传给 `mountChart()` 的内容合并：spec 条目在前，代码在后；与 spec 条目同 id 的代码定义以 `info` 警告取代它；格式错误的 spec 或重复的代码 id 会抛出异常；交互层策略由代码设置时取代码，否则取 spec；不运行交互的后端以一条 `info` 警告忽略 spec。
 
 # §4 图表语义
 
@@ -258,7 +258,7 @@ options.interactions ──► compose ────────────┤
 
 # §8 宿主与发现
 
-- **`mountChart()`** 从输入读取 `interaction_spec` 并与代码定义合并。MCP 的 `create_chart_view`、站点编辑器与图库在输入含交互条目时经由它挂载，否则静态渲染。
+- **`mountChart()`** 从输入读取 `interaction_spec` 并与代码定义合并。`<FlintChart>` 经由它挂载，宿主只需传入 spec：未声明交互的图表以静态渲染，不挂载运行时。MCP 的 `create_chart_view`、站点编辑器与图库都这样挂载。
 - **`getState()` 与 `onChange()`** 把图表作为上下文交给宿主。MCP 视图在每次已提交的变更后把状态发给模型；应用面板通过预览实时跟随悬停或刷选。
 - **`validateChart()`** 对装配后的语义运行解析器与准入，在任何渲染之前返回与挂载相同的警告。格式错误的 spec 是 `invalid_interaction_spec` 错误。MCP 的 `validate_chart` 返回同一列表。
 - **`supportedInteractionPresets(def.interactionSupport)`** 列出图表类型按声明支持的预设。`list_chart_types` 按图表类型返回它，Vega-Lite 参考文档打印它。数据仍可能在挂载时移除某一项，指南对此有说明。

@@ -109,10 +109,11 @@ const DOWNSTREAM_MCP_AFTER = `
   updates={updates}
   renderer="svg"
   expressionInterpreter={expressionInterpreter}
+  width="100%"
+  fit={autoSize ? 'relayout' : 'scale-down'}   // labels keep their size in narrow panels
   onWarnings={setSurfaceWarnings}
-  onError={setSurfaceError}
   onChange={(c) => {
-    if (c.source !== 'reader' || c.phase !== 'commit') return;
+    if (c.phase !== 'commit') return;
     const context = chartContext(c.state, previewInput, c);
     void app.updateModelContext({
       content: [{ type: 'text', text: context.text }],
@@ -120,7 +121,8 @@ const DOWNSTREAM_MCP_AFTER = `
   }}
 />
 
-// render.svg stays for Copy SVG / Download PNG
+// Every chart, static or live, goes through this one component;
+// Copy PNG renders the image on demand at the same width.
 `;
 
 const DOWNSTREAM_EXTERNAL = `
@@ -338,7 +340,7 @@ const playback = externalInteraction({
   handle: (frame: number) => frameUpdate(frame),
 });
 
-const chart = useRef<InteractiveChartSurface>(null);
+const chart = useRef<FlintChartHandle>(null);
 <FlintChart
   spec={climateSpec}
   interactions={[dragProjection, playback]}
@@ -637,17 +639,13 @@ const spec = {
   },
 };
 
-// Box size: render only. Changing it never recompiles.
-<FlintChart spec={spec} />                          // natural size
-<FlintChart spec={spec} width={320} height={240} /> // shrink into the box
-<FlintChart spec={spec} width="100%" fit="contain" />  // height follows
-                                                    // the chart's aspect
-
-// Re-layout on resize is explicit: the host writes the box into the spec
-const [box, boxRef] = useElementSize();
-<div ref={boxRef}>
-  <FlintChart spec={withBaseSize(spec, box)} />
-</div>
+// Box: the host sizes it; fit says how the chart meets it.
+<FlintChart spec={spec} />                            // natural size, no box
+<FlintChart spec={spec} width="100%" />               // scale-down: scale down to fit
+<FlintChart spec={spec} width={320} height={240}
+            fit="crop" />                            // natural size, clipped
+<FlintChart spec={spec} width="100%" fit="relayout" /> // the box becomes canvasSize:
+                                                      // laid out again for the room
 `;
 
 const V1_SPEC_CHANGE = `
@@ -685,7 +683,7 @@ static vs interactive     host chooses and wires it           follows from what 
 backends                  a branch per backend in each host   backend prop; static fallback + warning
 onChange                  per event, can loop                 real changes, with source and changed
 app vs reader state       setUpdates wipes the reader's       side by side; same id = takeover
-sizing                    ScaleToFit, hand-rolled re-layout   width / height / fit; re-layout explicit
+sizing                    ScaleToFit, hand-rolled re-layout   width / height / fit (contain, crop, relayout)
 static export             each host                           renderSvg
 reader state on spec      lost                                lost (unchanged)
 Vega View access          VegaLiteView onReady                none; ref is the Flint surface
@@ -712,24 +710,33 @@ interface FlintChartProps {
     | ((fromSpec: readonly InteractionDef[]) => InteractionDef[]);  // full control
   updates?: readonly ChartUpdate[];    // host updates, applied by id diff
   renderer?: 'svg' | 'canvas';
-  expressionInterpreter?: unknown;     // CSP hosts: Vega without eval
+  expressionInterpreter?: unknown;     // CSP hosts: Vega without eval; read at mount
   background?: string;
   width?: number | string;             // the box; omitted: natural size
   height?: number | string;
-  fit?: 'shrink' | 'contain' | 'none'; // default 'shrink'
+  fit?: 'scale-down' | 'crop' | 'relayout'; // default 'scale-down'
 
   onChange?(change: ChartChange): void;                        // the semantic state moved
   onInteraction?(detail: FlintInteractionEventDetail): void;   // every gesture event
   onRender?(chart: InteractiveChartSurface): void;             // after each mount and applied update
   onWarnings?(warnings: readonly ChartWarning[]): void;
-  onError?(error: Error): void;
+  onError?(error: Error): void;        // the chart failed; the box shows a muted error
   fallback?: ReactNode;                // server render; default: empty box at the compiled size
 
   className?: string;
-  ariaLabel?: string;
-  chartId?: string;
+  style?: CSSProperties;
+  ariaLabel?: string;                  // applied in place
+  chartId?: string;                    // identity: a new id remounts
 }
-// ref -> InteractiveChartSurface (applyUpdate, dispatch, getState, ...)
+
+interface FlintChartHandle {           // the ref; follows remounts
+  readonly surface: InteractiveChartSurface | null;
+  applyUpdate(update, options?): Promise<ChartUpdateResult | null>;
+  clearUpdate(id): Promise<void>;
+  dispatch(interactionId, payload): Promise<ChartUpdateResult | null>;
+  getState(): ChartState | undefined;
+  refresh(): void;
+}
 `;
 
 export function ChartApiDesign() {
@@ -808,8 +815,10 @@ Component  <FlintChart spec={...} />                  flint-chart/react, wraps m
               <code> interactions</code> prop adds to them. Precedence is code over spec.</li>
             <li><strong>Conflicts</strong> same id: the code entry replaces the spec entry with an info warning
               (today this throws). Same trigger: the existing narrowing, and the spec entry yields to code. A spec entry
-              the chart can't support is dropped with a warning. A code definition that is unsupported or conflicts with
-              another code definition is reported through <code>onError</code>, and the chart renders without it.
+              the chart can't support is dropped with a warning. Any error fails the chart instead of hiding: a code
+              definition that is unsupported, conflicts with another code definition, or repeats an id, a malformed
+              <code> interaction_spec</code>, or a compile error. <code>onError</code> receives it and the box shows a
+              muted error in place of the chart.
               Interactions on a backend that can't run them render static with a warning (today the mount fails).</li>
           </ul>
           <div style={pair}>
@@ -958,17 +967,21 @@ bidirectional         two writers clearing each other by hand      one owner; up
               <code> canvasSize</code> (ceiling) and <code>options</code> such as <code>maxStretch</code>. It decides band
               widths, label fitting, facet wrapping and the font ladder. Changing it re-lays out the chart. It lives in the
               spec, so it is deterministic, inspectable and writable by an agent.</li>
-            <li><strong>Box size</strong> is a render property: where the chart is shown. The chart renders at its compiled
-              size (a virtual canvas such as 400×320, possibly stretched under data pressure) and is fitted into the box.
-              Resizing the box never recompiles. It is a component prop: <code>width</code>/<code>height</code> in pixels
-              or CSS lengths; a percentage fills the container through a ResizeObserver. With only one side given, the
-              other follows the chart's aspect ratio.</li>
-            <li><strong>Fit</strong> <code>shrink</code> (default) scales down and never enlarges, like the site's
-              <code> ScaleToFit</code>; <code>contain</code> also scales up; <code>none</code> keeps the natural size.
-              Hit testing and overlays already account for CSS scale; the component calls <code>refresh()</code> when
-              it scales by transform.</li>
-            <li><strong>Re-layout on resize</strong> is opt-in and explicit: the host writes the box into the spec, which
-              the component treats as a spec change. The MCP App UI already does this with its measured width.</li>
+            <li><strong>Box size</strong> is where the chart is shown, and the host owns it: <code>width</code>/<code>height</code>
+              in pixels or CSS lengths, or the host's own CSS through <code>className</code> and <code>style</code>. A
+              percentage follows the container through a ResizeObserver. With only one side given, the other follows the chart.</li>
+            <li><strong>Fit</strong> is the one decision where the two meet. As with CSS <code>object-fit</code>, the chart is centred in
+              any room the box leaves. <code>scale-down</code> (default, as in CSS) scales the compiled
+              chart down to fit and never enlarges it: more room should mean a new layout, not bigger type. <code>crop</code>
+              keeps the natural size and clips. <code>relayout</code> writes the box into <code>canvasSize</code>, the
+              ceiling, on the sides the host sized; <code>baseSize</code> stays the spec's or the house's, so a sparse chart
+              keeps its footprint, a dense one grows into the room, and a narrow box shrinks the layout instead of the type.
+              Whatever still overflows is scaled down. Hit testing accounts for CSS scale; the component calls
+              <code> refresh()</code> when it scales.</li>
+            <li><strong>Relayout cost</strong> in v1 a new room is a remount, so the component waits until a resize settles
+              and ignores changes under 4px. Reader state does not survive it. Galleries, documents and thumbnails stay on
+              <code> scale-down</code>. Pages that want more presentation (centring, enlarging small charts) wrap a
+              box-less <code>FlintChart</code> in their own container.</li>
           </ul>
           <div style={pair}>
             <Code title="Before: downstream (this site, MCP App UI)">{SIZE_BEFORE}</Code>
@@ -1009,8 +1022,9 @@ bidirectional         two writers clearing each other by hand      one owner; up
           <p style={label}>Decided</p>
           <ul style={list}>
             <li>Rename <code>buildInteractiveChart</code> to <code>mountChart</code>, keeping the old name as an alias.</li>
-            <li>Sizing has two kinds: the box (component prop, render only, fit into it) and the layout size (in the
-              spec, read by the compiler). Re-layout on resize is explicit.</li>
+            <li>Sizing has two kinds: the box (the host's, through props or CSS) and the layout size (in the
+              spec, read by the compiler). <code>fit</code> joins them: <code>scale-down</code> and <code>crop</code> leave the
+              layout alone; <code>relayout</code> makes the box the <code>canvasSize</code> ceiling.</li>
             <li>A core <code>renderSvg(spec)</code> for static images, export and server rendering. The MCP App UI's
               Flint → Vega → SVG path and the MCP server's static render move onto it; the server keeps its own font and
               text-metric setup.</li>

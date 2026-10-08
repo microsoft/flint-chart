@@ -68,6 +68,7 @@ export interface VegaInteractionPlan {
     resolveGroupValue?: InteractionContext['resolveGroupValue'];
     legendFields?: Readonly<Record<string, string>>;
     axisFields?: Partial<Record<'x' | 'y', { field: string; type: string }>>;
+    indexAxis?: 'x' | 'y';
     axisTargets?: Readonly<Record<string, VegaAxisTarget>>;
     rangeLegendChannels?: readonly string[];
     annotationMarkType?: string;

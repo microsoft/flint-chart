@@ -13,9 +13,8 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { THEME_PRESETS, assembleVegaLite, assemblePlotly } from 'flint-chart';
-import { VegaLiteView } from '../components/VegaLiteView';
-import { PlotlyView } from '../components/PlotlyView';
+import { THEME_PRESETS, assembleVegaLite, assemblePlotly, type ChartAssemblyInput } from 'flint-chart';
+import { FlintView } from '../components/FlintView';
 import { ScaleToFit } from '../components/ScaleToFit';
 import { siteTheme } from '../shared/theme';
 import type { PreviewCase } from '../shared/preview-cases';
@@ -43,23 +42,14 @@ export function realInput(c: PreviewCase): any {
     };
 }
 
-function stripInternal(node: any): void {
-    if (!node || typeof node !== 'object') return;
-    if (Array.isArray(node)) return node.forEach(stripInternal);
-    for (const key of Object.keys(node)) {
-        if (/^_[^_]/.test(key)) delete node[key];
-        else stripInternal(node[key]);
-    }
-}
-
 interface Compiled {
-    spec?: any;
-    figure?: any;
+    input?: ChartAssemblyInput;
     background: string;
     error?: string;
     reportCount: number;
 }
 
+/** Compiled here only for the tile's paper colour and report count; the chart compiles itself. */
 function compileCell(c: PreviewCase, column: RealColumn, backend: LabBackend): Compiled {
     try {
         const base = realInput(c);
@@ -71,7 +61,7 @@ function compileCell(c: PreviewCase, column: RealColumn, backend: LabBackend): C
         if (backend === 'plotly') {
             const figure = assemblePlotly(input as any) as any;
             return {
-                figure,
+                input,
                 reportCount: figure._theme?.report?.length ?? 0,
                 background: typeof figure.layout?.paper_bgcolor === 'string'
                     ? figure.layout.paper_bgcolor
@@ -82,9 +72,7 @@ function compileCell(c: PreviewCase, column: RealColumn, backend: LabBackend): C
         const spec = assembleVegaLite(input as any) as any;
         const reportCount = spec._theme?.report?.length ?? 0;
         const background = typeof spec.background === 'string' ? spec.background : '#ffffff';
-        stripInternal(spec);
-        delete spec.$schema;
-        return { spec, background, reportCount };
+        return { input, background, reportCount };
     } catch (err) {
         return { background: '#ffe8e8', error: (err as Error).message, reportCount: 0 };
     }
@@ -191,9 +179,7 @@ export function RealCell({
                     </div>
                 ) : (
                     <ScaleToFit fill padding={6} height={REAL_TILE_HEIGHT}>
-                        {built.figure
-                            ? <PlotlyView figure={built.figure} constrain={false} />
-                            : <VegaLiteView spec={built.spec} renderer="svg" />}
+                        <FlintView spec={built.input!} backend={backend} renderer="svg" compact />
                     </ScaleToFit>
                 )}
             </div>

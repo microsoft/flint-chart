@@ -1,14 +1,15 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { RotateCcw } from 'lucide-react';
 import {
   assembleVegaLite,
 } from 'flint-chart';
 import {
-  buildInteractiveChart,
   externalInteraction,
   type ChartUpdate,
   type ChartUpdateResult,
+  type InteractiveChartSurface,
 } from 'flint-chart/interactive';
+import { FlintChart, type FlintChartHandle } from 'flint-chart/react';
 import { expressionInterpreter } from 'vega-interpreter';
 import { annotationCases, type InteractionCase } from './InteractionGallery';
 import { ThemePicker } from './ThemePicker';
@@ -160,58 +161,62 @@ async function waitForStableChartLayout(container: HTMLElement): Promise<void> {
       onStatus: (status: StaticStatus, result?: ChartUpdateResult | Error) => void;
     }) {
       const containerRef = useRef<HTMLDivElement>(null);
+      const chartRef = useRef<FlintChartHandle>(null);
       const statusRef = useRef(onStatus);
       statusRef.current = onStatus;
+      const themedInput = useMemo(
+        () => (themeId ? { ...item.input, theme_spec: themeId } : item.input),
+        [item, themeId],
+      );
+      const interactions = useMemo(() => [externalInteraction<ChartUpdate>({
+        id: 'static-annotation-policy',
+        handle: (update) => update,
+      })], []);
 
-      useEffect(() => {
+      useEffect(() => statusRef.current('loading'), [fixture, item, resetVersion, themeId]);
+
+      // Each mount annotates once its layout settles; a newer mount makes an older run stale.
+      const annotate = async (surface: InteractiveChartSurface): Promise<void> => {
         const container = containerRef.current;
         if (!container) return;
-        statusRef.current('loading');
-        const themedInput = themeId ? { ...item.input, theme_spec: themeId } : item.input;
-        const surface = buildInteractiveChart(container, themedInput, {
-          backend: 'vegalite',
-          renderer: 'svg',
-          interactions: [externalInteraction<ChartUpdate>({
-            id: 'static-annotation-policy',
-            handle: (update) => update,
-          })],
-          expressionInterpreter,
-          ariaLabel: item.input.chart_spec.title,
-        });
-        let active = true;
-        void surface.ready.then(async () => {
-          await waitForStableChartLayout(container);
-          if (!active) return;
-          const target = {
-            select: {
-              key: fixtureSelector(themedInput, fixture),
-              visual: fixture.visual,
-            },
-          };
-          const result = await surface.dispatch('static-annotation-policy', {
-            id: `annotation-lab-${item.id}-${fixture.label}`,
-            ops: [
-              { op: 'set-annotation', target, value: { text: fixture.text } },
-              {
-                op: 'set-style',
-                targets: [target],
-                value: { state: 'emphasized', mutedOpacity: 0.25 },
-              },
-            ],
-          });
-          if (!active) return;
-          statusRef.current(result?.status === 'applied' ? 'applied' : 'unsupported', result ?? undefined);
-        }).catch((error) => {
-          if (!active) return;
-          statusRef.current('error', error instanceof Error ? error : new Error(String(error)));
-        });
-        return () => {
-          active = false;
-          surface.destroy();
+        await waitForStableChartLayout(container);
+        if (chartRef.current?.surface !== surface) return;
+        const target = {
+          select: {
+            key: fixtureSelector(themedInput, fixture),
+            visual: fixture.visual,
+          },
         };
-      }, [fixture, item, resetVersion, themeId]);
+        const result = await surface.dispatch('static-annotation-policy', {
+          id: `annotation-lab-${item.id}-${fixture.label}`,
+          ops: [
+            { op: 'set-annotation', target, value: { text: fixture.text } },
+            {
+              op: 'set-style',
+              targets: [target],
+              value: { state: 'emphasized', mutedOpacity: 0.25 },
+            },
+          ],
+        });
+        if (chartRef.current?.surface !== surface) return;
+        statusRef.current(result?.status === 'applied' ? 'applied' : 'unsupported', result ?? undefined);
+      };
 
-      return <div className="cf-mount" ref={containerRef} />;
+      return (
+        <div className="cf-mount" ref={containerRef}>
+          <FlintChart
+            key={`${resetVersion}:${fixture.label}`}
+            ref={chartRef}
+            spec={themedInput}
+            interactions={interactions}
+            renderer="svg"
+            expressionInterpreter={expressionInterpreter}
+            ariaLabel={item.input.chart_spec.title}
+            onRender={(surface) => void annotate(surface)}
+            onError={(error) => statusRef.current('error', error)}
+          />
+        </div>
+      );
     }
 
     function StaticAnnotationCard({

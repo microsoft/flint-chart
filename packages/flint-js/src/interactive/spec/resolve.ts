@@ -34,7 +34,7 @@ function entryLabel(index: number, type?: unknown): string {
 }
 
 /**
- * Turn `interaction_spec` into the definitions `buildInteractiveChart()` takes.
+ * Turn `interaction_spec` into the definitions `mountChart()` takes.
  *
  * Every entry is looked up by `type` and created through the same factory that
  * code calls, so a spec entry and a factory call are two spellings of one

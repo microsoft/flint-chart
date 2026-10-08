@@ -169,7 +169,7 @@ export function MovingAverageStage() {
             updates={MOUNT_AVERAGE}
             chartId={CHART_ID}
             ariaLabel="Average price of a dozen eggs by month"
-            renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" fit="shrink"
+            renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%"
             onInteraction={onInteraction}
           />
         </div>

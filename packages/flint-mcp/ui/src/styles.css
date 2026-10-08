@@ -94,10 +94,10 @@ body {
   width: 100%;
 }
 
-/* The surface sizes itself to the compiled chart. Clamping it to the frame
-   lets the `.chart svg` rules below scale the SVG down, as in the static path. */
-.chart-interactive > [data-flint-chart-id] {
-  max-width: 100%;
+/* FlintChart lays the chart out for the frame and scales any overflow itself. */
+.chart .chart-interactive svg {
+  max-width: none;
+  max-height: none;
 }
 
 .chart-pending {

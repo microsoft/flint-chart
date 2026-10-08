@@ -2,9 +2,9 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import type {
   InteractionDef,
   FlintInteractionEventDetail,
-  InteractiveChartSurface,
 } from 'flint-chart/interactive';
 import { clickGroupFocus, externalInteraction } from 'flint-chart/interactive';
+import type { FlintChartHandle } from 'flint-chart/react';
 import { ScaleToFit } from '../components/ScaleToFit';
 import { InteractionDemoChart } from './InteractionDemoChart';
 import {
@@ -249,7 +249,7 @@ function ExternalDemoRow({ demo, compact = false, bidirectional = false }: {
   compact?: boolean;
   bidirectional?: boolean;
 }) {
-  const surfaceRef = useRef<InteractiveChartSurface | null>(null);
+  const chartRef = useRef<FlintChartHandle>(null);
   const payloadRef = useRef<MatchPayload | null>(demo.defaultSelection ?? null);
   const [lastPayload, setLastPayload] = useState<MatchPayload | null>(payloadRef.current);
   const interactionId = `${demo.id}-control`;
@@ -270,13 +270,9 @@ function ExternalDemoRow({ demo, compact = false, bidirectional = false }: {
         : [{ op: 'set-style', targets: [], value: { state: 'normal' } }],
     }),
   }), ...(bidirectional ? [clickGroupFocus({ groupBy: 'Continent' })] : [])], [interactionId, bidirectional]);
-  const handleSurface = useCallback((surface: InteractiveChartSurface | null) => {
-    surfaceRef.current = surface;
-    if (surface) void surface.ready.then(async () => {
-      if (surfaceRef.current === surface && payloadRef.current) {
-        await surface.dispatch(interactionId, payloadRef.current);
-      }
-    });
+  // Each new mount starts from the control's current selection.
+  const handleRender = useCallback(() => {
+    if (payloadRef.current) void chartRef.current?.dispatch(interactionId, payloadRef.current);
   }, [interactionId]);
   const handleSemanticEvent = useCallback((detail: FlintInteractionEventDetail) => {
     if (!bidirectional || detail.event.phase === 'start' || detail.event.phase === 'cancel') return;
@@ -284,16 +280,15 @@ function ExternalDemoRow({ demo, compact = false, bidirectional = false }: {
     const payload = typeof continent === 'string' ? { label: continent, match: { Continent: continent } } : { label: 'All' };
     payloadRef.current = payload;
     setLastPayload(payload);
-    void surfaceRef.current?.clearUpdate(interactionId);
+    void chartRef.current?.clearUpdate(interactionId);
   }, [bidirectional, interactionId]);
   const dispatch = async (payload: MatchPayload) => {
     payloadRef.current = payload;
     setLastPayload(payload);
-    const surface = surfaceRef.current;
-    if (!surface) return;
-    await surface.ready;
-    if (bidirectional) await surface.setUpdates([]);
-    await surface.dispatch(interactionId, payload);
+    const chart = chartRef.current;
+    if (!chart) return;
+    if (bidirectional) await chart.surface?.setUpdates([]);
+    await chart.dispatch(interactionId, payload);
   };
 
   return (
@@ -321,18 +316,20 @@ function ExternalDemoRow({ demo, compact = false, bidirectional = false }: {
         <section className="it-chart-panel" aria-label={demo.fixture.title}>
           {compact ? <ScaleToFit height={380} minHeight={280} adaptiveHeight padding={8}>
             <InteractionDemoChart
+              ref={chartRef}
               fixture={demo.fixture}
               interactions={interactions}
               chartId={`article-${demo.id}`}
-              onSurface={handleSurface}
+              onRender={handleRender}
               onSemanticEvent={handleSemanticEvent}
             />
           </ScaleToFit> :
           <InteractionDemoChart
+            ref={chartRef}
             fixture={demo.fixture}
             interactions={interactions}
             chartId={`external-${demo.id}`}
-            onSurface={handleSurface}
+            onRender={handleRender}
           />}
         </section>
       </div>

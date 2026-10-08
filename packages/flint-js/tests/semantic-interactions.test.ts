@@ -3,7 +3,7 @@ import { changeset, parse, View } from 'vega';
 import { expressionInterpreter } from 'vega-interpreter';
 import { compile } from 'vega-lite';
 import '../src/vegalite/interactive';
-import { assembleVegaLite } from '../src/vegalite/assemble';
+import { assembleVegaLite, indexAxisOf } from '../src/vegalite/assemble';
 import { axisHighlight, brushAngle, brushX, brushZoom, clickAnnotate, clickHighlight, dragReorder, externalInteraction, inspect, legendToggle, navigate, select } from '../src/interactive/interactions';
 import type { CanvasInteractionDef, ClickHighlightOptions, RenderHit, SemanticElement, SemanticTarget } from '../src/interactive/interactions';
 import { dragTrigger } from '../src/interactive/triggers';
@@ -47,6 +47,8 @@ import {
     clientToPlotPoint,
     clientToRendererPoint,
     clientToLayoutPoint,
+    curvePieces,
+    curveValueAt,
     facetPlotFrameAt,
     INTERACTION_KEY,
     INTERACTION_LEGEND_CHANNEL,
@@ -538,7 +540,53 @@ describe('Vega-Lite semantic interactions', () => {
         );
 
         expect(nearby).toMatchObject({ coordinate: 50, valueCoordinates: [30], hits: [expect.any(Object)] });
-        expect(distant).toEqual({ coordinate: 58, valueCoordinates: [], hits: [] });
+        expect(distant).toEqual({ coordinate: 58, valueCoordinates: [], hits: [], snapped: false });
+    });
+
+    it('chooses the index axis the series run along', () => {
+        expect(indexAxisOf({ x: { field: 'month', type: 'temporal' }, y: { field: 'sales', type: 'quantitative' } })).toBe('x');
+        expect(indexAxisOf({ x: { field: 'sales', type: 'quantitative' }, y: { field: 'month', type: 'temporal' } })).toBe('y');
+        expect(indexAxisOf({ x: { field: 'sales', type: 'quantitative' }, y: { field: 'team', type: 'nominal' } })).toBe('y');
+        expect(indexAxisOf({ x: { field: 'a', type: 'quantitative' }, y: { field: 'b', type: 'quantitative' } })).toBe('x');
+        const vertical = assembleVegaLite({
+            data: { values: [{ month: '2026-01', sales: 3 }, { month: '2026-02', sales: 5 }] },
+            semantic_types: { month: 'YearMonth', sales: 'Quantity' },
+            chart_spec: { chartType: 'Line Chart', encodings: { x: 'sales', y: 'month' } },
+        } as never) as any;
+        expect(vertical._interactionSemantics.indexAxis).toBe('y');
+        expect(vertical._interactionSemantics.capabilities).toContain('index');
+    });
+
+    it('reads a curved line where it is drawn, not on the chord between its points', () => {
+        const points = [{ x: 0, y: 10 }, { x: 10, y: 20 }, { x: 20, y: 5 }];
+        const step = curvePieces(points, 'step-after')!;
+        expect(curveValueAt(step, 'x', 5)).toBe(10);
+        expect(curveValueAt(step, 'x', 15)).toBe(20);
+        const monotone = curvePieces(points, 'monotone')!;
+        expect(curveValueAt(monotone, 'x', 10)).toBeCloseTo(20, 6);
+        expect(curveValueAt(monotone, 'x', 20)).toBeCloseTo(5, 6);
+        // A monotone curve flattens into the peak, so it reads above the straight chord near it.
+        expect(curveValueAt(monotone, 'x', 8)!).toBeGreaterThan(18);
+        expect(curveValueAt(monotone, 'x', 30)).toBeNull();
+    });
+
+    it('reads a curved segment of a line mark on its curve', () => {
+        const siblings = [{ x: 0, y: 10 }, { x: 10, y: 20 }];
+        const mark: any = { marktype: 'line', role: 'mark' };
+        mark.items = siblings.map((point, index) => ({
+            ...point,
+            mark,
+            interpolate: 'step-after',
+            stroke: '#4c78a8',
+            bounds: { x1: 0, x2: 10, y1: 10, y2: 20 },
+            datum: { [INTERACTION_KEY]: `p${index}`, Series: 'A' },
+            interactionGeometry: { kind: 'segment', points: [siblings[0], siblings[1]], offset: { x: 0, y: 0 } },
+            endDatum: { [INTERACTION_KEY]: 'p1', Series: 'A' },
+        }));
+        const acquisition = indexInspectAcquisition(
+            [mark.items[0]], { x: 5, y: 0 }, 'x', { show: 'all' }, true,
+        );
+        expect(acquisition).toMatchObject({ coordinate: 5, valueCoordinates: [10], snapped: false });
     });
     it('keeps path fallback connections anchored to the selected segment midpoint', () => {
         const item = {
@@ -635,7 +683,7 @@ describe('Vega-Lite semantic interactions', () => {
             await view.runAsync();
             const full = xLabels(view);
             expect(full).toEqual(['1990', '1995', '2000', '2005', '2010', '2015']);
-            view.signal(axes.x!.signal, [+new Date(2005, 0, 1), +new Date(2007, 0, 1)]);
+            view.signal(axes.x!.signal, [Date.UTC(2005, 0, 1), Date.UTC(2007, 0, 1)]);
             await view.runAsync();
             const window = xLabels(view);
             expect(window.length).toBeGreaterThan(full.length);

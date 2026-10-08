@@ -5,7 +5,6 @@ import { inspectIndexTrigger } from '../triggers';
 /** Reads values at one independent-axis position across one or more series. */
 export function createInspectIndexInteraction(options: InspectIndexOptions = {}): CanvasInteractionDef {
     const id = options.id ?? 'inspect-index';
-    const axis = options.axis ?? 'x';
     const show = options.show ?? 'all';
     if (show !== 'all' && !options.seriesBy) {
         throw new Error('inspectIndex({ show: "single" | { series } }) requires seriesBy.');
@@ -16,7 +15,7 @@ export function createInspectIndexInteraction(options: InspectIndexOptions = {})
     return {
         id,
         eventSource: inspectIndexTrigger(
-            axis, show, options.seriesBy, options.selector, options.guide, options.tolerance,
+            options.axis, show, options.seriesBy, options.selector, options.guide, options.tolerance,
             options.displayValue,
         ),
         affordances,

@@ -429,6 +429,19 @@ describe('Vega-Lite semantic formatting', () => {
         );
     });
 
+    it('ticks date-only data on its own calendar, so the last month keeps its label', async () => {
+        const spec: any = assembleVegaLite({
+            data: { values: ['2026-02', '2026-03', '2026-04', '2026-05', '2026-06']
+                .map((month, index) => ({ month, commits: 10 + index })) },
+            semantic_types: { month: 'YearMonth', commits: 'Count' },
+            chart_spec: { chartType: 'Line Chart', encodings: { x: 'month', y: 'commits' } },
+        } as never);
+        expect(spec.encoding.x.axis.values).toEqual(['2026-02', '2026-03', '2026-04', '2026-05', '2026-06']
+            .map(month => new Date(month).toISOString()));
+        const labels = await temporalLabels(spec);
+        expect(labels.map(label => label.text.slice(0, 3))).toEqual(['Feb', 'Mar', 'Apr', 'May', 'Jun']);
+    });
+
     it.each([undefined, 'datawrapper', 'powerbi'].flatMap(theme => [0, 3, 8].map(startMonth => ({ theme, startMonth }))))('keeps January year anchors while thinning intermediate month labels ($theme / start month $startMonth)', async ({ theme, startMonth }) => {
         const start = Date.UTC(2020, startMonth, 6);
         const week = 7 * 24 * 60 * 60 * 1000;
@@ -450,8 +463,8 @@ describe('Vega-Lite semantic formatting', () => {
             expect(labels.length).toBeGreaterThanOrEqual(2);
             const years = labels.filter(label => /^202[0-4]$/.test(label.text));
             expect(years.map(label => label.text)).toEqual(['2021', '2022', '2023', '2024']);
-            expect(years.every(label => new Date(label.datum.value).getMonth() === 0
-                && new Date(label.datum.value).getDate() === 1)).toBe(true);
+            expect(years.every(label => new Date(label.datum.value).getUTCMonth() === 0
+                && new Date(label.datum.value).getUTCDate() === 1)).toBe(true);
             if (width >= 600) {
                 expect(labels.some(label => /^(Apr(il)?|Jul(y)?|Oct(ober)?)$/.test(label.text))).toBe(true);
                 expect(labels.slice(1).every(label => !/[A-Za-z].*202[0-4]/.test(label.text))).toBe(true);
@@ -514,9 +527,13 @@ describe('Vega-Lite semantic formatting', () => {
 
     it.each((['x', 'y'] as const).flatMap(channel => ['time', 'utc'].map(timezone => ({ channel, timezone }))))(
         'promotes New Year without repeating years beside hours on $channel ($timezone)', async ({ channel, timezone }) => {
+            // Six hours either side of New Year on the scale's own calendar, whatever the runner's zone.
+            const dates = timezone === 'utc'
+                ? ['2023-12-31T18:00:00Z', '2024-01-01T12:00:00Z']
+                : [new Date(2023, 11, 31, 18), new Date(2024, 0, 1, 12)].map(date => date.toISOString());
             for (const size of [300, 900]) {
                 const spec: any = {
-                    data: { values: ['2023-12-31T18:00:00Z', '2024-01-01T12:00:00Z'].map(date => ({ date })) },
+                    data: { values: dates.map(date => ({ date })) },
                     mark: 'point', width: size, height: size,
                     encoding: { [channel]: { field: 'date', type: 'temporal', scale: { type: timezone } } },
                 };

@@ -94,17 +94,18 @@ export const suppressAnnotationUpdate: ChartUpdatePresenter = (update) => ({
     ops: update.ops.filter((op) => op.op !== 'set-annotation'),
 });
 
+// In the chart's locale: Vega labels axes in en-US whatever the browser's.
 function displayValue(field: string | undefined, value: unknown): string | undefined {
     if (value === null || value === undefined) return undefined;
-    if (value instanceof Date) return value.toLocaleString();
+    if (value instanceof Date) return value.toLocaleString('en-US');
     if (typeof value === 'number' && Number.isFinite(value)) {
         if (field && /date|time|start|end/i.test(field)) {
             const date = new Date(value);
             if (date.getFullYear() >= 1900 && date.getFullYear() <= 2200) {
-                return date.toLocaleDateString();
+                return date.toLocaleDateString('en-US');
             }
         }
-        return new Intl.NumberFormat(undefined, { maximumFractionDigits: 3 }).format(value);
+        return new Intl.NumberFormat('en-US', { maximumFractionDigits: 3 }).format(value);
     }
     return String(value);
 }

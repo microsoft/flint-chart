@@ -89,7 +89,7 @@ export function ReportSection({ spec, editable }: { spec: SectionSpec; editable?
           <button type="button" className="it-reset" onClick={report.clear}>Clear chart and pins</button>
         </section>
         <section className="it-chart-panel">
-          <FlintChart {...report.chartProps} renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" fit="shrink" />
+          <FlintChart {...report.chartProps} renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" />
         </section>
       </div>
     </article>
@@ -230,7 +230,7 @@ export function SlideSection({ spec }: { spec: SectionSpec }) {
       <div className="it-workspace idr-slides idr-animated">
         <SlidePanel slides={slides} report={report} />
         <section className="it-chart-panel idr-slide-chart">
-          <FlintChart {...report.chartProps} renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" fit="shrink" />
+          <FlintChart {...report.chartProps} renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" />
         </section>
       </div>
     </article>
@@ -273,7 +273,7 @@ export function ArticleSection({ spec, editable = true }: { spec: SectionSpec; e
       <div className="it-workspace idr-slides idr-article idr-animated">
         <SlidePanel slides={slides} report={report} vertical header={header} />
         <section className="it-chart-panel idr-slide-chart">
-          <FlintChart {...report.chartProps} renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" fit="shrink" />
+          <FlintChart {...report.chartProps} renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" />
         </section>
       </div>
     </article>
@@ -330,7 +330,7 @@ export function SelectionChatDemo({ spec, editable }: { spec: typeof SELECTION_C
                 interactions={spec.interactions}
                 chartId={spec.id}
                 ariaLabel={spec.fixture.title}
-                renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" fit="shrink"
+                renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%"
                 onChange={onChange}
               />
             </div>
@@ -383,7 +383,7 @@ export function AgentSection({ spec, opening, connection = CONNECTION, storyIds,
       <div className="it-workspace it-workspace-outbound idr-chat-workspace">
         <section className="it-chart-panel idr-chat-chart-panel">
           <div className="idr-chat-chart">
-            <FlintChart {...report.chartProps} renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" fit="shrink" />
+            <FlintChart {...report.chartProps} renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" />
           </div>
         </section>
         <AgentPanel chat={chat} report={report} sectionId={spec.id} connection={connection} adoptedIds={storyIds} onAdopt={onToggleStory} />
@@ -577,7 +577,7 @@ export function StorySection({ spec, story, onChange }: StorySectionProps) {
       <SectionHeader spec={spec} presets={presets} />
       <div className="it-workspace idr-story idr-animated">
         <section className="it-chart-panel idr-slide-chart">
-          <FlintChart {...report.chartProps} renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" fit="shrink" />
+          <FlintChart {...report.chartProps} renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" />
         </section>
         <section className="idr-story-panel" aria-label="Your story">
           <div className="idr-format" role="tablist" aria-label="Story format">

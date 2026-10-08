@@ -84,7 +84,7 @@ export function SetStyleDemo() {
       interactions={STYLE_INTERACTIONS}
       chartId="app-demo-style"
       ariaLabel={countriesFixture.title}
-      renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" fit="shrink"
+      renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%"
     />}
   />;
 }
@@ -127,7 +127,7 @@ export function SetAnnotationDemo() {
       interactions={ANNOTATION_INTERACTIONS}
       chartId="app-demo-annotation"
       ariaLabel={weatherFixture.title}
-      renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" fit="shrink"
+      renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%"
     />}
   />;
 }
@@ -169,7 +169,7 @@ export function SetViewportDemo() {
       interactions={VIEWPORT_INTERACTIONS}
       chartId="app-demo-viewport"
       ariaLabel={VIEWPORT_FIXTURE.title}
-      renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" fit="shrink"
+      renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%"
     />}
   />;
 }
@@ -227,7 +227,7 @@ export function SetOrderDemo() {
       interactions={ORDER_INTERACTIONS}
       chartId="app-demo-order"
       ariaLabel={ORDER_FIXTURE.title}
-      renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" fit="shrink"
+      renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%"
     />}
   />;
 }
@@ -298,7 +298,7 @@ export function SetDataDemo() {
       interactions={DATA_INTERACTIONS}
       chartId="app-demo-data"
       ariaLabel={DATA_FIXTURE.title}
-      renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" fit="shrink"
+      renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%"
     />}
   />;
 }
@@ -504,7 +504,7 @@ export function SetWindowDemo() {
       updates={GDP_INITIAL_UPDATES}
       chartId="app-demo-window"
       ariaLabel={GDP_FIXTURE.title}
-      renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" fit="shrink"
+      renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%"
     />}
   />;
 }

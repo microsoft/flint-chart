@@ -3,9 +3,9 @@ import { RotateCcw } from 'lucide-react';
 import type {
   ChartChange,
   InteractionDef,
-  InteractiveChartSurface,
   UpdateTarget,
 } from 'flint-chart/interactive';
+import type { FlintChartHandle } from 'flint-chart/react';
 import {
   brushY,
   clickGroupFocus,
@@ -205,10 +205,12 @@ function linkedTargets(chartId: string, observationIds: readonly string[]): Upda
 
 function DashboardPanel({
   chart,
-  registerSurface,
+  registerChart,
+  routeSelection,
 }: {
   chart: DashboardChart;
-  registerSurface: (id: string, surface: InteractiveChartSurface | null) => void;
+  registerChart: (id: string, handle: FlintChartHandle | null) => void;
+  routeSelection: (sourceId: string, change: ChartChange) => void;
 }) {
   const interactions = useMemo(() => [
     chart.interaction,
@@ -229,25 +231,30 @@ function DashboardPanel({
       },
     }),
   ], [chart.id, chart.interaction]);
-  const handleSurface = useCallback(
-    (surface: InteractiveChartSurface | null) => registerSurface(chart.id, surface),
-    [chart.id, registerSurface],
+  const handleRef = useCallback(
+    (handle: FlintChartHandle | null) => registerChart(chart.id, handle),
+    [chart.id, registerChart],
+  );
+  const handleChange = useCallback(
+    (change: ChartChange) => routeSelection(chart.id, change),
+    [chart.id, routeSelection],
   );
 
   return (
     <article className={`idash-panel idash-panel-${chart.id}`}>
       <InteractionDemoChart
+        ref={handleRef}
         fixture={chart.fixture}
         interactions={interactions}
         chartId={`dashboard-${chart.id}`}
-        onSurface={handleSurface}
+        onChange={handleChange}
       />
     </article>
   );
 }
 
 export function InteractionDashboardLab() {
-  const surfaces = useRef(new Map<string, InteractiveChartSurface>());
+  const charts = useRef(new Map<string, FlintChartHandle>());
   const [selection, setSelection] = useState<DashboardSelection | null>(null);
   const [snapshotYear, setSnapshotYear] = useState(2007);
   const [metric, setMetric] = useState<DashboardMetric>('Life expectancy');
@@ -259,9 +266,9 @@ export function InteractionDashboardLab() {
   );
 
   const dispatchSelection = useCallback((ids: string[], excludeId?: string) => {
-    for (const [id, surface] of surfaces.current) {
+    for (const [id, chart] of charts.current) {
       if (id === excludeId) continue;
-      void surface.dispatch(DASHBOARD_LINKED_SELECTION_ID, { observationIds: ids });
+      void chart.dispatch(DASHBOARD_LINKED_SELECTION_ID, { observationIds: ids });
     }
   }, []);
 
@@ -275,17 +282,10 @@ export function InteractionDashboardLab() {
     setSelection(ids.length > 0 ? { ids } : null);
   }, [dispatchSelection]);
 
-  const unsubscribes = useRef(new Map<string, () => void>());
-  const registerSurface = useCallback((id: string, surface: InteractiveChartSurface | null) => {
-    unsubscribes.current.get(id)?.();
-    unsubscribes.current.delete(id);
-    if (!surface) {
-      surfaces.current.delete(id);
-      return;
-    }
-    surfaces.current.set(id, surface);
-    unsubscribes.current.set(id, surface.onChange((change) => routeSelection(id, change)));
-  }, [routeSelection]);
+  const registerChart = useCallback((id: string, handle: FlintChartHandle | null) => {
+    if (handle) charts.current.set(id, handle);
+    else charts.current.delete(id);
+  }, []);
 
   const clearSelection = useCallback(() => {
     dispatchSelection([]);
@@ -368,14 +368,16 @@ export function InteractionDashboardLab() {
           <DashboardPanel
             key={chart.id}
             chart={chart}
-            registerSurface={registerSurface}
+            registerChart={registerChart}
+            routeSelection={routeSelection}
           />
         ))}
         {dashboardCharts.slice(2).map((chart) => (
           <DashboardPanel
             key={chart.id}
             chart={chart}
-            registerSurface={registerSurface}
+            registerChart={registerChart}
+            routeSelection={routeSelection}
           />
         ))}
       </div>

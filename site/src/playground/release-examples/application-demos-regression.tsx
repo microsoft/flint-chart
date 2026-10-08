@@ -199,7 +199,7 @@ export function DragTheFitDemo() {
       updates={MOUNT}
       chartId={CHART_ID}
       ariaLabel="Draw the relationship"
-      renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount app-demo-sample-chart" width="100%" fit="shrink"
+      renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount app-demo-sample-chart" width="100%"
     />}
   />;
 }

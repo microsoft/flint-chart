@@ -586,13 +586,15 @@ function renderPresetOptionsTable(): string {
         const path = resolve(interactiveDir, file);
         return ts.createSourceFile(path, readFileSync(path, 'utf8'), ts.ScriptTarget.Latest, true);
     };
-    const optionsSource = parse('interactions.ts');
+    const optionsSources = [parse('interactions.ts'), parse('filter-controls.ts')];
     const specSource = parse('spec/types.ts');
 
     const declarations = new Map<string, ts.InterfaceDeclaration | ts.TypeAliasDeclaration>();
-    optionsSource.forEachChild((node) => {
-        if (ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) declarations.set(node.name.text, node);
-    });
+    for (const source of optionsSources) {
+        source.forEachChild((node) => {
+            if (ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) declarations.set(node.name.text, node);
+        });
+    }
 
     const ALIASES: Record<string, string> = {
         'InteractionResetGesture[]': 'ResetGesture[]',
@@ -609,9 +611,12 @@ function renderPresetOptionsTable(): string {
         'InspectGuideOptions | false': '{ visible?, style?: { color?, opacity?, width?, fillOpacity?, haloColor?, haloOpacity?, haloWidth? } } | false',
         'SemanticTargetSelector': '{ select: { key } }',
         'Partial<NavigationDomainGuard>': '{ minVisibleFraction?, maxVisibleFraction?, overscrollFraction? }',
+        '(string | FilterFieldOptions)[]': "(string | { field, widget?: 'auto' | 'checkboxes' | 'select' | 'range' | 'toggle', label?, all? })[]",
+        'FilterPlacement': "'auto' | 'top' | 'bottom'",
+        'Readonly<Record<string, FilterValue>>': 'Record<field, FilterValue>',
     };
     const typeText = (node: ts.TypeNode): string => {
-        const text = node.getText(optionsSource).replace(/\breadonly /g, '').replace(/\s+/g, ' ');
+        const text = node.getText().replace(/\breadonly /g, '').replace(/\s+/g, ' ');
         return ALIASES[text] ?? text;
     };
     const noteOf = (member: ts.PropertySignature): string => {
@@ -651,7 +656,7 @@ function renderPresetOptionsTable(): string {
             })).filter((row) => !omit.has(row.name) && row.name !== 'id');
         }
         if (ts.isTypeReferenceNode(node) || ts.isExpressionWithTypeArguments(node)) {
-            const name = ts.isTypeReferenceNode(node) ? node.typeName.getText(optionsSource) : node.expression.getText(optionsSource);
+            const name = ts.isTypeReferenceNode(node) ? node.typeName.getText() : node.expression.getText();
             const declaration = declarations.get(name);
             if (!declaration) throw new Error(`gen:reference: unknown option type ${name}`);
             return membersOf(declaration, omit);

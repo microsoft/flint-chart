@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { assembleECharts, assembleVegaLite, type ChartAssemblyInput } from 'flint-chart';
-import { buildInteractiveChart, type ChartUpdate } from 'flint-chart/interactive';
+import { mountChart, type ChartUpdate } from 'flint-chart/interactive';
 import { genEChartsSlopeTests } from 'flint-chart/test-data';
 import { compile } from 'vega-lite';
 import { parse, View } from 'vega';
 import { expressionInterpreter } from 'vega-interpreter';
 import { EChartsView } from '../components/EChartsView';
 import { ScaleToFit } from '../components/ScaleToFit';
-import { VegaLiteView } from '../components/VegaLiteView';
+import { FlintView } from '../components/FlintView';
 import { testCaseToAssemblyInput } from '../shared/test-case-utils';
 import { siteTheme } from '../shared/theme';
 
@@ -59,17 +59,19 @@ function findFieldEncoding(node: unknown, field: string): Record<string, any> | 
 }
 
 function compileCase(typed: boolean) {
+  const input = makeInput(typed);
   try {
-    const spec = assembleVegaLite(makeInput(typed)) as any;
+    // Compiled here only to read the color encoding's resolved type.
+    const spec = assembleVegaLite(input) as any;
     const color = findFieldEncoding(spec, '年度');
     const resolvedType = color?.type ?? 'not found';
     const legendKind = resolvedType === 'quantitative' || resolvedType === 'temporal'
       ? 'continuous gradient'
       : 'categorical swatches';
-    return { spec, error: null as string | null, resolvedType, legendKind };
+    return { input, error: null as string | null, resolvedType, legendKind };
   } catch (error) {
     return {
-      spec: null,
+      input,
       error: String((error as Error)?.message ?? error),
       resolvedType: 'error',
       legendKind: 'error',
@@ -101,7 +103,7 @@ function CasePanel({ typed }: { typed: boolean }) {
         <pre style={{ color: '#b42318', whiteSpace: 'pre-wrap' }}>{result.error}</pre>
       ) : (
         <ScaleToFit height={320} minHeight={220} adaptiveHeight>
-          <VegaLiteView spec={result.spec} />
+          <FlintView spec={result.input} />
         </ScaleToFit>
       )}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px 16px', marginTop: 6, fontSize: 12 }}>
@@ -221,7 +223,7 @@ function TemporalAxisGym() {
     if (!host.current) return;
     const container = host.current;
     let cancelled = false;
-    let surface: ReturnType<typeof buildInteractiveChart> | undefined;
+    let surface: ReturnType<typeof mountChart> | undefined;
     let reference: View | undefined;
     const run = async () => {
       const input = spendingInput();
@@ -244,7 +246,7 @@ function TemporalAxisGym() {
       visit((reference.scenegraph() as any).root);
       reference.finalize();
       reference = undefined;
-      surface = buildInteractiveChart(container, input, {
+      surface = mountChart(container, input, {
         backend: 'vegalite', renderer: 'svg', expressionInterpreter,
       });
       await surface.ready;
@@ -306,7 +308,7 @@ function TemporalKeyCase({ keyCase }: { keyCase: KeyValueCase }) {
     if (!host.current) return;
     const container = host.current;
     let cancelled = false;
-    let surface: ReturnType<typeof buildInteractiveChart> | undefined;
+    let surface: ReturnType<typeof mountChart> | undefined;
     const update: ChartUpdate = {
       id: 'june',
       ops: [{
@@ -316,7 +318,7 @@ function TemporalKeyCase({ keyCase }: { keyCase: KeyValueCase }) {
       }],
     };
     const run = async () => {
-      surface = buildInteractiveChart(container, spendingInput('Bar Chart'), {
+      surface = mountChart(container, spendingInput('Bar Chart'), {
         backend: 'vegalite', renderer: 'svg', expressionInterpreter,
       });
       await surface.ready;

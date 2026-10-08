@@ -15,7 +15,7 @@ import { compile } from 'vega-lite';
 import { parse, View } from 'vega';
 import type { ChartAssemblyInput } from 'flint-chart';
 import { THEME_PRESETS } from 'flint-chart';
-import { assemblePreviewSpec, APP_PREVIEW_CANVAS_SIZE } from '../ui/src/render.js';
+import { assemblePreviewSpec, APP_PREVIEW_CANVAS_SIZE, usesAutoPreviewSize, withAppPreviewDefaults } from '../ui/src/render.js';
 
 /** A titled, decked, banded bar chart — the shape a real tool call produces. */
 function bars(themeId?: string): ChartAssemblyInput {
@@ -76,6 +76,15 @@ describe('the preview renders into the room it is given', () => {
     expect(wide.width).toBeGreaterThan(narrow.width);
   });
 
+  it('lets a sparse band chart spend the frame in the layout, not after it', async () => {
+    const sparse = await renderedSize(assemblePreviewSpec(bars(), { width: 584 }));
+    expect(sparse.width).toBeGreaterThan(584 * 0.75);
+    expect(sparse.width).toBeLessThanOrEqual(584 * 1.08);
+    // The bands are wide enough for the labels, so the layout lays them flat.
+    const spec = assemblePreviewSpec(bars(), { width: 584 }) as any;
+    expect(spec.encoding?.x?.axis?.labelAngle ?? 0).toBe(0);
+  });
+
   it('ignores a viewport too small to be a real measurement', async () => {
     // A collapsed or unmounted box must not shrink the chart to nothing.
     const collapsed = await renderedSize(assemblePreviewSpec(bars('swiss'), { width: 0 }));
@@ -97,6 +106,23 @@ describe('the preview renders into the room it is given', () => {
     const noFrame = await renderedSize(assemblePreviewSpec(stated()));
     expect(narrowFrame).toEqual(wideFrame);
     expect(narrowFrame).toEqual(noFrame);
+  });
+
+  it('fits sparse bands to the room unless the caller chose otherwise', () => {
+    expect(withAppPreviewDefaults(bars()).options?.bandStepFit).toBe(1);
+    const chosen = { ...bars(), options: { bandStepFit: 0 } };
+    expect(withAppPreviewDefaults(chosen).options?.bandStepFit).toBe(0);
+    const stated = bars();
+    stated.chart_spec.baseSize = { width: 700, height: 300 };
+    expect(withAppPreviewDefaults(stated)).toBe(stated);
+  });
+
+  it('lays the live chart out for the frame only when the preview picks the size', () => {
+    // The live chart relays out to the frame under the same rule the export uses.
+    expect(usesAutoPreviewSize(bars())).toBe(true);
+    const stated = bars();
+    stated.chart_spec.canvasSize = { width: 700, height: 300 };
+    expect(usesAutoPreviewSize(stated)).toBe(false);
   });
 
   it('leaves the house in charge of the type', async () => {

@@ -9,6 +9,7 @@ import {
   deriveStretchCaps,
   resolveStretchCaps,
   resolveBaseSize,
+  withCanvasSize,
 } from '../src/core/compute-layout';
 import { computeAxisStep } from '../src/core/decisions';
 
@@ -210,6 +211,45 @@ describe('resolveBaseSize (base clamps to the canvasSize ceiling)', () => {
   it('clamps only the dimension that exceeds the ceiling', () => {
     // default base 400x320, ceiling 500 wide but only 200 tall → width kept, height clamped.
     expect(resolveBaseSize(undefined, { width: 500, height: 200 })).toEqual({ width: 400, height: 200 });
+  });
+});
+
+describe('withCanvasSize (the host box as the ceiling)', () => {
+  const input = (chartSpec: Record<string, unknown> = {}, extra: Record<string, unknown> = {}) => ({
+    data: { values: [] },
+    semantic_types: {},
+    chart_spec: { chartType: 'Bar Chart', encodings: {}, ...chartSpec },
+    ...extra,
+  }) as never;
+
+  it('makes the box the ceiling on both sides and leaves the base alone', () => {
+    const sized = withCanvasSize(input({ baseSize: { width: 500, height: 300 } }), { width: 320, height: 240 });
+    expect(sized.chart_spec.canvasSize).toEqual({ width: 320, height: 240 });
+    expect(sized.chart_spec.baseSize).toEqual({ width: 500, height: 300 });
+  });
+
+  it('keeps the default stretch ceiling on a side the box leaves open', () => {
+    expect(withCanvasSize(input(), { width: 900 }).chart_spec.canvasSize).toEqual({ width: 900, height: 320 * 1.5 });
+    expect(withCanvasSize(input({}, { options: { maxStretch: 2 } }), { width: 900 }).chart_spec.canvasSize)
+      .toEqual({ width: 900, height: 640 });
+  });
+
+  it("keeps the spec's or the house's ceiling on an open side", () => {
+    expect(withCanvasSize(input({ canvasSize: { width: 600, height: 450 } }), { width: 900 }).chart_spec.canvasSize)
+      .toEqual({ width: 900, height: 450 });
+    const house = withCanvasSize(input({}, { theme_spec: 'economist' }), { width: 900 }).chart_spec.canvasSize!;
+    expect(house.width).toBe(900);
+    expect(house.height).toBeGreaterThan(0);
+  });
+
+  it('lets a narrow box shrink the assembled chart to fit', () => {
+    const values = Array.from({ length: 6 }, (_, index) => ({ cat: `C${index}`, val: index + 1 }));
+    const vl = assembleVegaLite(withCanvasSize({
+      data: { values },
+      semantic_types: { cat: 'Category', val: 'Quantity' },
+      chart_spec: { chartType: 'Bar Chart', encodings: { x: 'cat', y: 'val' } },
+    } as never, { width: 240 })) as { _width: number };
+    expect(vl._width).toBeLessThanOrEqual(240);
   });
 });
 

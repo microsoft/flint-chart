@@ -4,7 +4,7 @@
 import { useMemo } from 'react';
 import { assembleVegaLite, THEME_PRESETS, type ChartAssemblyInput } from 'flint-chart';
 import { ScaleToFit } from '../components/ScaleToFit';
-import { VegaLiteView } from '../components/VegaLiteView';
+import { FlintView } from '../components/FlintView';
 import './label-experiment-lab.css';
 
 type Outcome = 'direct' | 'dodge' | 'fallback';
@@ -123,20 +123,9 @@ const CASES: ExperimentCase[] = [
   },
 ];
 
-function stripInternal(node: any): void {
-  if (!node || typeof node !== 'object') return;
-  if (Array.isArray(node)) {
-    node.forEach(stripInternal);
-    return;
-  }
-  for (const key of Object.keys(node)) {
-    if (/^_[^_]/.test(key)) delete node[key];
-    else stripInternal(node[key]);
-  }
-}
-
-function buildCase(testCase: ExperimentCase): { spec?: any; outcome: Outcome; message: string; error?: string } {
+function buildCase(testCase: ExperimentCase): { outcome: Outcome; message: string; error?: string } {
   try {
+    // Compiled here only for the placement report; the chart compiles itself.
     const spec = assembleVegaLite(testCase.input as any) as any;
     const messages = (spec._theme?.report ?? [])
       .filter((entry: any) => entry.path === 'legend.placement')
@@ -152,8 +141,7 @@ function buildCase(testCase: ExperimentCase): { spec?: any; outcome: Outcome; me
       : messages.some((entry: string) => entry.includes('key is drawn'))
         ? 'fallback'
         : 'direct';
-    stripInternal(spec);
-    return { spec, outcome, message };
+    return { outcome, message };
   } catch (error) {
     return { outcome: 'fallback', message: 'Assembly failed', error: String((error as Error)?.message ?? error) };
   }
@@ -175,11 +163,11 @@ function CaseTile({ testCase }: { testCase: ExperimentCase }) {
         </span>
       </header>
       <div className="label-chart-frame">
-        {built.error || !built.spec
+        {built.error
           ? <div className="label-error">{built.error}</div>
           : (
             <ScaleToFit height={300} padding={8}>
-              <VegaLiteView spec={built.spec} renderer="svg" />
+              <FlintView spec={testCase.input} renderer="svg" />
             </ScaleToFit>
           )}
       </div>

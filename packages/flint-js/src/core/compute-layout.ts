@@ -46,11 +46,14 @@
 
 import type {
     ChannelSemantics,
+    ChartAssemblyInput,
     LayoutDeclaration,
     LayoutResult,
     AssembleOptions,
     ChannelBudgets,
 } from './types';
+import { resolveThemeSpec } from './theme/presets';
+import type { ThemeCompileDefaults } from './theme/types';
 import {
     computeAxisStep,
     computeGasPressure,
@@ -200,6 +203,35 @@ export function resolveBaseSize(
     return {
         width: Math.min(base.width, ceiling.width),
         height: Math.min(base.height, ceiling.height),
+    };
+}
+
+/**
+ * The input with the size available to the chart as its `canvasSize` ceiling. A side the
+ * host leaves open keeps the ceiling the chart had: the spec's, the house's, or the base
+ * size times `maxStretch`. The base size is untouched; the assembler clamps it to the ceiling.
+ */
+export function withCanvasSize(
+    input: ChartAssemblyInput,
+    available: { width?: number; height?: number },
+): ChartAssemblyInput {
+    let house: ThemeCompileDefaults | undefined;
+    try {
+        house = resolveThemeSpec(input.theme_spec)?.compileDefaults;
+    } catch {
+        // An unknown house is the assembler's error to report.
+        house = undefined;
+    }
+    const base = input.chart_spec.baseSize ?? house?.baseSize ?? DEFAULT_BASE_SIZE;
+    const stretch = input.options?.maxStretch ?? house?.maxStretch ?? DEFAULT_MAX_STRETCH;
+    const ceiling = input.chart_spec.canvasSize ?? house?.canvasSize
+        ?? { width: base.width * stretch, height: base.height * stretch };
+    return {
+        ...input,
+        chart_spec: {
+            ...input.chart_spec,
+            canvasSize: { width: available.width ?? ceiling.width, height: available.height ?? ceiling.height },
+        },
     };
 }
 

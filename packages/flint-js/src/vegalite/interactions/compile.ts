@@ -63,6 +63,8 @@ interface TemplateInteractionSemantics {
     resolveGroupValue?: InteractionContext['resolveGroupValue'];
     legendFields?: Record<string, string>;
     axisFields?: Partial<Record<'x' | 'y', { field: string; type: string }>>;
+    /** The axis the series run along; `inspect-index` reads along it unless the author names one. */
+    indexAxis?: 'x' | 'y';
     rangeLegendChannels?: readonly string[];
     selectableMarks: string[];
     annotationMarkType?: string;
@@ -518,6 +520,7 @@ export function addVegaLiteInteractions(
         resolveGroupValue: templateSemantics.resolveGroupValue,
         legendFields: templateSemantics.legendFields,
         axisFields: templateSemantics.axisFields,
+        indexAxis: templateSemantics.indexAxis,
         rangeLegendChannels: templateSemantics.rangeLegendChannels,
         annotationMarkType: templateSemantics.annotationMarkType,
         semanticStores: instrumented,

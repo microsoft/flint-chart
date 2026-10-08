@@ -113,6 +113,11 @@ export interface BuildInteractiveChartOptions extends InteractiveChartSurfaceOpt
      * renders static and its updates resolve as `unsupported`. Any interaction or update mounts it.
      */
     semanticUpdates?: boolean;
+    /**
+     * The room the host gives the chart, in pixels. It becomes the spec's `canvasSize`
+     * ceiling on the sides given, so the chart lays out for that room.
+     */
+    availableSize?: { width?: number; height?: number };
 }
 
 export interface InteractiveChartSurface {

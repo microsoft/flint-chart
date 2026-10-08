@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { ChartAssemblyInput, ChartWarning } from 'flint-chart';
-import { FlintChart } from 'flint-chart/react';
+import { FlintChart, type FlintChartProps } from 'flint-chart/react';
 import { siteTheme } from '../shared/theme';
 
 interface FlintViewProps {
   spec: ChartAssemblyInput;
+  backend?: FlintChartProps['backend'];
   renderer?: 'svg' | 'canvas';
   chartId?: string;
   ariaLabel?: string;
@@ -16,8 +17,8 @@ interface FlintViewProps {
   errorPrefix?: string;
 }
 
-/** A Vega-Lite `FlintChart` that shows its compile error (and optionally warnings) in place. */
-export function FlintView({ spec, renderer = 'canvas', chartId, ariaLabel, showWarnings = false, compact = false, errorPrefix }: FlintViewProps) {
+/** A `FlintChart` that shows its compile error (and optionally warnings) in place. */
+export function FlintView({ spec, backend, renderer = 'canvas', chartId, ariaLabel, showWarnings = false, compact = false, errorPrefix }: FlintViewProps) {
   const [warnings, setWarnings] = useState<readonly ChartWarning[]>([]);
   const [error, setError] = useState<string | null>(null);
   const onError = useCallback((err: Error) => setError(err.message), []);
@@ -25,13 +26,14 @@ export function FlintView({ spec, renderer = 'canvas', chartId, ariaLabel, showW
   useEffect(() => {
     setWarnings([]);
     setError(null);
-  }, [spec]);
+  }, [spec, backend]);
 
   return (
     <div>
       {!error && (
         <FlintChart
           spec={spec}
+          backend={backend}
           renderer={renderer}
           chartId={chartId}
           ariaLabel={ariaLabel}

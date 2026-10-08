@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Braces, ChevronDown, ChevronRight } from 'lucide-react';
 import type { ChartAssemblyInput, InteractionEntry } from 'flint-chart';
-import { InteractiveVegaLiteView } from '../components/InteractiveVegaLiteView';
+import { FlintView } from '../components/FlintView';
 import { ScaleToFit } from '../components/ScaleToFit';
 import './click-focus-lab.css';
 import './interaction-conflicts.css';
@@ -100,7 +100,7 @@ function CaseCard({ item }: { item: ConflictCase }) {
       </header>
       <div className="cf-stage">
         <ScaleToFit height={360} minHeight={280} adaptiveHeight padding={8}>
-          <InteractiveVegaLiteView input={item.input} chartId={`icf-${item.id}`} ariaLabel={item.title} />
+          <FlintView spec={item.input} renderer="svg" chartId={`icf-${item.id}`} ariaLabel={item.title} showWarnings />
         </ScaleToFit>
       </div>
       <div className={`cf-spec-panel${specOpen ? ' cf-spec-panel-open' : ''}`}>

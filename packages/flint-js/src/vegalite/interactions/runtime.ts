@@ -1944,10 +1944,59 @@ export function mountVegaInteractions(
         const modes = inspectModes(interaction);
         return modes[inspectModeIndices.get(interaction.id) ?? 0] ?? modes[0];
     };
-    const inspectValueFormatter = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 });
-    const inspectDateFormatter = new Intl.DateTimeFormat(undefined, {
-        year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC',
-    });
+    // Readouts speak the chart's language: Vega labels axes in en-US whatever the browser's locale.
+    const inspectValueFormatter = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 });
+    const inspectValueText = (value: unknown): string => value instanceof Date
+        ? inspectDateFormatter('day').format(value)
+        : typeof value === 'number' && Number.isFinite(value) ? inspectValueFormatter.format(value) : '';
+    // A snapped reading names the observation at the data's own grain; one between observations names the day.
+    const inspectIndexText = (
+        scale: any, coordinate: number, continuous: boolean, snapped: boolean, field: string,
+    ): string | undefined => {
+        if (!scale) return undefined;
+        if (!continuous) {
+            const half = (Number(scale.bandwidth?.()) || 0) / 2;
+            const value = scale.domain().find((candidate: unknown) => Math.abs(Number(scale(candidate)) + half - coordinate) < 1);
+            return value === undefined ? undefined : String(value);
+        }
+        const value = scale.invert?.(coordinate);
+        if (!(value instanceof Date)) return inspectValueText(value);
+        const grain = indexGrain(field);
+        return inspectDateFormatter(snapped || grain === 'time' ? grain : 'day').format(value);
+    };
+    const inspectDateFormatters = new Map<string, Intl.DateTimeFormat>();
+    type DateGrain = 'year' | 'month' | 'day' | 'time';
+    // The finest grain any observation needs: monthly data reads as months, January included.
+    const indexGrains = new Map<string, DateGrain>();
+    const indexGrain = (field: string): DateGrain => {
+        const cached = indexGrains.get(field);
+        if (cached) return cached;
+        let grain: DateGrain = 'year';
+        for (const record of plan.sourceRecords) {
+            const raw = record[field];
+            const value = raw instanceof Date ? raw : typeof raw === 'string' || typeof raw === 'number' ? new Date(raw) : null;
+            if (!value || Number.isNaN(value.getTime())) continue;
+            if (value.getUTCHours() || value.getUTCMinutes() || value.getUTCSeconds()) { grain = 'time'; break; }
+            if (value.getUTCDate() !== 1) grain = 'day';
+            else if (value.getUTCMonth() !== 0 && grain === 'year') grain = 'month';
+        }
+        indexGrains.set(field, grain);
+        return grain;
+    };
+    const inspectDateFormatter = (grain: 'year' | 'month' | 'day' | 'time'): Intl.DateTimeFormat => {
+        let formatter = inspectDateFormatters.get(grain);
+        if (!formatter) {
+            formatter = new Intl.DateTimeFormat('en-US', {
+                timeZone: 'UTC',
+                year: 'numeric',
+                ...(grain !== 'year' ? { month: 'short' as const } : {}),
+                ...(grain === 'day' || grain === 'time' ? { day: 'numeric' as const } : {}),
+                ...(grain === 'time' ? { hour: 'numeric' as const, minute: '2-digit' as const } : {}),
+            });
+            inspectDateFormatters.set(grain, formatter);
+        }
+        return formatter;
+    };
     const inspectHandler = (event: MouseEvent): void => {
         if (inspectInteractions.length === 0) return;
         const point = localPoint(event as unknown as PointerEvent);
@@ -1979,11 +2028,13 @@ export function mountVegaInteractions(
             const effectiveShow = singleSeries
                 ? { series: inspectSeriesLocks.get(interaction.id) }
                 : indexPolicy?.show;
-            const indexField = indexPolicy ? plan.axisFields?.[indexPolicy.axis] : undefined;
+            const indexAxis = indexPolicy?.axis ?? plan.indexAxis ?? 'x';
+            const indexField = indexPolicy ? plan.axisFields?.[indexAxis] : undefined;
             const continuousIndex = indexField?.type === 'temporal' || indexField?.type === 'quantitative';
             const indexScaleName = indexPolicy && indexField
                 ? Object.entries(plan.axisTargets ?? {}).find(([, target]) =>
-                    target.axis === indexPolicy.axis && target.field === indexField.field)?.[0]
+                    target.axis === indexAxis && target.field === indexField.field)?.[0]
+                    ?? plan.overlayScales?.[indexAxis]
                 : undefined;
             const indexScale = indexScaleName ? view.scale(indexScaleName) : undefined;
             const discreteCoordinates = !continuousIndex && indexScale?.domain
@@ -1994,11 +2045,11 @@ export function mountVegaInteractions(
                 ? indexInspectAcquisition(
                     eligibleItems,
                     point,
-                    indexPolicy.axis,
+                    indexAxis,
                     { show: effectiveShow as 'all' | { series: unknown }, seriesBy: indexPolicy.seriesBy },
                     continuousIndex,
                     discreteCoordinates,
-                    (indexPolicy.axis === 'x' ? space.plotWidth : space.plotHeight) * tolerance,
+                    (indexAxis === 'x' ? space.plotWidth : space.plotHeight) * tolerance,
                 )
                 : undefined;
             const hits = indexAcquisition
@@ -2013,10 +2064,10 @@ export function mountVegaInteractions(
                     { x: space.plotWidth * tolerance, y: space.plotHeight * tolerance },
                 );
             if (guide.visible && indexAcquisition) {
-                const guidePoint = indexPolicy!.axis === 'x'
+                const guidePoint = indexAxis === 'x'
                     ? { x: indexAcquisition.coordinate, y: point.y }
                     : { x: point.x, y: indexAcquisition.coordinate };
-                const valueAxis = indexPolicy!.axis === 'x' ? 'y' : 'x';
+                const valueAxis = indexAxis === 'x' ? 'y' : 'x';
                 const valueField = plan.axisFields?.[valueAxis];
                 const valueScaleName = indexPolicy!.displayValue && valueField
                     ? Object.entries(plan.axisTargets ?? {}).find(([, target]) =>
@@ -2025,19 +2076,20 @@ export function mountVegaInteractions(
                     : undefined;
                 const valueScale = valueScaleName ? view.scale(valueScaleName) : undefined;
                 const valueLabels = indexPolicy!.displayValue && valueScale?.invert
-                    ? indexAcquisition.valueCoordinates.map((coordinate, index) => {
-                        const value = valueScale.invert(coordinate);
-                        const text = value instanceof Date ? inspectDateFormatter.format(value)
-                            : typeof value === 'number' && Number.isFinite(value)
-                            ? inspectValueFormatter.format(value)
-                            : '';
-                        return { text, color: indexAcquisition.valueColors?.[index] };
-                    })
+                    ? indexAcquisition.valueCoordinates.map((coordinate, index) => ({
+                        text: inspectValueText(valueScale.invert(coordinate)),
+                        color: indexAcquisition.valueColors?.[index],
+                    }))
                     : undefined;
-                inspectGuideOverlay.renderAxes(guidePoint, indexPolicy!.axis, guide.style);
+                const indexLabel = indexPolicy!.displayValue && indexField && indexAcquisition.valueCoordinates.length > 0
+                    ? inspectIndexText(
+                        indexScale, indexAcquisition.coordinate, continuousIndex, indexAcquisition.snapped, indexField.field,
+                    )
+                    : undefined;
+                inspectGuideOverlay.renderAxes(guidePoint, indexAxis, guide.style, indexLabel);
                 inspectGuideOverlay.renderValueRules(
                     indexAcquisition.valueCoordinates,
-                    indexPolicy!.axis,
+                    indexAxis,
                     guide.style,
                     valueLabels,
                 );

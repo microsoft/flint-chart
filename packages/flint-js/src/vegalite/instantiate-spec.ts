@@ -1465,7 +1465,7 @@ export function vlFinalizeTemporalAxes(spec: any, context: InstantiateContext): 
             const span = (channel === 'x' ? plotWidth : plotHeight) * (original.end - original.start) / domainSpan;
             const plan = planTemporalTicks({
                 start: original.start, end: original.end, semanticType: original.semanticType,
-                utc: encoding.scale?.type === 'utc', span, vertical: channel === 'y', settings,
+                utc: original.inputs.utc, span, vertical: channel === 'y', settings,
                 fontSize: settings.labelFontSize ?? (channel === 'x' ? context.layout.xLabel : context.layout.yLabel).fontSize,
             });
             if (plan) Object.assign(encoding.axis, axisPropertiesOf(plan));
@@ -1584,33 +1584,44 @@ function planTemporalTicks({
         candidates.push(...levels[level].interval.range(new Date(start), new Date(end + 1)).map(Number));
     }
     if (startAnchor <= end) candidates.push(startAnchor);
-    const ticks = [...new Set(candidates)].sort((left, right) => left - right).map(value => {
-        const level = rank(value, base);
-        const calendarLevel = rank(value, minimumLevel);
-        const initial = value === startAnchor && calendarLevel < levels.length - 1;
-        const pattern = initial ? levels[calendarLevel].context : boundaryFormat(level, base);
-        const text = format(pattern)(new Date(value));
-        const priority = initial ? Math.min(base, calendarLevel) + 0.5
-            : base === dayLevel && monthDayLabels && levels[level].unit === 'month' ? base : level;
-        return { value, pattern, text, priority, size: extent(text), initial, level: calendarLevel };
-    });
-    const selected: typeof ticks = [];
-    for (const tick of [...ticks].sort((left, right) => right.priority - left.priority || left.value - right.value)) {
-        if (tick.initial) {
-            const parent = levels[Math.min(base + 1, levels.length - 1)].interval;
-            const periodEnd = +parent.offset(parent.floor(new Date(tick.value)), 1);
-            const hasYearContext = selected.some(other => other.level > base && levels[other.level].unit === 'year'
-                && other.value > tick.value && other.value <= periodEnd);
-            if (hasYearContext) {
-                const floor = Math.max(base, tick.level);
-                tick.pattern = boundaryFormat(rank(tick.value, floor), floor);
-                tick.text = format(tick.pattern)(new Date(tick.value));
-                tick.size = extent(tick.text);
+    const choose = (anchor: number, from: number) => {
+        const ticks = [...new Set(candidates)].sort((left, right) => left - right).map(value => {
+            const level = rank(value, base);
+            const calendarLevel = rank(value, minimumLevel);
+            const initial = value === anchor && calendarLevel < levels.length - 1;
+            const pattern = initial ? levels[calendarLevel].context : boundaryFormat(level, base);
+            const text = format(pattern)(new Date(value));
+            const priority = initial ? Math.min(base, calendarLevel) + 0.5
+                : base === dayLevel && monthDayLabels && levels[level].unit === 'month' ? base : level;
+            return { value, pattern, text, priority, size: extent(text), initial, level: calendarLevel };
+        });
+        const selected: typeof ticks = [];
+        for (const tick of [...ticks].sort((left, right) => right.priority - left.priority || left.value - right.value)) {
+            if (tick.value < from) continue;
+            if (tick.initial) {
+                const parent = levels[Math.min(base + 1, levels.length - 1)].interval;
+                const periodEnd = +parent.offset(parent.floor(new Date(tick.value)), 1);
+                const hasYearContext = selected.some(other => other.level > base && levels[other.level].unit === 'year'
+                    && other.value > tick.value && other.value <= periodEnd);
+                if (hasYearContext) {
+                    const floor = Math.max(base, tick.level);
+                    tick.pattern = boundaryFormat(rank(tick.value, floor), floor);
+                    tick.text = format(tick.pattern)(new Date(tick.value));
+                    tick.size = extent(tick.text);
+                }
+            }
+            if (selected.every(other => Math.abs(position(tick.value) - position(other.value)) >= (tick.size + other.size) / 2 + gap)) {
+                selected.push(tick);
             }
         }
-        if (selected.every(other => Math.abs(position(tick.value) - position(other.value)) >= (tick.size + other.size) / 2 + gap)) {
-            selected.push(tick);
-        }
+        return { ticks, selected };
+    };
+    let { ticks, selected } = choose(startAnchor, -Infinity);
+    // An opening label crowded out (say a half-hour start beside the next full hour) would leave
+    // the axis without its date; the earliest label that fits carries it instead.
+    if (selected.length > 0 && ticks.some(tick => tick.initial) && !selected.some(tick => tick.initial)) {
+        const first = Math.min(...selected.map(tick => tick.value));
+        ({ ticks, selected } = choose(first, first));
     }
     selected.sort((left, right) => left.value - right.value);
     const expandMonth = (pattern: string): string =>
@@ -1690,14 +1701,22 @@ function vlApplyDefaultAxisFormat(
                     || enc.scale?.domain != null || enc.scale?.domainMin != null || enc.scale?.domainMax != null) continue;
                 let earliest = Infinity;
                 let latest = -Infinity;
+                // Date-only strings such as "2026-06" parse to UTC midnights; ticks planned on the local
+                // calendar would sit hours off every point and drop the last one past the domain's end.
+                let utcMidnights = true;
+                let localMidnights = true;
                 for (const row of context.table ?? vgObj.data?.values ?? []) {
                     const value = row[enc.field];
                     if (value == null) continue;
-                    const timestamp = +new Date(value);
+                    const date = new Date(value);
+                    const timestamp = +date;
                     if (!Number.isFinite(timestamp)) continue;
                     earliest = Math.min(earliest, timestamp);
                     latest = Math.max(latest, timestamp);
+                    if (date.getUTCHours() || date.getUTCMinutes() || date.getUTCSeconds() || date.getUTCMilliseconds()) utcMidnights = false;
+                    if (date.getHours() || date.getMinutes() || date.getSeconds() || date.getMilliseconds()) localMidnights = false;
                 }
+                const utc = enc.scale?.type === 'utc' || (utcMidnights && !localMidnights);
                 const semantics = context.channelSemantics[ch];
                 const fontSize = typeof formatting.labelFontSize === 'number' ? formatting.labelFontSize
                     : axisLabelFontSize ?? (ch === 'x' ? context.layout.xLabel : context.layout.yLabel).fontSize;
@@ -1707,7 +1726,7 @@ function vlApplyDefaultAxisFormat(
                     : ch === 'x' ? context.layout.subplotWidth : context.layout.subplotHeight;
                 const semanticType = semantics?.field === enc.field ? semantics.semanticAnnotation?.semanticType : undefined;
                 const plan = planTemporalTicks({
-                    start: earliest, end: latest, semanticType, utc: enc.scale?.type === 'utc',
+                    start: earliest, end: latest, semanticType, utc,
                     span, vertical: ch === 'y', settings: formatting, fontSize,
                 });
                 if (!plan) continue;
@@ -1716,7 +1735,7 @@ function vlApplyDefaultAxisFormat(
                     semanticType,
                     labelExpr: plan.labelExpr,
                     inputs: {
-                        semanticType, utc: enc.scale?.type === 'utc', vertical: ch === 'y',
+                        semanticType, utc, vertical: ch === 'y',
                         settings: temporalPlanSettings(formatting), fontSize,
                     },
                 });

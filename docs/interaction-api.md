@@ -24,7 +24,7 @@ const surface = mountChart(container, input, {
 await surface.ready;
 ```
 
-A factory and its declarative preset describe the same behavior. Spec entries mount before code definitions. A code definition with the same `id` as a spec entry replaces that entry, with an `interaction_overridden` info warning. A code definition the chart cannot honour throws; an unsupported spec entry is dropped with a warning. Tooltips are part of the spec, not an interaction: set `options.addTooltips: true` to show them (default `false`).
+A factory and its declarative preset describe the same behavior. Spec entries mount before code definitions. A code definition with the same `id` as a spec entry replaces that entry, with an `interaction_overridden` info warning. A code definition the chart cannot honour, a repeated code `id`, or a malformed `interaction_spec` fails the mount with an error that names the problem; an unsupported spec entry is dropped with a warning. Tooltips are part of the spec, not an interaction: set `options.addTooltips: true` to show them (default `false`).
 
 ## Render the chart in React
 
@@ -42,19 +42,21 @@ import { clickHighlight } from 'flint-chart/interactive';
 />;
 ```
 
-A spec with no interactions renders a static chart; a chart is interactive only if its spec or the `interactions` prop declares an interaction. A static chart mounts no interaction runtime, so it costs about the same as a plain Vega-Lite embed. To drive a chart without interactions from the host, pass `updates`; even `updates={[]}` mounts the runtime so the ref's `applyUpdate` works. On a static chart `applyUpdate` warns and returns `null`. `interactions` takes preset factories, never JSON entries: an array adds to the spec's `interaction_spec`, and a function `(fromSpec) => definitions` receives the spec's definitions and returns the full list.
+A spec with no interactions renders a static chart; a chart is interactive only if its spec or the `interactions` prop declares an interaction. A static chart mounts no interaction runtime, so it costs about the same as a plain Vega-Lite embed. To drive a chart without interactions from the host, pass `updates`; even `updates={[]}` mounts the runtime so the ref's `applyUpdate` works. On a static chart `applyUpdate` warns and returns `null`. `interactions` takes preset factories, never JSON entries: an array adds to the spec's `interaction_spec`, and a function `(fromSpec) => definitions` receives the spec's definitions and returns the full list. A preset rebuilt with the same id and options keeps the mounted chart, so inline factory calls are fine; changing an option remounts it. Function-valued options, such as `clickAnnotate`'s `format`, are read at mount.
 
 | Prop | Purpose |
 |------|---------|
 | `spec` | The `ChartAssemblyInput`, `interaction_spec` included |
 | `interactions` | An array added to the spec's interactions, or a function that returns the full list |
 | `updates` | Host updates, diffed by id: new or changed ids apply, dropped ids clear unless the reader changed them since |
-| `width`, `height`, `fit` | The box the chart fits into. `fit` is `shrink` (default, scale down only), `contain`, or `none`. The box scales the chart; the layout size stays in `chart_spec.baseSize` |
+| `width`, `height`, `fit` | The box the chart sits in, sized by the host. `fit` is `scale-down` (default: scale down to fit, never up), `crop` (natural size, clipped), or `relayout` (the box becomes `chart_spec.canvasSize` on the sides given, so Flint lays the chart out again for that room; a resize remounts once it settles). As with CSS `object-fit`, the chart is centred in any room the box leaves. With `mountChart`, pass the room as `availableSize` |
 | `onChange`, `onInteraction` | What the chart shows after a state change, and the raw gesture record |
-| `onRender`, `onWarnings`, `onError` | Mount and update lifecycle |
+| `onRender`, `onWarnings` | Mount and update lifecycle |
+| `onError` | The chart failed: a compile error, a malformed `interaction_spec`, or a code interaction the chart cannot honour. The box shows a muted error in place of the chart |
 | `fallback` | Shown until the chart mounts, including in server rendering |
+| `ariaLabel`, `chartId` | `ariaLabel` applies in place; a new `chartId` remounts the chart. `expressionInterpreter` is read at mount |
 
-A ref gives a `FlintChartHandle` with `applyUpdate`, `clearUpdate`, `dispatch`, `getState`, and `refresh`. The `selectionUpdate(id, selection)` and `viewportUpdate(id, viewport)` helpers build the updates a selection or navigation preset writes: `selection` takes elements or a field key, and `viewport` takes `[start, end]` per axis or a `ChartState.viewport`. `null` clears the selection or returns the viewport home.
+A ref gives a `FlintChartHandle` with `surface` (the mounted `InteractiveChartSurface`, or `null`), `applyUpdate`, `clearUpdate`, `dispatch`, `getState`, and `refresh`. The `selectionUpdate(id, selection)` and `viewportUpdate(id, viewport)` helpers build the updates a selection or navigation preset writes: `selection` takes elements or a field key, and `viewport` takes `[start, end]` per axis or a `ChartState.viewport`. `null` clears the selection or returns the viewport home.
 
 For a static image without a DOM, `renderSvg(input, { backend })` from `flint-chart/render` returns an SVG string for `vegalite` or `echarts`.
 

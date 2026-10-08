@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
     currentFilters,
     describeFilterFields,
@@ -179,6 +179,27 @@ describe('value formatting from semantic types', () => {
         expect(summarizeFilter(month!, { range: ['2015-08-01', '2025-08-01'] })).toBe('Aug 2015–Aug 2025');
         expect(year!.format!(12000)).toBe('12000');
         expect(price!.format!(1.2)).toMatch(/^\$1\.2/);
+    });
+
+    it('reads in the chart\'s en-US whatever the browser\'s locale', () => {
+        const toLocaleString = Number.prototype.toLocaleString;
+        // A German browser: no locale given means de-DE.
+        const spy = vi.spyOn(Number.prototype, 'toLocaleString').mockImplementation(function (this: number, locales, options) {
+            return toLocaleString.call(this, locales ?? 'de-DE', options);
+        });
+        try {
+            const priced: ChartAssemblyInput = {
+                data: { values: [{ Item: 'a', Price: 12345.5 }, { Item: 'b', Price: 20 }] },
+                semantic_types: { Item: 'Category', Price: { semanticType: 'Price', unit: 'USD' } },
+                chart_spec: { chartType: 'Bar Chart', encodings: { x: 'Item', y: 'Price' } },
+            };
+            const [price] = describeFilterFields(priced, { fields: ['Price'] });
+            expect(price!.format!(12345.5)).toMatch(/^\$12,345\.5/);
+            const region = describeFilterFields(input, { fields: ['country'] })[0]!;
+            expect(summarizeFilter(region, { range: [266353, 7476880] })).toBe('266K–7.48M');
+        } finally {
+            spy.mockRestore();
+        }
     });
 });
 

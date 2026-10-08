@@ -1,10 +1,7 @@
 import { useMemo, useState, type CSSProperties } from 'react';
 import type { ChartAssemblyInput } from 'flint-chart';
 import { BACKENDS, ALL_BACKENDS, type PreviewBackend } from '../shared/supported-backends';
-import { VegaLiteView } from '../components/VegaLiteView';
-import { EChartsView } from '../components/EChartsView';
-import { ChartjsView } from '../components/ChartjsView';
-import { PlotlyView } from '../components/PlotlyView';
+import { FlintView } from '../components/FlintView';
 import { SiteRange } from '../components/SiteRange';
 import { siteTheme } from '../shared/theme';
 
@@ -47,31 +44,25 @@ function buildInput(count: number): ChartAssemblyInput {
   };
 }
 
-function BackendChart({ backend, spec }: { backend: PreviewBackend; spec: unknown }) {
-  if (backend === 'vegalite') return <VegaLiteView spec={spec} />;
-  if (backend === 'echarts') return <EChartsView option={spec} constrain={false} />;
-  if (backend === 'chartjs') return <ChartjsView config={spec} constrain={false} />;
-  return <PlotlyView figure={spec} constrain={false} />;
-}
-
 const labelStyle: CSSProperties = { fontSize: 13, color: siteTheme.textMuted, fontWeight: 500 };
 
 export function BandExpansionFigure() {
   const [backend, setBackend] = useState<PreviewBackend>('plotly');
   const [count, setCount] = useState(5);
 
-  const { spec, width, error } = useMemo(() => {
+  const input = useMemo(() => buildInput(count), [count]);
+  // Compiled here only for the plot-width readout; the chart compiles itself.
+  const { width, error } = useMemo(() => {
     try {
-      const s = BACKENDS[backend].assemble(buildInput(count)) as any;
+      const s = BACKENDS[backend].assemble(input) as any;
       return {
-        spec: s,
         width: typeof s?._width === 'number' ? Math.round(s._width) : 0,
         error: null as string | null,
       };
     } catch (err) {
-      return { spec: null, width: 0, error: String((err as Error)?.message ?? err) };
+      return { width: 0, error: String((err as Error)?.message ?? err) };
     }
-  }, [backend, count]);
+  }, [backend, input]);
 
 
   return (
@@ -176,7 +167,7 @@ export function BandExpansionFigure() {
           {error ? (
             <div style={{ color: siteTheme.error, fontSize: 13, fontFamily: siteTheme.fontMono }}>{error}</div>
           ) : (
-            spec && <BackendChart backend={backend} spec={spec} />
+            <FlintView spec={input} backend={backend} />
           )}
         </div>
       </div>

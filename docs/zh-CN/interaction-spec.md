@@ -127,7 +127,7 @@ Interaction "click-highlight" yields legend clicks to "legend-toggle".
 - `mountChart(container, input)` 通过 `surface.warnings` 暴露它们，并在控制台记录一次。
 - MCP 工具 `validate_chart` 返回同一列表。
 
-格式错误的条目是错误而不是丢弃：未知的 `type`、放在 `options` 外的选项、放在 `options` 内的 `id`、缺少 `groupBy` 等必需选项、未知或不支持的 `reset` 手势、重复的 `id`。
+格式错误的条目是错误而不是丢弃：未知的 `type`、放在 `options` 外的选项、放在 `options` 内的 `id`、缺少 `groupBy` 等必需选项、未知或不支持的 `reset` 手势、重复的 `id`。挂载以同一消息失败。
 
 ## 代码与 spec，同一定义
 
@@ -143,7 +143,7 @@ mountChart(container, { ...input, interaction_spec: { interactions: [{ type: 'cl
 mountChart(container, input, { interactions: [clickHighlight({ dimOpacity: 0.2 })] });
 ```
 
-两者可以同时出现在一张图表上；spec 条目先挂载。两边使用同一个 `id` 是错误。图表无法支持的代码定义会抛出异常，因为开发者能看到异常；spec 条目则被丢弃，因为智能体读取的是警告。
+两者可以同时出现在一张图表上；spec 条目先挂载。代码定义与 spec 条目同 `id` 时取代该条目，附带 `info` 警告。图表无法支持的代码定义会抛出异常，因为开发者能看到异常；spec 条目则被丢弃，因为智能体读取的是警告。
 
 ## 在哪里生效
 

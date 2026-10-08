@@ -1,3 +1,4 @@
+import * as vega from 'vega';
 import {
     semanticVisualFamily,
     type RenderHit,
@@ -1296,6 +1297,75 @@ export interface IndexInspectAcquisition {
     coordinate: number;
     valueCoordinates: number[];
     valueColors?: (string | undefined)[];
+    /** The reading sits on an observation rather than between two. */
+    snapped: boolean;
+}
+
+type CurvePiece = { kind: 'line' | 'quad' | 'cubic'; points: PlotPoint[] };
+type CurveFactory = (context: unknown) => { lineStart(): void; point(x: number, y: number): void; lineEnd(): void };
+// Vega draws line marks with d3-shape curves and exports the factory it uses; it has no typings.
+const pathCurves = (vega as unknown as {
+    pathCurves?: (type: string, orientation?: string, tension?: number) => CurveFactory | null;
+}).pathCurves;
+
+/** The pieces Vega draws a line mark's curve with, in plot coordinates. */
+export function curvePieces(
+    points: readonly PlotPoint[],
+    interpolate: string,
+    orientation?: string,
+    tension?: number,
+): CurvePiece[] | null {
+    const factory = pathCurves?.(interpolate, orientation, tension);
+    if (!factory) return null;
+    const pieces: CurvePiece[] = [];
+    let current: PlotPoint | null = null;
+    const move = (to: PlotPoint, piece?: CurvePiece): void => {
+        if (piece && current) pieces.push(piece);
+        current = to;
+    };
+    const curve = factory({
+        moveTo: (x: number, y: number) => move({ x, y }),
+        lineTo: (x: number, y: number) => move({ x, y }, { kind: 'line', points: [current!, { x, y }] }),
+        quadraticCurveTo: (x1: number, y1: number, x: number, y: number) =>
+            move({ x, y }, { kind: 'quad', points: [current!, { x: x1, y: y1 }, { x, y }] }),
+        bezierCurveTo: (x1: number, y1: number, x2: number, y2: number, x: number, y: number) =>
+            move({ x, y }, { kind: 'cubic', points: [current!, { x: x1, y: y1 }, { x: x2, y: y2 }, { x, y }] }),
+        closePath: () => undefined,
+    });
+    curve.lineStart();
+    for (const point of points) curve.point(point.x, point.y);
+    curve.lineEnd();
+    return pieces;
+}
+
+/** Where a drawn curve crosses `coordinate` on `axis`, on the other axis; null when it does not. */
+export function curveValueAt(pieces: readonly CurvePiece[], axis: 'x' | 'y', coordinate: number): number | null {
+    const along = (point: PlotPoint) => (axis === 'x' ? point.x : point.y);
+    const across = (point: PlotPoint) => (axis === 'x' ? point.y : point.x);
+    const at = (piece: CurvePiece, t: number, read: (point: PlotPoint) => number): number => {
+        const p = piece.points.map(read);
+        const u = 1 - t;
+        if (piece.kind === 'line') return u * p[0] + t * p[1];
+        if (piece.kind === 'quad') return u * u * p[0] + 2 * u * t * p[1] + t * t * p[2];
+        return u * u * u * p[0] + 3 * u * u * t * p[1] + 3 * u * t * t * p[2] + t * t * t * p[3];
+    };
+    for (const piece of pieces) {
+        const start = along(piece.points[0]);
+        const end = along(piece.points[piece.points.length - 1]);
+        if (coordinate < Math.min(start, end) || coordinate > Math.max(start, end)) continue;
+        if (start === end) return across(piece.points[piece.points.length - 1]);
+        // Curves drawn along their index axis advance monotonically along it within a piece.
+        let low = 0;
+        let high = 1;
+        const rising = end > start;
+        for (let step = 0; step < 32; step += 1) {
+            const middle = (low + high) / 2;
+            if ((at(piece, middle, along) < coordinate) === rising) low = middle;
+            else high = middle;
+        }
+        return at(piece, (low + high) / 2, across);
+    }
+    return null;
 }
 
 export function indexInspectAcquisition(
@@ -1334,7 +1404,7 @@ export function indexInspectAcquisition(
         ? discreteCoordinates.map((coordinate) => ({ coordinate }))
         : itemAnchors;
     const pointerCoordinate = axis === 'x' ? point.x : point.y;
-    if (anchors.length === 0) return { hits: [], coordinate: pointerCoordinate, valueCoordinates: [] };
+    if (anchors.length === 0) return { hits: [], coordinate: pointerCoordinate, valueCoordinates: [], snapped: false };
 
     const hitsAtCoordinate = (coordinate: number): RenderHit[] => {
         const intersecting = axisIntersectingHits(eligibleItems, coordinate, axis);
@@ -1363,10 +1433,12 @@ export function indexInspectAcquisition(
         })()
         : Math.abs(anchor.coordinate - pointerCoordinate);
     if (continuousIndex && directHits.length === 0 && anchorDistance > assistDistance) {
-        return { hits: [], coordinate: pointerCoordinate, valueCoordinates: [] };
+        return { hits: [], coordinate: pointerCoordinate, valueCoordinates: [], snapped: false };
     }
-    const coordinate = directHits.length > 0 ? pointerCoordinate : anchor.coordinate;
-    const hits = directHits.length > 0 ? directHits : hitsAtCoordinate(coordinate);
+    // Within a pixel of an observation the reading is that observation, not a moment beside it.
+    const snapped = directHits.length === 0 || Math.abs(anchor.coordinate - pointerCoordinate) < 1;
+    const coordinate = snapped ? anchor.coordinate : pointerCoordinate;
+    const hits = snapped ? hitsAtCoordinate(coordinate) : directHits;
 
     const hitKeys = new Set(hits.map((hit) => hit.datum[INTERACTION_KEY]));
     let candidates = eligibleItems.filter((item) => {
@@ -1389,6 +1461,20 @@ export function indexInspectAcquisition(
             const alongStart = axis === 'x' ? start.x : start.y;
             const alongEnd = axis === 'x' ? end.x : end.y;
             if (coordinate < Math.min(alongStart, alongEnd) || coordinate > Math.max(alongStart, alongEnd)) return [];
+            // A curved line is read where it is drawn, not on the straight chord between its points.
+            if (typeof item.interpolate === 'string' && item.interpolate !== 'linear' && Array.isArray(item.mark?.items)) {
+                const offset = item.interactionGeometry.offset ?? { x: 0, y: 0 };
+                const pieces = curvePieces(
+                    item.mark.items
+                        .filter((sibling: any) => sibling.defined !== false)
+                        .map((sibling: any) => ({ x: sibling.x + offset.x, y: sibling.y + offset.y })),
+                    item.interpolate,
+                    item.orient,
+                    item.tension,
+                );
+                const onCurve = pieces ? curveValueAt(pieces, axis, coordinate) : null;
+                if (onCurve !== null) return [{ color, coordinate: onCurve }];
+            }
             const ratio = alongEnd === alongStart ? 0 : (coordinate - alongStart) / (alongEnd - alongStart);
             return [{ color, coordinate: axis === 'x'
                 ? start.y + ratio * (end.y - start.y)
@@ -1402,7 +1488,7 @@ export function indexInspectAcquisition(
         && guides.findIndex((candidate) => Math.abs(candidate.coordinate - guide.coordinate) < 0.5) === index);
     const valueCoordinates = valueGuides.map((guide) => guide.coordinate);
     const valueColors = valueGuides.map((guide) => guide.color);
-    return { hits, coordinate, valueCoordinates, ...(valueColors.some(Boolean) ? { valueColors } : {}) };
+    return { hits, coordinate, valueCoordinates, snapped, ...(valueColors.some(Boolean) ? { valueColors } : {}) };
 }
 
 export function indexInspectHits(

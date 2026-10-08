@@ -1,11 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { schemeTableau10, schemeSet3 } from 'd3';
 import type { ChartAssemblyInput } from 'flint-chart';
 import { ScaleToFit } from '../components/ScaleToFit';
-import { VegaLiteView } from '../components/VegaLiteView';
-import { EChartsView } from '../components/EChartsView';
-import { ChartjsView } from '../components/ChartjsView';
-import { PlotlyView } from '../components/PlotlyView';
+import { FlintView } from '../components/FlintView';
 import { BACKENDS, ALL_BACKENDS, type PreviewBackend } from '../shared/supported-backends';
 import { LABEL_CASES, DUAL_LEGEND_CASES, HORIZONTAL_LEGEND_CASES, FACET_LABEL_CASES, MEDAL_SOURCE, labelCaseInput, type LabelSurface } from './axis-label-cases';
 import './axis-label-lab.css';
@@ -18,23 +15,11 @@ const SURFACES: Array<{ id: LabelSurface; label: string }> = [
 function LabelChart({ input, surface, backend }: {
   input: ChartAssemblyInput; surface: LabelSurface | 'facet' | 'horizontal'; backend: PreviewBackend;
 }) {
-  const built = useMemo(() => {
-    try {
-      return { spec: BACKENDS[backend].assemble(input) as any, error: '' };
-    } catch (error) {
-      return { spec: null, error: String(error) };
-    }
-  }, [input, backend]);
   return (
     <div className="axis-label-chart" data-surface={surface}>
-      {built.error ? <p role="alert">{built.error}</p> : (
-        <ScaleToFit adaptiveHeight height={440} minHeight={180} padding={0}>
-          {backend === 'vegalite' && <VegaLiteView spec={built.spec} renderer="svg" />}
-          {backend === 'echarts' && <EChartsView option={built.spec} constrain={false} />}
-          {backend === 'chartjs' && <ChartjsView config={built.spec} constrain={false} />}
-          {backend === 'plotly' && <PlotlyView figure={built.spec} constrain={false} />}
-        </ScaleToFit>
-      )}
+      <ScaleToFit adaptiveHeight height={440} minHeight={180} padding={0}>
+        <FlintView spec={input} backend={backend} renderer="svg" />
+      </ScaleToFit>
     </div>
   );
 }

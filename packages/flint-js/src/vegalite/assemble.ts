@@ -124,6 +124,22 @@ function headlineText(title: any): string | undefined {
     return parts.length ? parts.join(' ') : undefined;
 }
 
+/**
+ * The axis the series run along, which an index reading moves over: the temporal axis, else
+ * the discrete one beside a measure, else x.
+ */
+export function indexAxisOf(
+    encodings: Partial<Record<'x' | 'y', { field?: string; type?: string } | undefined>>,
+): 'x' | 'y' {
+    const typeOf = (axis: 'x' | 'y') => (encodings[axis]?.field ? encodings[axis]?.type : undefined);
+    const x = typeOf('x');
+    const y = typeOf('y');
+    if ((x === 'temporal') !== (y === 'temporal')) return y === 'temporal' ? 'y' : 'x';
+    const discrete = (type: string | undefined) => type === 'nominal' || type === 'ordinal';
+    if (discrete(y) && x !== undefined && !discrete(x)) return 'y';
+    return 'x';
+}
+
 export function assembleVegaLite(input: ChartAssemblyInput): any {
     const chartType = input.chart_spec.chartType;
     const semanticTypes = input.semantic_types ?? {};
@@ -963,12 +979,13 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
         const encoding = resolvedEncodings[axis];
         return !!encoding?.field && (encoding.type === 'nominal' || encoding.type === 'ordinal');
     });
+    const indexAxis = indexAxisOf(resolvedEncodings);
     const confirmed: Partial<Record<InteractionCapability, boolean>> = {
         navigation: navigationAxes.length > 0,
         reorder: reorderAxes.length > 0,
         legend: discreteLegend,
         'discrete-axis': discreteAxis,
-        index: !!resolvedEncodings.x?.field,
+        index: !!resolvedEncodings[indexAxis]?.field,
     };
     const capabilities = declaredInteractionCapabilities(support)
         .filter((capability) => confirmed[capability] ?? true);
@@ -976,6 +993,7 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
         ...templateSemantics,
         chartType: chartTemplate.chart,
         capabilities,
+        indexAxis,
         axisFields: Object.fromEntries((['x', 'y'] as const).flatMap((axis) => {
             const encoding = resolvedEncodings[axis];
             return encoding?.field

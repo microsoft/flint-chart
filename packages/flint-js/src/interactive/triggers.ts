@@ -29,7 +29,8 @@ export interface InteractionEventSource {
     readonly inspectCycle?: readonly ReturnType<typeof parseInspectMode>[];
     readonly inspectTolerance?: number;
     readonly inspectIndex?: {
-        readonly axis: 'x' | 'y';
+        /** Absent: the chart's index axis, the one its series run along. */
+        readonly axis?: 'x' | 'y';
         readonly show: InspectIndexShow;
         readonly seriesBy?: string;
         readonly displayValue?: boolean;
@@ -208,17 +209,22 @@ export function inspectTrigger(
 }
 
 export function inspectIndexTrigger(
-    axis: 'x' | 'y' = 'x',
+    axis?: 'x' | 'y',
     show: InspectIndexShow = 'all',
     seriesBy?: string,
     selector?: SemanticTargetSelector,
     guide?: InspectGuideOptions | false,
     tolerance?: number,
-    displayValue = false,
+    displayValue = true,
 ): InteractionEventSource {
     return {
-        ...inspectTrigger(axis, selector, tolerance, guide),
-        inspectIndex: { axis, show, ...(seriesBy ? { seriesBy } : {}), ...(displayValue ? { displayValue } : {}) },
+        ...inspectTrigger(axis ?? 'x', selector, tolerance, guide),
+        inspectIndex: {
+            ...(axis ? { axis } : {}),
+            show,
+            ...(seriesBy ? { seriesBy } : {}),
+            ...(displayValue ? { displayValue } : {}),
+        },
     };
 }
 

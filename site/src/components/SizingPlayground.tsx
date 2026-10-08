@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { assembleVegaLite, assembleECharts, type ChartAssemblyInput } from 'flint-chart';
-import { VegaLiteView } from './VegaLiteView';
-import { EChartsView } from './EChartsView';
+import { FlintView } from './FlintView';
 import { SiteRange } from './SiteRange';
 import { siteTheme } from '../shared/theme';
 
@@ -200,19 +199,20 @@ export function SizingPlayground({ mode }: { mode: Mode }) {
   const showSeries = cfg.seriesLabel != null;
   const showElasticity = cfg.controls.includes('elasticity');
 
-  const { spec, resolvedWidth, resolvedHeight, error } = useMemo(() => {
+  const { input, resolvedWidth, resolvedHeight, error } = useMemo(() => {
     const canvas = { width, height };
     try {
       const input = cfg.build({ count, seriesCount, canvas, elasticity });
+      // Compiled here only for the size readout; the chart compiles itself.
       const s = (cfg.backend === 'vl' ? assembleVegaLite(input) : assembleECharts(input)) as any;
       return {
-        spec: s,
+        input,
         resolvedWidth: typeof s._width === 'number' ? Math.round(s._width) : null,
         resolvedHeight: typeof s._height === 'number' ? Math.round(s._height) : null,
         error: null as string | null,
       };
     } catch (err) {
-      return { spec: null, resolvedWidth: null, resolvedHeight: null, error: String((err as Error)?.message ?? err) };
+      return { input: null, resolvedWidth: null, resolvedHeight: null, error: String((err as Error)?.message ?? err) };
     }
   }, [cfg, count, seriesCount, elasticity, width, height]);
 
@@ -307,7 +307,7 @@ export function SizingPlayground({ mode }: { mode: Mode }) {
         <div style={{ color: siteTheme.error, fontFamily: siteTheme.fontMono, fontSize: 13 }}>{error}</div>
       ) : (
         <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
-          {spec && (cfg.backend === 'vl' ? <VegaLiteView spec={spec} /> : <EChartsView option={spec} />)}
+          {input && <FlintView spec={input} backend={cfg.backend === 'vl' ? 'vegalite' : 'echarts'} />}
         </div>
       )}
     </div>

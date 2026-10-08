@@ -31,9 +31,9 @@ Configure a canvas interaction with a reusable handler:
 
 ```ts
 import {
-    buildInteractiveChart,
     clickTrigger,
     externalInteraction,
+    mountChart,
     type CanvasInteractionDef,
 } from 'flint-chart/interactive';
 
@@ -50,7 +50,7 @@ const selectCountry: CanvasInteractionDef = {
     } : null,
 };
 
-const surface = buildInteractiveChart(container, input, {
+const surface = mountChart(container, input, {
     backend: 'vegalite',
     interactions: [selectCountry],
 });
@@ -73,7 +73,7 @@ const countryPicker = externalInteraction<{ country: string; selected: boolean }
     }),
 });
 
-const surface = buildInteractiveChart(container, input, {
+const surface = mountChart(container, input, {
     backend: 'vegalite',
     interactions: [countryPicker],
 });
@@ -522,7 +522,7 @@ inspectIndex({
     axis: 'x',
     seriesBy: 'Series',
     show: 'all',
-    displayValue: true,
+    displayValue: false,
 });
 
 brushX({
@@ -546,10 +546,10 @@ returns every series in that slice. `show: 'single'` starts with the first serie
 `show: { series: value }` starts with a preferred series. In either single-series mode, clicking
 a legend item switches tracking to that series; marks remain inert and available to other interactions.
 The tracked series remains highlighted in its authored colour. Hovering another legend item previews it.
-Set `displayValue: true` to show compact labels on the value guides inside the plot, using the
-current interpolated scale values. Labels and value guides inherit the rendered series colour,
+Compact labels on the value guides inside the plot show the current interpolated scale values.
+Labels and value guides inherit the rendered series colour,
 and nearby labels stagger along their guides without moving the reference lines.
-This is off by default; `guide: false` also hides the labels.
+They are on by default; `displayValue: false` hides them, and `guide: false` hides guides and labels.
 Both single-series policies require the `seriesBy` field. Aggregates such as averages remain custom-handler logic;
 the preset does not transform records. Directional predicates on the lower-level
 `inspectTrigger()` can support bespoke interactions such as threshold quadrants.
@@ -764,7 +764,7 @@ assisted acquisition. Set `assistedTargeting: false` to require direct hits glob
 opt-in:
 
 ```ts
-buildInteractiveChart(container, input, {
+mountChart(container, input, {
     backend: 'vegalite',
     interactions: [clickHighlight({ targets: ['mark', 'legend', 'discreteAxis'] }), axisHighlight()],
     assistedTargeting: {

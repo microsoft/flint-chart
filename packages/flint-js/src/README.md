@@ -217,7 +217,7 @@ import { clickHighlight } from 'flint-chart/interactive';
 <FlintChart
   spec={input}                                   // interaction_spec included
   interactions={[clickHighlight()]}              // added to the spec's interactions
-  width="100%" fit="shrink"                      // the box scales the chart; layout size stays in chart_spec
+  width="100%" fit="relayout"                    // the box becomes canvasSize; scale-down (default) scales instead
   onChange={(change) => setSelection(change.state.selected)}
 />;
 ```

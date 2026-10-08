@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, CornerDownLeft, Pause, Play, RotateCcw } from 'lucide-react';
 import type { ChartAssemblyInput } from 'flint-chart';
-import { accessibleNavigation, buildInteractiveChart } from 'flint-chart/interactive';
+import { accessibleNavigation } from 'flint-chart/interactive';
+import { FlintChart } from 'flint-chart/react';
 import { expressionInterpreter } from 'vega-interpreter';
 import { ScaleToFit } from '../components/ScaleToFit';
 import { interactionCases } from './InteractionGallery';
@@ -108,32 +109,23 @@ export function AccessibilityShowcase() {
     .filter(key => demoKeys.has(key));
 
   useEffect(() => {
-    if (!stageDocument) return;
-    const host = hostRef.current!;
     setStatus('loading');
     setError('');
     setIndex(-1);
     setActiveKey('');
-    let disposed = false;
-    let surface: ReturnType<typeof buildInteractiveChart> | undefined;
-    try {
-      surface = buildInteractiveChart(host, demo.input, {
-        backend: 'vegalite', renderer: 'svg', expressionInterpreter,
-        interactions: [accessibleNavigation()], ariaLabel: demo.title,
-      });
-      void surface.ready.then(() => {
-        if (disposed) return;
-        if (!host.querySelector('[data-flint-accessible-focus]')) throw new Error('Accessible navigation is unavailable.');
-        setStatus('ready');
-      }).catch((reason: unknown) => {
-        if (!disposed) { setStatus('error'); setError(String(reason)); }
-      });
-    } catch (reason) {
-      setStatus('error');
-      setError(String(reason));
+  }, [demo]);
+  const onChartRender = () => {
+    if (hostRef.current?.querySelector('[data-flint-accessible-focus]')) {
+      setStatus('ready');
+      return;
     }
-    return () => { disposed = true; surface?.destroy(); };
-  }, [demo, stageDocument]);
+    setStatus('error');
+    setError('Accessible navigation is unavailable.');
+  };
+  const onChartError = (reason: Error) => {
+    setStatus('error');
+    setError(String(reason));
+  };
 
   const selectExample = (next: number) => {
     if (next === selected) return;
@@ -260,7 +252,11 @@ export function AccessibilityShowcase() {
                 if (event.nativeEvent.isTrusted && !['Meta', 'Control', 'Alt', 'Shift'].includes(event.key)) {
                   setPlaying(false); setIndex(-1); setActiveKey(event.key); setPressSerial(previous => previous + 1);
                 }
-              }} />
+              }}>
+              <FlintChart spec={demo.input} interactions={[accessibleNavigation()]} renderer="svg"
+                expressionInterpreter={expressionInterpreter} ariaLabel={demo.title}
+                onRender={onChartRender} onError={onChartError} />
+            </div>
           </ScaleToFit>, stageDocument.body)}
         </div>
       </div>

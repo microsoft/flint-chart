@@ -157,7 +157,8 @@ top-level key that is not one of the three, with a hint for the two keys the spe
 `dismiss` and `updates`. Every message names the entry by index and type.
 
 `composeInteractiveOptions()` merges the spec with what code passed to
-`mountChart()`: spec entries first, then code; an id shared by both is an error; the
+`mountChart()`: spec entries first, then code; a code definition with a spec entry's id
+replaces it with an `info` warning; a malformed spec or a repeated code id throws; the
 surface policies come from code when it sets them and from the spec otherwise; a backend that
 runs no interactions ignores the spec with one `info` warning.
 
@@ -355,8 +356,9 @@ Which fact is decided where:
 # §8 Hosts and discovery
 
 - **`mountChart()`** reads `interaction_spec` from the input and merges it with code
-  definitions. The MCP `create_chart_view`, the site editor, and the site gallery mount through
-  it whenever the input carries interaction entries; a static render otherwise.
+  definitions. `<FlintChart>` mounts through it, so a host passes the spec and nothing else:
+  a chart that declares no interactions renders static, with no runtime. The MCP
+  `create_chart_view`, the site editor, and the site gallery mount this way.
 - **`getState()` and `onChange()`** give a host the chart as context. The MCP view sends the
   state to the model after each committed change; an application panel follows a hover or a
   brush live through the previews.

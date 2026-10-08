@@ -112,7 +112,7 @@ PHASE 2       build backend encodings
 
 - **Gallery 开发服务器：** 在仓库根目录运行 `npm run site`，然后打开 `/gallery`
 - **Supported backends：** 若新后端应出现在 UI 中，更新 `site/src/shared/supported-backends.ts`
-- **Renderers：** 仅当 spec 格式无法复用 `VegaLiteView`、`EChartsView` 或 `ChartjsView` 时，才添加新的 React 视图（`site/src/components/`）。`TripleChart` 当前覆盖 VL + ECharts + Chart.js。
+- **Renderers：** 站点通过 `<FlintChart backend>`（经由 `site/src/components/FlintView.tsx`）渲染所有后端，因此新后端应在 `mountChart`（`packages/flint-js/src/interactive/`）中添加渲染器，而不是添加站点视图。`TripleChart`、编辑器和图库会自动使用它。
 
 可选：若 MCP 客户端应能调用该组装器，将其接入 `agent-skills/mcp-server/`。
 

@@ -3291,17 +3291,19 @@ describe('legend, inspect, zoom, and touch presets', () => {
     it('declares all and legend-switchable single-series index inspection policies', () => {
         expect(inspectIndex()).toMatchObject({
             id: 'inspect-index',
-            eventSource: { inspectIndex: { axis: 'x', show: 'all' } },
+            eventSource: { inspectIndex: { show: 'all' } },
         });
         expect(inspectIndex().handle).toBeUndefined();
-        expect(inspectIndex({ displayValue: true }).eventSource.inspectIndex)
-            .toEqual({ axis: 'x', show: 'all', displayValue: true });
+        expect(inspectIndex().eventSource.inspectIndex)
+            .toEqual({ show: 'all', displayValue: true });
+        expect(inspectIndex({ axis: 'x', displayValue: false }).eventSource.inspectIndex)
+            .toEqual({ axis: 'x', show: 'all' });
         const single = inspectIndex({ axis: 'y', show: 'single', seriesBy: 'Series', tolerance: 0.03 });
-        expect(single.eventSource.inspectIndex).toEqual({ axis: 'y', show: 'single', seriesBy: 'Series' });
+        expect(single.eventSource.inspectIndex).toEqual({ axis: 'y', show: 'single', seriesBy: 'Series', displayValue: true });
         expect(single.eventSource.inspectTolerance).toBe(0.03);
         expect(single.affordances).toEqual({ 'legend-item': { cursor: 'activate', hover: 'cohort' } });
         expect(inspectIndex({ show: { series: 'Forecast' }, seriesBy: 'Series' }).eventSource.inspectIndex)
-            .toEqual({ axis: 'x', show: { series: 'Forecast' }, seriesBy: 'Series' });
+            .toEqual({ show: { series: 'Forecast' }, seriesBy: 'Series', displayValue: true });
         expect(() => inspectIndex({ show: 'single' })).toThrow('requires seriesBy');
         expect(() => inspectIndex({ show: { series: 'Forecast' } }))
             .toThrow('requires seriesBy');

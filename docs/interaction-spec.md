@@ -68,10 +68,10 @@ State is not part of the spec. What the chart shows now, an emphasis, a note, a 
 
 The option names are the ones the matching factory in `flint-chart/interactive` accepts. `InteractionPresetSpec` in that entry gives the precise shape per type for TypeScript callers.
 
-For `inspect-index`, set `options.displayValue: true` to label the value guides inside the
-plot, rather than on the axis. Labels reflect the current interpolated scale value; labels
-and value guides inherit the rendered series colour. Nearby labels stagger along their
-guides to avoid overlap. Labels are off by default. Setting `guide: false` hides both the
+For `inspect-index`, the value guides carry labels inside the plot, rather than on the axis.
+Labels reflect the current interpolated scale value; labels and value guides inherit the
+rendered series colour. Nearby labels stagger along their guides to avoid overlap. Labels are
+on by default; `options.displayValue: false` hides them. Setting `guide: false` hides both the
 guides and their labels.
 
 A viewport a gesture commits, and a reset, animate over 400 ms. `"transition": { "duration": 0 }` on `brush-zoom`, or `"resetTransition": { "duration": 0 }` on either preset, jumps instead. Panning and wheel zooming follow the pointer and never animate.
@@ -138,7 +138,7 @@ Where to read the warnings:
 - `mountChart(container, input)` exposes them on `surface.warnings` and logs them once to the console.
 - The MCP tool `validate_chart` returns the same list.
 
-A malformed entry is an error, not a drop: an unknown `type`, an option outside `options`, an `id` inside `options`, a missing required option such as `groupBy`, an unknown or unsupported `reset` gesture, or a duplicate `id`.
+A malformed entry is an error, not a drop: an unknown `type`, an option outside `options`, an `id` inside `options`, a missing required option such as `groupBy`, an unknown or unsupported `reset` gesture, or a duplicate `id`. The mount fails with the same message.
 
 ## Where it runs
 

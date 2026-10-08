@@ -52,6 +52,13 @@ describe('composeInteractiveOptions', () => {
         })).toThrow(/Duplicate interaction id: "select"/);
     });
 
+    it('rejects a malformed spec', () => {
+        expect(() => composeInteractiveOptions(
+            { interaction_spec: { interactions: [{ type: 'no-such-preset' }] } as unknown as InteractionSpec },
+            { backend: 'vegalite', interactions: [select()] },
+        )).toThrow(/interaction_spec\.interactions\[0\]/);
+    });
+
     it('lets the code win on the targeting policies', () => {
         const fromSpec = composeInteractiveOptions({ interaction_spec: SPEC }, { backend: 'vegalite' });
         expect(fromSpec.keyboardTargeting).toBe(true);

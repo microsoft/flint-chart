@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { BACKENDS } from '../shared/supported-backends';
 import { FlintView } from '../components/FlintView';
-import { PlotlyView } from '../components/PlotlyView';
 import { ScaleToFit } from '../components/ScaleToFit';
 import { siteTheme } from '../shared/theme';
 import { ThemePicker } from './ThemePicker';
@@ -84,14 +83,6 @@ const familyOf = (chartType: string) => FAMILY_OF[chartType] ?? 'Points & correl
 function CaseCard({ c, themeId }: { c: PreviewCase; themeId: string | undefined }) {
     const backend = pickBackend(c.chartType);
     const input = useMemo(() => buildInput(c, themeId), [c, themeId]);
-    const compiled = useMemo(() => {
-        if (backend === 'vegalite') return { ok: true as const, value: null };
-        try {
-            return { ok: true as const, value: BACKENDS[backend].assemble(input) };
-        } catch (err) {
-            return { ok: false as const, err };
-        }
-    }, [input, backend]);
 
     return (
         <article
@@ -101,15 +92,7 @@ function CaseCard({ c, themeId }: { c: PreviewCase; themeId: string | undefined 
             onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
         >
             <ScaleToFit height={168} minHeight={110} adaptiveHeight padding={2}>
-                {compiled.ok ? (
-                    backend === 'vegalite'
-                        ? <FlintView spec={input} compact />
-                        : <PlotlyView figure={compiled.value} constrain={false} />
-                ) : (
-                    <pre style={{ color: siteTheme.error, fontSize: 11, whiteSpace: 'pre-wrap', margin: 0 }}>
-                        {String((compiled.err as Error)?.message ?? compiled.err)}
-                    </pre>
-                )}
+                <FlintView spec={input} backend={backend} compact />
             </ScaleToFit>
             <div style={{ marginTop: 6, fontSize: 12, fontWeight: 600, lineHeight: 1.3, color: siteTheme.text }}>{c.title}</div>
             <div style={{ marginTop: 2, fontSize: 10.5, color: siteTheme.navInactive, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

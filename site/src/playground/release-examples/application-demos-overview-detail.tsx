@@ -145,7 +145,7 @@ export function OverviewDetailDemo() {
         interactions={DETAIL_INTERACTIONS}
         chartId={DETAIL_ID}
         ariaLabel={`US regular gasoline, ${FIRST.slice(0, 4)}–${LAST.slice(0, 4)}`}
-        renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" fit="shrink"
+        renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%"
       />
     </div>
     <div className="app-demo-box app-demo-stack-chart app-demo-strip">
@@ -154,7 +154,7 @@ export function OverviewDetailDemo() {
         interactions={OVERVIEW_INTERACTIONS}
         chartId={OVERVIEW_ID}
         ariaLabel="Weekly US regular gasoline price, every week"
-        renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" fit="shrink"
+        renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%"
         onChange={onOverviewChange}
         onInteraction={onOverviewInteraction}
       />

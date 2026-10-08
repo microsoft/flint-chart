@@ -360,11 +360,11 @@ the muted marks, 0.25 by default. A `guide` is `{ visible?, style? }`, or
 |  | `guide` | `{ visible?, style?: { color?, opacity?, width?, fillOpacity?, haloColor?, haloOpacity?, haloWidth? } } \| false` | Transient guide shown while inspecting; false disables visual feedback. |
 |  | `selector` | `{ select: { key } }` |  |
 |  | `dimOpacity` | `number` |  |
-| `inspect-index` | `axis` | `'x' \| 'y'` | Independent chart axis used to acquire one index slice. |
+| `inspect-index` | `axis` | `'x' \| 'y'` | The axis an index slice is read along. Defaults to the chart's index axis: the temporal one, else the discrete one beside a measure, else x. |
 |  | `tolerance` | `number` | Near-axis acquisition radius as a plot-size fraction. Defaults to 0.01. |
 |  | `show` | `'all' \| 'single' \| { series: value }` | Which series to present: all, the first series, or a preferred initial series. |
 |  | `seriesBy` | `string` | Record field identifying a series; single-series policies switch through the legend. |
-|  | `displayValue` | `boolean` | Show compact series-colored labels on value guides inside the plot. Defaults to false. |
+|  | `displayValue` | `boolean` | Show compact series-colored labels on value guides inside the plot. Defaults to true. |
 |  | `guide` | `{ visible?, style?: { color?, opacity?, width?, fillOpacity?, haloColor?, haloOpacity?, haloWidth? } } \| false` |  |
 |  | `selector` | `{ select: { key } }` |  |
 |  | `reset` | `ResetGesture[]` | Releases a locked series. Defaults to ['escape']. |
@@ -381,6 +381,12 @@ the muted marks, 0.25 by default. A `guide` is `{ visible?, style? }`, or
 |  | `caption` | `boolean` | Show a visible caption naming the focused element and its content. Defaults to true. |
 |  | `sections` | `('titles' \| 'axes' \| 'legends' \| 'headers' \| 'data' \| 'labels')[]` | The chart parts the walk reaches, in reading order. Defaults to every section. |
 |  | `maxFields` | `number` | The most data fields read out for one mark. Defaults to 8. |
+| `filter-controls` | `fields` | `(string \| { field, widget?: 'auto' \| 'checkboxes' \| 'select' \| 'range' \| 'toggle', label?, all? })[]` | The fields that get a control. Listed fields always get one. When absent, the categorical, boolean, and temporal fields are chosen, up to four, skipping a field another interaction already filters: the color field under `legend-toggle`, a continuous axis field under `navigate` or `brush-zoom`. |
+|  | `mode` | `'filter' \| 'highlight'` | `filter` removes the rows that fail; `highlight` keeps them and mutes their marks. Defaults to `filter`. |
+|  | `placement` | `'auto' \| 'top' \| 'bottom'` | Defaults to `auto`. |
+|  | `render` | `boolean` | False draws nothing; the host draws its own controls and drives the preset through `dispatch`. Defaults to true. |
+|  | `initial` | `Record<field, FilterValue>` | Filters applied when the chart mounts. |
+|  | `dimOpacity` | `number` | Opacity of the marks that fail in `highlight` mode. |
 <!-- preset-options:end -->
 
 ## Use Flint in an application

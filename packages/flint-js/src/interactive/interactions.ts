@@ -113,6 +113,8 @@ export interface CanvasInteractionDef {
     readonly origin?: 'spec';
     /** The preset that made this definition; admission reads its requirements from the registry. */
     readonly preset?: InteractionPresetType;
+    /** The options the preset was made with, so a host can tell two definitions with one id apart. */
+    readonly presetOptions?: Readonly<object>;
     /** Gestures that return this interaction to its neutral state, normalised by the factory. Absent on presets that retain nothing. */
     readonly reset?: readonly InteractionResetGesture[];
     /** Drops state the preset keeps outside the chart's retained updates, when a reset gesture fires. */
@@ -264,7 +266,7 @@ export interface InspectOptions {
 
 export interface InspectIndexOptions {
     id?: string;
-    /** Independent chart axis used to acquire one index slice. */
+    /** The axis an index slice is read along. Defaults to the chart's index axis: the temporal one, else the discrete one beside a measure, else x. */
     axis?: 'x' | 'y';
     /** Near-axis acquisition radius as a plot-size fraction. Defaults to 0.01. */
     tolerance?: number;
@@ -272,7 +274,7 @@ export interface InspectIndexOptions {
     show?: InspectIndexShow;
     /** Record field identifying a series; single-series policies switch through the legend. */
     seriesBy?: string;
-    /** Show compact series-colored labels on value guides inside the plot. Defaults to false. */
+    /** Show compact series-colored labels on value guides inside the plot. Defaults to true. */
     displayValue?: boolean;
     guide?: InspectGuideOptions | false;
     selector?: SemanticTargetSelector;
@@ -350,8 +352,9 @@ export interface DragReorderOptions {
     reset?: readonly InteractionResetGesture[];
 }
 
-function asPreset(type: InteractionPresetType, definition: CanvasInteractionDef): CanvasInteractionDef {
-    return { ...definition, preset: type };
+function asPreset(type: InteractionPresetType, definition: CanvasInteractionDef, options: { id?: string }): CanvasInteractionDef {
+    const { id: _id, ...presetOptions } = options;
+    return { ...definition, preset: type, presetOptions };
 }
 
 /** Attaches the normalised reset list; presets that retain nothing never pass through here. */
@@ -365,7 +368,7 @@ function withReset(
 
 export function clickHighlight(options: ClickHighlightOptions = {}): CanvasInteractionDef {
     return {
-        ...asPreset('click-highlight', withReset(createClickHighlightInteraction(options), options.reset, SELECTION_RESET)),
+        ...asPreset('click-highlight', withReset(createClickHighlightInteraction(options), options.reset, SELECTION_RESET), options),
         withoutAffordances(drop) {
             const remaining = (options.targets ?? CLICK_HIGHLIGHT_DEFAULT_TARGETS)
                 .filter((target) => !drop.includes(CLICK_HIGHLIGHT_AFFORDANCE_TARGET[target]));
@@ -375,7 +378,7 @@ export function clickHighlight(options: ClickHighlightOptions = {}): CanvasInter
 }
 
 export function axisHighlight(options: AxisHighlightOptions = {}): CanvasInteractionDef {
-    return asPreset('axis-highlight', withReset(createAxisHighlightInteraction(options), options.reset, SELECTION_RESET));
+    return asPreset('axis-highlight', withReset(createAxisHighlightInteraction(options), options.reset, SELECTION_RESET), options);
 }
 
 export function clickGroupFocus(options: ClickGroupFocusOptions = {}): CanvasInteractionDef {
@@ -383,78 +386,78 @@ export function clickGroupFocus(options: ClickGroupFocusOptions = {}): CanvasInt
         id: options.id ?? 'click-group-focus',
         dimOpacity: options.dimOpacity,
         groupBy: options.groupBy,
-    }), options.reset, SELECTION_RESET));
+    }), options.reset, SELECTION_RESET), options);
 }
 
 export function clickAnnotate(options: ClickAnnotateOptions = {}): CanvasInteractionDef {
-    return asPreset('click-annotate', withReset(createClickAnnotateInteraction(options), options.reset, SELECTION_RESET));
+    return asPreset('click-annotate', withReset(createClickAnnotateInteraction(options), options.reset, SELECTION_RESET), options);
 }
 
 export function linkedBrush(options: LinkedBrushOptions): CanvasInteractionDef {
-    return asPreset('linked-brush', withReset(createLinkedBrushInteraction(options), options.reset, SELECTION_RESET));
+    return asPreset('linked-brush', withReset(createLinkedBrushInteraction(options), options.reset, SELECTION_RESET), options);
 }
 
 export function hoverGroupFocus(options: HoverGroupFocusOptions): CanvasInteractionDef {
-    return asPreset('hover-group-focus', createHoverGroupFocusInteraction({ ...options, id: options.id ?? 'hover-group-focus' }));
+    return asPreset('hover-group-focus', createHoverGroupFocusInteraction({ ...options, id: options.id ?? 'hover-group-focus' }), options);
 }
 
 export function select(options: SelectOptions = {}): CanvasInteractionDef {
-    return asPreset('select', withReset(createSelectInteraction(options), options.reset, SELECTION_RESET));
+    return asPreset('select', withReset(createSelectInteraction(options), options.reset, SELECTION_RESET), options);
 }
 
 export function lassoSelect(options: LassoSelectOptions = {}): CanvasInteractionDef {
-    return asPreset('lasso-select', withReset(createLassoSelectInteraction(options), options.reset, SELECTION_RESET));
+    return asPreset('lasso-select', withReset(createLassoSelectInteraction(options), options.reset, SELECTION_RESET), options);
 }
 
 export function legendToggle(options: LegendToggleOptions = {}): CanvasInteractionDef {
-    return asPreset('legend-toggle', withReset(createLegendToggleInteraction(options), options.reset, NO_RESET));
+    return asPreset('legend-toggle', withReset(createLegendToggleInteraction(options), options.reset, NO_RESET), options);
 }
 
 export function contextActivate(options: ContextActivateOptions = {}): CanvasInteractionDef {
-    return asPreset('context-activate', createContextActivateInteraction(options));
+    return asPreset('context-activate', createContextActivateInteraction(options), options);
 }
 
 export function inspect(options: InspectOptions = {}): CanvasInteractionDef {
-    return asPreset('inspect', createInspectInteraction(options));
+    return asPreset('inspect', createInspectInteraction(options), options);
 }
 
 export function inspectIndex(options: InspectIndexOptions = {}): CanvasInteractionDef {
-    return asPreset('inspect-index', withReset(createInspectIndexInteraction(options), options.reset, ['escape']));
+    return asPreset('inspect-index', withReset(createInspectIndexInteraction(options), options.reset, ['escape']), options);
 }
 
 export function brushZoom(options: BrushZoomOptions = {}): CanvasInteractionDef {
-    return asPreset('brush-zoom', withReset(createBrushZoomInteraction(options), options.reset, ['double-click', 'escape']));
+    return asPreset('brush-zoom', withReset(createBrushZoomInteraction(options), options.reset, ['double-click', 'escape']), options);
 }
 
 export function longPress(options: LongPressOptions = {}): CanvasInteractionDef {
-    return asPreset('long-press', withReset(createLongPressInteraction(options), options.reset, SELECTION_RESET));
+    return asPreset('long-press', withReset(createLongPressInteraction(options), options.reset, SELECTION_RESET), options);
 }
 
 export function doubleActivate(options: DoubleActivateOptions = {}): CanvasInteractionDef {
-    return asPreset('double-activate', withReset(createDoubleActivateInteraction(options), options.reset, SELECTION_RESET));
+    return asPreset('double-activate', withReset(createDoubleActivateInteraction(options), options.reset, SELECTION_RESET), options);
 }
 
 export function brushX(options: BrushOptions = {}): CanvasInteractionDef {
-    return asPreset('brush-x', withReset(createBrushInteraction('x', options), options.reset, SELECTION_RESET));
+    return asPreset('brush-x', withReset(createBrushInteraction('x', options), options.reset, SELECTION_RESET), options);
 }
 
 export function brushY(options: BrushOptions = {}): CanvasInteractionDef {
-    return asPreset('brush-y', withReset(createBrushInteraction('y', options), options.reset, SELECTION_RESET));
+    return asPreset('brush-y', withReset(createBrushInteraction('y', options), options.reset, SELECTION_RESET), options);
 }
 
 /** Select an angular interval on a polar chart. */
 export function brushAngle(options: AngularBrushOptions = {}): CanvasInteractionDef {
-    return asPreset('brush-angle', withReset(createAngularBrushInteraction(options), options.reset, SELECTION_RESET));
+    return asPreset('brush-angle', withReset(createAngularBrushInteraction(options), options.reset, SELECTION_RESET), options);
 }
 
 export function navigate(options: NavigateOptions = {}): CanvasInteractionDef {
     const definition = createNavigateInteraction(options);
     // Mirrors the trigger's normalised list.
-    return asPreset('navigate', { ...definition, reset: definition.eventSource.reset ?? NAVIGATION_RESET });
+    return asPreset('navigate', { ...definition, reset: definition.eventSource.reset ?? NAVIGATION_RESET }, options);
 }
 
 export function dragReorder(options: DragReorderOptions = {}): CanvasInteractionDef {
-    return asPreset('drag-reorder', withReset(createDragReorderInteraction(options), options.reset, NO_RESET));
+    return asPreset('drag-reorder', withReset(createDragReorderInteraction(options), options.reset, NO_RESET), options);
 }
 
 /**
@@ -463,7 +466,7 @@ export function dragReorder(options: DragReorderOptions = {}): CanvasInteraction
  * the element is and what it represents, and emphasises the data behind it.
  */
 export function accessibleNavigation(options: AccessibleNavigationOptions = {}): CanvasInteractionDef {
-    return asPreset('accessible-navigation', createAccessibleNavigationInteraction(options));
+    return asPreset('accessible-navigation', createAccessibleNavigationInteraction(options), options);
 }
 
 export function normalizeInteractions(

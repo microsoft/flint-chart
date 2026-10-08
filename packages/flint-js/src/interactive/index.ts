@@ -197,7 +197,13 @@ export function mountChart(
     input: ChartAssemblyInput,
     options: BuildInteractiveChartOptions,
 ): InteractiveChartSurface {
-    const { backend, renderer, expressionInterpreter, background, className, ariaLabel, chartId } = options;
+    const { backend, renderer, expressionInterpreter, background, className, ariaLabel, chartId, availableSize } = options;
+    // Loaded with the renderer: it reads the theme, which the mount entry does not bundle.
+    const sized = async (chartInput: ChartAssemblyInput): Promise<ChartAssemblyInput> => {
+        if (!availableSize) return chartInput;
+        const { withCanvasSize } = await import('../core/compute-layout');
+        return withCanvasSize(chartInput, availableSize);
+    };
     // The spec and the code are two sources of one configuration; the spec comes first.
     const { interactions, updates, assistedTargeting, keyboardTargeting, warnings } =
         composeInteractiveOptions(input, options);
@@ -234,7 +240,7 @@ export function mountChart(
                                 keyboard: keyboardTargeting ? {} : false,
                             },
                             keyboardTargeting,
-                        }).mount(chartContainer, chartInput);
+                        }).mount(chartContainer, await sized(chartInput));
                     },
                 },
                 { className, ariaLabel, chartId, updates, interactions, warnings },
@@ -246,7 +252,7 @@ export function mountChart(
                 {
                     async mount(chartContainer, chartInput) {
                         const { createEChartsInteractiveRenderer } = await import('../echarts/interactive');
-                        return createEChartsInteractiveRenderer({ renderer }).mount(chartContainer, chartInput);
+                        return createEChartsInteractiveRenderer({ renderer }).mount(chartContainer, await sized(chartInput));
                     },
                 },
                 { className, ariaLabel, chartId, updates, interactions, warnings },
@@ -258,7 +264,7 @@ export function mountChart(
                 {
                     async mount(chartContainer, chartInput) {
                         const { createChartjsInteractiveRenderer } = await import('../chartjs/interactive');
-                        return createChartjsInteractiveRenderer().mount(chartContainer, chartInput);
+                        return createChartjsInteractiveRenderer().mount(chartContainer, await sized(chartInput));
                     },
                 },
                 { className, ariaLabel, chartId, updates, interactions, warnings },
@@ -270,7 +276,7 @@ export function mountChart(
                 {
                     async mount(chartContainer, chartInput) {
                         const { createPlotlyInteractiveRenderer } = await import('../plotly/interactive');
-                        return createPlotlyInteractiveRenderer().mount(chartContainer, chartInput);
+                        return createPlotlyInteractiveRenderer().mount(chartContainer, await sized(chartInput));
                     },
                 },
                 { className, ariaLabel, chartId, updates, interactions, warnings },

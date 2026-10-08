@@ -238,7 +238,7 @@ export function FitDistributionDemo() {
       updates={MOUNT}
       chartId={CHART_ID}
       ariaLabel="Draw the wait"
-      renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" fit="shrink"
+      renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%"
     />}
   />;
 }
