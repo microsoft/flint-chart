@@ -28,6 +28,7 @@
  *   swiss          heavy structural black rules on warm paper
  *   pop            process-colour quadrants divided by heavy black ink
  *   cartoon        rounded bar tops and a thick soft outline
+ *   apple          rounded system-colour bars, ruled with labels on the trailing edge
  *
  * Each is a complete SVG document so a caller can put it straight in an `<img>`
  * or inline it. 16×16 with a half-pixel inset frame: the frame is what lets a
@@ -168,3 +169,16 @@ export const CARTOON_ICON = tile(
         rule(2.6, BASELINE, 13.4, '#2e2b28', 1.7),
     3.5,
 );
+
+/** Rounded system-colour bars, the ruling labelled on the trailing edge. */
+export const APPLE_ICON = tile(
+    '#ffffff',
+    '#e5e5ea',
+    rule(2.6, 5.5, 11.6, '#d1d1d6', 0.6) +
+        rule(2.6, 9, 11.6, '#d1d1d6', 0.6) +
+        bars(['#007aff', '#34c759', '#ff9500'], [6.2, 8, 4.6], 2.2, 0.9) +
+        rule(2.6, BASELINE, 11.6, '#d1d1d6', 0.6) +
+        '<path d="M12.6 5.5h1M12.6 9h1M12.6 12.5h1" stroke="#8a8a8e" stroke-width="0.9"/>',
+    3,
+);
+

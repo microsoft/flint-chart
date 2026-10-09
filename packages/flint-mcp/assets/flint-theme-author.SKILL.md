@@ -99,7 +99,7 @@ Use `extends` when a built-in preset already supplies the intended compiler
 behavior and the new theme is a focused variation. Available preset IDs are:
 
 `nyt`, `economist`, `swiss`, `nature`, `mckinsey`, `datawrapper`, `powerbi`,
-`powerbi-light`, `pop`, and `cartoon`.
+`powerbi-light`, `pop`, `cartoon`, and `apple`.
 
 Nested objects merge. Arrays and scalar values replace the preset value. If you
 replace `ink.series.categorical`, also consider replacing

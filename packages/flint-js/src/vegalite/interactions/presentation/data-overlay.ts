@@ -21,6 +21,22 @@ export interface DataOverlayOptions {
     containerLayoutSize(): { width: number; height: number };
 }
 
+type OverlayChannel = 'x' | 'x2' | 'y' | 'y2';
+
+/** The channels an overlay projects, or undefined when its mark cannot be drawn from them. */
+export function overlayChannels(spec: ChartOverlaySpec): readonly OverlayChannel[] | undefined {
+    const has = (channel: OverlayChannel): boolean => !!spec.encodings[channel];
+    if (spec.mark !== 'rule' && spec.mark !== 'rect') return has('x') && has('y') ? ['x', 'y'] : undefined;
+    if (has('x') && has('y') && has('x2') && has('y2')) return ['x', 'y', 'x2', 'y2'];
+    const span = (start: OverlayChannel, end: OverlayChannel): OverlayChannel[] | undefined =>
+        spec.mark === 'rect'
+            ? (has(start) && has(end) ? [start, end] : undefined)
+            : (has(start) && !has(end) ? [start] : undefined);
+    if (!has('y') && !has('y2')) return span('x', 'x2');
+    if (!has('x') && !has('x2')) return span('y', 'y2');
+    return undefined;
+}
+
 export function orderedOverlayRows(spec: ChartOverlaySpec): readonly Record<string, unknown>[] {
     const rows = [...spec.data.values];
     const field = spec.encodings.order?.field;
@@ -128,21 +144,14 @@ export function createDataOverlay({
         });
         layer.setAttribute('viewBox', `0 0 ${space.logicalWidth} ${space.logicalHeight}`);
 
+        // On a band scale a rect spans its band from edge to edge, while a
+        // point, line, rule, or text sits at the band's centre, as Vega-Lite
+        // places those marks.
+        const bandCentre = (scale: any): number => (typeof scale.bandwidth === 'function' ? Number(scale.bandwidth()) || 0 : 0) / 2;
         for (const [name, spec] of current) {
             const rows = orderedOverlayRows(spec);
-            const projected = (row: Record<string, unknown>, xField: string, yField: string) => {
-                const x = xScale(row[xField]);
-                const y = yScale(row[yField]);
-                return Number.isFinite(x) && Number.isFinite(y) ? { x, y } : undefined;
-            };
-            const points = rows.flatMap((row) => {
-                const x = xScale(row[spec.encodings.x.field]);
-                const y = yScale(row[spec.encodings.y.field]);
-                return Number.isFinite(x) && Number.isFinite(y)
-                    ? [{ x: x + space.originX, y: y + space.originY }]
-                    : [];
-            });
-            if (points.length === 0) continue;
+            const centreX = spec.mark === 'rect' ? 0 : bandCentre(xScale);
+            const centreY = spec.mark === 'rect' ? 0 : bandCentre(yScale);
             const identify = (element: SVGElement, rowIndex?: number): void => {
                 element.setAttribute('data-flint-overlay', name);
                 element.setAttribute('data-flint-role', spec.role);
@@ -154,9 +163,71 @@ export function createDataOverlay({
                 element.style.pointerEvents = 'none';
             };
 
+            if (spec.mark === 'rule' || spec.mark === 'rect') {
+                // A missing start channel spans the plot along that axis.
+                const extent = (
+                    scale: any, origin: number, centre: number, row: Record<string, unknown>,
+                    start: string | undefined, end: string | undefined,
+                ): [number, number] | undefined => {
+                    if (!start) {
+                        const range = scale.range() as number[];
+                        return [Math.min(...range) + origin, Math.max(...range) + origin];
+                    }
+                    const from = scale(row[start]) + centre;
+                    const to = end ? scale(row[end]) + centre : from;
+                    return Number.isFinite(from) && Number.isFinite(to) ? [from + origin, to + origin] : undefined;
+                };
+                rows.forEach((row, rowIndex) => {
+                    const xs = extent(xScale, space.originX, centreX, row, spec.encodings.x?.field, spec.encodings.x2?.field);
+                    const ys = extent(yScale, space.originY, centreY, row, spec.encodings.y?.field, spec.encodings.y2?.field);
+                    if (!xs || !ys) return;
+                    const [x, x2] = xs;
+                    const [y, y2] = ys;
+                    if (spec.mark === 'rule') {
+                        const rule = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        identify(rule, rowIndex);
+                        rule.setAttribute('x1', String(x));
+                        rule.setAttribute('y1', String(y));
+                        rule.setAttribute('x2', String(x2));
+                        rule.setAttribute('y2', String(y2));
+                        rule.setAttribute('stroke', spec.style?.stroke ?? '#4c78a8');
+                        rule.setAttribute('stroke-width', String(spec.style?.strokeWidth ?? 1));
+                        if (spec.style?.strokeDash?.length) rule.setAttribute('stroke-dasharray', spec.style.strokeDash.join(' '));
+                        layer.append(rule);
+                        return;
+                    }
+                    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                    identify(rect, rowIndex);
+                    rect.setAttribute('x', String(Math.min(x, x2)));
+                    rect.setAttribute('y', String(Math.min(y, y2)));
+                    rect.setAttribute('width', String(Math.abs(x2 - x)));
+                    rect.setAttribute('height', String(Math.abs(y2 - y)));
+                    rect.setAttribute('fill', spec.style?.fill ?? '#4c78a8');
+                    rect.setAttribute('fill-opacity', String(spec.style?.fillOpacity ?? 0.2));
+                    if (spec.style?.stroke) rect.setAttribute('stroke', spec.style.stroke);
+                    if (spec.style?.strokeWidth !== undefined) rect.setAttribute('stroke-width', String(spec.style.strokeWidth));
+                    layer.append(rect);
+                });
+                continue;
+            }
+
+            const xField = spec.encodings.x?.field;
+            const yField = spec.encodings.y?.field;
+            if (!xField || !yField) continue;
+            const projected = (row: Record<string, unknown>) => {
+                const x = xScale(row[xField]) + centreX;
+                const y = yScale(row[yField]) + centreY;
+                return Number.isFinite(x) && Number.isFinite(y) ? { x, y } : undefined;
+            };
+            const points = rows.flatMap((row) => {
+                const point = projected(row);
+                return point ? [{ x: point.x + space.originX, y: point.y + space.originY }] : [];
+            });
+            if (points.length === 0) continue;
+
             if (spec.mark === 'line') {
                 const vertices = rows.flatMap((row) => {
-                    const point = projected(row, spec.encodings.x.field, spec.encodings.y.field);
+                    const point = projected(row);
                     return point ? [{ point, record: row }] : [];
                 });
                 projectedVertices.set(name, vertices);
@@ -182,7 +253,7 @@ export function createDataOverlay({
             }
 
             rows.forEach((row, rowIndex) => {
-                const point = projected(row, spec.encodings.x.field, spec.encodings.y.field);
+                const point = projected(row);
                 if (!point) return;
                 const x = point.x + space.originX;
                 const y = point.y + space.originY;
@@ -215,36 +286,6 @@ export function createDataOverlay({
                     layer.append(text);
                     return;
                 }
-
-                const endPoint = spec.encodings.x2 && spec.encodings.y2
-                    ? projected(row, spec.encodings.x2.field, spec.encodings.y2.field)
-                    : undefined;
-                if (!endPoint) return;
-                const x2 = endPoint.x + space.originX;
-                const y2 = endPoint.y + space.originY;
-                if (spec.mark === 'rule') {
-                    const rule = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                    identify(rule, rowIndex);
-                    rule.setAttribute('x1', String(x));
-                    rule.setAttribute('y1', String(y));
-                    rule.setAttribute('x2', String(x2));
-                    rule.setAttribute('y2', String(y2));
-                    rule.setAttribute('stroke', spec.style?.stroke ?? '#4c78a8');
-                    rule.setAttribute('stroke-width', String(spec.style?.strokeWidth ?? 1));
-                    layer.append(rule);
-                    return;
-                }
-                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                identify(rect, rowIndex);
-                rect.setAttribute('x', String(Math.min(x, x2)));
-                rect.setAttribute('y', String(Math.min(y, y2)));
-                rect.setAttribute('width', String(Math.abs(x2 - x)));
-                rect.setAttribute('height', String(Math.abs(y2 - y)));
-                rect.setAttribute('fill', spec.style?.fill ?? '#4c78a8');
-                rect.setAttribute('fill-opacity', String(spec.style?.fillOpacity ?? 0.2));
-                if (spec.style?.stroke) rect.setAttribute('stroke', spec.style.stroke);
-                if (spec.style?.strokeWidth !== undefined) rect.setAttribute('stroke-width', String(spec.style.strokeWidth));
-                layer.append(rect);
             });
         }
         if (layer.childElementCount === 0) layer.remove();

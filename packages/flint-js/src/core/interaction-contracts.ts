@@ -156,13 +156,17 @@ export interface OverlayFieldEncoding {
     field: string;
 }
 
-/** A retained visual projected through an existing plot's scales. */
+/**
+ * A retained visual projected through an existing plot's scales. A rule with
+ * only `x` or only `y`, and a rect with only `x`/`x2` or only `y`/`y2`, span
+ * the plot along the other axis.
+ */
 export interface ChartOverlaySpec {
     mark: OverlayMark;
     data: { values: readonly Record<string, unknown>[] };
     encodings: {
-        x: OverlayFieldEncoding;
-        y: OverlayFieldEncoding;
+        x?: OverlayFieldEncoding;
+        y?: OverlayFieldEncoding;
         x2?: OverlayFieldEncoding;
         y2?: OverlayFieldEncoding;
         order?: OverlayFieldEncoding;

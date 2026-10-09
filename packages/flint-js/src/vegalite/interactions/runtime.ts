@@ -89,7 +89,7 @@ import { createLegendRangeOverlay } from './presentation/legend-range-overlay';
 import { createReorderResetControls } from './presentation/reorder-reset-controls';
 import { createViewportResetControl } from './presentation/viewport-reset-control';
 import { createInspectGuideOverlay } from './presentation/inspect-guide-overlay';
-import { createDataOverlay } from './presentation/data-overlay';
+import { createDataOverlay, overlayChannels } from './presentation/data-overlay';
 import { buildAccessibleTree, type AccessibleNode } from './accessible-navigation/model';
 import { mountAccessibleNavigation } from './accessible-navigation/controller';
 import {
@@ -996,7 +996,8 @@ export function mountVegaInteractions(
 
     const overlayProjects = (spec: ChartOverlaySpec | null): boolean => {
         if (spec === null) return true;
-        const channels: ('x' | 'y' | 'x2' | 'y2')[] = spec.mark === 'rule' || spec.mark === 'rect' ? ['x', 'y', 'x2', 'y2'] : ['x', 'y'];
+        const channels = overlayChannels(spec);
+        if (!channels) return false;
         const xScale = view.scale(plan.overlayScales?.x ?? '');
         const yScale = view.scale(plan.overlayScales?.y ?? '');
         if (typeof xScale !== 'function' || typeof yScale !== 'function') return false;

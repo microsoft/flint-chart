@@ -220,6 +220,7 @@ Call `list_themes` to choose an id, then place it beside `chart_spec`:
 | `powerbi` | Dashboard tile: compact, legend to the right, latest point emphasised. |
 | `powerbi-light` | Light dashboard tile: white canvas, fine gridlines, and bright categorical color. |
 | `cartoon` | Playful illustration: warm paper, rounded type, bold outlines, and bright color. |
+| `apple` | App-interface chart: light labels, trailing value axis, symbols beside color. |
 
 ### 2. Override a preset
 

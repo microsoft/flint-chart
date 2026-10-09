@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from 'vitest';
 import type { ChartOverlaySpec } from '../src/interactive/language/updates';
-import { orderedOverlayRows, projectPointToPath } from '../src/vegalite/interactions/presentation/data-overlay';
+import { orderedOverlayRows, overlayChannels, projectPointToPath } from '../src/vegalite/interactions/presentation/data-overlay';
 
 describe('retained data overlays', () => {
     it('orders a path by time when the order field holds dates', () => {
@@ -54,5 +54,29 @@ describe('retained data overlays', () => {
         expect(projection?.segment.start.value.Year).toBe(1980);
         expect(projection?.segment.end.value.Year).toBe(1990);
         expect(projection?.segment.t).toBeCloseTo(0.7);
+    });
+});
+describe('overlay channels', () => {
+    const overlay = (mark: ChartOverlaySpec['mark'], channels: string[]): ChartOverlaySpec => ({
+        mark,
+        data: { values: [] },
+        encodings: Object.fromEntries(channels.map((channel) => [channel, { field: channel }])),
+        role: 'test',
+    });
+
+    it('spans the plot along an axis a rule or rect leaves out', () => {
+        expect(overlayChannels(overlay('rule', ['x']))).toEqual(['x']);
+        expect(overlayChannels(overlay('rule', ['y']))).toEqual(['y']);
+        expect(overlayChannels(overlay('rect', ['x', 'x2']))).toEqual(['x', 'x2']);
+        expect(overlayChannels(overlay('rect', ['y', 'y2']))).toEqual(['y', 'y2']);
+        expect(overlayChannels(overlay('rect', ['x', 'y', 'x2', 'y2']))).toEqual(['x', 'y', 'x2', 'y2']);
+    });
+
+    it('rejects a combination that draws nothing', () => {
+        expect(overlayChannels(overlay('rect', ['x']))).toBeUndefined();
+        expect(overlayChannels(overlay('rect', ['x', 'x2', 'y']))).toBeUndefined();
+        expect(overlayChannels(overlay('rule', ['x', 'x2']))).toBeUndefined();
+        expect(overlayChannels(overlay('line', ['x']))).toBeUndefined();
+        expect(overlayChannels(overlay('point', ['x', 'y']))).toEqual(['x', 'y']);
     });
 });

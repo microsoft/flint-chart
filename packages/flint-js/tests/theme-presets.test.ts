@@ -467,6 +467,7 @@ describe('theme compileDefaults', () => {
 
     it('declares an explicit sparse band-fit preference for every house', () => {
         const expected = {
+            apple: 1,
             cartoon: 0.75,
             datawrapper: 1,
             economist: 0.55,

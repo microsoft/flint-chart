@@ -269,7 +269,8 @@
       "powerbi-light": "Light dashboard tiles with a white canvas, fine gridlines, and legends on the right.",
       "swiss": "International Typographic Style with a visible grid, strong black structure, and a single red accent.",
       "pop": "A pop-art remix of Swiss with electric process colors, heavy black structure, and punchy display type.",
-      "cartoon": "Playful charts with warm paper, rounded type, bold outlines, bright colors, and a soft dashed grid."
+      "cartoon": "Playful charts with warm paper, rounded type, bold outlines, bright colors, and a soft dashed grid.",
+      "apple": "Quiet app-interface charts where the data leads: light labels, a sparse grid, a trailing value axis, a symbol beside every color, and rounded bars."
     },
     "cases": {
       "keeling": {

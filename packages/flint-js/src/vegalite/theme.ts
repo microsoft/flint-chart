@@ -3558,7 +3558,9 @@ function applyRedundantChannels(spec: any, d: DesignDecisions, say: (p: string, 
             if (!node.encoding.strokeDash) node.encoding.strokeDash = { ...key };
             placed = true;
         }
-        if (r.shape && LINE_MARKS.has(mark) && d.marks.point?.show) {
+        if (r.shape && LINE_MARKS.has(mark) && d.marks.point?.show && normalizeMark(node.mark).point !== false) {
+            // The vertex overlay takes its shape from the line's own encoding.
+            if (!node.encoding.shape) node.encoding.shape = { ...key };
             placed = true;
         }
     });
