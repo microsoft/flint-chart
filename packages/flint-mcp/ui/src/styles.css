@@ -43,6 +43,11 @@ body {
   color: var(--muted);
 }
 
+.status-reason {
+  margin-top: 4px;
+  font-size: 12px;
+}
+
 .app {
   display: flex;
   flex-direction: column;

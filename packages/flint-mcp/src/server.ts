@@ -118,7 +118,25 @@ function jsonResult(value: unknown): JsonContent {
 
 /** The chart as the model reads it before it is drawn: the same report the drawn view sends as its context. */
 function chartReport(input: ChartAssemblyInput, updates: readonly ChartUpdate[] | undefined, result: ValidateResult): string {
-  return chartContext({ agent: input, shown: input, updates, checks: result.updates, warnings: result.warnings }).text;
+  const report = chartContext({ agent: input, shown: input, updates, checks: result.updates, warnings: result.warnings }).text;
+  const ops = (result.updates ?? []).flatMap((check) => check.ops);
+  const failed = ops.filter((op) => !op.ok).length;
+  if (failed === 0) return report;
+  return `${failed} of ${ops.length} update ops do not apply (✗ below); the chart draws without them. ` +
+    `Fix each one and call again, or tell the user what is missing.\n${report}`;
+}
+
+/** A create_chart_view call that draws nothing: the model reads the fix to make, the card shows the reason. */
+function notDrawn(reason: string) {
+  return {
+    content: [{
+      type: 'text' as const,
+      text: `Chart spec has errors: ${reason}. No chart was drawn; the card shows this reason. ` +
+        'Fix the spec and call create_chart_view again, which opens a new card.',
+    }],
+    _meta: { flint: { error: reason } },
+    isError: true,
+  };
 }
 
 function errorResult(err: unknown): JsonContent {
@@ -323,8 +341,8 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
         'With an interaction_spec it also reports the entries the chart would drop. ' +
         'With updates it rejects a malformed layer and reports, op by op, whether ' +
         'each will apply (✓) or why not (✗), in the same report create_chart_view ' +
-        'returns. Run it before create_chart_view whenever you pass updates, and fix ' +
-        'every ✗ first, so the user sees one chart.',
+        'returns. create_chart_view runs the same checks and draws nothing on an ' +
+        'error, so do not call this before it; use it to check a spec without drawing it.',
       inputSchema: { ...assemblyInputShape, ...updatesShape, backend: backendEnum },
     },
     async (args: any) => {
@@ -465,9 +483,12 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
         'for hover, click, brush, or zoom, pass interaction_spec ' +
         '(list_interaction_presets has the presets for each chart type). ' +
         'Pass updates to open the chart in a state (emphasis, a note, a range), ' +
-        'and call it again with new updates to change an open chart; check them ' +
-        'with validate_chart first. The result is a report of the chart: its ' +
-        'encodings, interactions, and each update op as applied (✓) or not and why (✗). ' +
+        'and call it again with new updates to show the chart in a new state; each ' +
+        'call opens a new card, and earlier cards stay as they were. It validates ' +
+        'the spec itself: an invalid spec or update layer returns an error and draws ' +
+        'nothing, so call it directly, without validate_chart first. The result is a ' +
+        'report of the chart: its encodings, interactions, and each update op as ' +
+        'applied (✓) or not and why (✗); fix a ✗ and call again, or tell the user. ' +
         'What the user then does on the chart reaches you with their next message.',
       inputSchema: { ...assemblyInputShape, ...updatesShape },
       _meta: { ui: { resourceUri: CHART_VIEW_RESOURCE_URI } },
@@ -482,19 +503,16 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
           roots: await clientRoots(),
           updates,
         });
-        const note = result.valid
-          ? chartReport(input, updates, result)
-          : `Chart spec has errors: ${result.errors.map((e) => e.message).join('; ')}`;
+        if (!result.valid) return notDrawn(result.errors.map((e) => e.message).join('; '));
         return {
-          content: [{ type: 'text' as const, text: note }],
+          content: [{ type: 'text' as const, text: chartReport(input, updates, result) }],
           // The view's payload, with data inlined so it never sees an unreadable
           // local data.url. `_meta` reaches the view but not the model, which
           // reads `content` only when there is no `structuredContent`.
           _meta: { flint: { input, ...(updates ? { updates } : {}) } },
-          ...(result.valid ? {} : { isError: true }),
         };
       } catch (err) {
-        return errorResult(err);
+        return notDrawn(err instanceof Error ? err.message : String(err));
       }
     },
   );

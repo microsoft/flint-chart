@@ -303,7 +303,25 @@ describe('MCP server', () => {
     expect(view._meta.flint.updates).toEqual([layer]);
     const viewBad: any = await client.callTool({ name: 'create_chart_view', arguments: { ...base, updates: [{ id: '', ops: [] }] } });
     expect(viewBad.isError).toBe(true);
-    expect(viewBad.content[0].text).toBe('Chart spec has errors: updates[0]: "id" must be a non-empty string.');
+    expect(viewBad.content[0].text).toContain('Chart spec has errors: updates[0]: "id" must be a non-empty string.');
+    expect(viewBad.content[0].text).toContain('No chart was drawn; the card shows this reason.');
+    expect(viewBad._meta.flint).toEqual({ error: 'updates[0]: "id" must be a non-empty string.' });
+    const viewOff: any = await client.callTool({ name: 'create_chart_view', arguments: { ...base, updates: [layer, shorthand] } });
+    expect(viewOff.isError).toBeFalsy();
+    expect(viewOff._meta.flint.updates).toEqual([layer, shorthand]);
+    expect(viewOff.content[0].text).toMatch(/^1 of 2 update ops do not apply \(✗ below\); the chart draws without them\./);
+    expect(viewOff.content[0].text).toContain('✗ overlay "goal"');
+  });
+
+  it('create_chart_view draws nothing for an invalid spec', async () => {
+    const res: any = await client.callTool({
+      name: 'create_chart_view',
+      arguments: { ...barChart, chart_spec: { ...barChart.chart_spec, chartType: 'Not A Real Chart' } },
+    });
+    expect(res.isError).toBe(true);
+    expect(res.content[0].text).toContain('call create_chart_view again, which opens a new card');
+    expect(res._meta.flint.input).toBeUndefined();
+    expect(res._meta.flint.error).toContain('Not A Real Chart');
   });
 
   it('a misshapen op is rejected with its shape, and the schema lists every op shape', async () => {

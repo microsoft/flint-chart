@@ -36,8 +36,9 @@ other backends leave `interaction_spec` and updates untouched.
 ## Which workflow the user is asking for
 
 - **Presets through the MCP tools:** put the object beside `chart_spec` as
-  `interaction_spec` in the input of `create_chart_view`; `validate_chart`
-  reports the same warnings without rendering. `list_interaction_presets`
+  `interaction_spec` in the input of `create_chart_view`, which reports its
+  warnings; `validate_chart` reports the same without rendering, for when you
+  do not draw. `list_interaction_presets`
   with `chartType` lists the presets that chart type supports, what each
   does, and its options.
 - **An update through the MCP tools:** there is no handle on the chart. Pass
@@ -208,7 +209,9 @@ The object is `{ "interactions": [ ... ] }`, beside `chart_spec` as
 }
 ```
 
-Run `validate_chart` with the object beside the chart spec. A malformed entry
+`create_chart_view` checks the object when it draws the chart; to check it
+without drawing, run `validate_chart` with the object beside the chart spec.
+Do not run both for the same chart. A malformed entry
 is an error: an unknown `type`, an option beside `type`, an `id` inside
 `options`, a bare string entry, a missing required option, an unsupported
 `reset` gesture, a duplicate `id`. A dropped or yielded entry is a warning
@@ -548,20 +551,23 @@ inside it:
 ```
 
 The view opens the chart with the layers applied, with the same look as a
-user action. To change an open chart, call `create_chart_view` again with the
-same input and the layers wanted now; the new list replaces what the previous
-call declared. The argument is state, and `interaction_spec` is behaviour, so
+user action. To show the chart in a new state, call `create_chart_view` again
+with the same input and the layers wanted now. Each call opens a new card with
+exactly those layers; earlier cards keep what they showed. The argument is state, and `interaction_spec` is behaviour, so
 each stays where it is. The reader's own brush or selection does not survive
 the new view; the context message reports it in field terms, and it is
 carried as a layer when it still serves the reader.
 
-Call `validate_chart` with the same input and `updates` first. A malformed
-layer is an `invalid_updates` error; otherwise its second text block is the
-report above, one line per op. Fix every ✗ (a key no row has, an overlay
-encoding written as `"x": "start"` instead of `{ "field": "start" }`, a
-viewport with no navigation preset) and validate again, so the reader sees one
-chart. The `create_chart_view` result is the same report. The reader's later
-brushes and clicks reach you with their next message, not in the same turn.
+Call `create_chart_view` directly; it validates the input and `updates`
+itself, so do not call `validate_chart` first. A malformed layer or an invalid
+spec is an error and draws nothing: the card shows the reason, and the fix
+opens a new card. Otherwise the result is the report above, one
+line per op, led by a count when an op did not apply. The chart is drawn
+without a ✗ op: fix it (a key no row has, an overlay encoding written as
+`"x": "start"` instead of `{ "field": "start" }`, a viewport with no
+navigation preset) and call again, or tell the reader what is missing. The
+reader's later brushes and clicks reach you with their next message, not in
+the same turn.
 
 ## Use Flint in an application
 
@@ -920,7 +926,7 @@ For an `interaction_spec`:
 4. `groupBy` and `seriesBy` are present where required, and name bound fields.
 5. At most one entry owns the plot drag, the double-click, the legend click,
    and the retained mark focus.
-6. `validate_chart` returns no warning.
+6. `create_chart_view` (or `validate_chart`, when not drawing) returns no warning.
 
 For a `ChartUpdate`:
 

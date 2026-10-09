@@ -1015,7 +1015,10 @@ const NO_UPDATES: readonly ChartUpdate[] = [];
 export function FlintApp() {
   const [input, setInput] = useState<ChartAssemblyInput | null>(null);
   const [updates, setUpdates] = useState<readonly ChartUpdate[]>(NO_UPDATES);
+  // The reason a rejected call drew nothing; the card keeps it, since a fix opens a new card.
+  const [notDrawn, setNotDrawn] = useState<string | null>(null);
   const [hostContext, setHostContext] = useState<McpUiHostContext | undefined>();
+  const toolArgs = useRef<(ChartAssemblyInput & { updates?: ChartUpdate[] }) | undefined>(undefined);
 
   const { app, error } = useApp({
     appInfo: { name: 'Flint Chart', version: __FLINT_MCP_VERSION__ },
@@ -1026,31 +1029,29 @@ export function FlintApp() {
       app.onerror = (err) => console.error(err);
       app.onhostcontextchanged = (params) =>
         setHostContext((prev) => ({ ...prev, ...params }));
+      // The raw args wait for the result: a call the server rejects draws nothing.
       app.ontoolinput = (params) => {
-        const args = params?.arguments as (ChartAssemblyInput & { updates?: ChartUpdate[] }) | undefined;
-        if (Array.isArray(args?.updates)) setUpdates(args.updates);
-        // Only accept raw tool args that already carry inline rows. A
-        // local `data.url` cannot be read in the browser, so for those we
-        // wait for the server-resolved input delivered via ontoolresult.
-        if (args?.chart_spec && Array.isArray(args.data?.values)) setInput(args);
+        toolArgs.current = params?.arguments as (ChartAssemblyInput & { updates?: ChartUpdate[] }) | undefined;
       };
       app.ontoolresult = (result) => {
         // The view's payload is in `_meta.flint`, which the model does not read;
-        // `structuredContent` is the fallback.
-        type Payload = { input?: ChartAssemblyInput; updates?: ChartUpdate[] };
+        // `structuredContent` is the fallback, then the raw args when they carry
+        // inline rows (a local `data.url` cannot be read in the browser).
+        type Payload = { input?: ChartAssemblyInput; updates?: ChartUpdate[]; error?: string };
         const { _meta, structuredContent } = result as { _meta?: { flint?: Payload }; structuredContent?: Payload };
         const structured = _meta?.flint ?? structuredContent;
-        if (Array.isArray(structured?.updates)) setUpdates(structured.updates);
-        // The server pre-resolves data (local data.url → inline values), so
-        // the server's input is authoritative. Prefer it whenever it
-        // carries rows the current input lacks.
-        if (structured?.input?.chart_spec && Array.isArray(structured.input.data?.values)) {
-          setInput((prev) =>
-            Array.isArray(prev?.data?.values) && prev!.data.values.length > 0
-              ? prev
-              : structured.input!,
-          );
+        if (result.isError) {
+          setNotDrawn(structured?.error ?? '');
+          return;
         }
+        const args = toolArgs.current;
+        const next = structured?.input?.chart_spec && Array.isArray(structured.input.data?.values)
+          ? structured.input
+          : args?.chart_spec && Array.isArray(args.data?.values) ? args : undefined;
+        if (!next) return;
+        setUpdates(structured?.updates ?? args?.updates ?? NO_UPDATES);
+        setNotDrawn(null);
+        setInput(next);
       };
     },
   });
@@ -1067,6 +1068,14 @@ export function FlintApp() {
     );
   }
   if (!app) return <div className="status">Connecting…</div>;
+  if (notDrawn !== null) {
+    return (
+      <div className="status">
+        <strong>Chart not drawn</strong>
+        {notDrawn && <div className="status-reason">{notDrawn}</div>}
+      </div>
+    );
+  }
   if (!input) return <div className="status">Waiting for chart data…</div>;
 
   return <FlintAppInner app={app} input={input} updates={updates} hostContext={hostContext} />;
