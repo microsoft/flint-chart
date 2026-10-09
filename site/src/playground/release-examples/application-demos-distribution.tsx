@@ -14,11 +14,15 @@ import { DemoColumns } from './application-demos-layout';
 
 /*
  * A belief the reader draws. The bars start as a plausible guess at how long
- * Old Faithful makes you wait; a drag across them sets each five-minute bin
- * to the pointer's height, and the host reads the sketch back as a mean, a
- * spread, a peak, and a share under an hour. Reveal draws the real month as
- * a faded overlay through the chart's own band scale, where a band's left
- * edge is the bin's lower edge, so the sketch and the data share one frame.
+ * Old Faithful makes you wait, with a handle on each bar's top and a line
+ * through the handles so the sketch reads as a curve. A drag from a handle or
+ * a bar sets every bin the pointer crosses to the pointer's height, and the
+ * host reads the sketch back as a mean, a spread, a peak, and a share under
+ * an hour. The handles and the line are overlays that carry the bar rows
+ * themselves, so a drag that starts on a handle resolves to the bar beneath
+ * it. Reveal draws the real month as faded bars through the chart's own band
+ * scale, where a band's left edge is the bin's lower edge, so the sketch and
+ * the data share one frame.
  */
 
 type Row = { Minutes: number; Eruptions: number };
@@ -35,6 +39,8 @@ const BINS = 13;
 const Y_MAX = 70;
 const HOUR = 60;
 const DATA_INK = '#d1495b';
+const SKETCH_INK = '#1f2328';
+const HANDLE_RADIUS = 12;
 
 const binValue = (bin: number) => FIRST + bin * WIDTH;
 const centre = (row: Row) => row[MIN] + WIDTH / 2;
@@ -75,11 +81,75 @@ function readingOf(rows: readonly Row[]): Reading {
 
 const DATA_READING = readingOf(DATA);
 
-/** The reader's sketch. */
-function sketchUpdate(rows: readonly Row[]): ChartUpdate {
+type Cue =
+  | { kind: 'hint' }
+  | { kind: 'active'; bin: number }
+  | { kind: 'none' };
+
+/**
+ * The reader's sketch: the bars, a line through their tops, and a knob on each.
+ * Before the first edit the peak knob says "Drag"; during a drag the knob under
+ * the pointer grows and names its count.
+ */
+function sketchUpdate(rows: readonly Row[], cue: Cue = { kind: 'none' }): ChartUpdate {
+  const values = rows.map((row) => ({ ...row }));
+  const encodings = { x: { field: MIN }, y: { field: COUNT } };
+  const peak = values.reduce((best, row) => (row[COUNT] > best[COUNT] ? row : best));
+  const cued = cue.kind === 'active' ? [values[cue.bin]] : cue.kind === 'hint' ? [peak] : [];
+  const label = cue.kind === 'active' ? String(values[cue.bin][COUNT]) : cue.kind === 'hint' ? 'Drag' : '';
   return {
     id: SKETCH_ID,
-    ops: [{ op: 'set-data', source: 'main', value: { rows: rows.map((row) => ({ ...row })) } }],
+    ops: [
+      { op: 'set-data', source: 'main', value: { rows: values } },
+      {
+        op: 'set-overlay',
+        name: 'curve',
+        value: {
+          mark: 'line',
+          role: 'sketch',
+          data: { values },
+          encodings,
+          style: { stroke: SKETCH_INK, strokeWidth: 1.5, opacity: 0.8 },
+        },
+      },
+      {
+        op: 'set-overlay',
+        name: 'handles',
+        value: {
+          mark: 'point',
+          role: 'handle',
+          data: { values },
+          encodings,
+          style: { fill: SKETCH_INK, stroke: '#ffffff', strokeWidth: 2, pointRadius: 6 },
+        },
+      },
+      {
+        op: 'set-overlay',
+        name: 'active',
+        value: cued.length > 0
+          ? {
+            mark: 'point',
+            role: 'handle',
+            data: { values: cued },
+            encodings,
+            style: { fill: SKETCH_INK, stroke: '#ffffff', strokeWidth: 2.5, pointRadius: 9 },
+          }
+          : null,
+      },
+      {
+        op: 'set-overlay',
+        name: 'handle-label',
+        value: cued.length > 0
+          ? {
+            mark: 'text',
+            role: 'handle-label',
+            data: { values: cued.map((row) => ({ ...row, label })) },
+            encodings: { ...encodings, text: { field: 'label' } },
+            style: { fill: SKETCH_INK, fontSize: 11, fontWeight: 'bold', textAlign: 'middle', dy: -15 },
+          }
+          : null,
+      },
+    ],
   };
 }
 
@@ -101,7 +171,8 @@ const revealUpdate = (shown: boolean): ChartUpdate => ({
   }],
 });
 
-const MOUNT: readonly ChartUpdate[] = [sketchUpdate(GUESS)];
+/** The data is retained before the sketch so its bars draw beneath the sketch's line and handles. */
+const MOUNT: readonly ChartUpdate[] = [revealUpdate(false), sketchUpdate(GUESS, { kind: 'hint' })];
 
 const SPEC = {
   data: { values: GUESS.map((row) => ({ ...row })) },
@@ -141,16 +212,16 @@ export function FitDistributionDemo() {
   const [rows, setRows] = useState<readonly Row[]>(rowsRef.current);
   const [revealed, setRevealed] = useState(false);
 
-  const apply = useCallback((next: Row[]): ChartUpdate => {
+  const apply = useCallback((next: Row[], cue?: Cue): ChartUpdate => {
     rowsRef.current = next;
     setRows(next);
-    return sketchUpdate(next);
+    return sketchUpdate(next, cue);
   }, []);
 
   const interactions = useMemo<readonly InteractionDef[]>(() => {
     const sketch: CanvasInteractionDef = {
       id: SKETCH_ID,
-      eventSource: dragTrigger(),
+      eventSource: dragTrigger(HANDLE_RADIUS),
       affordances: { mark: { cursor: 'drag', hover: 'target' } },
       handle(event) {
         if (event.action !== 'drag') return null;
@@ -158,11 +229,11 @@ export function FitDistributionDemo() {
           const value = event.target?.elements[0]?.value as Partial<Record<string, unknown>> | undefined;
           const bin = binOf(value?.[MIN]);
           last.current = bin === undefined ? null : { bin, count: rowsRef.current[bin][COUNT] };
-          return null;
+          return bin === undefined ? null : apply(rowsRef.current, { kind: 'active', bin });
         }
         if (event.phase === 'cancel') {
           last.current = null;
-          return null;
+          return apply(rowsRef.current);
         }
         const previous = last.current;
         const count = countOf(event.geometry.domain?.y);
@@ -176,12 +247,12 @@ export function FitDistributionDemo() {
           next[at][COUNT] = Math.round(previous.count + (count - previous.count) * t);
         }
         last.current = event.phase === 'commit' ? null : { bin, count };
-        return apply(next);
+        return apply(next, event.phase === 'commit' ? undefined : { kind: 'active', bin });
       },
     };
     const reset = externalInteraction<Record<string, never>>({
       id: RESET_ID,
-      handle: () => apply(GUESS.map((row) => ({ ...row }))),
+      handle: () => apply(GUESS.map((row) => ({ ...row })), { kind: 'hint' }),
     });
     const reveal = externalInteraction<{ shown: boolean }>({
       id: REVEAL_ID,

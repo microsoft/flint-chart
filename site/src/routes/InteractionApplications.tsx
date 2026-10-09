@@ -201,11 +201,11 @@ export function InteractionApplications() {
               <header className="bespoke-case-header">
                 <div>
                   <h2>Sketch the wait</h2>
-                  <p>How long between Old Faithful’s eruptions, in five-minute bins. Drag across the bars to draw the distribution you expect, then press Show the data to see the real month behind your sketch.</p>
+                  <p>How long between Old Faithful’s eruptions, in five-minute bins. Drag a handle, or sweep across the bars, to draw the distribution you expect, then press Show the data to see the real month behind your sketch.</p>
                   <Credit source={{ label: 'Azzalini & Bowman (1990), 272 eruptions in August 1985, as R datasets::faithful', url: 'https://stat.ethz.ch/R-manual/R-devel/library/datasets/html/faithful.html' }} />
                   <div className="bespoke-pattern">
                     <strong>Within chart</strong>
-                    <strong>Drag → set-data + set-overlay</strong>
+                    <strong>Drag a handle → set-data + set-overlay</strong>
                   </div>
                 </div>
                 <span className="bespoke-status">Case 11</span>
