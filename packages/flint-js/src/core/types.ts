@@ -7,6 +7,7 @@ import type { SemanticAnnotation, FormatSpec, DomainConstraint, TickConstraint }
 import type { ColorDecisionResult } from './color-decisions';
 import type { GeometryKind, ThemeGeometry, ThemeSpec } from './theme/types';
 import type { ChartInteractionSupport, InteractionSpec } from './interaction-spec';
+import type { ChartUpdateOp, UpdateTarget } from './interaction-contracts';
 
 /**
  * Core types for the chart engine library.
@@ -1097,6 +1098,12 @@ export interface ChartWarning {
     /** Optional: which channel(s) or field(s) triggered the warning */
     channel?: string;
     field?: string;
+    /** Optional: on an update the chart applied only in part, its id and what it left out. */
+    update?: {
+        id: string;
+        unsupportedOps: readonly ChartUpdateOp['op'][];
+        unresolvedTargets: readonly UpdateTarget[];
+    };
 }
 
 // ---------------------------------------------------------------------------

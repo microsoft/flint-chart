@@ -349,9 +349,21 @@ if (!result.valid) {
 }
 ```
 
+Pass `options.updates` (a ChartUpdate list) to check it against the chart in the
+same pass. A malformed list is an `invalid_updates` error. Otherwise
+`result.updates` says, op by op, what each update will do (`ok`, `text`) or why
+it will not apply (`reason`); each op that will not apply is also an
+`update_not_applied` warning, and `valid` stays about the spec. Backends other
+than `vegalite` report the updates as ignored.
+
+```ts
+const result = validateChart(input, 'vegalite', { updates });
+// result.updates: [{ id, ops: [{ op, text, ok, reason? }] }]
+```
+
 | Symbol | Purpose |
 |--------|---------|
-| `validateChart(input, backend, options?)` | Validate and assemble; never throws |
+| `validateChart(input, backend, options?)` | Validate and assemble, and check `options.updates` against the chart; never throws |
 | `validateChartInput(input, backend?, options?)` | Shape checks only; throws on the first problem |
 | `validateSemanticTypes(semantic_types)` | `unknown_semantic_type` warnings for labels not in the type registry (also included by `validateChart`) |
 | `assembleForBackend(backend, input, options?)` | Assemble and split out `_warnings` / `_width` / `_height` |

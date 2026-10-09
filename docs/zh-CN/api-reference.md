@@ -288,9 +288,19 @@ if (!result.valid) {
 }
 ```
 
+传入 `options.updates`（ChartUpdate 列表）即可在同一次校验中对照图表检查它。格式错误的列表是
+`invalid_updates` 错误。否则 `result.updates` 逐个 op 说明每个更新会做什么（`ok`、`text`），
+或为何不会生效（`reason`）；每个不会生效的 op 也是一条 `update_not_applied` 警告，`valid`
+仍只针对 spec。`vegalite` 以外的后端会报告更新被忽略。
+
+```ts
+const result = validateChart(input, 'vegalite', { updates });
+// result.updates: [{ id, ops: [{ op, text, ok, reason? }] }]
+```
+
 | 符号 | 用途 |
 |--------|---------|
-| `validateChart(input, backend, options?)` | 校验并装配；不抛出异常 |
+| `validateChart(input, backend, options?)` | 校验并装配，并对照图表检查 `options.updates`；不抛出异常 |
 | `validateChartInput(input, backend?, options?)` | 仅做结构检查；遇到第一个问题即抛出 |
 | `validateSemanticTypes(semantic_types)` | 对未在类型注册表中的标签返回 `unknown_semantic_type` 警告（`validateChart` 也会包含这些警告） |
 | `assembleForBackend(backend, input, options?)` | 装配并拆出 `_warnings` / `_width` / `_height` |

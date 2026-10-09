@@ -15,14 +15,14 @@ import { useApp } from '@modelcontextprotocol/ext-apps/react';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { ChartAssemblyInput, ChartOption, ChartUpdate, ChartWarning } from 'flint-chart';
-import { THEME_PRESETS, DEFAULT_THEME_ICON, getChartTransform } from 'flint-chart';
+import { THEME_PRESETS, DEFAULT_THEME_ICON, getChartTransform, validateChart } from 'flint-chart';
 import type { ChartChange, ChartState, InteractiveChartSurface } from 'flint-chart/interactive';
 import { FlintChart } from 'flint-chart/react';
 import { expressionInterpreter } from 'vega-interpreter';
 
 import { assemblePreviewSpec, renderFlintSvg, usesAutoPreviewSize, withAppPreviewDefaults } from './render';
 import { chartIconFor } from './chart-icons';
-import { chartContext, chartView, type ChartGesture } from './chart-context';
+import { chartContext, chartView, type ChartGesture } from '../../src/chart-context';
 import {
   buildPanelModel,
   setProperty,
@@ -884,6 +884,8 @@ export function FlintAppInner(props: {
   const lastContext = useRef<string | null>(null);
   const shownSurface = useRef<InteractiveChartSurface | null>(null);
   const shownWarnings = useRef<readonly ChartWarning[]>([]);
+  const drawnUpdates = useRef<readonly ChartUpdate[]>([]);
+  const checks = useMemo(() => (updates.length > 0 ? validateChart(current, 'vegalite', { updates }).updates : undefined), [current, updates]);
   const gestures = useRef(new Map<string, ChartGesture>());
   const agentView = useMemo(() => {
     try {
@@ -901,7 +903,9 @@ export function FlintAppInner(props: {
       agentView,
       shownView,
       updates,
+      checks,
       warnings: shownWarnings.current,
+      drawnUpdates: drawnUpdates.current,
       gestures: gestures.current,
     });
     if (context.text === lastContext.current) return;
@@ -910,10 +914,13 @@ export function FlintAppInner(props: {
       content: [{ type: 'text', text: context.text }],
       structuredContent: context.data,
     }).catch((err) => console.warn('The host declined the chart context', err));
-  }, [app, input, current, agentView, shownView, updates]);
+  }, [app, input, current, agentView, shownView, updates, checks]);
   const handleRender = useCallback(async (surface: InteractiveChartSurface) => {
     const mounted = shownSurface.current !== surface;
-    if (mounted) gestures.current.clear();
+    if (mounted) {
+      gestures.current.clear();
+      drawnUpdates.current = updates;
+    }
     shownSurface.current = surface;
     // Read here: the `onWarnings` state may not have landed when the chart renders.
     const mountWarnings = await surface.warnings;
@@ -924,7 +931,7 @@ export function FlintAppInner(props: {
     shownWarnings.current = [...assembled.warnings, ...kept];
     const state = surface.getState();
     if (state) sendContext(state);
-  }, [assembled.warnings, sendContext]);
+  }, [assembled.warnings, sendContext, updates]);
   // Host updates also report changes; the render after them sends the context once.
   // A preview is too frequent for it.
   const handleChange = useCallback((change: ChartChange) => {
@@ -1028,11 +1035,14 @@ export function FlintApp() {
         if (args?.chart_spec && Array.isArray(args.data?.values)) setInput(args);
       };
       app.ontoolresult = (result) => {
-        const structured = (result as { structuredContent?: { input?: ChartAssemblyInput; updates?: ChartUpdate[] } })
-          .structuredContent;
+        // The view's payload is in `_meta.flint`, which the model does not read;
+        // `structuredContent` is the fallback.
+        type Payload = { input?: ChartAssemblyInput; updates?: ChartUpdate[] };
+        const { _meta, structuredContent } = result as { _meta?: { flint?: Payload }; structuredContent?: Payload };
+        const structured = _meta?.flint ?? structuredContent;
         if (Array.isArray(structured?.updates)) setUpdates(structured.updates);
         // The server pre-resolves data (local data.url → inline values), so
-        // structuredContent.input is authoritative. Prefer it whenever it
+        // the server's input is authoritative. Prefer it whenever it
         // carries rows the current input lacks.
         if (structured?.input?.chart_spec && Array.isArray(structured.input.data?.values)) {
           setInput((prev) =>

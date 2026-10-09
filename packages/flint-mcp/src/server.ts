@@ -12,7 +12,7 @@ import {
 } from '@modelcontextprotocol/ext-apps/server';
 import { z } from 'zod';
 
-import { renderChart, resolveDataSource } from './render/index.js';
+import { renderChart } from './render/index.js';
 import type { RenderBackend } from './render/types.js';
 import { compileChart } from './tools/compile.js';
 import { validateChart } from './tools/validate.js';
@@ -25,9 +25,10 @@ import {
   type SupportedBackend,
   type AssemblyInputArgs,
 } from './tools/schemas.js';
-import { validateChartUpdates, type ChartUpdate } from 'flint-chart';
+import type { ChartAssemblyInput, ChartUpdate, ValidateResult } from 'flint-chart';
 
 import { VERSION } from './version.js';
+import { chartContext } from './chart-context.js';
 export { VERSION };
 
 export const AGENT_SKILL_RESOURCE_URI = 'flint://agent-skill';
@@ -113,6 +114,11 @@ type JsonContent = { content: { type: 'text'; text: string }[]; isError?: boolea
 
 function jsonResult(value: unknown): JsonContent {
   return { content: [{ type: 'text', text: JSON.stringify(value, null, 2) }] };
+}
+
+/** The chart as the model reads it before it is drawn: the same report the drawn view sends as its context. */
+function chartReport(input: ChartAssemblyInput, updates: readonly ChartUpdate[] | undefined, result: ValidateResult): string {
+  return chartContext({ agent: input, shown: input, updates, checks: result.updates, warnings: result.warnings }).text;
 }
 
 function errorResult(err: unknown): JsonContent {
@@ -314,22 +320,23 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
       description:
         'Validate a Flint chart spec for a backend without rendering. Reports ' +
         'whether it is valid, all warnings/errors, and the computed layout size. ' +
-        'With an interaction_spec it also reports the entries the chart would drop, ' +
-        'and with updates it rejects a malformed layer.',
+        'With an interaction_spec it also reports the entries the chart would drop. ' +
+        'With updates it rejects a malformed layer and reports, op by op, whether ' +
+        'each will apply (✓) or why not (✗), in the same report create_chart_view ' +
+        'returns. Run it before create_chart_view whenever you pass updates, and fix ' +
+        'every ✗ first, so the user sees one chart.',
       inputSchema: { ...assemblyInputShape, ...updatesShape, backend: backendEnum },
     },
     async (args: any) => {
       try {
-        const input = toAssemblyInput(args as AssemblyInputArgs);
-        const result = validateChart(input, args.backend as RenderBackend, { ...dataSourceOptions, roots: await clientRoots() });
-        const updateErrors = args.updates === undefined ? [] : validateChartUpdates(args.updates);
-        if (updateErrors.length === 0) return jsonResult(result);
-        return jsonResult({
-          ...result,
-          valid: false,
-          warnings: [...result.warnings, ...updateErrors],
-          errors: [...result.errors, ...updateErrors],
+        const { result, input } = validateChart(toAssemblyInput(args as AssemblyInputArgs), args.backend as RenderBackend, {
+          ...dataSourceOptions,
+          roots: await clientRoots(),
+          updates: args.updates,
         });
+        if (!result.valid || args.backend !== 'vegalite') return jsonResult(result);
+        const report = chartReport(input, args.updates, result);
+        return { content: [...jsonResult(result).content, { type: 'text' as const, text: report }] };
       } catch (err) {
         return errorResult(err);
       }
@@ -458,45 +465,33 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
         'for hover, click, brush, or zoom, pass interaction_spec ' +
         '(list_interaction_presets has the presets for each chart type). ' +
         'Pass updates to open the chart in a state (emphasis, a note, a range), ' +
-        'and call it again with new updates to change an open chart.',
+        'and call it again with new updates to change an open chart; check them ' +
+        'with validate_chart first. The result is a report of the chart: its ' +
+        'encodings, interactions, and each update op as applied (✓) or not and why (✗). ' +
+        'What the user then does on the chart reaches you with their next message.',
       inputSchema: { ...assemblyInputShape, ...updatesShape },
       _meta: { ui: { resourceUri: CHART_VIEW_RESOURCE_URI } },
     },
     async (args: any) => {
       try {
-        // Inline any local `data.url` rows up front: the host UI renders
-        // Vega-Lite client-side and cannot read local files, so it must
-        // receive inline `data.values`. resolveDataSource is a no-op for specs
-        // that already carry inline values.
-        const input = resolveDataSource(
-          toAssemblyInput(args as AssemblyInputArgs),
-          { ...dataSourceOptions, roots: await clientRoots() },
-        );
+        // The host UI renders Vega-Lite client-side and cannot read local files,
+        // so it gets the input with `data.url` read into inline `data.values`.
         const updates = args.updates as ChartUpdate[] | undefined;
-        const updateErrors = updates === undefined ? [] : validateChartUpdates(updates);
-        if (updateErrors.length > 0) {
-          return { content: [{ type: 'text' as const, text: updateErrors[0].message }], isError: true };
-        }
-        const summary = validateChart(input, 'vegalite', dataSourceOptions);
-        const size = summary.computedSize
-          ? `${summary.computedSize.width}×${summary.computedSize.height}px`
-          : 'auto size';
-        const note = summary.valid
-          ? `Chart view ready: ${summary.chartType} (${size})` +
-            (summary.warnings.length ? `, ${summary.warnings.length} warning(s)` : '') +
-            (updates?.length ? `, ${updates.length} update layer(s)` : '')
-          : `Chart spec has errors: ${summary.errors.map((e) => e.message).join('; ')}`;
+        const { result, input } = validateChart(toAssemblyInput(args as AssemblyInputArgs), 'vegalite', {
+          ...dataSourceOptions,
+          roots: await clientRoots(),
+          updates,
+        });
+        const note = result.valid
+          ? chartReport(input, updates, result)
+          : `Chart spec has errors: ${result.errors.map((e) => e.message).join('; ')}`;
         return {
           content: [{ type: 'text' as const, text: note }],
-          // Fallback render payload for hosts that surface structuredContent to
-          // the UI; the UI primarily reads the tool arguments via ontoolinput.
-          // Data is pre-resolved to inline values so the client-side renderer
-          // never sees an unreadable local data.url.
-          structuredContent: {
-            input: input as unknown as Record<string, unknown>,
-            ...(updates ? { updates } : {}),
-          },
-          ...(summary.valid ? {} : { isError: true }),
+          // The view's payload, with data inlined so it never sees an unreadable
+          // local data.url. `_meta` reaches the view but not the model, which
+          // reads `content` only when there is no `structuredContent`.
+          _meta: { flint: { input, ...(updates ? { updates } : {}) } },
+          ...(result.valid ? {} : { isError: true }),
         };
       } catch (err) {
         return errorResult(err);

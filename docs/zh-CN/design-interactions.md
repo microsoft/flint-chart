@@ -260,7 +260,7 @@ options.interactions ──► compose ────────────┤
 
 - **`mountChart()`** 从输入读取 `interaction_spec` 并与代码定义合并。`<FlintChart>` 经由它挂载，宿主只需传入 spec：未声明交互的图表以静态渲染，不挂载运行时。MCP 的 `create_chart_view`、站点编辑器与图库都这样挂载。
 - **`getState()` 与 `onChange()`** 把图表作为上下文交给宿主。MCP 视图在每次已提交的变更后把状态发给模型；应用面板通过预览实时跟随悬停或刷选。
-- **`validateChart()`** 对装配后的语义运行解析器与准入，在任何渲染之前返回与挂载相同的警告。格式错误的 spec 是 `invalid_interaction_spec` 错误。MCP 的 `validate_chart` 返回同一列表。
+- **`validateChart()`** 对装配后的语义运行解析器与准入，在任何渲染之前返回与挂载相同的警告。格式错误的 spec 是 `invalid_interaction_spec` 错误。MCP 的 `validate_chart` 返回同一列表。传入 `options.updates` 时，它会在同一次校验中对照图表检查每个更新 op（键所匹配的行、叠加层编码、视口或排序所需的预设），让 Agent 在图表绘制之前就知道哪些不会生效。
 - **`supportedInteractionPresets(def.interactionSupport)`** 列出图表类型按声明支持的预设。`list_chart_types` 按图表类型返回它，Vega-Lite 参考文档打印它。数据仍可能在挂载时移除某一项，指南对此有说明。
 - **交互实验室的覆盖页签**为每种图表类型装配一个代表性用例，展示每种图表类型对每个预设的情况：对该数据生效、类型支持但该数据未确认、或从不提供。
 

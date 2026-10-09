@@ -311,6 +311,11 @@ export function mountInteractiveChartSurface(
                     severity: 'warning',
                     code: result.status === 'unsupported' ? 'unsupported_update' : 'partially_applied_update',
                     message: `Update "${initialUpdates[index]?.id}" was ${result.status.replace('-', ' ')}: ${parts.join('; ')}.`,
+                    update: {
+                        id: initialUpdates[index]?.id ?? '',
+                        unsupportedOps: result.unsupportedOps,
+                        unresolvedTargets: result.unresolvedTargets,
+                    },
                 };
                 warnings.push(warning);
                 console.warn(`[flint-chart] ${chartId}: ${warning.code}: ${warning.message}`);

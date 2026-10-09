@@ -364,7 +364,10 @@ Which fact is decided where:
   brush live through the previews.
 - **`validateChart()`** runs the resolver and admission against the assembled semantics and
   returns the same warnings the mount would, before anything renders. A malformed spec is an
-  `invalid_interaction_spec` error. The MCP `validate_chart` returns the same list.
+  `invalid_interaction_spec` error. The MCP `validate_chart` returns the same list. With
+  `options.updates` it also checks each update op against the chart (key rows, overlay
+  encodings, the presets a viewport or an order needs) in the same pass, so an agent learns
+  what will not apply before the chart is drawn.
 - **`supportedInteractionPresets(def.interactionSupport)`** lists the presets a chart type
   supports by declaration. `list_chart_types` returns it per chart type, and the Vega-Lite
   reference prints it. The data can still remove one at mount; the guide says so.

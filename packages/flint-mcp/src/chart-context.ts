@@ -1,4 +1,4 @@
-import type { ChartAssemblyInput, ChartUpdate, ChartWarning, PivotSurface } from 'flint-chart';
+import type { ChartAssemblyInput, ChartUpdate, ChartUpdateOp, ChartWarning, PivotSurface, UpdateCheck, UpdateOpCheck } from 'flint-chart';
 import type { ChartChange, ChartState, DomainCoordinate, SemanticElement } from 'flint-chart/interactive';
 
 /** The most marks the context names one by one; the text then says how many more there are. */
@@ -35,7 +35,8 @@ export function chartView(
 const VIEW_KEYS = new Set(['chartType', 'arrange', 'pivot']);
 
 export interface ChartContextSource {
-  state: ChartState;
+  /** What the drawn chart holds; absent before it is drawn, when the report is the checks alone. */
+  state?: ChartState;
   /** The spec the agent sent. */
   agent: ChartAssemblyInput;
   /** The spec the chart shows: the agent's, with the reader's panel edits. */
@@ -44,7 +45,12 @@ export interface ChartContextSource {
   shownView?: ChartView;
   /** The agent's updates. */
   updates?: readonly ChartUpdate[];
+  /** What each update will do on `shown`: `validateChart(shown, 'vegalite', { updates }).updates`. */
+  checks?: readonly UpdateCheck[];
+  /** On a drawn chart, an update warning carrying `update` marks the ops the chart left out. */
   warnings?: readonly ChartWarning[];
+  /** The updates the drawn chart mounted with, whose outcome `warnings` reports; others fall back to `checks`. */
+  drawnUpdates?: readonly ChartUpdate[];
   /** The last committed gesture of each reader interaction, by interaction id. */
   gestures?: ReadonlyMap<string, ChartGesture>;
 }
@@ -232,49 +238,67 @@ function filterText(field: string, filter: Filter): string {
   return `${field} from ${bound(filter.range[0])} to ${bound(filter.range[1])}`;
 }
 
-/** What one agent update does on the chart now. */
-function updateLines(update: ChartUpdate, state: ChartState, columns: Columns): string[] {
-  const parts: string[] = [];
-  let emphasis: string[] = [];
-  for (const op of update.ops) {
-    switch (op.op) {
-      case 'set-style':
-        if (op.value.state === 'emphasized' || op.value.state === 'focused') {
-          const values = valuesOf(state.entries?.get(update.id)?.elements ?? [], columns);
-          if (values.length === 0) parts.push('matched no marks');
-          else emphasis = emphasisLines(values, undefined);
-        } else {
-          parts.push('sets style');
-        }
-        break;
-      case 'set-annotation': {
-        if (!op.value) {
-          parts.push('removes a note');
-          break;
-        }
-        const notes = (state.annotations ?? []).filter((annotation) => annotation.id === update.id);
-        parts.push(notes.length > 0 ? notes.map((note) => noteText(note, columns)).join('; ') : 'note not placed');
-        break;
-      }
-      case 'set-viewport':
-        parts.push(`sets the ${op.axes} viewport`);
-        break;
-      case 'set-order':
-        parts.push(`orders ${op.field}`);
-        break;
-      case 'set-overlay':
-      case 'set-freeform-overlay':
-        parts.push(op.value ? `draws overlay "${op.name}"` : `removes overlay "${op.name}"`);
-        break;
-      case 'set-data':
-        parts.push(`replaces the data with ${plural(op.value.rows.length, 'row')}`);
-        break;
-    }
+/** The targets an op aims at, to match the ones a drawn chart could not resolve. */
+function opTargets(op: ChartUpdateOp): readonly unknown[] {
+  switch (op.op) {
+    case 'set-style':
+      return op.targets;
+    case 'set-annotation':
+      return [op.target];
+    case 'set-freeform-overlay':
+      return op.value?.body.flatMap((body) => (body.type === 'clone' ? body.targets : [])) ?? [];
+    default:
+      return [];
   }
-  // A listed emphasis ends the line with its colon, so it goes last.
-  const [head, ...listed] = emphasis;
-  const said = [...parts, head].filter(Boolean).join('; ');
-  return [`- ${update.id}: ${said || 'no effect'}${listed.length > 0 ? '' : '.'}`, ...listed];
+}
+
+/** Whether a drawn chart applied an op, and why not when it did not. */
+function drawnOutcome(op: ChartUpdateOp, check: UpdateOpCheck, left: ChartWarning['update']): { ok: boolean; reason?: string } {
+  if (!left) return { ok: true };
+  if (left.unsupportedOps.includes(op.op)) return { ok: false, reason: check.reason ?? 'the chart could not apply it.' };
+  const unresolved = new Set(left.unresolvedTargets.map((target) => JSON.stringify(target)));
+  if (opTargets(op).some((target) => unresolved.has(JSON.stringify(target)))) {
+    return { ok: false, reason: check.reason ?? 'its target matched no mark.' };
+  }
+  return { ok: true };
+}
+
+/** One line per op of an agent update: ✓ with what it does, or ✗ with why it did not apply. */
+function updateLines(
+  update: ChartUpdate,
+  check: UpdateCheck | undefined,
+  state: ChartState | undefined,
+  drawn: boolean,
+  left: ChartWarning['update'],
+  columns: Columns,
+): string[] {
+  const lines = [`- ${update.id}:`];
+  update.ops.forEach((op, index) => {
+    const opCheck = check?.ops[index] ?? { op: op.op, text: op.op, ok: true };
+    const outcome = drawn ? drawnOutcome(op, opCheck, left) : { ok: opCheck.ok, reason: opCheck.reason };
+    let text = opCheck.text;
+    let more: string[] = [];
+    if (outcome.ok && state && op.op === 'set-style' && (op.value.state === 'emphasized' || op.value.state === 'focused') && op.targets.length > 0) {
+      const values = valuesOf(state.entries?.get(update.id)?.elements ?? [], columns);
+      if (values.length === 0) {
+        outcome.ok = false;
+        outcome.reason = opCheck.reason ?? 'its targets matched no mark.';
+      } else {
+        [text, ...more] = emphasisLines(values, undefined);
+      }
+    }
+    lines.push(outcome.ok ? `  ✓ ${text}` : `  ✗ ${text}: ${outcome.reason}`, ...more.map((line) => `  ${line}`));
+  });
+  return lines;
+}
+
+/** The interaction presets the spec asks for, by type. */
+function interactionsText(input: ChartAssemblyInput): string | undefined {
+  const entries = (input.interaction_spec as { interactions?: readonly unknown[] } | undefined)?.interactions ?? [];
+  const types = entries
+    .map((entry) => (typeof entry === 'string' ? entry : (entry as { type?: unknown } | null)?.type))
+    .filter((type): type is string => typeof type === 'string');
+  return types.length > 0 ? types.join(', ') : undefined;
 }
 
 /**
@@ -283,7 +307,9 @@ function updateLines(update: ChartUpdate, state: ChartState, columns: Columns): 
  * chart. Each send replaces the last, so every send carries all of it.
  */
 export function chartContext(source: ChartContextSource): ChartContext {
-  const { state, agent, shown, updates = [], warnings = [], gestures } = source;
+  const { agent, shown, updates = [], warnings = [], gestures } = source;
+  const state = source.state;
+  const checks = source.checks ?? [];
   const agentView = source.agentView ?? chartView(agent);
   const shownView = source.shownView ?? chartView(shown);
   const spec = shown.chart_spec;
@@ -297,34 +323,43 @@ export function chartContext(source: ChartContextSource): ChartContext {
   const edits = panelEdits(agent, shown, agentView, shownView);
   if (edits.length > 0) lines.push(`Edited in panel: ${edits.join(', ')}.`);
   lines.push(`Encodings: ${encodingsText(shown)}.`);
+  const interactions = interactionsText(shown);
+  if (interactions) lines.push(`Interactions: ${interactions}.`);
 
+  const leftOut = new Map(warnings.flatMap((warning) => (warning.update ? [[warning.update.id, warning.update] as const] : [])));
+  const drawnKeys = new Set((source.drawnUpdates ?? []).map((update) => JSON.stringify(update)));
   if (updates.length > 0) {
     lines.push('Agent updates (yours):');
-    for (const update of updates) lines.push(...updateLines(update, state, columns));
+    for (const update of updates) {
+      const drawn = !!state && drawnKeys.has(JSON.stringify(update));
+      const check = checks.find((entry) => entry.id === update.id);
+      lines.push(...updateLines(update, check, state, drawn, leftOut.get(update.id), columns));
+    }
   }
 
   const user: string[] = [];
-  const interactions: { id: string; marks: Row[] }[] = [];
-  for (const [id, entry] of state.entries ?? []) {
+  const userInteractions: { id: string; marks: Row[] }[] = [];
+  for (const [id, entry] of state?.entries ?? []) {
     if (agentIds.has(id) || entry.layer !== 'retained' || entry.elements.length === 0) continue;
     const values = valuesOf(entry.elements, columns);
-    interactions.push({ id, marks: values });
+    userInteractions.push({ id, marks: values });
     const [head, ...rest] = emphasisLines(values, regionText(gestures?.get(id), shown));
     user.push(`- ${id}: ${head}${rest.length > 0 ? '' : '.'}`, ...rest);
   }
-  const userNotes = (state.annotations ?? []).filter((annotation) => !agentIds.has(annotation.id));
+  const userNotes = (state?.annotations ?? []).filter((annotation) => !agentIds.has(annotation.id));
   for (const annotation of userNotes) user.push(`- ${annotation.id}: ${noteText(annotation, columns)}.`);
-  const hidden = state.hidden ?? [];
+  const hidden = state?.hidden ?? [];
   if (hidden.length > 0) user.push(`- Hidden: ${hidden.map((value) => cell(value.value)).join(', ')}.`);
-  const filters = Object.entries(state.filters ?? {});
+  const filters = Object.entries(state?.filters ?? {});
   if (filters.length > 0) user.push(`- Filters: ${filters.map(([field, filter]) => filterText(field, filter)).join('; ')}.`);
   lines.push(user.length > 0 ? 'User interactions:' : 'User interactions: none.', ...user);
 
   for (const axis of ['x', 'y'] as const) {
-    const text = axisText(axis, state.viewport?.[axis], dataRows, shown);
+    const text = axisText(axis, state?.viewport?.[axis], dataRows, shown);
     if (text) lines.push(text);
   }
-  if (warnings.length > 0) lines.push('Warnings:', ...warnings.map((warning) => `- ${warning.message}`));
+  const shownWarnings = warnings.filter((warning) => !warning.update && warning.code !== 'update_not_applied');
+  if (shownWarnings.length > 0) lines.push('Warnings:', ...shownWarnings.map((warning) => `- ${warning.message}`));
 
   return {
     text: lines.join('\n'),
@@ -337,15 +372,16 @@ export function chartContext(source: ChartContextSource): ChartContext {
       editedInPanel: edits,
       agentUpdates: updates.map((update) => ({
         id: update.id,
-        marks: valuesOf(state.entries?.get(update.id)?.elements ?? [], columns),
-        annotations: (state.annotations ?? []).filter((annotation) => annotation.id === update.id),
+        ops: checks.find((check) => check.id === update.id)?.ops ?? [],
+        marks: valuesOf(state?.entries?.get(update.id)?.elements ?? [], columns),
+        annotations: (state?.annotations ?? []).filter((annotation) => annotation.id === update.id),
       })),
-      userInteractions: interactions,
+      userInteractions,
       userAnnotations: userNotes,
       hidden,
-      filters: state.filters ?? {},
-      viewport: state.viewport,
-      warnings: warnings.map(({ code, message }) => ({ code, message })),
+      filters: state?.filters ?? {},
+      viewport: state?.viewport,
+      warnings: shownWarnings.map(({ code, message }) => ({ code, message })),
     },
   };
 }

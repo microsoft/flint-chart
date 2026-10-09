@@ -273,6 +273,13 @@ describe('MCP server', () => {
     const layer = { id: 'agent', ops: [{ op: 'set-style', targets: [{ select: { key: { region: 'East' } } }], value: { state: 'emphasized' } }] };
     const ok: any = await client.callTool({ name: 'validate_chart', arguments: { ...base, backend: 'vegalite', updates: [layer] } });
     expect(JSON.parse(ok.content[0].text).valid).toBe(true);
+    expect(ok.content[1].text).toContain('- agent:\n  ✓ emphasizes marks where region = East');
+    const shorthand = {
+      id: 'goal',
+      ops: [{ op: 'set-overlay', name: 'goal', value: { mark: 'rule', role: 'reference', data: { values: [{ v: 100 }] }, encodings: { y: 'v' } } }],
+    };
+    const off: any = await client.callTool({ name: 'validate_chart', arguments: { ...base, backend: 'vegalite', updates: [shorthand] } });
+    expect(off.content[1].text).toContain('✗ overlay "goal" (rule, 1 row): encodings.y must be { "field": "v" }, not "v".');
     const bad: any = await client.callTool({
       name: 'validate_chart',
       arguments: { ...base, backend: 'vegalite', updates: [layer, { id: 'agent', ops: [] }] },
@@ -291,11 +298,12 @@ describe('MCP server', () => {
     expect(unknownOp.content[0].text).toContain('set-style');
     const view: any = await client.callTool({ name: 'create_chart_view', arguments: { ...base, updates: [layer] } });
     expect(view.isError).toBeFalsy();
-    expect(view.content[0].text).toContain('1 update layer(s)');
-    expect(view.structuredContent.updates).toEqual([layer]);
+    expect(view.content[0].text).toContain('Agent updates (yours):\n- agent:\n  ✓ emphasizes marks where region = East');
+    expect(view.structuredContent).toBeUndefined();
+    expect(view._meta.flint.updates).toEqual([layer]);
     const viewBad: any = await client.callTool({ name: 'create_chart_view', arguments: { ...base, updates: [{ id: '', ops: [] }] } });
     expect(viewBad.isError).toBe(true);
-    expect(viewBad.content[0].text).toBe('updates[0]: "id" must be a non-empty string.');
+    expect(viewBad.content[0].text).toBe('Chart spec has errors: updates[0]: "id" must be a non-empty string.');
   });
 
   it('a misshapen op is rejected with its shape, and the schema lists every op shape', async () => {
@@ -397,7 +405,7 @@ describe('MCP server', () => {
       arguments: { ...barChart },
     });
     expect(res.isError).toBeFalsy();
-    expect(res.structuredContent?.input?.chart_spec?.chartType).toBe('Bar Chart');
+    expect(res._meta?.flint?.input?.chart_spec?.chartType).toBe('Bar Chart');
     expect(res.content[0].text).toContain('Bar Chart');
   });
 
@@ -530,7 +538,7 @@ describe('MCP server', () => {
     }
   });
 
-  it('inlines local data.url rows into create_chart_view structuredContent', async () => {
+  it('inlines local data.url rows into the create_chart_view payload', async () => {
     const dataDir = mkdtempSync(join(tmpdir(), 'flint-mcp-view-data-'));
     const dataServer = createServer();
     const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
@@ -547,7 +555,7 @@ describe('MCP server', () => {
       expect(res.isError).toBeFalsy();
       // The host UI renders client-side and cannot read local files, so the
       // server must hand it inline rows, not the original data.url.
-      const viewInput = res.structuredContent?.input;
+      const viewInput = res._meta?.flint?.input;
       expect(viewInput?.data?.url).toBeUndefined();
       expect(viewInput?.data?.values).toEqual([
         { region: 'North', revenue: 120 },

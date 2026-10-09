@@ -23,14 +23,15 @@ import type {
     ChartTemplateDef,
     ChartWarning,
 } from '../core/types';
-import { CHART_UPDATE_OPS, type ChartUpdateOp } from '../core/interaction-contracts';
 import { isRegistered } from '../core/type-registry';
 import { toTypeString } from '../core/field-semantics';
 import { resolveEncodingSort } from '../core/resolve-semantics';
 import { assembleVegaLite } from '../vegalite/assemble';
 import { resolveInteractionSpec } from '../interactive/spec/resolve';
 import { admitInteractions } from '../interactive/spec/admission';
-import { isCanvasInteraction } from '../interactive/interactions';
+import { isCanvasInteraction, type CanvasInteractionDef } from '../interactive/interactions';
+import type { ChartUpdate } from '../core/interaction-contracts';
+import { checkUpdates, updateShapeErrors, type UpdateCheck } from './updates';
 import { vlGetTemplateDef } from '../vegalite/templates';
 import { assembleECharts } from '../echarts/assemble';
 import { ecGetTemplateDef } from '../echarts/templates';
@@ -60,6 +61,8 @@ export interface ValidateChartOptions {
     maxDataRows?: number;
     /** Maximum `baseSize` / `canvasSize` dimension in pixels. Default: 4000. */
     maxCanvasDim?: number;
+    /** ChartUpdates to check against the chart, as JSON from a caller; see {@link ValidateResult.updates}. */
+    updates?: unknown;
 }
 
 export interface AssembleResult {
@@ -84,6 +87,12 @@ export interface ValidateResult {
     errors: ChartWarning[];
     /** Computed layout size from Flint's stretch model, if available. */
     computedSize?: { width: number; height: number };
+    /**
+     * With `options.updates` on a Vega-Lite chart: what each update will do, op by op.
+     * An op that will not apply is also an `update_not_applied` warning; a malformed
+     * list is an `invalid_updates` error and leaves this out.
+     */
+    updates?: UpdateCheck[];
 }
 
 const ASSEMBLERS: Record<ValidationBackend, (input: ChartAssemblyInput) => any> = {
@@ -319,6 +328,34 @@ export function assembleForBackend(
     return { spec, warnings, width, height };
 }
 
+/** The interactions the mount would admit, and the warnings `interaction_spec` would produce. */
+function admitSpecInteractions(
+    input: ChartAssemblyInput,
+    backend: ValidationBackend,
+    assembled: unknown,
+): { admitted: readonly CanvasInteractionDef[]; warnings: ChartWarning[] } {
+    if (!input.interaction_spec) return { admitted: [], warnings: [] };
+    if (backend !== 'vegalite') {
+        return {
+            admitted: [],
+            warnings: [{
+                severity: 'info',
+                code: 'interactions_ignored',
+                message: `Interactions are ignored: backend "${backend}" does not run interactions, so the chart renders static.`,
+            }],
+        };
+    }
+    try {
+        const resolved = resolveInteractionSpec(input.interaction_spec);
+        const { _interactionSemantics: plan } = assembled as { _interactionSemantics: Parameters<typeof admitInteractions>[0] };
+        const admission = admitInteractions(plan, resolved.interactions.filter(isCanvasInteraction));
+        return { admitted: admission.admitted, warnings: [...admission.warnings] };
+    } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        return { admitted: [], warnings: [{ severity: 'error', code: 'invalid_interaction_spec', message }] };
+    }
+}
+
 /**
  * The warnings `interaction_spec` would produce at mount: a malformed spec is an
  * error, an entry the assembled chart cannot honour is a warning, and a backend
@@ -329,101 +366,41 @@ export function validateInteractionSpec(
     backend: ValidationBackend,
     assembled: unknown,
 ): ChartWarning[] {
-    if (!input.interaction_spec) return [];
+    return admitSpecInteractions(input, backend, assembled).warnings;
+}
+
+interface UpdatesOutcome {
+    checks?: UpdateCheck[];
+    warnings: ChartWarning[];
+}
+
+/** What `updates` will do on the chart, and the warnings for the ops that will not apply. */
+function checkSpecUpdates(
+    input: ChartAssemblyInput,
+    backend: ValidationBackend,
+    assembled: unknown,
+    admitted: readonly CanvasInteractionDef[],
+    updates: readonly ChartUpdate[],
+): UpdatesOutcome {
     if (backend !== 'vegalite') {
-        return [{
-            severity: 'info',
-            code: 'interactions_ignored',
-            message: `Interactions are ignored: backend "${backend}" does not run interactions, so the chart renders static.`,
-        }];
+        return {
+            warnings: [{
+                severity: 'info',
+                code: 'updates_ignored',
+                message: `Updates are ignored: backend "${backend}" does not run them.`,
+            }],
+        };
     }
-    try {
-        const resolved = resolveInteractionSpec(input.interaction_spec);
-        const { _interactionSemantics: plan } = assembled as { _interactionSemantics: Parameters<typeof admitInteractions>[0] };
-        return [...admitInteractions(plan, resolved.interactions.filter(isCanvasInteraction)).warnings];
-    } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        return [{ severity: 'error', code: 'invalid_interaction_spec', message }];
-    }
+    const checks = checkUpdates(input, updates, assembled, admitted);
+    const warnings = checks.flatMap((check) => check.ops.flatMap((op): ChartWarning[] => (op.ok ? [] : [{
+        severity: 'warning',
+        code: 'update_not_applied',
+        message: `Update "${check.id}" will not apply ${op.text}: ${op.reason}`,
+    }])));
+    return { checks, warnings };
 }
 
-const isObject = (value: unknown): value is Record<string, any> =>
-    !!value && typeof value === 'object' && !Array.isArray(value);
-const isTarget = (value: unknown): boolean =>
-    isObject(value) && ((isObject(value.select) && isObject(value.select.key)) || (isObject(value.visual) && Array.isArray(value.elements)));
-const isObjectOrNull = (value: unknown): boolean => value === null || isObject(value);
-const isName = (value: unknown): boolean => typeof value === 'string' && value.length > 0;
-
-type OpShape = { shape: string; fields: Record<string, (value: unknown) => boolean> };
-
-const OP_SHAPES = {
-    'set-style': {
-        shape: '{ op, targets: UpdateTarget[], value: StyleSpec }',
-        fields: { targets: (v: unknown) => Array.isArray(v) && v.every(isTarget), value: isObject },
-    },
-    'set-annotation': {
-        shape: "{ op, target: UpdateTarget, value: { text, anchor?: 'segment' | 'point' } | null }",
-        fields: { target: isTarget, value: isObjectOrNull },
-    },
-    'set-viewport': {
-        shape: "{ op, axes: 'x' | 'y' | 'xy', value: { x?: [lo, hi], y?: [lo, hi] } }",
-        fields: { axes: (v: unknown) => v === 'x' || v === 'y' || v === 'xy', value: isObject },
-    },
-    'set-order': {
-        shape: "{ op, scope: 'category' | 'series' | 'facet', field, values: [] }",
-        fields: { scope: isName, field: isName, values: Array.isArray },
-    },
-    'set-overlay': {
-        shape: '{ op, name, value: { mark, data: { values }, encodings: { x?, y?, x2?, y2? }, role } | null }',
-        fields: { name: isName, value: isObjectOrNull },
-    },
-    'set-freeform-overlay': {
-        shape: "{ op, name, value: { coordinateSpace: 'plot' | 'renderer', body: [] } | null }",
-        fields: { name: isName, value: isObjectOrNull },
-    },
-    'set-data': {
-        shape: "{ op, source: 'main', value: { rows: [] } }",
-        fields: { source: (v: unknown) => v === 'main', value: (v: unknown) => isObject(v) && Array.isArray(v.rows) },
-    },
-} satisfies Record<ChartUpdateOp['op'], OpShape>;
-
-/** Shape check of a ChartUpdate list from JSON; whether targets resolve is checked at mount. */
-export function validateChartUpdates(updates: unknown, label = 'updates'): ChartWarning[] {
-    const fail = (message: string): ChartWarning[] => [{ severity: 'error', code: 'invalid_updates', message }];
-    if (!Array.isArray(updates)) return fail(`${label} must be an array of { id, ops }.`);
-    const owners = new Map<string, number>();
-    for (const [index, update] of updates.entries()) {
-        const entry = `${label}[${index}]`;
-        if (!update || typeof update !== 'object' || Array.isArray(update)) {
-            return fail(`${entry}: expected an object with "id" and "ops".`);
-        }
-        const { id, ops } = update as { id?: unknown; ops?: unknown };
-        if (typeof id !== 'string' || id.length === 0) return fail(`${entry}: "id" must be a non-empty string.`);
-        if (!Array.isArray(ops)) return fail(`${entry} (${id}): "ops" must be an array.`);
-        for (const [opIndex, op] of ops.entries()) {
-            const name = (op as { op?: unknown } | null)?.op;
-            if (typeof name !== 'string' || !(CHART_UPDATE_OPS as readonly string[]).includes(name)) {
-                return fail(
-                    `${entry} (${id}).ops[${opIndex}]: unknown op "${String(name)}". Known ops: ${CHART_UPDATE_OPS.join(', ')}.`,
-                );
-            }
-            const { shape, fields }: OpShape = OP_SHAPES[name as ChartUpdateOp['op']];
-            const bad = Object.entries(fields).find(([field, check]) => !check((op as Record<string, unknown>)[field]));
-            if (bad) {
-                const targetNote = bad[0].startsWith('target') ? ' UpdateTarget is { select: { key: { field: value } } }.' : '';
-                return fail(
-                    `${entry} (${id}).ops[${opIndex}]: ${name} has a missing or malformed "${bad[0]}". Shape: ${shape}.${targetNote}`,
-                );
-            }
-        }
-        const owner = owners.get(id);
-        if (owner !== undefined) {
-            return fail(`${entry}: duplicate id "${id}" (also used by ${label}[${owner}]). One id holds one layer.`);
-        }
-        owners.set(id, index);
-    }
-    return [];
-}
+export type { UpdateCheck, UpdateOpCheck } from './updates';
 
 /**
  * Validate a {@link ChartAssemblyInput} for a backend: report warnings/errors,
@@ -432,7 +409,8 @@ export function validateChartUpdates(updates: unknown, label = 'updates'): Chart
  * `semantic_types` labels are included as warnings (see
  * {@link validateSemanticTypes}) and do not affect `valid`. An
  * `interaction_spec` is checked the way the mount checks it (see
- * {@link validateInteractionSpec}).
+ * {@link validateInteractionSpec}). `options.updates` is checked for its shape
+ * and then op by op against the chart (see {@link ValidateResult.updates}).
  */
 export function validateChart(
     input: ChartAssemblyInput,
@@ -443,9 +421,14 @@ export function validateChart(
         ? input.chart_spec.chartType
         : '(unknown)';
     const semanticTypeWarnings = validateSemanticTypes(input?.semantic_types);
+    const updateErrors = options.updates === undefined ? [] : updateShapeErrors(options.updates);
     try {
         const { spec, warnings, width, height } = assembleForBackend(backend, input, options);
-        const all = [...warnings, ...semanticTypeWarnings, ...validateInteractionSpec(input, backend, spec)];
+        const interactions = admitSpecInteractions(input, backend, spec);
+        const updates: UpdatesOutcome = options.updates === undefined || updateErrors.length > 0
+            ? { warnings: updateErrors }
+            : checkSpecUpdates(input, backend, spec, interactions.admitted, options.updates as ChartUpdate[]);
+        const all = [...warnings, ...semanticTypeWarnings, ...interactions.warnings, ...updates.warnings];
         const errors = all.filter((w) => w.severity === 'error');
         return {
             backend,
@@ -455,6 +438,7 @@ export function validateChart(
             errors,
             computedSize:
                 width !== undefined && height !== undefined ? { width, height } : undefined,
+            ...(updates.checks ? { updates: updates.checks } : {}),
         };
     } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
@@ -462,8 +446,8 @@ export function validateChart(
             backend,
             chartType,
             valid: false,
-            warnings: semanticTypeWarnings,
-            errors: [{ severity: 'error', code: 'assembly_failed', message }],
+            warnings: [...semanticTypeWarnings, ...updateErrors],
+            errors: [{ severity: 'error', code: 'assembly_failed', message }, ...updateErrors],
         };
     }
 }

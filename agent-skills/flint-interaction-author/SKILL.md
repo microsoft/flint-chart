@@ -383,20 +383,22 @@ panel edit) and every committed gesture, and each send replaces the last:
 Chart "Life expectancy": Line Chart, theme economist.
 Edited in panel: theme default → economist.
 Encodings: x = year, y = life, color = continent.
+Interactions: legend-toggle, navigate.
 Agent updates (yours):
-- asia: emphasizes 3 marks where continent = Asia.
-- oceania: matched no marks.
+- asia:
+  ✓ emphasizes 3 marks where continent = Asia
+- oceania:
+  ✗ emphasizes marks where continent = Oceania: no row has continent = Oceania.
 User interactions:
 - Hidden: Africa.
 The y axis shows life from 70 to 86.
-Warnings:
-- Update "oceania" was unsupported: 1 target matched nothing.
 ```
 
 The state is in field terms: what the chart is after the reader's panel edits,
-what each of your updates emphasizes or notes (an update that matched nothing
-says so), what the reader selected, hid or filtered, and the viewport on view
-when the chart navigates. From it, decide what the
+each op of your updates as applied (✓) or not and why (✗), what the reader
+selected, hid or filtered, and the viewport on view when the chart navigates.
+`validate_chart` and `create_chart_view` return the same report before the
+reader touches the chart, with `User interactions: none.` From it, decide what the
 reader should see next: which rows stand out, what one note says, which range
 frames them. The rows you were given are the source of every value; the chart
 hands over no copy of the data, and nothing is computed that the chart cannot
@@ -547,10 +549,15 @@ same input and the layers wanted now; the new list replaces what the previous
 call declared. The argument is state, and `interaction_spec` is behaviour, so
 each stays where it is. The reader's own brush or selection does not survive
 the new view; the context message reports it in field terms, and it is
-carried as a layer when it still serves the reader. `validate_chart` with the
-same `updates` reports a malformed layer as an `invalid_updates` error; a
-target that matches nothing, or an op the chart does not mount, is a warning
-the view shows beside the chart.
+carried as a layer when it still serves the reader.
+
+Call `validate_chart` with the same input and `updates` first. A malformed
+layer is an `invalid_updates` error; otherwise its second text block is the
+report above, one line per op. Fix every ✗ (a key no row has, an overlay
+encoding written as `"x": "start"` instead of `{ "field": "start" }`, a
+viewport with no navigation preset) and validate again, so the reader sees one
+chart. The `create_chart_view` result is the same report. The reader's later
+brushes and clicks reach you with their next message, not in the same turn.
 
 ## Use Flint in an application
 

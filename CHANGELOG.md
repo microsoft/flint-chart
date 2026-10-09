@@ -18,6 +18,16 @@ the entries below describe implemented changes, not the remaining checklist.
 
 ### Added
 
+- `validateChart(input, backend, { updates })` checks ChartUpdates against the
+  chart in the same pass: `result.updates` gives each op as applied or why not,
+  each op that will not apply is an `update_not_applied` warning, and a
+  malformed list is an `invalid_updates` error. It replaces the shape-only
+  `validateChartUpdates`. The MCP `validate_chart` and `create_chart_view`
+  return the same report the chart view later sends as its context: the chart,
+  its interactions, and one ✓/✗ line per update op. `create_chart_view` hands
+  the view its payload in `_meta.flint` instead of `structuredContent`, so the
+  model reads the report rather than the data rows.
+
 - `filter-controls` (`filterControls`), a filter-only interaction preset. It
   draws one row of muted controls per field under the chart (a segmented bar
   to pick one of a few values, pills to pick several, a searchable dropdown for
