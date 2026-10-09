@@ -104,7 +104,7 @@ export function buildAssemblyInputShape(disableFileReference = false) {
       .record(z.string(), z.any())
       .optional()
       .describe(
-        'Field name → semantic type, e.g. { revenue: "Quantity", country: "Country" }. A value may instead be an annotation object when the type alone understates what you know, e.g. { rating: { semanticType: "Score", intrinsicDomain: [1, 5] } } — see the flint://agent-skill resource.',
+        'Field name → semantic type, e.g. { revenue: "Quantity", country: "Country" }. A value may instead be an annotation object when the type alone understates what you know, e.g. { rating: { semanticType: "Score", intrinsicDomain: [1, 5] } } — see get_flint_skill with skill "chart", section "Step 3 — annotate with semantic types".',
       ),
     chart_spec: chartSpecSchema,
     theme_spec: z
@@ -134,7 +134,7 @@ export function buildAssemblyInputShape(disableFileReference = false) {
       })
       .optional()
       .describe(
-        'How the chart behaves, for create_chart_view (Vega-Lite only). Lists interaction presets by type with their options nested under `options`. An entry the chart type cannot honour is dropped with a warning and the chart still renders; validate_chart reports the same warnings. Read flint://interaction-skill ("Add interactions to the chart") before you write one.',
+        'How the chart behaves, for create_chart_view (Vega-Lite only). Lists interaction presets by type with their options nested under `options`. An entry the chart type cannot honour is dropped with a warning and the chart still renders; validate_chart reports the same warnings. Call get_flint_skill with skill "interaction", section "Add interactions to the chart", before you write one.',
       ),
     options: z
       .record(z.string(), z.any())
@@ -178,7 +178,7 @@ export const updatesShape = {
     )
     .optional()
     .describe(
-      'ChartUpdate layers the chart shows at open: state, where interaction_spec is behaviour. Read flint://interaction-skill ("Update the chart") before you write one. To change an open chart, call create_chart_view again with new layers.',
+      'ChartUpdate layers the chart shows at open: state, where interaction_spec is behaviour. Call get_flint_skill with skill "interaction", section "Update the chart", before you write one. To change an open chart, call create_chart_view again with new layers.',
     ),
 };
 

@@ -86,12 +86,44 @@ describe('MCP server', () => {
     expect(names).toEqual([
       'compile_chart',
       'create_chart_view',
+      'get_flint_skill',
       'list_chart_types',
       'list_interaction_presets',
       'list_themes',
       'render_chart',
       'validate_chart',
     ]);
+  });
+
+  it('get_flint_skill returns the same text as the skill resources', async () => {
+    for (const [skill, uri] of [
+      ['chart', 'flint://agent-skill'],
+      ['theme', 'flint://theme-skill'],
+      ['interaction', 'flint://interaction-skill'],
+    ]) {
+      const res: any = await client.callTool({ name: 'get_flint_skill', arguments: { skill } });
+      const resource: any = await client.readResource({ uri });
+      expect(res.isError, skill).toBeFalsy();
+      expect(res.content[0].text, skill).toBe(resource.contents[0].text);
+    }
+  });
+
+  it('get_flint_skill returns one section, or the headings for an unknown one', async () => {
+    const res: any = await client.callTool({
+      name: 'get_flint_skill',
+      arguments: { skill: 'interaction', section: 'Update the chart' },
+    });
+    const text: string = res.content[0].text;
+    expect(text.startsWith('## Update the chart\n')).toBe(true);
+    expect(text).toContain('### Step 2 — choose ops');
+    expect(text).not.toContain('## Use Flint in an application');
+
+    const bad: any = await client.callTool({
+      name: 'get_flint_skill',
+      arguments: { skill: 'interaction', section: 'Change the chart' },
+    });
+    expect(bad.isError).toBe(true);
+    expect(bad.content[0].text).toContain('"Update the chart"');
   });
 
   it('render_chart returns inline PNG image content', async () => {

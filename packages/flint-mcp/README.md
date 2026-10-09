@@ -29,6 +29,7 @@ renders **locally**.
 | `list_chart_types` | `backend?` | chart types, encoding channels, and supported interaction presets per backend |
 | `list_interaction_presets` | `chartType?`, `type?` | interaction presets: what each does, what it needs from the chart, reset gestures, and every option it accepts |
 | `list_themes` | optional preset `id` | shipped visual themes, plus guidance for a selected theme |
+| `get_flint_skill` | `skill` (`chart`/`theme`/`interaction`) + `section?` | a bundled skill as markdown, or one `## ` section of it |
 | `create_chart_view` | spec + optional `updates` | live chart **UI** (MCP App): SVG preview + editing panel, opened with the given ChartUpdate layers applied |
 
 ## Visual themes
@@ -80,9 +81,11 @@ self-contained HTML bundle served as the
 | `author_flint_theme` | prompt | Embeds the theme-author skill for creating, translating, refining, or reviewing a `ThemeSpec`. |
 | `author_flint_interaction` | prompt | Embeds the interaction-author skill: presets as an `interaction_spec`, the `ChartUpdate` for a mounted chart, reading the chart state, linking charts, and bespoke interactions. |
 
-For best results, have your MCP client include `flint://agent-skill` or run the
-`author_flint_chart` prompt before asking the agent to call `create_chart_view`,
-`render_chart`, `compile_chart`, or `validate_chart`.
+The server instructions tell the agent to call `get_flint_skill` before it
+writes a spec, so the skills reach the agent in hosts that do not surface MCP
+resources or prompts to the model. You can also include `flint://agent-skill` or
+run the `author_flint_chart` prompt before asking the agent to call
+`create_chart_view`, `render_chart`, `compile_chart`, or `validate_chart`.
 
 When creating or substantially customizing a visual theme, load
 `flint://theme-skill` or run `author_flint_theme`. Use `list_themes` separately

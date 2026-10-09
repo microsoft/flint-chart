@@ -47,16 +47,46 @@ const CHART_VIEW_PLACEHOLDER = `<!DOCTYPE html><html><head><meta charset="utf-8"
 padding:24px">Flint chart view UI is not built. Run <code>npm run build:ui</code> in \
 packages/flint-mcp to generate it.</body></html>`;
 
-function readAgentSkill(): string {
-  return readFileSync(AGENT_SKILL_ASSET, 'utf8');
+const SKILL_ASSETS = {
+  chart: AGENT_SKILL_ASSET,
+  theme: THEME_SKILL_ASSET,
+  interaction: INTERACTION_SKILL_ASSET,
+} as const;
+export type SkillName = keyof typeof SKILL_ASSETS;
+const SKILL_NAMES = Object.keys(SKILL_ASSETS) as [SkillName, ...SkillName[]];
+
+function readSkill(name: SkillName): string {
+  return readFileSync(SKILL_ASSETS[name], 'utf8');
 }
 
-function readThemeSkill(): string {
-  return readFileSync(THEME_SKILL_ASSET, 'utf8');
+const readAgentSkill = () => readSkill('chart');
+const readThemeSkill = () => readSkill('theme');
+const readInteractionSkill = () => readSkill('interaction');
+
+/** Top-level `## ` headings of a skill, skipping fenced code blocks. */
+function skillSections(text: string): { heading: string; start: number }[] {
+  const sections: { heading: string; start: number }[] = [];
+  let fenced = false;
+  let offset = 0;
+  for (const line of text.split('\n')) {
+    if (line.startsWith('```')) fenced = !fenced;
+    else if (!fenced && line.startsWith('## ')) sections.push({ heading: line.slice(3).trim(), start: offset });
+    offset += line.length + 1;
+  }
+  return sections;
 }
 
-function readInteractionSkill(): string {
-  return readFileSync(INTERACTION_SKILL_ASSET, 'utf8');
+/** One `## ` section of a skill, from its heading up to the next `## ` heading. */
+export function skillSection(text: string, heading: string): string {
+  const sections = skillSections(text);
+  const wanted = heading.replace(/^#+\s*/, '').trim().toLowerCase();
+  const index = sections.findIndex((section) => section.heading.toLowerCase() === wanted);
+  if (index < 0) {
+    throw new Error(
+      `No section "${heading}". Sections: ${sections.map((section) => `"${section.heading}"`).join(', ')}.`,
+    );
+  }
+  return text.slice(sections[index].start, sections[index + 1]?.start ?? text.length).trimEnd() + '\n';
 }
 
 /** Read the bundled chart-view HTML, tolerating a not-yet-built asset. */
@@ -162,16 +192,18 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
         'what it needs from the chart, and the options it accepts. ' +
         'Use list_themes to discover visual themes; ' +
         'prefer a preset id, and use an `extends` override only when the user ' +
-        'asks to customize it. Before authoring chart specs, read the ' +
-        'flint://agent-skill resource or use the author_flint_chart prompt. ' +
+        'asks to customize it. Before authoring chart specs, call ' +
+        'get_flint_skill with skill "chart" (also the flint://agent-skill ' +
+        'resource and the author_flint_chart prompt). ' +
         'When the user asks to create, translate, or substantially customize a ' +
-        'ThemeSpec, read flint://theme-skill or use author_flint_theme. ' +
+        'ThemeSpec, call get_flint_skill with skill "theme". ' +
         'When the user asks for behaviour on a chart, names an intent such as ' +
         'explore or compare, adds behaviour to a chart that already exists, ' +
         'changes or reads a mounted chart from code or as an agent, passes ' +
         'updates to a tool, links charts, ' +
-        'or needs an interaction no preset gives, read flint://interaction-skill ' +
-        'or use author_flint_interaction.' +
+        'or needs an interaction no preset gives, call get_flint_skill with ' +
+        'skill "interaction". Pass `section` with one "## " heading when you ' +
+        'need only that part of a skill.' +
         dataAccessNote(options),
     },
   );
@@ -336,8 +368,8 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
         'what each needs from the chart, its reset gestures, and every option it ' +
         'accepts under `options`. Pass `chartType` for the presets a Vega-Lite ' +
         'chart type supports, or `type` for one preset. Which presets answer a ' +
-        'request and how they combine is in flint://interaction-skill ' +
-        '("Add interactions to the chart").',
+        'request and how they combine is in get_flint_skill with skill ' +
+        '"interaction", section "Add interactions to the chart".',
       inputSchema: {
         chartType: z.string().optional().describe('A Vega-Lite chart type name from list_chart_types.'),
         type: z.string().optional().describe('One preset type, for its options alone.'),
@@ -346,6 +378,38 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
     async (args: any) => {
       try {
         return jsonResult(listInteractionPresets({ chartType: args?.chartType, type: args?.type }));
+      } catch (err) {
+        return errorResult(err);
+      }
+    },
+  );
+
+  // --- get_flint_skill ----------------------------------------------------
+  server.registerTool(
+    'get_flint_skill',
+    {
+      title: 'Get Flint skill',
+      description:
+        'Return a bundled Flint skill as markdown. Read it before you write the ' +
+        'matching spec: `chart` for a ChartAssemblyInput, `theme` for a ThemeSpec, ' +
+        '`interaction` for an interaction_spec, ChartUpdate layers, reading a ' +
+        'mounted chart, linking charts, or a bespoke interaction. Pass `section` ' +
+        'with one "## " heading to get only that part; an unknown section lists ' +
+        'the headings. The same text is served as the flint://agent-skill, ' +
+        'flint://theme-skill, and flint://interaction-skill resources.',
+      inputSchema: {
+        skill: z.enum(SKILL_NAMES).describe('Which skill: chart, theme, or interaction.'),
+        section: z
+          .string()
+          .optional()
+          .describe('One "## " heading of the skill, e.g. "Update the chart".'),
+      },
+      annotations: { readOnlyHint: true },
+    },
+    async (args: any) => {
+      try {
+        const text = readSkill(args.skill as SkillName);
+        return { content: [{ type: 'text' as const, text: args.section ? skillSection(text, args.section) : text }] };
       } catch (err) {
         return errorResult(err);
       }

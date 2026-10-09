@@ -44,7 +44,7 @@ Options:
 
 Tools:
   create_chart_view, render_chart, compile_chart, validate_chart,
-  list_chart_types, list_themes
+  list_chart_types, list_interaction_presets, list_themes, get_flint_skill
 
 Resources:
   flint://agent-skill, flint://theme-skill, flint://interaction-skill,
