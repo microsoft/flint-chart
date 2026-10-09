@@ -651,6 +651,43 @@ describe('Vega-Lite semantic interactions', () => {
             .toEqual(expect.arrayContaining([expect.objectContaining({ clip: true })]));
     });
 
+    it('clips navigated marks to the plot, whether or not they are drawn in faceted groups', () => {
+        const groups = (spec: any): any[] => {
+            const found: any[] = [];
+            const walk = (group: any): void => {
+                for (const mark of group.marks ?? []) {
+                    found.push(mark);
+                    if (mark.type === 'group') walk(mark);
+                }
+            };
+            walk(spec);
+            return found;
+        };
+        const navigated = (input: any): any => {
+            const spec = assembleVegaLite(input) as any;
+            const plan = addVegaLiteInteractions(spec, [navigate({ axes: 'x' })]);
+            const compiled = compile(spec).spec as any;
+            injectVegaNavigationSignals(compiled, plan!.navigationChannels);
+            return compiled;
+        };
+        const lines = navigated({
+            chart_spec: { chartType: 'Line Chart', encodings: { x: { field: 'Age' }, y: { field: 'Hours' }, color: { field: 'Who' } } },
+            semantic_types: { Age: 'Number', Hours: 'Number', Who: 'Category' },
+            data: { values: [15, 30, 60].flatMap((Age) => ['Family', 'Friends'].map((Who, index) => ({ Age, Who, Hours: index + Age / 20 }))) },
+        });
+        expect(groups(lines).find((mark) => mark.type === 'line').clip).toBe(true);
+
+        const bars = navigated({
+            chart_spec: { chartType: 'Stacked Bar Chart', encodings: { x: { field: 'Month' }, y: { field: 'Price' }, color: { field: 'Food' } } },
+            semantic_types: { Month: 'YearMonth', Price: 'Number', Food: 'Category' },
+            theme_spec: { extends: 'datawrapper', geometry: { band: { cornerRadius: 2 } } },
+            data: { values: ['2020-01', '2020-02', '2020-03'].flatMap((Month) => ['A', 'B'].map((Food, index) => ({ Month, Food, Price: 1 + index }))) },
+        });
+        const stack = groups(bars).find((mark) => mark.type === 'group' && mark.from?.facet && mark.encode?.update?.xc);
+        expect(stack.clip).toBe(true);
+        expect(groups(stack).some((mark) => mark.clip === true)).toBe(false);
+    });
+
     it('re-plans calendar ticks of a navigated time axis from the live domain', async () => {
         const rows = Array.from({ length: 1500 }, (_, index) => ({
             Week: new Date(Date.UTC(1990, 0, 1) + index * 7 * 864e5).toISOString().slice(0, 10),

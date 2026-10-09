@@ -627,7 +627,9 @@ export function injectVegaNavigationSignals(
 /**
  * Rounded stacked bars draw each stack as a faceted group, and Vega-Lite puts a mark's clip
  * on the rects inside it, which clips them to the stack group instead of the plot. The clip
- * belongs on the stack group, whose items then clip to the plot that holds it.
+ * belongs on the stack group, whose items then clip to the plot that holds it. A group that
+ * fills the plot, such as the one a multi-series line draws its paths in, keeps its marks'
+ * own clip.
  */
 function clipStackGroups(group: Record<string, any>): void {
     const unclip = (mark: Record<string, any>): boolean => {
@@ -638,7 +640,8 @@ function clipStackGroups(group: Record<string, any>): void {
     };
     for (const mark of group.marks ?? []) {
         if (mark.type !== 'group') continue;
-        if (mark.from?.facet) {
+        const update = mark.encode?.update ?? {};
+        if (mark.from?.facet && (update.x || update.xc || update.y || update.yc)) {
             if ((mark.marks ?? []).map(unclip).some(Boolean)) mark.clip = true;
         } else {
             clipStackGroups(mark);
