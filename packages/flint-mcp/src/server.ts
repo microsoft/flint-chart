@@ -14,7 +14,7 @@ import { renderChart, resolveDataSource } from './render/index.js';
 import type { RenderBackend } from './render/types.js';
 import { compileChart } from './tools/compile.js';
 import { validateChart } from './tools/validate.js';
-import { listChartTypes, listThemes } from './tools/list.js';
+import { listChartTypes, listThemes, listInteractionPresets } from './tools/list.js';
 import {
   buildAssemblyInputShape,
   toAssemblyInput,
@@ -154,7 +154,9 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
         'static image. Use compile_chart for the backend spec JSON, ' +
         'validate_chart to check a spec, and list_chart_types to discover chart ' +
         'types, their channels, and the interaction presets each supports for ' +
-        'interaction_spec. Use list_themes to discover visual themes; ' +
+        'interaction_spec. Use list_interaction_presets for what each preset does, ' +
+        'what it needs from the chart, and the options it accepts. ' +
+        'Use list_themes to discover visual themes; ' +
         'prefer a preset id, and use an `extends` override only when the user ' +
         'asks to customize it. Before authoring chart specs, read the ' +
         'flint://agent-skill resource or use the author_flint_chart prompt. ' +
@@ -299,6 +301,32 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
     async (args: any) => {
       try {
         return jsonResult(listChartTypes(args?.backend as RenderBackend | undefined));
+      } catch (err) {
+        return errorResult(err);
+      }
+    },
+  );
+
+  // --- list_interaction_presets ---------------------------------------------
+  server.registerTool(
+    'list_interaction_presets',
+    {
+      title: 'List interaction presets',
+      description:
+        'List the interaction presets for interaction_spec: what the reader does, ' +
+        'what each needs from the chart, its reset gestures, and every option it ' +
+        'accepts under `options`. Pass `chartType` for the presets a Vega-Lite ' +
+        'chart type supports, or `type` for one preset. Which presets answer a ' +
+        'request and how they combine is in flint://interaction-skill ' +
+        '("Add interactions to the chart").',
+      inputSchema: {
+        chartType: z.string().optional().describe('A Vega-Lite chart type name from list_chart_types.'),
+        type: z.string().optional().describe('One preset type, for its options alone.'),
+      },
+    },
+    async (args: any) => {
+      try {
+        return jsonResult(listInteractionPresets({ chartType: args?.chartType, type: args?.type }));
       } catch (err) {
         return errorResult(err);
       }

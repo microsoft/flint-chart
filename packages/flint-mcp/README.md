@@ -27,6 +27,7 @@ renders **locally**.
 | `compile_chart` | spec + `backend` | backend-native spec JSON + warnings |
 | `validate_chart` | spec + `backend` + optional `updates` | validity, warnings/errors, computed size; a malformed update layer is an error |
 | `list_chart_types` | `backend?` | chart types, encoding channels, and supported interaction presets per backend |
+| `list_interaction_presets` | `chartType?`, `type?` | interaction presets: what each does, what it needs from the chart, reset gestures, and every option it accepts |
 | `list_themes` | optional preset `id` | shipped visual themes, plus guidance for a selected theme |
 | `create_chart_view` | spec + optional `updates` | interactive chart **UI** (MCP App): live SVG preview + customization panel, opened with the given ChartUpdate layers applied |
 

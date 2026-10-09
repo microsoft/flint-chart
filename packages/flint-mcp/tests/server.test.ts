@@ -57,6 +57,7 @@ describe('MCP server', () => {
       'compile_chart',
       'create_chart_view',
       'list_chart_types',
+      'list_interaction_presets',
       'list_themes',
       'render_chart',
       'validate_chart',
@@ -139,6 +140,28 @@ describe('MCP server', () => {
       expect(payload.valid).toBe(false);
       expect(payload.errors.length).toBeGreaterThan(0);
     }
+  });
+
+  it('list_interaction_presets describes every preset with its options', async () => {
+    const all: any = await client.callTool({ name: 'list_interaction_presets', arguments: {} });
+    const { presets } = JSON.parse(all.content[0].text);
+    expect(presets.length).toBeGreaterThan(20);
+    const highlight = presets.find((preset: any) => preset.type === 'click-highlight');
+    expect(highlight.requires).toContain('elements');
+    expect(highlight.defaultReset).toEqual(['click-none', 'escape']);
+    expect(highlight.options.map((option: any) => option.name)).toEqual(['dimOpacity', 'targets', 'reset']);
+
+    const pie: any = await client.callTool({ name: 'list_interaction_presets', arguments: { chartType: 'Pie Chart' } });
+    const pieTypes = JSON.parse(pie.content[0].text).presets.map((preset: any) => preset.type);
+    expect(pieTypes).toContain('brush-angle');
+    expect(pieTypes).not.toContain('navigate');
+
+    const one: any = await client.callTool({ name: 'list_interaction_presets', arguments: { type: 'navigate' } });
+    expect(JSON.parse(one.content[0].text).presets).toHaveLength(1);
+
+    const bad: any = await client.callTool({ name: 'list_interaction_presets', arguments: { type: 'zoom' } });
+    expect(bad.isError).toBe(true);
+    expect(bad.content[0].text).toContain('Unknown interaction preset');
   });
 
   it('list_chart_types enumerates chart types per backend', async () => {
@@ -268,8 +291,8 @@ describe('MCP server', () => {
 
     const read = await client.readResource({ uri: 'flint://interaction-skill' });
     const skillText = resourceText(read.contents[0]);
-    expect(skillText).toContain('# flint-chart: interactions on a chart');
-    expect(skillText).toContain('bare `interaction_spec`');
+    expect(skillText).toContain('# flint-chart: interactions and updates on a chart');
+    expect(skillText).toContain('Return the bare object');
   });
 
   it('registers the create_chart_view MCP App tool linked to its UI resource', async () => {

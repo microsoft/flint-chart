@@ -35,6 +35,10 @@ describe('interaction preset registry', () => {
             expect(summary).not.toHaveProperty('create');
             expect(summary.label.length).toBeGreaterThan(0);
             expect(summary.description.length).toBeGreaterThan(0);
+            expect(Array.isArray(summary.options)).toBe(true);
+            for (const required of summary.requiredOptions ?? []) {
+                expect(summary.options.find((option) => option.name === required)?.required).toBe(true);
+            }
         }
     });
 });

@@ -128,13 +128,13 @@ export function buildAssemblyInputShape(disableFileReference = false) {
                 .describe('The preset\'s own options, including its `reset` gesture list ("click-none", "double-click", "escape").'),
             }),
           )
-          .describe('One entry per interaction. Take the preset names from list_chart_types → chartTypes[].interactions for the chosen chart type.'),
+          .describe('One entry per behaviour: a gesture the user named, or a question their goal asks of the chart. Take the presets and their options from list_interaction_presets with the chosen chartType.'),
         assistedTargeting: z.union([z.boolean(), z.record(z.string(), z.any())]).optional(),
         keyboardTargeting: z.boolean().optional(),
       })
       .optional()
       .describe(
-        'How the chart behaves, for create_chart_view (Vega-Lite only). Lists interaction presets by type with their options nested under `options`. An entry the chart type cannot honour is dropped with a warning and the chart still renders; validate_chart reports the same warnings. Guide: https://microsoft.github.io/flint-chart/#/documentation/interaction-spec',
+        'How the chart behaves, for create_chart_view (Vega-Lite only). Lists interaction presets by type with their options nested under `options`. An entry the chart type cannot honour is dropped with a warning and the chart still renders; validate_chart reports the same warnings. Read flint://interaction-skill ("Add interactions to the chart") before you write one.',
       ),
     options: z
       .record(z.string(), z.any())

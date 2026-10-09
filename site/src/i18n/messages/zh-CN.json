@@ -548,6 +548,7 @@
       "compile_chart": "生成可供 Vega-Lite、ECharts 或 Chart.js 直接使用的 JSON 规范，并返回编译警告。",
       "validate_chart": "检查规范是否有效，报告警告或错误，并返回计算得到的图表尺寸。",
       "list_chart_types": "列出可用的图表类型和编码通道，也可按渲染后端筛选。",
+      "list_interaction_presets": "列出交互预设：各自的作用、对图表的要求以及所有可用选项，可按图表类型或单个预设筛选。",
       "list_themes": "列出 Flint 内置的视觉主题；传入主题 id 后，还可获取使用或扩展该设计语言的指南。",
       "agentSkill": "随包提供的图表编写指南，帮助智能体生成有效的 ChartAssemblyInput 规范。",
       "themeSkill": "随包提供的 ThemeSpec 编写指南，帮助智能体将视觉识别转换成可复用的正式规范。",

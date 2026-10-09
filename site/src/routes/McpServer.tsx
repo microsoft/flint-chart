@@ -14,6 +14,7 @@ const SURFACE_ITEMS = [
   { tagKey: 'tool', name: 'compile_chart', descKey: 'compile_chart' },
   { tagKey: 'tool', name: 'validate_chart', descKey: 'validate_chart' },
   { tagKey: 'tool', name: 'list_chart_types', descKey: 'list_chart_types' },
+  { tagKey: 'tool', name: 'list_interaction_presets', descKey: 'list_interaction_presets' },
   { tagKey: 'tool', name: 'list_themes', descKey: 'list_themes' },
   { tagKey: 'resource', name: 'flint://agent-skill', descKey: 'agentSkill' },
   { tagKey: 'resource', name: 'flint://theme-skill', descKey: 'themeSkill' },

@@ -3,115 +3,199 @@ name: flint-interaction-author
 description: "Use when: a Flint chart should respond to the reader (highlight, zoom, brush, legend toggle, reorder, annotate, explore, link charts); an application or an agent changes a mounted chart from outside or reads what it shows; or a gesture no preset gives must be built. Produce one valid interaction_spec, one ChartUpdate, or code against flint-chart/interactive, with no invented names."
 ---
 
-# flint-chart: interactions on a chart
+# flint-chart: interactions and updates on a chart
 
-A Flint chart is shared state. A reader changes it with gestures, an
-application changes it with code, an agent changes it with JSON, and all three
-read the same state back. This skill is the reference for all three, with no
-need to read the library's source.
+A Flint chart is shared state. A reader's gesture becomes an event, a handler
+turns the event into an update `{ id, ops }`, updates compose as layers, and
+the layers render into a state the host and the agent read back. An
+application and an agent write the same kind of update directly. The full
+model is in the documentation:
+https://microsoft.github.io/flint-chart/#/documentation/interaction-introduction
 
 The chart itself (`chart_spec`, `semantic_types`) is the `flint-chart-author`
 skill. Everything here runs on the Vega-Lite backend; a static render and the
-other backends leave `interaction_spec` untouched.
+other backends leave `interaction_spec` and updates untouched.
 
 ## What you produce (and what you do NOT)
 
-Three outputs, picked by what the request asks for:
-
 | The request says | You produce | Section |
 | --- | --- | --- |
-| A gesture or a behaviour on the chart: "highlight on click", "zoom", "brush a period", "make it interactive", "add behaviour to this chart". | One `interaction_spec`: `{ "interactions": [ ... ] }`, presets only. | Presets |
-| A change to a chart that is already on screen, from outside: "point out Japan", "frame 2010 to 2020", "note this value", "reorder by value", an agent answering a user with the chart. | One `ChartUpdate`: `{ "id", "ops": [ ... ] }`. | Change the chart |
+| A gesture or a behaviour on the chart: "highlight on click", "zoom", "brush a period", "make it interactive", "add behaviour to this chart". | One `interaction_spec`: `{ "interactions": [ ... ] }`, presets only. | Add interactions to the chart |
+| A change to a chart that is already on screen, from outside: "point out Japan", "frame 2010 to 2020", "note this value", "reorder by value", an agent answering a user with the chart. | One `ChartUpdate`: `{ "id", "ops": [ ... ] }`. | Update the chart |
 | Code around a chart: "in my app", "on click open the record", "link these two charts", "a panel that follows the hover", "play the years". | TypeScript against `flint-chart/interactive`: mount, presets as factories, `onChange`, `dispatch`. | Use Flint in an application |
-| A gesture no preset gives: "drag along the path", "draw a guess", "a rule for the box", "a lens the app draws". | A `CanvasInteractionDef`: a trigger, affordances, a handler. | Build a bespoke interaction |
+| A gesture no preset gives: "drag along the path", "draw a guess", "a rule for the box", "a lens the app draws". | A `CanvasInteractionDef`: a trigger, affordances, a handler. | When no preset fits |
 
 - **DO** use only the names in this skill: preset types, options, ops, states,
   triggers, cursors, event actions. Every name here is one the library ships.
-- **DO** return the whole layer for an id on every update, and read the result.
+  When the request asks for a behaviour no preset gives, say which preset
+  comes closest and what it leaves out, then offer a bespoke definition if the
+  host runs code.
 - **DO** add behaviour only when the request or the session asks for it. A
   static image or a bare spec gets no `interaction_spec`.
-- **Never** invent a preset, an option, an op, or a trigger. When the request
-  asks for a behaviour no preset gives, say which preset comes closest and
-  what it leaves out, then offer a bespoke definition if the host runs code.
-- **Never** add an entry for a tooltip or values on hover. Every compiled chart
-  shows a tooltip on hover already.
 
-## How an interaction works
+## Which workflow the user is asking for
 
-One model runs under presets, updates, and bespoke definitions. Read it once;
-every rule below follows from it.
+- **Presets through the MCP tools:** put the object beside `chart_spec` as
+  `interaction_spec` in the input of `create_chart_view`; `validate_chart`
+  reports the same warnings without rendering. `list_interaction_presets`
+  with `chartType` lists the presets that chart type supports, what each
+  does, and its options.
+- **An update through the MCP tools:** there is no handle on the chart. Pass
+  the layers as the `updates` argument of `create_chart_view`, beside the
+  input; see "Step 4 — send the layer and read the result".
+- **Code, only when the user asks for code:** mount with `mountChart`, or
+  `<FlintChart>` in React; presets as factory calls, updates with
+  `applyUpdate`, state with `getState` and `onChange`. The programming API
+  is documented at
+  https://microsoft.github.io/flint-chart/#/documentation/interaction-api
+- **A bespoke interaction** needs a host that runs code. In the MCP view, the
+  answer is the closest preset and what it leaves out.
 
-```
-reader gesture ──► trigger ──► event (action, phase, target, geometry)
-                                 │
-host payload ───► dispatch ──────┤──► handle(event | payload, context) ──► ChartUpdate { id, ops }
-                                 │                                            │
-agent / app ────► applyUpdate ───┴────────────────────────────────────────────┤
-                                                                              ▼
-                                                        layers by id ──► render ──► state
-                                                                              │
-                                              getState(), onChange(), the MCP view's context ◄──┘
-```
+## Add interactions to the chart
 
-- **A trigger** reads the pointer, the wheel, or the keyboard and makes an
-  event. Three families: **element** (a click, hover, long press, double-click,
-  drag, or inspect on marks, legend items, or axis labels), **region** (a drag
-  that draws a rectangle, an interval along one axis, a lasso, or an angular
-  sector, and lists the marks inside), **navigation** (a drag that pans, a
-  wheel or pinch that zooms a continuous axis). The keyboard is a fourth
-  source: `accessible-navigation` walks the chart with Tab and the arrow keys.
-- **An event** carries `action` (what the gesture is: `click-element`,
-  `select-region`, `pan-viewport`, …), `phase` (`start`, `preview` while the
-  gesture runs, `commit`, `cancel`), `target` (the marks hit, each as a
-  `value` in field terms: a bar's category and measure, a legend item's field
-  and value), and `geometry` (the gesture in plot pixels and in data values,
-  inverted through the chart's scales).
-- **A handler** maps the event to one `ChartUpdate`, or `null` for no change.
-  It never touches the DOM. A preset is a packaged trigger plus handler with
-  a name; `click-highlight` in JSON and `clickHighlight()` in code are two
-  spellings of the same definition.
-- **An update** is `{ id, ops }`. The `id` names a layer; applying an update
-  with an id already held replaces that layer. Layers compose in insertion
-  order. A gesture, a host call, and an agent's JSON all write the same kind of
-  layer, so a click and a story step produce the same kind of change.
-- **The state** is what the chart shows now: the emphasized marks, the hidden
-  legend values, the viewport, the category order. A host reads it with
-  `getState()` and hears every change with `onChange()`, instead of replaying
-  gestures. The MCP chart view sends it to the model after each commit.
-- **Admission** runs at mount and decides what the chart can honour. The chart
-  type declares what it offers (marks that resolve to data, a drag region,
-  navigable axes, a reorderable axis, a discrete legend, discrete axis labels,
-  an index axis). The data confirms the parts that depend on it (a colour field
-  bound to a legend, a continuous unfaceted axis). Each preset needs some of
-  these. A spec entry the chart cannot honour is **dropped with a warning**,
-  and the chart renders; a code definition **throws**, because a developer sees
-  the exception.
-- **One trigger has one owner.** Two definitions that ask for the same gesture
-  on the same kind of hit collide: the plot drag, the double-click, the legend
-  click, the axis-label click, the retained mark focus. The later entry yields,
-  or, when it can keep the rest, gives up only that trigger with an `info`
-  warning. See "Ownership".
-- **A reset** is a gesture that returns a preset to neutral: `click-none` (a
-  click that hits no element), `double-click`, `escape`. Each preset has a
-  default list. A reset clears preset layers only; a layer a host wrote stays
-  until the host clears it.
+### Step 1 — read the request and the chart
 
-## Presets (`interaction_spec`)
+Three things in the request decide the entries, read in this order:
 
-### Output contract
+1. **What the user named.** A gesture or a preset in their words: "brush a
+   period", "zoom", "toggle the legend", "highlight on click". Each is one job.
+2. **The goal they stated.** "Explore", "compare the regions", "find
+   outliers", "present this", "a control in my app". A goal is the set of
+   questions the reader will ask of this chart; each question is one job.
+3. **Nothing named**, only "interactive", a live view, a dashboard. The chart
+   and the data say what the reader can do with it.
 
-Unless the user asks for commentary, return exactly one valid JSON object:
+Then read the chart spec: the chart type, the field on each channel, and the
+shape of the data. What a chart invites a reader to do:
 
-- The bare `interaction_spec`, `{ "interactions": [ ... ] }`, not
-  `{ "interaction_spec": ... }` and not a whole `ChartAssemblyInput`.
-- Every entry is `{ "type": <preset>, "id"?: <string>, "options"?: { ... } }`.
-  Options nest under `options`; an option beside `type` is rejected. `id` sits
-  on the entry, never inside `options`, and is needed only when one preset
-  appears twice. No string shorthand: `"click-highlight"` alone is rejected.
-- Every entry answers the request. A broad request gets at most three.
-- Omit `reset` to accept the preset's default. Set it only when the default
-  collides with another entry.
-- Strict JSON, no Markdown fence, no comments, no trailing commas.
+| The chart | Invites |
+| --- | --- |
+| A time series, one or many series | Comparing the series at one x; focusing a period; hiding a series when a colour field is bound; moving along the series when it is long. |
+| A scatter or a dense point chart | Focusing a cluster; moving closer; hiding a series when a colour field is bound. |
+| A bar, lollipop, or other category chart | Singling out a category; ranking by hand; hiding a series when a colour field is bound. |
+| A pie, donut, rose, or radar | Singling out a sector; focusing adjacent sectors. |
+| A heatmap or a calendar | Singling out a cell; reading a whole row or column. |
+| A map | Singling out a region; moving closer. |
+| A chart that is a control in an app | A click the app reads as a selection; a stronger gesture the app reads as an activation. |
+| A chart read without a pointer | Walking the chart from the keyboard. |
+
+### Step 2 — pick presets
+
+Before any entry, a mounted chart already shows a tooltip with the mark's
+values on hover and nothing else. An entry adds one behaviour.
+
+Take one row of the map per job. A named gesture takes the row whose
+"Gesture" is that gesture. A question takes the row whose "Answers" is that
+question, on a chart whose "Needs" it offers; a broad goal takes two or three
+rows, the ones the chart invites most. When nothing is named, the rows the
+chart invites, two or three. A row that answers no job on the request stays
+out.
+
+| Preset | Gesture | Answers | Needs | Default reset |
+| --- | --- | --- | --- | --- |
+| **Single one thing out** | | | | |
+| `click-highlight` | Clicks a mark, a legend item, or an axis label; it stays emphasised and the rest mute. Shift-click adds. | Which mark, series, or category is this one? | elements | click-none, escape |
+| `click-group-focus` | Clicks a mark; every mark in its group stays emphasised. `groupBy` names the group field. | Which marks belong with this one? | elements | click-none, escape |
+| `hover-group-focus` | Hovers a mark; its group previews until the pointer leaves. `groupBy` names the group field. | Which marks belong with this one, at a glance? | elements | none |
+| `axis-highlight` | Clicks (or with `event: "hover"`, hovers) a discrete axis label; that category's marks emphasise. | Which marks share this row or column? | discrete axis | click-none, escape |
+| **Read values** | | | | |
+| `inspect` | Moves over the plot; a guide follows the pointer and the nearest mark on the chosen axes reads out. `mode` picks the axes and a comparison (`"x>"` reads every mark past the pointer). | What is at this x, this y, or beyond it? | elements | none |
+| `inspect-index` | Moves along the index axis; every series reads out at that position on one guide, each value labelled in its series colour and the position named at the axis. `show: "single"` reads one series and switches it through the legend; `seriesBy` names the series field when the chart draws one series at a time; `displayValue: false` keeps the guides and drops the labels. | What does each series hold at this point? | index axis | escape |
+| **Focus a region** | | | | |
+| `select` | Drags a rectangle; the marks inside emphasise. | Which marks lie in this area? | elements, cartesian region | click-none, escape |
+| `lasso-select` | Draws a freehand region; the marks inside emphasise. | Which marks lie in this irregular cluster? | elements, cartesian region | click-none, escape |
+| `brush-x`, `brush-y` | Drags an interval along one axis; the marks in it emphasise. `mode: "stateful"` keeps the interval on screen to move and resize. On a polar chart the x brush is a sector. | Which marks fall in this period or this range? | elements, cartesian region | click-none, escape |
+| `brush-angle` | Drags an angular sector on a pie, donut, rose, or radar; the slices in it emphasise. | Which adjacent slices make up this share? | elements, angular region | click-none, escape |
+| `linked-brush` | Drags a region; the groups inside emphasise in every chart that mounts the same preset. `groupBy` names the shared field. | Where are these groups in the other charts? | elements, cartesian region | click-none, escape |
+| **Move the view** | | | | |
+| `navigate` | Drags to pan; wheels or pinches to zoom a continuous axis. `axes` limits it; `pan: false` leaves the plot drag free. | What is in this part of the range, closer? | navigation | double-click |
+| `brush-zoom` | Drags a rectangle; the chart flies into it. | What is in this box, closer? | navigation | double-click, escape |
+| **Reduce or rearrange** | | | | |
+| `legend-toggle` | Clicks a legend item; its series hides or returns. Hidden series are a setting and survive every reset. | What does the chart look like without this series? | discrete legend | none |
+| `drag-reorder` | Drags a discrete axis label to a new place; the categories reorder. | How do these rank in the order I choose? | reorderable axis | none |
+| `filter-controls` | Picks values in controls beside the chart; the rows that fail are removed, or muted with `mode: "highlight"`. One control per listed field. | What does the chart show for this subset of a field it does not draw? | inline data | none |
+| **Mark for the reader** | | | | |
+| `click-annotate` | Clicks a mark; a note with its value pins to it. | What is this value, left on the chart? | elements | click-none, escape |
+| **Hand a gesture to the app** | | | | |
+| `double-activate` | Double-clicks a mark; the mark activates and the host reads it. | Which record should the app open? | elements | click-none, escape |
+| `long-press` | Holds a mark (500 ms); the mark activates. The touch spelling of the same activation. | Which record should the app open, on touch? | elements | click-none, escape |
+| `context-activate` | Right-clicks or long-presses a mark; the host receives a context target and draws its own menu. | What can the app do with this mark? | elements | none |
+| **Read without a pointer** | | | | |
+| `accessible-navigation` | Tabs into the chart and walks titles, axes, legends, facet headers, series, and marks with the arrow keys; each step says what the element is and emphasises its data. Space on a focused element runs the click presets. | What is on this chart, from the keyboard or a screen reader? | elements | none |
+
+Within a family the rows answer neighbouring questions, so one chart takes
+one of them: `inspect` reads the marks near the pointer, `inspect-index` reads
+every series at one index; `select` takes an area, `brush-x` a period, `lasso`
+a shape; `navigate` moves continuously, `brush-zoom` jumps into a box;
+`double-activate`, `long-press`, and `context-activate` are three spellings of
+"hand this mark to the app" for a mouse, a finger, and a menu.
+
+"Needs" is what the chart type offers; `list_chart_types` has already applied
+it to the list it returns. The data confirms a few at mount, in Step 3. A
+viewport a gesture commits, and a reset, fly over 400 ms;
+`"transition": { "duration": 0 }` or `"resetTransition": { "duration": 0 }`
+jumps. Panning and wheel zooming follow the pointer.
+
+**`filter-controls`.** It draws real controls beside the chart and changes the
+rows the chart shows, so it answers a request that names a field to filter by
+("filter by region", "one year at a time", "let me pick the group"), or a data
+column the chart does not encode whose values are versions of the same chart:
+a year in a snapshot scatter, a population group, a scenario. A field the
+chart already draws has its own preset: the colour field `legend-toggle`, a
+continuous axis `brush-x` or `navigate`, a category on an axis
+`click-highlight`; and the measure the chart plots is the chart. List `fields`
+explicitly, one or two, three at most: unlisted, the preset picks up to four
+categorical and temporal fields itself. One entry per chart. A fixed subset
+belongs in the data, and slices side by side are a facet in the
+`flint-chart-author` skill.
+
+### Step 3 — resolve conflicts
+
+Each trigger has one owner. At mount, admission gives a trigger to the first
+entry that asks for it; a later entry that asks for the same trigger yields
+it with an `info` warning when it can keep the rest, or is dropped with a
+warning when it cannot. The chart still renders. Four triggers are asked for
+by more than one preset:
+
+| Trigger | Asked for by | Free it with |
+| --- | --- | --- |
+| The plot drag | `navigate` with pan on, every region preset, `brush-zoom`, `drag-reorder` | `"pan": false` on `navigate` beside one region preset |
+| The double-click | `double-activate`, and any entry whose `reset` holds `double-click` (`navigate` and `brush-zoom` by default) | `"reset": ["escape"]` on `navigate` or `brush-zoom` |
+| The legend click | `legend-toggle`, `click-highlight`, `inspect-index` with `show: "single"` | `"targets": ["mark"]` on `click-highlight` |
+| The retained mark focus | `click-highlight`, `click-group-focus` | one of them |
+
+`click-highlight` yields a legend or an axis click on its own, with an `info`
+warning; `targets` keeps the spec silent. `accessible-navigation` takes no
+pointer trigger, so it sits beside any entry.
+
+The data confirms what the chart type cannot promise. An entry that fails one
+of these at mount is dropped with a warning:
+
+- `legend-toggle` needs a colour field bound to a discrete legend.
+- `navigate` and `brush-zoom` need a continuous, unfaceted axis.
+- `drag-reorder` needs a discrete axis in the bound encodings.
+- `inspect-index` needs an index axis, which it finds itself: the temporal
+  axis, else the discrete axis beside a measure, else x. A horizontal bar
+  chart reads along y with no option; `axis` overrides the choice. `seriesBy`
+  names the series field when the chart draws one series at a time.
+- `click-group-focus`, `hover-group-focus`, and `linked-brush` need `groupBy`,
+  a bound field.
+
+### Step 4 — write and validate
+
+The object is `{ "interactions": [ ... ] }`, beside `chart_spec` as
+`interaction_spec`. Every entry is
+`{ "type": <preset>, "id"?: <string>, "options"?: { ... } }`:
+
+- `type` is a preset from the map, supported by the chart type per
+  `list_chart_types`.
+- `options` holds the preset's own options; `list_interaction_presets` lists
+  every one with its type (see "Preset options"). `reset` is one of them: omit it for the default list in the map, set it to
+  free a trigger. A preset that keeps nothing (`hover-group-focus`, `inspect`,
+  `context-activate`) accepts no `reset`.
+- `id` sits on the entry and is needed only when one preset appears twice.
+- In code, the same entry is a factory call with the same options:
+  `clickHighlight({ targets: ['mark'] })`, `brushX()`, `navigate({ axes: 'x' })`.
 
 ```json
 {
@@ -123,271 +207,331 @@ Unless the user asks for commentary, return exactly one valid JSON object:
 }
 ```
 
-### Workflow
-
-1. **Read the chart spec.** Note the chart type, the field on each channel,
-   and the shape of the data: one series or many, time or categories, points
-   or bars, a colour field or none.
-2. **Name the jobs.** Each thing the reader should be able to do is one job:
-   "zoom" is one, "explore" is a few. A request that names no gesture goes to
-   "When the request names no gesture".
-3. **Pick a preset per job.** Call `list_chart_types` and read `interactions`
-   for the chart type: the presets it supports. Choose from the preset map
-   the one that fits this chart and this data. Fewest entries that serve the
-   request.
-4. **Check ownership.** Two entries must not ask for one trigger; see
-   "Ownership" and the data conditions there.
-5. **Validate.** Run `validate_chart` on the input with the object beside the
-   chart spec, fix or drop what it warns about, and return the bare object.
-
-### Preset map
-
-| Preset | The reader does | It is for | Required | Needs | Default reset |
-| --- | --- | --- | --- | --- | --- |
-| `click-highlight` | Clicks a mark, legend item, or axis label; it stays emphasised and the rest mute. | Single one mark or series out. | | elements | click-none, escape |
-| `click-group-focus` | Clicks a mark; every mark in its group stays emphasised. | Single one group out. | `groupBy` | elements | click-none, escape |
-| `hover-group-focus` | Hovers a mark; its group previews. | Preview a group without a click. | `groupBy` | elements | none |
-| `axis-highlight` | Clicks (or hovers) a discrete axis label; the category's marks emphasise. | Single one category out. | | discrete axis | click-none, escape |
-| `inspect` | Moves over the plot; the nearest mark shows its values. | Examine one mark in detail. | | elements | none |
-| `inspect-index` | Moves over the plot; every series shows its value at that x. | Compare every series at one x. | `seriesBy` for a single series | index axis | escape |
-| `select` | Drags a rectangle; the marks inside emphasise. | Focus an area of points. | | elements, cartesian region | click-none, escape |
-| `lasso-select` | Draws a freehand region; the marks inside emphasise. | Focus an irregular cluster. | | elements, cartesian region | click-none, escape |
-| `brush-x`, `brush-y` | Drags an interval along one axis; on a polar chart the x brush is a sector. | Focus a period or a range. | | elements, cartesian region | click-none, escape |
-| `brush-angle` | Drags an angular sector on a pie, donut, rose, or radar. | Focus adjacent sectors. | | elements, angular region | click-none, escape |
-| `linked-brush` | Brushes marks; the same groups emphasise in every linked chart. | Carry a focus to another chart. | `groupBy` | elements, cartesian region | click-none, escape |
-| `navigate` | Drags to pan; scrolls or pinches to zoom continuous axes. | Move closer or along. | | navigation | double-click |
-| `brush-zoom` | Drags a rectangle; the chart zooms into it. | Zoom into detail with one gesture. | | navigation | double-click, escape |
-| `legend-toggle` | Clicks a legend item; its series hides or returns. | Reduce the series on view. | | discrete legend | none |
-| `drag-reorder` | Drags a discrete axis label; the categories reorder. | Rank by hand. | | reorderable axis | none |
-| `filter-controls` | Picks values in a row of controls under the chart, one row per field; the rows that fail are removed (or muted with `mode: "highlight"`). | Narrow the data by a field the chart does not show. Only when asked; see below. | | | none |
-| `click-annotate` | Clicks a mark; an annotation pins with its value. | Note a value for the reader. | | elements | click-none, escape |
-| `context-activate` | Right-clicks or long-presses; the host receives a context target. | A context menu in the app. | | elements | none |
-| `long-press` | Holds a mark; it activates. | Touch-first activation. | | elements | click-none, escape |
-| `double-activate` | Double-clicks a mark; it activates. | Open the record behind a mark. | | elements | click-none, escape |
-| `accessible-navigation` | Tabs into the chart and walks titles, axes, legends, facet headers, series, and marks with the keyboard; each step says what the element is and emphasises its data. | Keyboard and screen-reader access to the whole chart. | | elements | none |
-
-"Needs" is what the chart type must offer; `list_chart_types` has already
-applied it. The data can still remove an entry at mount: see the data
-conditions under "Ownership". A viewport a gesture commits, and a reset, fly
-over 400 ms; `"transition": { "duration": 0 }` or
-`"resetTransition": { "duration": 0 }` jumps. Panning and wheel zooming follow
-the pointer and never animate.
-
-### When the request names no gesture
-
-"Make it interactive", a live view, a dashboard, or a session whose goal is to
-explore the data: the chart shape picks the entries. Take the fewest that fit,
-and let a named preset in the user's words replace the default for its job.
-
-- **A time series, one or many series:** `inspect-index`, and `legend-toggle`
-  when a colour field is bound. Add `brush-x` when the reader will point at a
-  period, `navigate` with `axes: "x"` when the series is long.
-- **A scatter or a dense point chart:** `select`, `navigate`. Add
-  `legend-toggle` when a colour field is bound.
-- **A bar, lollipop, or other category chart:** `click-highlight`. Add
-  `legend-toggle` when a colour field is bound, `drag-reorder` when the reader
-  ranks by hand.
-- **A pie, donut, rose, or radar:** `click-highlight` with
-  `targets: ["mark", "legend"]`, or `brush-angle` for adjacent sectors.
-- **A heatmap or a calendar:** `click-highlight` with `targets: ["mark"]`,
-  `axis-highlight` to read a row or a column.
-- **A map:** `click-highlight`, `navigate`.
-- **A chart that is a control in the user's app** ("in my app", "on click
-  open"): `click-highlight` with `targets: ["mark"]`, and `double-activate` or
-  `context-activate` for the stronger trigger the app reads.
-- **A chart other people read without a pointer** (accessibility, a screen
-  reader, "keyboard"): `accessible-navigation`, beside any other entry.
-
-None of these is `filter-controls`. "Make it interactive" never adds it.
-
-### When to add `filter-controls`
-
-It puts real controls under the chart, takes room from the plot, and changes
-the data the chart shows. Add it only in these cases:
-
-- The request asks to filter, to pick a subset, or to switch what the chart
-  shows by a field: "filter by region", "show one year at a time",
-  "let me pick the group".
-- The data holds a field the chart does not encode, and each of its values is
-  a different version of the same chart: a year in a snapshot scatter, a
-  population group, a scenario. The reader picks one at a time.
-
-Then:
-
-- **List `fields`**, one or two of them, three at most. Do not leave the preset
-  to pick fields itself.
-- **Do not filter a field the chart already shows.** Use another preset for it:
-  a colour field gets `legend-toggle`, a continuous axis gets `brush-x` or
-  `navigate`, and a category on an axis gets `click-highlight`.
-- **Do not filter the measure** the chart plots unless the request names it.
-- **Use one entry per chart.**
-- **Do not use it to replace other choices.** A fixed subset belongs in the
-  data. A comparison of slices side by side is a facet (the
-  `flint-chart-author` skill). A static image or an export gets no controls.
-
-### Ownership
-
-One trigger has one owner. Admission drops the later entry that asks for a
-trigger an earlier entry holds, with a warning. Four triggers collide in
-practice:
-
-| Trigger | Who asks for it | How to free it |
-| --- | --- | --- |
-| the plot drag | `navigate` with pan on, every region preset, `brush-zoom`, `drag-reorder` | `navigate` with `"pan": false` beside one region preset |
-| the double-click | `double-activate`, and any entry whose `reset` holds `double-click` (`navigate`, `brush-zoom` by default) | `"reset": ["escape"]` on `navigate` or `brush-zoom` |
-| the legend click | `legend-toggle`, `click-highlight`, `inspect-index` with `show: "single"` | `click-highlight` with `"targets": ["mark"]` |
-| the retained mark focus | `click-highlight`, `click-group-focus` | pick one |
-
-`click-highlight` yields a legend or an axis click on its own, with an `info`
-warning. Set `targets` to keep the spec silent.
-
-`accessible-navigation` takes no pointer trigger, so it sits beside any other
-entry. Space on a focused mark, legend item, or axis label runs the click
-presets on the list, so `legend-toggle` and `click-highlight` also answer the
-keyboard.
-
-Data conditions the chart type cannot promise; an entry that fails one is
-dropped at mount with a warning:
-
-- `legend-toggle` needs a colour field bound to a discrete legend.
-- `filter-controls` in filter mode is skipped when the chart's categories scroll
-  on a backend other than Vega-Lite. Without `fields` it picks up to four
-  categorical, boolean, or temporal fields, skipping the ones a sibling preset
-  already filters; list `fields` instead. A field the chart needs to tell its rows apart (a year, a
-  population group) holds one value at a time, without All; set `all` on the field to choose.
-- `navigate` and `brush-zoom` need a continuous, unfaceted axis.
-- `drag-reorder` needs a discrete axis in the bound encodings.
-- `inspect-index` needs the index axis; `seriesBy` names the series field
-  when the chart shows one series at a time.
-- `click-group-focus`, `hover-group-focus`, and `linked-brush` need `groupBy`,
-  a bound field.
-
-Two pairs answer one question twice; keep one of each: `inspect` with
-`inspect-index`, and `long-press` with `context-activate`.
-
-### Apply after the chart exists
-
-Keep the chart spec as it is. Put the object beside it as `interaction_spec`
-in the same input and call `create_chart_view` again, or
-`mountChart(container, input)` in code. The entries mount in order.
-
-An entry the chart cannot honour is dropped with a warning that names the
-entry, what it needed, and the chart type:
+Run `validate_chart` with the object beside the chart spec. A malformed entry
+is an error: an unknown `type`, an option beside `type`, an `id` inside
+`options`, a bare string entry, a missing required option, an unsupported
+`reset` gesture, a duplicate `id`. A dropped or yielded entry is a warning
+that names the entry, what it needed, and the chart type:
 
 ```
 Interaction "legend-toggle" requires a discrete legend; Bar Chart has none. The interaction was dropped.
 Interaction "click-highlight" yields legend clicks to "legend-toggle".
 ```
 
-`validate_chart` returns the same warnings before anything renders. A
-malformed entry is an error, not a drop: an unknown `type`, an option beside
-`type`, an `id` inside `options`, a missing required option, an unknown or
-unsupported `reset` gesture, a `reset` on a preset that keeps nothing
-(`hover-group-focus`, `inspect`, `context-activate`), or a duplicate `id`.
+Fix or drop what it warns about. Return the bare object, strict JSON, unless
+the user asks for commentary.
 
-### Preset options
+### When no preset fits
 
-Every option a preset accepts, from the library's own types. `id` is omitted:
-it sits on the entry. A `ResetGesture` is `click-none`, `double-click`, or
-`escape`; the preset map has each default list. `dimOpacity` is the opacity of
-the muted marks, 0.25 by default. A `guide` is `{ visible?, style? }`, or
-`false` to draw nothing while the gesture runs. `click-annotate` also takes
-`format`, a function, in code only.
+A host that runs code mounts a `CanvasInteractionDef` in `options.interactions`
+beside presets: a trigger, what it affords, and a handler that returns the
+layer for its id.
 
-<!-- preset-options:start -->
-| Preset | Option | Type | Notes |
-| --- | --- | --- | --- |
-| `click-highlight` | `dimOpacity` | `number` |  |
-|  | `targets` | `('mark' \| 'legend' \| 'discreteAxis')[]` | Semantic surfaces activated by this preset. Defaults to all three targets. |
-|  | `reset` | `ResetGesture[]` | Gestures that return this interaction to its neutral state. |
-| `axis-highlight` | `axis` | `'x' \| 'y'` | Limits the preset to one axis; both discrete axes when unset. |
-|  | `event` | `'hover' \| 'click'` | Defaults to 'click'. |
-|  | `dimOpacity` | `number` |  |
-|  | `reset` | `ResetGesture[]` | Gestures that return this interaction to its neutral state. |
-| `click-group-focus` | `dimOpacity` | `number` |  |
-|  | `groupBy` | `string \| string[]` |  |
-|  | `reset` | `ResetGesture[]` | Gestures that return this interaction to its neutral state. |
-| `hover-group-focus` | `groupBy` (required) | `string \| string[]` |  |
-|  | `dimOpacity` | `number` |  |
-|  | `tolerance` | `number` | Nearest-mark hover radius in renderer pixels. Defaults to 8. |
-| `click-annotate` | `dimOpacity` | `number` |  |
-|  | `reset` | `ResetGesture[]` | Gestures that return this interaction to its neutral state. |
-| `select` | `match` | `'intersect' \| 'contain'` | The marks the region lists: those it touches, or only those it contains. Defaults to 'intersect'. |
-|  | `dimOpacity` | `number` |  |
-|  | `guide` | `{ visible?, style?: { fill?, fillOpacity?, stroke?, strokeOpacity?, strokeWidth? } } \| false` | Transient region shown during the gesture; false disables visual feedback. |
-|  | `reset` | `ResetGesture[]` | Gestures that return this interaction to its neutral state. |
-| `lasso-select` | `match` | `'intersect' \| 'contain'` | The marks the region lists: those it touches, or only those it contains. Defaults to 'intersect'. |
-|  | `dimOpacity` | `number` |  |
-|  | `guide` | `{ visible?, style?: { fill?, fillOpacity?, stroke?, strokeOpacity?, strokeWidth? } } \| false` | Transient region shown during the gesture; false disables visual feedback. |
-|  | `reset` | `ResetGesture[]` | Gestures that return this interaction to its neutral state. |
-| `brush-x` | `match` | `'intersect' \| 'contain'` | The marks the region lists: those it touches, or only those it contains. Defaults to 'intersect'. |
-|  | `dimOpacity` | `number` |  |
-|  | `guide` | `{ visible?, style?: { fill?, fillOpacity?, stroke?, strokeOpacity?, strokeWidth? } } \| false` | Transient region shown during the gesture; false disables visual feedback. |
-|  | `reset` | `ResetGesture[]` | Gestures that return this interaction to its neutral state. |
-|  | `mode` | `'ephemeral' \| 'stateful'` | 'stateful' keeps the interval on screen and editable after the drag. Defaults to 'ephemeral'. |
-| `brush-y` | `match` | `'intersect' \| 'contain'` | The marks the region lists: those it touches, or only those it contains. Defaults to 'intersect'. |
-|  | `dimOpacity` | `number` |  |
-|  | `guide` | `{ visible?, style?: { fill?, fillOpacity?, stroke?, strokeOpacity?, strokeWidth? } } \| false` | Transient region shown during the gesture; false disables visual feedback. |
-|  | `reset` | `ResetGesture[]` | Gestures that return this interaction to its neutral state. |
-|  | `mode` | `'ephemeral' \| 'stateful'` | 'stateful' keeps the interval on screen and editable after the drag. Defaults to 'ephemeral'. |
-| `brush-angle` | `match` | `'intersect' \| 'contain'` | The marks the region lists: those it touches, or only those it contains. Defaults to 'intersect'. |
-|  | `dimOpacity` | `number` |  |
-|  | `guide` | `{ visible?, style?: { fill?, fillOpacity?, stroke?, strokeOpacity?, strokeWidth? } } \| false` | Transient region shown during the gesture; false disables visual feedback. |
-|  | `reset` | `ResetGesture[]` | Gestures that return this interaction to its neutral state. |
-|  | `mode` | `'ephemeral' \| 'stateful'` | 'stateful' keeps the sector on screen and editable after the drag. Defaults to 'ephemeral'. |
-| `brush-zoom` | `axes` | `'x' \| 'y' \| 'xy'` | Defaults to 'xy'. |
-|  | `guide` | `{ visible?, style?: { fill?, fillOpacity?, stroke?, strokeOpacity?, strokeWidth? } } \| false` |  |
-|  | `reset` | `ResetGesture[]` | Returns the viewport to the full frame. Defaults to ['double-click', 'escape']. |
-|  | `transition` | `{ duration: ms }` | The zoom into the brushed region. Defaults to 400 ms; `{ duration: 0 }` jumps. |
-|  | `resetTransition` | `{ duration: ms }` | The flight home on reset. Defaults to 400 ms; `{ duration: 0 }` jumps. |
-| `linked-brush` | `match` | `'intersect' \| 'contain'` | The marks the region lists: those it touches, or only those it contains. Defaults to 'intersect'. |
-|  | `dimOpacity` | `number` |  |
-|  | `guide` | `{ visible?, style?: { fill?, fillOpacity?, stroke?, strokeOpacity?, strokeWidth? } } \| false` | Transient region shown during the gesture; false disables visual feedback. |
-|  | `reset` | `ResetGesture[]` | Gestures that return this interaction to its neutral state. |
-|  | `groupBy` (required) | `string \| string[]` |  |
-|  | `brush` | `'rectangle' \| 'lasso'` | Defaults to 'rectangle'. |
-| `legend-toggle` | `mutedOpacity` | `number` |  |
-|  | `reset` | `ResetGesture[]` | Hidden series are a setting, so nothing resets them unless this list says so. |
-| `context-activate` | — | | |
-| `long-press` | `holdMs` | `number` | Defaults to 500. |
-|  | `dimOpacity` | `number` |  |
-|  | `reset` | `ResetGesture[]` | Gestures that return this interaction to its neutral state. |
-| `double-activate` | `dimOpacity` | `number` |  |
-|  | `reset` | `ResetGesture[]` | Gestures that return this interaction to its neutral state. |
-| `inspect` | `mode` | `'x' \| 'y' \| 'xy', with an optional comparison such as 'x>' or 'x<=;y>='` | The axes the pointer reads, with an optional comparison per axis. Defaults to 'xy'. |
-|  | `cycle` | `InspectMode[]` | Ordered modes cycled by wheel or context-menu gestures; mode is included automatically. |
-|  | `tolerance` | `number` | Hit tolerance as a plot-size fraction. Defaults to 0.02 for XY and 0.01 otherwise. |
-|  | `guide` | `{ visible?, style?: { color?, opacity?, width?, fillOpacity?, haloColor?, haloOpacity?, haloWidth? } } \| false` | Transient guide shown while inspecting; false disables visual feedback. |
-|  | `selector` | `{ select: { key } }` |  |
-|  | `dimOpacity` | `number` |  |
-| `inspect-index` | `axis` | `'x' \| 'y'` | The axis an index slice is read along. Defaults to the chart's index axis: the temporal one, else the discrete one beside a measure, else x. |
-|  | `tolerance` | `number` | Near-axis acquisition radius as a plot-size fraction. Defaults to 0.01. |
-|  | `show` | `'all' \| 'single' \| { series: value }` | Which series to present: all, the first series, or a preferred initial series. |
-|  | `seriesBy` | `string` | Record field identifying a series; single-series policies switch through the legend. |
-|  | `displayValue` | `boolean` | Show compact series-colored labels on value guides inside the plot. Defaults to true. |
-|  | `guide` | `{ visible?, style?: { color?, opacity?, width?, fillOpacity?, haloColor?, haloOpacity?, haloWidth? } } \| false` |  |
-|  | `selector` | `{ select: { key } }` |  |
-|  | `reset` | `ResetGesture[]` | Releases a locked series. Defaults to ['escape']. |
-| `navigate` | `axes` | `'x' \| 'y' \| 'xy' \| 'available'` | 'available' navigates every axis the chart confirms. Defaults to 'available'. |
-|  | `pan` | `boolean` | Defaults to true. |
-|  | `zoom` | `boolean` | Defaults to true. |
-|  | `wheelSensitivity` | `number` | Defaults to 0.002. |
-|  | `domainGuard` | `{ minVisibleFraction?, maxVisibleFraction?, overscrollFraction? }` |  |
-|  | `reset` | `ResetGesture[]` | Returns the viewport to the full frame. Defaults to ['double-click']. |
-|  | `resetTransition` | `{ duration: ms }` | The flight home on reset. Defaults to 400 ms; `{ duration: 0 }` jumps. |
-| `drag-reorder` | `reset` | `ResetGesture[]` | The order is a setting, so nothing resets it unless this list says so. |
-| `accessible-navigation` | `emphasis` | `boolean` | Dim the marks outside the focused element, as a click highlight does. Defaults to true. |
-|  | `dimOpacity` | `number` |  |
-|  | `caption` | `boolean` | Show a visible caption naming the focused element and its content. Defaults to true. |
-|  | `sections` | `('titles' \| 'axes' \| 'legends' \| 'headers' \| 'data' \| 'labels')[]` | The chart parts the walk reaches, in reading order. Defaults to every section. |
-|  | `maxFields` | `number` | The most data fields read out for one mark. Defaults to 8. |
-| `filter-controls` | `fields` | `(string \| { field, widget?: 'auto' \| 'checkboxes' \| 'select' \| 'range' \| 'toggle', label?, all? })[]` | The fields that get a control. Listed fields always get one. When absent, the categorical, boolean, and temporal fields are chosen, up to four, skipping a field another interaction already filters: the color field under `legend-toggle`, a continuous axis field under `navigate` or `brush-zoom`. |
-|  | `mode` | `'filter' \| 'highlight'` | `filter` removes the rows that fail; `highlight` keeps them and mutes their marks. Defaults to `filter`. |
-|  | `placement` | `'auto' \| 'top' \| 'bottom'` | Defaults to `auto`. |
-|  | `render` | `boolean` | False draws nothing; the host draws its own controls and drives the preset through `dispatch`. Defaults to true. |
-|  | `initial` | `Record<field, FilterValue>` | Filters applied when the chart mounts. |
-|  | `dimOpacity` | `number` | Opacity of the marks that fail in `highlight` mode. |
-<!-- preset-options:end -->
+```ts
+import { rectangleTrigger, type CanvasInteractionDef } from 'flint-chart/interactive';
+
+const timebox: CanvasInteractionDef = {
+  id: 'timebox',
+  eventSource: rectangleTrigger('contain'),
+  affordances: { plot: { cursor: 'region' } },
+  reset: ['click-none', 'escape'],
+  handle(event) {
+    if (event.action !== 'select-region' || event.phase !== 'commit') return null;
+    const x = event.geometry.domain?.x;
+    const y = event.geometry.domain?.y;
+    if (x?.kind !== 'interval' || y?.kind !== 'interval') return null;
+    const keep = seriesInsideBox(x.start, x.end, Number(y.start), Number(y.end)); // host logic over host rows
+    return {
+      id: 'timebox',
+      ops: [{ op: 'set-style',
+        targets: keep.map((series) => ({ select: { key: { Series: series } } })),
+        value: { state: 'emphasized' } }],
+    };
+  },
+};
+```
+
+| Field | Role |
+| --- | --- |
+| `id` | Names the interaction in events and the layer it retains. |
+| `eventSource` | The trigger: what to capture and how to read it. |
+| `affordances` | The kinds of hit the handler receives, each with its cursor and hover; a hit of a kind not listed never reaches it. Keys: `mark`, `legend-item`, `axis-label`, `plot`. Cursors: `activate`, `drag`, `region`, `navigate`, `inspect`, `draw`. Hovers: `target` (the mark), `cohort` (its group). |
+| `handle(event, context)` | Returns the whole layer for this id, or `null` for no change. |
+| `reset` | Gestures that clear the layer: `click-none`, `double-click`, `escape`. A reset reports as a commit with no `interactionId`. It suits a layer of styles the state shows; an overlay or a data layer is cleared by the host. |
+
+**Triggers.**
+
+| Trigger | The reader does | `action` | `geometry.plot` | `geometry.domain` | Affordance key |
+| --- | --- | --- | --- | --- | --- |
+| `clickTrigger` | Clicks a mark, legend item, or axis label. | `click-element`, `click-legend`, `click-axis` | `point` | — | `mark`, `legend-item`, `axis-label` |
+| `hoverTrigger` | Moves over a mark. | `hover-element`, `hover-legend`, `hover-axis` | `point` | — | same |
+| `dragTrigger(tolerance?)` | Presses a mark, or a projectable overlay path, within `tolerance` px (12) and drags. | `drag` | `drag { start, current, delta }` | the pointer's values; `geometry.projection` while over a projectable overlay | `mark` |
+| `rectangleTrigger(match?, guide?)` | Drags a rectangle. | `select-region` | `rect` | `x`, `y` intervals | `plot` |
+| `xBrushTrigger(match?, mode?, guide?)`, `yBrushTrigger(…)` | Drags an interval along one axis. | `brush-x`, `brush-y` | `rect` | that axis's interval | `plot` |
+| `lassoTrigger(match?, guide?)` | Draws a freehand region; previews begin at the third point. | `select-lasso` | `polygon` | `points`: the stroke so far, in data values | `plot` |
+| `angularBrushTrigger(match?, mode?, guide?)` | Drags a sector on a polar chart. | `brush-angle` | `angular-sector` | — | `plot` |
+| `inspectTrigger(mode?)` | Moves over the plot. | `inspect-x`, `inspect-y`, `inspect-xy` | `point` | `x`, `y` values | `plot` |
+| `inspectIndexTrigger(axis?, show?, seriesBy?)` | Moves along the index axis. | `inspect-x`, `inspect-y` | `point` | the index value | `plot` |
+| `navigationTrigger({ axes?, pan?, zoom?, reset? })` | Drags, wheels, pinches. | `pan-viewport`, `zoom-viewport`, `reset-viewport` | `viewport { delta, factor, anchor }` | the viewport after the move | `plot` |
+| `contextTrigger`, `longPressTrigger(ms?)`, `doubleActivateTrigger` | Right-clicks, holds (500 ms), double-clicks a mark. | `context-element`, `long-press-element`, `double-activate-element` | `point` | — | `mark` |
+
+`match` is `'intersect'` (default) or `'contain'` and decides which marks the
+region's `target` lists. `guide` styles the drawn shape; `false` hides it. A
+region is ephemeral: its guide and its preview end at the commit. An axis brush
+with `mode: 'stateful'` keeps the interval on screen and editable, and
+`event.operation` reads `create`, `move`, `resize-leading`, `resize-trailing`,
+or `clear`. Spread a trigger to tune it:
+`{ ...hoverTrigger, defaultAssistDistance: 28 }` acquires the nearest mark
+within 28 px. A chart admits a trigger when it offers what the trigger needs,
+per the map's "Needs"; a code definition the chart cannot honour throws at
+mount with a message that names what it needed.
+
+**The event.**
+
+```ts
+interface CanvasInteractionEvent {
+  action: string;                                     // from the table
+  phase: 'start' | 'preview' | 'commit' | 'cancel';   // clicks and hovers skip start
+  operation?: string;                                 // a stateful brush's edit, or pan | zoom | reset
+  geometry: { plot?, domain?, projection? };
+  target: { visual: { kind, role }, elements: [{ value, records? }] } | null;
+  modifiers?: { shift, ctrl, meta };
+  description?: { kind, type, content, text };  // on focus-element from accessible-navigation
+}
+```
+
+- `target.elements[i].value` holds the mark's encoded values, derived fields
+  included; `records` holds the source rows when the runtime can prove them. A
+  region target lists every mark inside. A legend hit has `value.field` and
+  `value.domain.value`.
+- `geometry.domain` is inverted through the plot's scales: a temporal axis
+  gives `Date` values; a discrete axis gives the category.
+- `description` arrives on `focus-element` while `accessible-navigation` walks
+  the chart: what the focused element is (`type`, such as "Bar") and what it
+  represents (`content`), with the spoken `text`. The walk's emphasis reports
+  through `onChange` as a `preview`.
+- `geometry.projection.kind === 'path'` during a drag over an overlay with
+  `projectable: true`: `segment.start.value` and `segment.end.value` are the
+  overlay rows on each side of the pointer and `segment.t` the fraction between
+  them.
+- `context` is the chart state plus `available`, every drawn mark, for
+  building refs, and `selected`, the current emphasis, for a toggle rule.
+
+**The handler.**
+
+- It returns the complete layer for the id on every `preview` and `commit`;
+  the runtime drops the preview on `cancel`. A `null` on a `preview` shows
+  nothing until the commit, which is how a rule applies to the committed box
+  only. A region gesture keeps a preview layer under the interaction's id
+  while the drag runs, so a commit after previews restates the layer; a
+  `null` there lets the last preview stand.
+- It maps geometry to the host's model and the model to ops. Host side
+  effects (state, panels, overlays the host draws) come from
+  `flint-interaction` or `onChange`, which carry the same event; the handler
+  itself returns ops and leaves the DOM to the runtime.
+- Triggers have one owner for code definitions as for presets; two code
+  definitions on one trigger throw at mount. `navigate({ pan: false })` goes
+  beside a region trigger.
+- An element drag owns the press on the marks it affords. A press there is a
+  `drag` with phase `start`; `target` is the pressed mark through every phase.
+  The layer returned at `start` is kept as the gesture's preview, and a release
+  without movement commits that preview with no further call. No click
+  definition fires on those marks, so the definition that drags a mark also
+  answers its press.
+- A click definition that affords `hover` on marks receives `preview` events
+  for the hover cue. Return `null` or an emphasis for them, and the layer on
+  `commit`.
+
+**Patterns.**
+
+| Pattern | Flow | Pieces |
+| --- | --- | --- |
+| Gesture rule | Flint in, Flint out | A region trigger reads `geometry.domain`; the host rule picks rows; `set-style` by key (the timebox above). |
+| Host-drawn detail | Flint in, custom out | `hoverTrigger` or `inspectTrigger` with a `null` handle; the host listens to `flint-interaction` for the resolved element and draws a lens, a cursor, or a badge over the mount. |
+| Application drives the chart | external in, Flint out | `externalInteraction` plus `dispatch` per frame: a playback year, a reveal progress. |
+| Drag along a path | press, then drag | One `dragTrigger()` definition and one layer. At `start` on a mark it returns the mark's path as a `set-overlay` `line` with `interactive: true, projectable: true` and `order`, plus `set-data` for the current position. On `preview` and `commit` with `geometry.projection` it returns the same two ops for the pointer's position. `intrinsicDomain` on the x and y fields holds the axes still across the swaps. |
+| Freehand stroke | draw | The rows to guess form their own series, and a mount update sets `opacity: 0` on that series, which keeps the axis. `lassoTrigger('contain', false)` with `plot: { cursor: 'draw' }` is the pen: `geometry.domain.points` become the rows of a `set-overlay` line. An `externalInteraction` reveals the truth as an overlay, then the host clears the hide. |
+| Chart-level zoom | wheel | When the layout itself must change (bar step, ticks, domain), filter the rows and `mountChart` again in a hidden layer; swap on `ready`. No preset re-lays out. |
+| Semantic zoom on a map | navigate | A Choropleth with `level: 'auto'` or a Map with `levelField` and `levels`, `navigate()`, and `set-viewport { region: { key } }` with a `transition` to fly into a region. Navigation events carry `geometry.domain.level` and `focus`. |
+
+Host-drawn detail, the shape of it:
+
+```ts
+const probe: CanvasInteractionDef = {
+  id: 'probe',
+  eventSource: { ...hoverTrigger, defaultAssistDistance: 28 },
+  affordances: { mark: { hover: 'target' } },
+  handle() { return null; },
+};
+container.addEventListener('flint-interaction', (e) => {
+  const { interactionId, event } = (e as CustomEvent<FlintInteractionEventDetail>).detail;
+  if (interactionId !== 'probe' || event.phase !== 'preview') return;
+  const row = event.target?.elements[0]?.records?.[0];
+  if (row) lens.show(row);                 // the host draws; the chart is unchanged
+});
+```
+
+## Update the chart
+
+### Step 1 — read the state
+
+A host hands the model the chart input and the state, as text or as data. The
+MCP chart view does this after every committed gesture:
+
+```
+The chart "Life expectancy" emphasizes 3 marks where continent = Asia.
+Hidden: Africa.
+The y axis shows life from 70 to 86.
+```
+
+The state is in field terms: which marks are emphasized and by which values,
+which legend values are hidden, the viewport on view when the chart
+navigates, the category order when it reorders. From it, decide what the
+reader should see next: which rows stand out, what one note says, which range
+frames them. The rows you were given are the source of every value; the chart
+hands over no copy of the data, and nothing is computed that the chart cannot
+verify.
+
+### Step 2 — choose ops
+
+Every change from outside is one update, `{ id, ops }`. Each op does one kind
+of thing:
+
+| Op | It is for | Effect | Shape | Needs |
+| --- | --- | --- | --- | --- |
+| `set-style` | The marks the chart already draws: emphasize some, fade some, hide some, recolour some. A highlight is this op with `state: 'emphasized'`. | Emphasize the targets and mute the rest; recolour; fade; hide. | `{ op, targets: UpdateTarget[], value: StyleSpec }` | marks |
+| `set-annotation` | One mark that should carry a note. | Pin a note on one mark; `null` clears it. | `{ op, target: UpdateTarget, value: { text } \| null }` | one resolved element |
+| `set-viewport` | The range or region the chart should frame. | Frame a continuous domain. | `{ op, axes: 'x' \| 'y' \| 'xy', value: { x?: [lo, hi], y?: [lo, hi] } }`; on a multi-level map `value: { region: { key } }` | `navigate` or `brush-zoom` mounted on that axis |
+| `set-order` | The order of the categories on a discrete axis. | Reorder the axis; list every category in the order wanted. | `{ op, scope: 'category', field, values: unknown[] }` | `drag-reorder` mounted on that axis |
+| `set-overlay` | Marks the chart does not draw: a reference line, a threshold band, a forecast, a sketch of rows. | Draw new rows through the plot's own scales. | `{ op, name, value: { mark, data: { values }, encodings: { x, y, x2?, y2?, order?, color?, text? }, role, interactive?, projectable?, style? } \| null }` | x and y scales |
+| `set-freeform-overlay` | A custom shape with no data behind it. | Draw SVG, or a clone of marks, over the plot. | `{ op, name, value: { coordinateSpace: 'plot' \| 'renderer', body: [{ type: 'svg', content } \| { type: 'clone', targets, transform?, opacity? }] } \| null }` | — |
+| `set-data` | The rows the chart draws, for playback or a swap. | Replace every row; the rows carry every encoded field. | `{ op, source: 'main', value: { rows } }` | inline data |
+
+`StyleSpec` is `{ state?, opacity?, visible?, fill?, stroke?, strokeWidth?,
+mutedOpacity? }`. Two states matter from outside: `emphasized` keeps the
+targets at full ink and mutes every other mark; `normal` with `targets: []`
+clears the layer. `opacity` on the targets fades a subset and leaves the rest
+alone; `opacity: 0` hides marks and keeps the axes, where `visible: false`
+removes the rows and shrinks the scales. The mute level is one per chart,
+fixed at mount from the lowest `mutedOpacity` the mounted interactions carry
+(0.25 when none).
+
+Overlay marks are `line`, `point`, `rule`, `rect`, `text`. `encodings` name
+fields of the overlay's own rows, projected through the chart's x, y, and
+colour scales. `style` takes `stroke`, `strokeWidth`, `strokeDash`, `fill`,
+`fillOpacity`, `opacity`, `pointRadius`, `fontSize`, `fontWeight`, `textAlign`
+(`start`, `middle`, `end`), `dx`, `dy`. A `line` takes its stroke and a `text`
+its fill from the `color` encoding; a `point` takes `style.fill`.
+
+Two ops need a preset the chart mounts: `set-viewport` needs `navigate` or
+`brush-zoom` on that axis, `set-order` needs `drag-reorder`. The host says
+which are mounted, or the state shows `viewport` and `categoryOrder`. On a
+chart that mounts neither, say so and offer an emphasis; `set-data` replaces
+what the chart shows and is not a frame. Legend values belong to
+`legend-toggle`: no update hides or restores one, and a series fades with
+`opacity` instead.
+
+### Step 3 — name targets and values
+
+A target is one of two forms:
+
+```ts
+{ select: { key: { Country: 'Japan' } } }                 // rows the chart encodes
+{ visual: { kind: 'mark', role: 'mark' }, elements }      // elements from an event or the state
+```
+
+- A selector key names fields the chart encodes (`x`, `y`, `color`, `detail`,
+  `size`, …) and matches rows by equality, so `'2007'` and `2007` differ. One
+  key may cover many marks (`{ Continent: 'Africa' }` takes every African
+  mark); several fields narrow it; an annotation's key covers one. On a line
+  or area chart, a key on the series field covers the whole line and a key on
+  the x field covers one segment, so a run of segments is one target per row.
+- A field the chart does not encode resolves to nothing. Encode the identity
+  field (`detail` on a scatter), or pass elements from `event.target`,
+  `state.selected`, or `context.available` through as `{ visual, elements }`,
+  as they are: an element's `value` carries derived fields on a bar, pie,
+  heatmap, or waterfall mark (a stack start, a sort index), so the element
+  resolves where a key copied from it does not.
+- A target that matches nothing is listed in the result as unresolved, and
+  nothing nearby is taken in its place.
+
+A key value, an overlay row, and a viewport bound hold what the parsed row
+holds, not the source text: a CSV `120` is the number `120`, and a temporal
+field (`Year`, `YearMonth`, `Date`, …) is UTC epoch milliseconds, so
+`"2014-01"` and a local-time value match nothing; `Date.UTC(2014, 0, 1)` is
+`1388534400000`. On a discrete axis the value is the category. Overlay rows
+need the fields their mark reads: `line`, `point`, `text` read `x` and `y`;
+`rule` and `rect` read `x`, `y`, `x2`, `y2`. A threshold is one `rule` row
+from the first `x` to the last. An overlay whose rows do not project is
+reported as unsupported.
+
+```json
+{ "id": "agent", "ops": [
+  { "op": "set-style", "value": { "state": "emphasized" },
+    "targets": [{ "select": { "key": { "month": 1388534400000 } } }, { "select": { "key": { "month": 1391212800000 } } }] },
+  { "op": "set-overlay", "name": "threshold", "value": { "mark": "rule", "role": "reference",
+    "data": { "values": [{ "x": 1388534400000, "y": 1e9, "x2": 1785542400000, "y2": 1e9 }] },
+    "encodings": { "x": { "field": "x" }, "y": { "field": "y" }, "x2": { "field": "x2" }, "y2": { "field": "y2" } } } }
+] }
+```
+
+### Step 4 — send the layer and read the result
+
+**Ids are layers.** One id holds one concern: the agent's update, a story
+step, a linked selection. Use one stable id, such as `agent`, and send the
+whole layer each time:
+
+- An update with an id already retained replaces that layer, and carries only
+  what it lists: an omitted viewport flies home, an omitted order returns to
+  the input order, an omitted annotation disappears. The ops that should hold
+  are repeated; the ops the request replaces are dropped.
+- Layers compose in insertion order, and a replaced layer keeps its place:
+  styles accumulate across layers; for an annotation, an order, a data swap,
+  or an overlay name, the layer inserted last wins. One kind of op lives in
+  one layer: a drag and a playback that both swap the rows write the same id.
+- A canvas interaction retains its layer under its own `id`; a host may write
+  or clear that layer by the id, as a Reset button does.
+- A gesture reset (`click-none`, `escape`, `double-click`) clears preset
+  layers only. A host layer stays until the host clears it, or until a layer
+  with `set-style`, `targets: []`, `state: 'normal'` replaces it.
+- After `set-data` the marks are new; a style layer is sent again with the
+  data.
+
+**The result.** `applyUpdate`, `setUpdates`, and `dispatch` return a
+`ChartUpdateResult`: `{ status: 'applied' | 'partially-applied' |
+'unsupported', resolvedTargets, unresolvedTargets, unsupportedOps }`. An
+unresolved target has a wrong field or value; an unsupported op needs a
+preset the chart does not mount. What the chart shows is what the result says
+it shows: fix an unresolved key or drop an unsupported op before describing
+the chart.
+
+**From the MCP view.** There is no `applyUpdate` to call. Pass the same layers
+as the `updates` argument of `create_chart_view`, beside the chart input, not
+inside it:
+
+```json
+{
+  "data": { "values": [ ... ] },
+  "chart_spec": { "chartType": "Bar Chart", "encodings": { "x": "region", "y": "revenue" } },
+  "updates": [
+    { "id": "agent", "ops": [
+      { "op": "set-style", "targets": [{ "select": { "key": { "region": "East" } } }], "value": { "state": "emphasized" } },
+      { "op": "set-annotation", "target": { "select": { "key": { "region": "West" } } }, "value": { "text": "Lowest in Q3" } }
+    ] }
+  ]
+}
+```
+
+The view opens the chart with the layers applied, with the same look as a
+user action. To change an open chart, call `create_chart_view` again with the
+same input and the layers wanted now; the new list replaces what the previous
+call declared. The argument is state, and `interaction_spec` is behaviour, so
+each stays where it is. The reader's own brush or selection does not survive
+the new view; the context message reports it in field terms, and it is
+carried as a layer when it still serves the reader. `validate_chart` with the
+same `updates` reports a malformed layer as an `invalid_updates` error; a
+target that matches nothing, or an op the chart does not mount, is a warning
+the view shows beside the chart.
 
 ## Use Flint in an application
 
@@ -426,9 +570,15 @@ surface.destroy();
 | `destroy()` | Removes listeners, the renderer, and the DOM. |
 
 - `input` is a `ChartAssemblyInput`. Presets go in `input.interaction_spec` as
-  JSON or in `options.interactions` as factory calls (`clickHighlight()`,
-  `select()`, `brushX()`, `navigate()`, …, one per preset, same options). Both
-  may appear; spec entries mount first, and one `id` in both is an error.
+  JSON or in `options.interactions` as factory calls. Both may appear; spec
+  entries mount first, and a code definition with a spec entry's `id`
+  replaces it with an `interaction_overridden` info warning.
+- A malformed `interaction_spec`, a repeated code `id`, or a code definition
+  the chart cannot honour fails the mount with an error that names it. A spec
+  entry the chart cannot honour is dropped with a warning instead.
+- `options.availableSize: { width?, height? }` is the room the host gives the
+  chart. It becomes the `canvasSize` ceiling on the sides given, so the chart
+  lays out for that room rather than being scaled into it.
 - `options.updates` holds retained updates present at the first render, for a
   chart that starts with a part hidden or framed.
 - `renderer: 'svg'` for charts whose marks a host reads from the DOM, or under
@@ -438,116 +588,49 @@ surface.destroy();
   A `semantic_types` entry may be an object,
   `{ semanticType, intrinsicDomain: [lo, hi] }`; the intrinsic domain holds an
   axis still while the rows change.
-- `options: { addTooltips: false }` on the input when a tooltip would give
-  away hidden values.
+- `options: { addTooltips: false }` on the input is the switch for the
+  tooltip, for a chart whose hidden values it would give away.
 - Build with a bundler. The interactive entry reaches every backend through
-  lazy imports; when `echarts`, `chart.js`, and `plotly.js-dist-min` are not
-  installed, mark them external (esbuild
+  lazy imports with no file extension; when `echarts`, `chart.js`, and
+  `plotly.js-dist-min` are not installed, mark them external (esbuild
   `--splitting --external:echarts --external:chart.js --external:plotly.js-dist-min`;
   Vite `build.rollupOptions.external`).
-- In React, mount in an effect, keep the surface in a ref, destroy in the
-  cleanup.
+- In React, use `<FlintChart>` from `flint-chart/react` rather than mounting
+  in an effect; see "In React" below.
 
-### Change the chart: `ChartUpdate`
+### In React
 
-Every change from outside is one update, `{ id, ops }`:
+```tsx
+import { FlintChart, type FlintChartHandle } from 'flint-chart/react';
+import { clickHighlight } from 'flint-chart/interactive';
 
-| Op | It is for | Effect | Shape | Needs |
-| --- | --- | --- | --- | --- |
-| `set-style` | Highlight, emphasize, fade, or hide marks the chart already draws, a run of line segments included. | Emphasize the targets and mute the rest; recolour; fade; hide. | `{ op, targets: UpdateTarget[], value: StyleSpec }` | marks |
-| `set-annotation` | Label one mark with a note. | Pin a note on one mark; `null` clears it. | `{ op, target: UpdateTarget, value: { text } \| null }` | one resolved element |
-| `set-viewport` | Zoom to, or frame, a range or a region. | Frame a continuous domain. | `{ op, axes: 'x' \| 'y' \| 'xy', value: { x?: [lo, hi], y?: [lo, hi] } }`; on a multi-level map `value: { region: { key } }` | `navigate` or `brush-zoom` mounted on that axis |
-| `set-order` | Sort or rank the categories. | Reorder a discrete axis. List every category in the order wanted. | `{ op, scope: 'category', field, values: unknown[] }` | `drag-reorder` mounted on that axis |
-| `set-overlay` | Add marks the chart does not draw: a reference line, a threshold band, a forecast, a sketch of rows. | Draw rows through the plot's own scales. | `{ op, name, value: { mark, data: { values }, encodings: { x, y, x2?, y2?, order?, color?, text? }, role, interactive?, projectable?, style? } \| null }` | x and y scales |
-| `set-freeform-overlay` | Draw a custom shape with no data behind it. | Draw SVG, or a clone of marks, over the plot. | `{ op, name, value: { coordinateSpace: 'plot' \| 'renderer', body: [{ type: 'svg', content } \| { type: 'clone', targets, transform?, opacity? }] } \| null }` | — |
-| `set-data` | Play or swap the rows the chart draws. | Replace every row the chart draws; the rows carry every encoded field. | `{ op, source: 'main', value: { rows } }` | inline data |
+const chartRef = useRef<FlintChartHandle>(null);
 
-A highlight never adds marks. Use `set-style` with `state: 'emphasized'`,
-never `set-overlay`; an overlay whose rows copy rows the chart already draws is
-wrong.
-
-`StyleSpec` is `{ state?, opacity?, visible?, fill?, stroke?, strokeWidth?,
-mutedOpacity? }`. Two states matter from outside: `emphasized` keeps the
-targets at full ink and mutes every other mark; `normal` with `targets: []`
-clears the layer. To fade a subset and leave the rest alone, set `opacity` on
-the targets; `opacity: 0` hides marks and keeps the axes, where
-`visible: false` removes the rows and shrinks the scales. The mute level is one
-per chart, fixed at mount from the lowest `mutedOpacity` the mounted
-interactions carry (0.25 when none); a `mutedOpacity` in a later update does
-not change it.
-
-Overlay marks are `line`, `point`, `rule`, `rect`, `text`. `encodings` name
-fields of the overlay's own rows, projected through the chart's x, y, and
-colour scales. `style` takes `stroke`, `strokeWidth`, `strokeDash`, `fill`,
-`fillOpacity`, `opacity`, `pointRadius`, `fontSize`, `fontWeight`, `textAlign`
-(`start`, `middle`, `end`), `dx`, `dy`. A `line` takes its stroke and a `text`
-its fill from the `color` encoding; a `point` takes `style.fill`.
-
-**Targets.** Two forms:
-
-```ts
-{ select: { key: { Country: 'Japan' } } }                 // rows the chart encodes
-{ visual: { kind: 'mark', role: 'mark' }, elements }      // elements from an event or the state
+<FlintChart
+  ref={chartRef}
+  spec={input}
+  interactions={[clickHighlight({ targets: ['mark'] })]}
+  width="100%"
+  fit="relayout"
+  onChange={(change) => setSelected(change.state.selected)}
+  onError={(error) => report(error)}
+/>;
 ```
 
-- A selector key names fields the chart encodes (`x`, `y`, `color`, `detail`,
-  `size`, …) and matches rows by equality, so `'2007'` and `2007` differ. One
-  key may cover many marks (`{ Continent: 'Africa' }` takes every African
-  mark); several fields narrow it; an annotation's key must cover one. On a
-  line or area chart, a key on the series field covers the whole line and a
-  key on the x field covers one segment, so a run of segments is one target
-  per row.
-- A field the chart does not encode never resolves: encode the identity field
-  (`detail` on a scatter), or pass elements from `event.target`,
-  `state.selected`, or `context.available` through as `{ visual, elements }`.
-  Pass elements as they are: an element's `value` carries derived fields on a
-  bar, pie, heatmap, or waterfall mark (a stack start, a sort index), so a key
-  copied from it does not resolve, where a key on the encoded fields does.
-- A target that matches nothing is listed in the result, never rebound to a
-  near match.
+| Prop | What it does |
+| --- | --- |
+| `spec` | The `ChartAssemblyInput`, `interaction_spec` included. A change of content remounts; rows compare by reference. |
+| `interactions` | Factory calls added to the spec's entries, or `(fromSpec) => definitions` for the full list. A factory rebuilt with the same id and options keeps the chart; a changed option remounts it. |
+| `updates` | Host updates, diffed by id. Passing even `[]` mounts the runtime on a chart with no interactions. |
+| `width`, `height`, `fit` | The box. `fit` is `scale-down` (default; never scales up), `crop` (natural size, clipped), or `relayout` (the box becomes the layout room; a resize remounts once it settles, so a selection does not survive it). |
+| `onChange`, `onInteraction` | The state after a change, and the raw gesture record. |
+| `onRender`, `onWarnings`, `onError` | Each mount's render and warnings; a failed mount, shown in the box as a muted error. |
+| `fallback` | Shown until the chart mounts. |
+| `ariaLabel`, `chartId` | `ariaLabel` applies in place; a new `chartId` remounts. |
 
-**Values.** A key value, an overlay row, and a viewport bound hold what the
-parsed row holds, not the source text: a CSV `120` is the number `120`, and a
-temporal field (`Year`, `YearMonth`, `Date`, …) is UTC epoch milliseconds, so
-`"2014-01"` and a local-time value match nothing; `Date.UTC(2014, 0, 1)` is
-`1388534400000`. On a discrete axis the value is the category. Overlay rows
-need the fields their mark reads: `line`, `point`, `text` read `x` and `y`;
-`rule` and `rect` read `x`, `y`, `x2`, `y2`. A threshold is one `rule` row
-from the first `x` to the last. An overlay whose rows do not project is
-reported as unsupported.
-
-```json
-{ "id": "agent", "ops": [
-  { "op": "set-style", "value": { "state": "emphasized" },
-    "targets": [{ "select": { "key": { "month": 1388534400000 } } }, { "select": { "key": { "month": 1391212800000 } } }] },
-  { "op": "set-overlay", "name": "threshold", "value": { "mark": "rule", "role": "reference",
-    "data": { "values": [{ "x": 1388534400000, "y": 1e9, "x2": 1785542400000, "y2": 1e9 }] },
-    "encodings": { "x": { "field": "x" }, "y": { "field": "y" }, "x2": { "field": "x2" }, "y2": { "field": "y2" } } } }
-] }
-```
-
-**The result.** `applyUpdate`, `setUpdates`, and `dispatch` return a
-`ChartUpdateResult`: `{ status: 'applied' | 'partially-applied' |
-'unsupported', resolvedTargets, unresolvedTargets, unsupportedOps }`. Read it.
-An unresolved target has a wrong field or value; an unsupported op needs a
-preset the chart does not mount.
-
-**Ids are layers.**
-
-- One id holds one concern: the agent's update, a story step, a linked
-  selection. `applyUpdate` with an id already retained replaces that layer;
-  `clearUpdate(id)` removes it.
-- A replacing update carries only what it lists: an omitted viewport flies
-  home, an omitted order returns to the input order, an omitted annotation
-  disappears. Repeat the ops that should hold.
-- Layers compose in insertion order, and a replaced layer keeps its place:
-  styles accumulate across layers; for an annotation, an order, a data swap,
-  or an overlay name, the layer inserted last wins. One kind of op lives in
-  one layer: a drag and a playback that both swap the rows write the same id.
-- A canvas interaction retains its layer under its own `id`. A host may write
-  or clear that layer by the id, as a Reset button does.
-- A gesture reset (`click-none`, `escape`, `double-click`) clears preset
-  layers only. A host layer stays until the host clears it.
+The ref's `FlintChartHandle` holds `surface` (the mounted surface or `null`),
+`applyUpdate`, `clearUpdate`, `dispatch`, `getState`, and `refresh`. A remount
+keeps the old chart on screen until the new one is ready.
 
 ### Read the chart
 
@@ -555,7 +638,7 @@ preset the chart does not mount.
 | --- | --- |
 | `selected` | The marks the chart emphasizes now, previews included. |
 | `entries` | The same marks per update id, with `layer: 'retained' \| 'preview'`. |
-| `hidden` | Legend values a `legend-toggle` hides, as `{ channel, value }`. The toggle owns them: no update hides or restores a legend value; fade marks with `opacity` instead. |
+| `hidden` | Legend values a `legend-toggle` hides, as `{ channel, value }`. |
 | `viewport` | The domain on view after a pan or zoom; absent on a chart that does not navigate. |
 | `categoryOrder` | The order of the reorderable axis now. |
 | `windows` | Category rail windows, `{ start, count, total }` per channel. |
@@ -563,7 +646,7 @@ preset the chart does not mount.
 Each element's `value` is the mark in field terms: a bar's category and
 measure, a legend item's `{ channel, field, domain }`, a histogram bar's
 `{ field, range }`. The host owns the rows and queries them from the value and
-the geometry; the chart hands over no copy of the data.
+the geometry.
 
 `onChange` fires after every render with a `ChartChange`: `phase` (`preview`
 while a gesture runs, `commit` for a committed change or a host call, `cancel`
@@ -623,228 +706,51 @@ for (const [id, source] of surfaces) {
 
 `dispatch` is also how an application drives a chart over time: a playback
 loop dispatches one frame per animation frame, and the handler returns the
-whole layer for that frame. Give linked charts one `theme_spec` so a value has
-one colour everywhere.
+whole layer for that frame. Linked charts share one `theme_spec` so a value
+has one colour everywhere.
 
-### An agent in the loop
-
-A host mounts the chart and hands the model the input and the state, as text
-or as data. The MCP chart view does this after every committed gesture:
-
-```
-The chart "Life expectancy" emphasizes 3 marks where continent = Asia.
-Hidden: Africa.
-The y axis shows life from 70 to 86.
-```
-
-The model answers with one `ChartUpdate`; the host applies it and returns the
-result.
-
-1. Read the state: the marks emphasized, `hidden`, `viewport`.
-2. Decide what the reader should see: which rows stand out, what one note
-   says, which range frames them. Compute nothing the chart cannot verify.
-3. Name targets by encoded fields, with values from the rows you were given. A
-   key may cover many marks; an annotation's key covers one.
-4. Use one stable id, such as `agent`, and return the whole layer each turn:
-   carry the ops that still serve the reader, drop the ones the request
-   replaces.
-5. Add `set-viewport` only when the chart navigates: the host says so, or
-   `viewport` is in the state. Add `set-order` only when it reorders. When the
-   chart does neither, say so and offer an emphasis; `set-data` replaces what
-   the chart shows and is not a frame.
-6. On the result, fix an unresolved key before saying what the chart shows.
-
-To stand down: `{ "id": "agent", "ops": [{ "op": "set-style", "targets": [],
-"value": { "state": "normal" } }] }`, or the host calls `clearUpdate('agent')`.
-
-**Without a handle on the chart.** In the MCP chart view there is no
-`applyUpdate` to call. Pass the same layers as the `updates` argument of
-`create_chart_view`, beside the chart input, not inside it:
-
-```json
-{
-  "data": { "values": [ ... ] },
-  "chart_spec": { "chartType": "Bar Chart", "encodings": { "x": "region", "y": "revenue" } },
-  "updates": [
-    { "id": "agent", "ops": [
-      { "op": "set-style", "targets": [{ "select": { "key": { "region": "East" } } }], "value": { "state": "emphasized" } },
-      { "op": "set-annotation", "target": { "select": { "key": { "region": "West" } } }, "value": { "text": "Lowest in Q3" } }
-    ] }
-  ]
-}
-```
-
-The view opens the chart with the layers applied, with the same look as a
-user action. To change an open chart, call `create_chart_view` again with the
-same input and the layers you want now. Rules:
-
-- The argument is state, not behaviour. `interaction_spec` stays as it was;
-  `updates` never goes inside it.
-- Repeat the whole layer each turn, as above. The new list replaces what the
-  previous call declared.
-- The reader's own brush or selection does not survive the new view. The
-  context message reports it in field terms; carry it as a layer when it still
-  serves the reader.
-- Run `validate_chart` with the same `updates` first: a malformed layer is an
-  `invalid_updates` error there. A target that matches nothing, or an op the
-  chart does not mount, is a warning the view shows beside the chart; fix the
-  key or drop the op.
-
-## Build a bespoke interaction
-
-A `CanvasInteractionDef` is a trigger, what it affords, and a handler. Mount
-it in `options.interactions` beside presets.
-
-```ts
-import { rectangleTrigger, type CanvasInteractionDef } from 'flint-chart/interactive';
-
-const timebox: CanvasInteractionDef = {
-  id: 'timebox',
-  eventSource: rectangleTrigger('contain'),
-  affordances: { plot: { cursor: 'region' } },
-  reset: ['click-none', 'escape'],
-  handle(event) {
-    if (event.action !== 'select-region' || event.phase !== 'commit') return null;
-    const x = event.geometry.domain?.x;
-    const y = event.geometry.domain?.y;
-    if (x?.kind !== 'interval' || y?.kind !== 'interval') return null;
-    const keep = seriesInsideBox(x.start, x.end, Number(y.start), Number(y.end)); // host logic over host rows
-    return {
-      id: 'timebox',
-      ops: [{ op: 'set-style',
-        targets: keep.map((series) => ({ select: { key: { Series: series } } })),
-        value: { state: 'emphasized' } }],
-    };
-  },
-};
-```
-
-| Field | Role |
-| --- | --- |
-| `id` | Names the interaction in events and the layer it retains. |
-| `eventSource` | The trigger: what to capture and how to read it. |
-| `affordances` | The kinds of hit it receives, each with its cursor and hover. A hit of a kind not listed never reaches the handler. Keys: `mark`, `legend-item`, `axis-label`, `plot`. Cursors: `activate`, `drag`, `region`, `navigate`, `inspect`, `draw`. Hovers: `target` (the mark), `cohort` (its group). |
-| `handle(event, context)` | Returns the whole update for this id, or `null` for no change. |
-| `reset` | Optional gestures that clear the layer: `click-none`, `double-click`, `escape`. A reset reports as a commit with no `interactionId`; give it to a layer of styles the state shows, and clear an overlay or data layer from the host instead. |
-
-### Triggers
-
-| Trigger | The reader does | `action` | `geometry.plot` | `geometry.domain` | Affordance key |
-| --- | --- | --- | --- | --- | --- |
-| `clickTrigger` | Clicks a mark, legend item, or axis label. | `click-element`, `click-legend`, `click-axis` | `point` | — | `mark`, `legend-item`, `axis-label` |
-| `hoverTrigger` | Moves over a mark. | `hover-element`, `hover-legend`, `hover-axis` | `point` | — | same |
-| `dragTrigger(tolerance?)` | Presses a mark, or a projectable overlay path, within `tolerance` px (12) and drags. | `drag` | `drag { start, current, delta }` | the pointer's values; `geometry.projection` while over a projectable overlay | `mark` |
-| `rectangleTrigger(match?, guide?)` | Drags a rectangle. | `select-region` | `rect` | `x`, `y` intervals | `plot` |
-| `xBrushTrigger(match?, mode?, guide?)`, `yBrushTrigger(…)` | Drags an interval along one axis. | `brush-x`, `brush-y` | `rect` | that axis's interval | `plot` |
-| `lassoTrigger(match?, guide?)` | Draws a freehand region; previews begin at the third point. | `select-lasso` | `polygon` | `points`: the stroke so far, in data values | `plot` |
-| `angularBrushTrigger(match?, mode?, guide?)` | Drags a sector on a polar chart. | `brush-angle` | `angular-sector` | — | `plot` |
-| `inspectTrigger(mode?)` | Moves over the plot. | `inspect-x`, `inspect-y`, `inspect-xy` | `point` | `x`, `y` values | `plot` |
-| `inspectIndexTrigger(axis?, show?, seriesBy?)` | Moves along the index axis. | `inspect-x`, `inspect-y` | `point` | the index value | `plot` |
-| `navigationTrigger({ axes?, pan?, zoom?, reset? })` | Drags, wheels, pinches. | `pan-viewport`, `zoom-viewport`, `reset-viewport` | `viewport { delta, factor, anchor }` | the viewport after the move | `plot` |
-| `contextTrigger`, `longPressTrigger(ms?)`, `doubleActivateTrigger` | Right-clicks, holds (500 ms), double-clicks a mark. | `context-element`, `long-press-element`, `double-activate-element` | `point` | — | `mark` |
-
-`match` is `'intersect'` (default) or `'contain'`, and decides which marks the
-region's `target` lists. `guide` styles the drawn shape; `false` hides it. A
-region is ephemeral: its guide and its preview end at the commit. An axis brush
-with `mode: 'stateful'` keeps the interval on screen and editable;
-`event.operation` then reads `create`, `move`, `resize-leading`,
-`resize-trailing`, or `clear`. Spread a trigger to tune it:
-`{ ...hoverTrigger, defaultAssistDistance: 28 }` acquires the nearest mark
-within 28 px.
-
-A chart type admits a trigger when it offers what the trigger needs: marks
-that resolve to data for element triggers, a drag region for region triggers,
-a continuous axis for navigation, a discrete axis for an element drag. A code
-definition the chart cannot honour throws at mount with a message that names
-what it needed; the preset map's "Needs" column says what each chart offers.
-
-### The event
-
-```ts
-interface CanvasInteractionEvent {
-  action: string;                                     // from the table
-  phase: 'start' | 'preview' | 'commit' | 'cancel';   // clicks and hovers skip start
-  operation?: string;                                 // a stateful brush's edit, or pan | zoom | reset
-  geometry: { plot?, domain?, projection? };
-  target: { visual: { kind, role }, elements: [{ value, records? }] } | null;
-  modifiers?: { shift, ctrl, meta };
-  description?: { kind, type, content, text };  // on focus-element from accessible-navigation
-}
-```
-
-- `target.elements[i].value` holds the mark's encoded values, derived fields
-  included; `records` holds the source rows when the runtime can prove them. A
-  region target lists every mark inside. A legend hit has `value.field` and
-  `value.domain.value`.
-- `geometry.domain` is inverted through the plot's scales: a temporal axis
-  gives `Date` values; a discrete axis gives the category.
-- `description` arrives on `focus-element` while `accessible-navigation` walks
-  the chart: what the focused element is (`type`, such as "Bar") and what it
-  represents (`content`), with the spoken `text`. The walk's emphasis reports
-  through `onChange` as a `preview`.
-- `geometry.projection.kind === 'path'` during a drag over an overlay with
-  `projectable: true`: `segment.start.value` and `segment.end.value` are the
-  overlay rows on each side of the pointer and `segment.t` the fraction between
-  them.
-- `context` is the chart state plus `available`, every drawn mark, for
-  building refs, and `selected`, the current emphasis, for a toggle rule.
-
-### Handler rules
-
-- Return the complete layer for the id on every `preview` and `commit`; the
-  runtime drops the preview on `cancel`. A `null` on a `preview` shows nothing
-  until the commit, which is how a rule applies to the committed box only. A
-  region gesture keeps a preview layer under the interaction's id while the
-  drag runs, so a handler that returns `null` on the commit after previews lets
-  the last preview take the layer: restate the layer instead.
-- The handler maps geometry to the host's model and the model to ops. It never
-  reads or writes the DOM. Host side effects (state, panels, overlays the host
-  draws) come from `flint-interaction` or `onChange`.
-- One trigger has one owner, for code definitions as for presets. Two code
-  definitions on one trigger throw at mount; mount `navigate({ pan: false })`
-  beside a region trigger.
-- An element drag owns the press on the marks it affords. A press there is a
-  `drag` with phase `start`; `target` is the pressed mark through every phase.
-  The layer returned at `start` is kept as the gesture's preview, and a release
-  without movement commits that preview with no further call. No click
-  definition fires on those marks, so the definition that drags a mark also
-  answers its press.
-- A click definition that affords `hover` on marks receives `preview` events
-  for the hover cue. Return `null` or an emphasis for them, and the layer on
-  `commit`.
-
-### Patterns
-
-| Pattern | Flow | Pieces |
-| --- | --- | --- |
-| Gesture rule | Flint in, Flint out | A region trigger reads `geometry.domain`; the host rule picks rows; `set-style` by key (the timebox above). |
-| Host-drawn detail | Flint in, custom out | `hoverTrigger` or `inspectTrigger` with a `null` handle; the host listens to `flint-interaction` for the resolved element and draws a lens, a cursor, or a badge over the mount. |
-| Application drives the chart | external in, Flint out | `externalInteraction` plus `dispatch` per frame: a playback year, a reveal progress. |
-| Drag along a path | press, then drag | One `dragTrigger()` definition and one layer. At `start` on a mark it returns the mark's path as a `set-overlay` `line` with `interactive: true, projectable: true` and `order`, plus `set-data` for the current position. On `preview` and `commit` with `geometry.projection` it returns the same two ops for the pointer's position. `intrinsicDomain` on the x and y fields holds the axes still across the swaps. |
-| Freehand stroke | draw | The rows to guess form their own series, and a mount update sets `opacity: 0` on that series, which keeps the axis. `lassoTrigger('contain', false)` with `plot: { cursor: 'draw' }` is the pen: `geometry.domain.points` become the rows of a `set-overlay` line. An `externalInteraction` reveals the truth as an overlay, then the host clears the hide. |
-| Chart-level zoom | wheel | When the layout itself must change (bar step, ticks, domain), filter the rows and `mountChart` again in a hidden layer; swap on `ready`. No preset re-lays out. |
-| Semantic zoom on a map | navigate | A Choropleth with `level: 'auto'` or a Map with `levelField` and `levels`, `navigate()`, and `set-viewport { region: { key } }` with a `transition` to fly into a region. Navigation events carry `geometry.domain.level` and `focus`. |
-
-Host-drawn detail, the shape of it:
-
-```ts
-const probe: CanvasInteractionDef = {
-  id: 'probe',
-  eventSource: { ...hoverTrigger, defaultAssistDistance: 28 },
-  affordances: { mark: { hover: 'target' } },
-  handle() { return null; },
-};
-container.addEventListener('flint-interaction', (e) => {
-  const { interactionId, event } = (e as CustomEvent<FlintInteractionEventDetail>).detail;
-  if (interactionId !== 'probe' || event.phase !== 'preview') return;
-  const row = event.target?.elements[0]?.records?.[0];
-  if (row) lens.show(row);                 // the host draws; the chart is unchanged
-});
-```
+Things the surface holds fixed: no preset changes the layout, so a zoom never
+recomputes the bar step, the ticks, or the domain (filter the rows and mount
+again for that); the mute level is set at mount; Escape reaches a chart after
+a press on it, and only that chart; a preset's toggle (`select`,
+`click-highlight`) needs Shift, Ctrl, or Meta, and a plain second click
+replaces; a press on an overlay path resolves to no mark, so a `click-none`
+reset on the definition that drew the overlay clears it at that press.
 
 ## Worked examples
 
 In each example `data` is a placeholder; the host binds real rows.
+
+### Presets: a named gesture
+
+User: "An interactive chart that I can brush." A line chart of `sales` by
+`month`, one series.
+
+```json
+{ "interactions": [ { "type": "brush-x" } ] }
+```
+
+The user named one job, a brush along the period axis, and the row for it is
+`brush-x`. Hover already reads the values.
+
+### Presets: a goal on a category chart
+
+User: "Which regions stand out? Let me look." A bar chart of `revenue` by
+`region`, no colour field.
+
+The reader singles out a region and compares orders. `click-highlight` singles
+one out; `drag-reorder` lets the reader rank by hand. No colour field is
+bound, so `legend-toggle` has nothing to work with. Both presets ask for a
+different trigger, a click on a bar and a drag on an axis label.
+
+```json
+{
+  "interactions": [
+    { "type": "click-highlight" },
+    { "type": "drag-reorder" }
+  ]
+}
+```
 
 ### Presets: a multi-series line chart in an explore session
 
@@ -859,10 +765,9 @@ User: "Help me understand how these three regions moved." The chart:
 ```
 
 The reader compares the series at one month, hides a region, and points at a
-period. `inspect-index` reads every series at one x; `legend-toggle` has a
-colour field to work with; `brush-x` focuses a period. `inspect-index` and
-`legend-toggle` do not collide: the index reads all series, so it asks for no
-legend click.
+period. `inspect-index` reads every series at one month; `legend-toggle` has a
+colour field to work with; `brush-x` focuses a period. `inspect-index` with
+`show: "all"` asks for no legend click, so it sits beside `legend-toggle`.
 
 ```json
 {
@@ -881,9 +786,8 @@ its page. Zooming the y axis would help too." A scatter of `gdp` by `life`
 with `color: continent` and `detail: country`.
 
 `navigate` holds the double-click by default for its reset, and
-`double-activate` needs it. Free it with `reset: ["escape"]`. `click-highlight`
-takes `targets: ["mark"]` so the app's selection never comes from a legend
-click.
+`double-activate` needs it; `reset: ["escape"]` frees it. `click-highlight`
+takes `targets: ["mark"]` so the app's selection comes from marks only.
 
 ```json
 {
@@ -970,68 +874,29 @@ every point in that month range lies inside the y range stay emphasized. No
 preset applies a rule over series, so the definition is the `timebox` above:
 `rectangleTrigger('contain')`, a `plot` affordance with the `region` cursor,
 a handler that acts on `select-region` at `commit`, and `reset:
-['click-none', 'escape']` so a click on empty plot clears it. Mount it beside
-`navigate({ pan: false })` if the chart also zooms; both ask for the plot drag
-otherwise.
-
-## Limits and gotchas
-
-- No preset changes the layout: zooming never recomputes the bar step, the
-  ticks, or the domain. Filter the rows and mount again for that.
-- No update hides or restores a legend value; `legend-toggle` owns `hidden`.
-  Fade marks with `opacity` instead.
-- The tooltip is always on; `options: { addTooltips: false }` on the input is
-  the only switch.
-- The mute level is fixed at mount; a later `mutedOpacity` does not change it.
-- Viewport bounds on a temporal axis take `Date` or epoch milliseconds, never
-  a bare year.
-- `set-annotation` needs exactly one resolved element. On a paired mark such
-  as a dumbbell, name the end that resolves alone.
-- A selector resolves to marks when its update is stored. After `set-data` the
-  marks are new, so apply the style layer again with the data.
-- A press on an overlay path resolves to no mark, so a `click-none` reset on
-  the definition that drew the overlay clears it at that press.
-- A preset's toggle (`select`, `click-highlight`) needs Shift, Ctrl, or Meta; a
-  plain second click replaces.
-- Escape reaches a chart after a press on it, and only that chart.
-- The package's lazy imports carry no file extension, so a browser cannot
-  load it from `node_modules` through an import map. Build with a bundler.
-
-## What you should NOT do
-
-- **Don't invent names.** Presets, options, ops, states, triggers, cursors, and
-  event actions are the ones in this skill. A behaviour outside them is a
-  bespoke definition or a plain answer that it is not available.
-- **Don't add behaviour nobody asked for.** A static image, a bare spec, and a
-  request for a tooltip get no entry.
-- **Don't write an option beside `type`, an `id` inside `options`, or a bare
-  string entry.**
-- **Don't put two owners on one trigger.** Free the double-click with `reset`,
-  the legend click with `targets`, the plot drag with `pan: false`.
-- **Don't send a partial layer.** An update replaces the whole layer for its
-  id; repeat the ops that should hold.
-- **Don't name a field the chart does not encode in a selector.** Encode it or
-  pass elements through.
-- **Don't read or write the DOM in a handler.** Return ops; let the host react
-  through `onChange` or `flint-interaction`.
-- **Don't claim what the chart shows before the result says `applied`.**
+['click-none', 'escape']` so a click on empty plot clears it. It mounts beside
+`navigate({ pan: false })` when the chart also zooms, since both ask for the
+plot drag otherwise.
 
 ## Validation checklist
 
 For an `interaction_spec`:
 
 1. It parses as strict JSON and is a bare object with `interactions`.
-2. Every `type` is in the chart type's list from `list_chart_types`, and every
+2. Every entry answers a job from Step 1: a gesture the user named, a
+   question their goal raises, or something the chart invites.
+3. Every `type` is in the chart type's list from `list_chart_types`, and every
    option is under `options` with `id` on the entry.
-3. `groupBy` and `seriesBy` are present where required, and name bound fields.
-4. At most one entry owns the plot drag, the double-click, the legend click,
+4. `groupBy` and `seriesBy` are present where required, and name bound fields.
+5. At most one entry owns the plot drag, the double-click, the legend click,
    and the retained mark focus.
-5. `validate_chart` returns no warning.
+6. `validate_chart` returns no warning.
 
 For a `ChartUpdate`:
 
 1. Every `op` and `state` is one from the op table.
-2. Every selector key names encoded fields with values that exist in the rows.
+2. Every selector key names encoded fields with values that exist in the rows,
+   in the parsed form (epoch milliseconds for a temporal field).
 3. The update is the whole layer for its id; clearing uses `targets: []` with
    `state: 'normal'`.
 4. Ops that need a mounted preset have it, or `unsupportedOps` has been read
@@ -1047,3 +912,15 @@ For code:
    an `id`.
 4. The surface is destroyed on unmount, and every `applyUpdate` or `dispatch`
    result is read.
+
+## Preset options
+
+`list_interaction_presets` returns every preset with what it needs from the
+chart, its reset gestures, and every option it accepts under `options`, with
+each option's type and note; `type` narrows it to one preset and `chartType`
+to the presets a chart type supports. In code, the same options are the
+factory's parameter type in `flint-chart/interactive`. `id` is never an
+option: it sits on the entry. A `ResetGesture` is `click-none`,
+`double-click`, or `escape`. `dimOpacity` is the opacity of the muted marks,
+0.25 by default. A `guide` is `{ visible?, style? }`, or `false` to draw
+nothing while the gesture runs.

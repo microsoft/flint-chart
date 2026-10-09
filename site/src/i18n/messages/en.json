@@ -548,6 +548,7 @@
       "compile_chart": "Returns the backend-native spec JSON for Vega-Lite, ECharts, or Chart.js, along with assembly warnings.",
       "validate_chart": "Checks whether a spec is valid, reports warnings or errors, and returns the computed chart size.",
       "list_chart_types": "Lists chart types and encoding channels, optionally scoped to one backend.",
+      "list_interaction_presets": "Lists interaction presets: what each does, what it needs from the chart, and every option it accepts; scope it to one chart type or one preset.",
       "list_themes": "Lists shipped visual theme presets. Pass an id for guidance on using or extending that design language.",
       "agentSkill": "Bundled chart-authoring instructions for producing valid ChartAssemblyInput specs.",
       "themeSkill": "Bundled ThemeSpec instructions for translating a visual identity into a reusable formal specification.",

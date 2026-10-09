@@ -68,3 +68,8 @@ export * from './image-charts';
 
 // Validation: validateChart, validateChartInput, assembleForBackend
 export * from './validate';
+
+// The interaction preset catalogue: what a host or an agent needs to choose a preset and write its options
+export { listInteractionPresets } from './interactive/spec/registry';
+export type { InteractionPresetSummary } from './interactive/spec/registry';
+export type { InteractionPresetOption } from './interactive/spec/preset-options';

@@ -95,6 +95,7 @@ Each chart type declares the properties it offers: marks that resolve to data, a
 Two places show the answer:
 
 - The MCP tool `list_chart_types` returns `interactions` per chart type.
+- The MCP tool `list_interaction_presets` describes each preset, what it needs, and the options it accepts; `chartType` narrows it to one chart type.
 - The Interactions lab's **Coverage** tab shows every chart type against every preset.
 
 The data can still remove a preset at mount. A bar chart supports `legend-toggle`, but a bar chart with no colour field has no legend to toggle. `navigate` needs a continuous, unfaceted axis. `drag-reorder` needs a discrete axis in the bound encodings.

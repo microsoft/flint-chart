@@ -25,6 +25,7 @@ import {
 } from '../interactions';
 import { filterControls } from '../filter-controls';
 import type { InteractionPresetOptions } from './types';
+import { INTERACTION_PRESET_OPTIONS, type InteractionPresetOption } from './preset-options';
 import { INTERACTION_RESET_GESTURES, NAVIGATION_RESET, NO_RESET, SELECTION_RESET, type InteractionResetGesture } from '../reset';
 
 const ANY_RESET: readonly InteractionResetGesture[] = INTERACTION_RESET_GESTURES;
@@ -278,6 +279,8 @@ export interface InteractionPresetSummary {
     readonly requiredOptions?: readonly string[];
     readonly supportedReset: readonly InteractionResetGesture[];
     readonly defaultReset: readonly InteractionResetGesture[];
+    /** The options the preset accepts under `options`. */
+    readonly options: readonly InteractionPresetOption[];
 }
 
 export function listInteractionPresets(): readonly InteractionPresetSummary[] {
@@ -292,6 +295,7 @@ export function listInteractionPresets(): readonly InteractionPresetSummary[] {
             supportedReset: definition.supportedReset,
             defaultReset: definition.defaultReset,
             ...(definition.requiredOptions ? { requiredOptions: definition.requiredOptions } : {}),
+            options: INTERACTION_PRESET_OPTIONS[type],
         };
     });
 }

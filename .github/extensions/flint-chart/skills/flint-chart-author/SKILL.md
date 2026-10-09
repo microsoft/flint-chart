@@ -255,38 +255,28 @@ https://microsoft.github.io/flint-chart/#/documentation/theme-spec
 
 ## Interactions (`interaction_spec`)
 
-Add `interaction_spec` beside `chart_spec` only when the user asks for
-behaviour, or when the goal of the session is to explore or analyse the data.
-A static image never needs it.
+Add `interaction_spec` beside `chart_spec` when the user asks for behaviour,
+or when the goal of the session is to explore or analyse the data. A static
+image never needs it.
 
 ```json
 {
   "chart_spec": { "chartType": "Line Chart", "encodings": { "x": "date", "y": "value", "color": "series" } },
-  "interaction_spec": { "interactions": [ { "type": "inspect-index" }, { "type": "legend-toggle" } ] }
+  "interaction_spec": { "interactions": [ { "type": "brush-x" } ] }
 }
 ```
 
-Every entry is `{ "type": <preset>, "options": { ... } }`. Take the preset
-names for the chart type from `list_chart_types` (`chartTypes[].interactions`);
-never invent one. Options nest under `options`; `id` sits on the entry.
+Every entry is `{ "type": <preset>, "options": { ... } }`, one per behaviour.
+Take the presets and their options for the chart type from
+`list_interaction_presets` with `chartType`; never invent one. Options nest under
+`options`; `id` sits on the entry.
 
-| the user says | preset |
-| --- | --- |
-| highlight a mark on click | `click-highlight` |
-| hide a series from the legend | `legend-toggle` |
-| pan and zoom | `navigate` |
-| drag to focus a range | `brush-x`, `brush-y`, `select` |
-| examine values on hover | `inspect`, `inspect-index` |
-| pin a note on click | `click-annotate` |
-| make it keyboard or screen-reader accessible | `accessible-navigation` |
-
-For an intent (explore, compare, analyse, find outliers, link charts, hand a
-click to the app), for "make it interactive" with nothing named, for a
-combination of presets, or to add behaviour to a chart that already exists,
-load the `flint-interaction-author` skill (`flint://interaction-skill` on the
-MCP server). It maps a request to presets, says which interactions lead in
-each scenario, holds the ownership rules for combinations, and reads the
-warnings.
+Which presets answer a request, how they combine, and what the warnings mean
+is the `flint-interaction-author` skill (`flint://interaction-skill` on the
+MCP server). Load it for anything beyond a single named gesture: an intent
+(explore, compare, analyse, find outliers), "make it interactive" with
+nothing named, several presets together, behaviour on a chart that already
+exists, or an update to a chart on screen.
 
 Full reference:
 https://microsoft.github.io/flint-chart/#/documentation/interaction-spec

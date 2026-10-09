@@ -48,6 +48,7 @@ describe('MCP server over HTTP (stateless streamable transport)', () => {
       'compile_chart',
       'create_chart_view',
       'list_chart_types',
+      'list_interaction_presets',
       'list_themes',
       'render_chart',
       'validate_chart',

@@ -177,6 +177,8 @@ export type {
 } from '../core/interaction-spec';
 export type { InteractionPresetOptions, InteractionPresetSpec } from './spec/types';
 export { INTERACTION_PRESETS, listInteractionPresets } from './spec/registry';
+export { INTERACTION_PRESET_OPTIONS } from './spec/preset-options';
+export type { InteractionPresetOption } from './spec/preset-options';
 export type {
     InteractionCapability,
     InteractionGestureFamily,

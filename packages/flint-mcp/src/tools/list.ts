@@ -6,9 +6,11 @@ import {
   ecAllTemplateDefs,
   cjsAllTemplateDefs,
   listThemePresets,
+  listInteractionPresets as listPresetSummaries,
   supportedInteractionPresets,
   THEME_PRESETS,
   type ChartTemplateDef,
+  type InteractionPresetSummary,
   type InteractionPresetType,
 } from 'flint-chart';
 import type { RenderBackend } from '../render/types.js';
@@ -78,4 +80,35 @@ export function listThemes(id?: string) {
   // helps an agent decide, and both are large.
   const { spec: _spec, icon: _icon, ...rest } = preset;
   return rest;
+}
+
+/**
+ * The interaction presets, each with what it needs from a chart, its reset
+ * gestures, and every option it accepts. `chartType` narrows the list to the
+ * presets that Vega-Lite chart type supports by declaration; `type` returns one.
+ */
+export function listInteractionPresets(filter: { chartType?: string; type?: string } = {}): {
+  presets: readonly InteractionPresetSummary[];
+} {
+  let presets = listPresetSummaries();
+  if (filter.chartType !== undefined) {
+    const def = vlAllTemplateDefs.find((d) => d.chart === filter.chartType);
+    if (!def) {
+      throw new Error(
+        `Unknown Vega-Lite chart type \`${filter.chartType}\`. Call list_chart_types for the registered names.`,
+      );
+    }
+    const supported = new Set<string>(supportedInteractionPresets(def.interactionSupport));
+    presets = presets.filter((preset) => supported.has(preset.type));
+  }
+  if (filter.type !== undefined) {
+    const one = presets.find((preset) => preset.type === filter.type);
+    if (!one) {
+      throw new Error(
+        `Unknown interaction preset \`${filter.type}\`. Flint ships: ${presets.map((preset) => preset.type).join(', ')}.`,
+      );
+    }
+    presets = [one];
+  }
+  return { presets };
 }
