@@ -15,7 +15,11 @@ import {
     INTERACTION_ROLE,
     PATH_KEY_SUFFIX,
     clientToLayoutPoint,
+    clippedBounds,
+    itemVisibility,
     plotToClientPoint,
+    pointInClip,
+    sceneContentClip,
     sceneItems,
     type RendererCoordinateSpace,
 } from '../hit-adapter';
@@ -106,26 +110,26 @@ export function annotationSourceBounds(items: readonly any[], source: any): {
     }), { ...sourceBounds });
 }
 
+/** The marks a note card avoids, cut to the part of each that its clip leaves on screen. */
 function sceneObstacles(view: any): any[] {
     const obstacles: any[] = [];
-    const visit = (item: any, offsetX: number, offsetY: number): void => {
+    const visit = (item: any, offsetX: number, offsetY: number, clip?: { x1: number; y1: number; x2: number; y2: number }): void => {
         if (!item) return;
         const isGroup = item.mark?.marktype === 'group';
         if (!isGroup && isAnnotationObstacle(item) && item.bounds && (item.opacity ?? 1) > 0) {
-            obstacles.push({
-                ...item,
-                bounds: {
-                    x1: item.bounds.x1 + offsetX,
-                    x2: item.bounds.x2 + offsetX,
-                    y1: item.bounds.y1 + offsetY,
-                    y2: item.bounds.y2 + offsetY,
-                },
-            });
+            const bounds = clippedBounds({
+                x1: item.bounds.x1 + offsetX,
+                x2: item.bounds.x2 + offsetX,
+                y1: item.bounds.y1 + offsetY,
+                y2: item.bounds.y2 + offsetY,
+            }, clip);
+            if (bounds) obstacles.push({ ...item, bounds });
         }
         const childOffsetX = offsetX + (isGroup && typeof item.x === 'number' ? item.x : 0);
         const childOffsetY = offsetY + (isGroup && typeof item.y === 'number' ? item.y : 0);
+        const childClip = sceneContentClip(item, childOffsetX, childOffsetY, clip);
         if (Array.isArray(item.items)) {
-            for (const child of item.items) visit(child, childOffsetX, childOffsetY);
+            for (const child of item.items) visit(child, childOffsetX, childOffsetY, childClip);
         }
     };
     visit(view.scenegraph()?.root, 0, 0);
@@ -460,6 +464,11 @@ export function annotationConnectionPoint(
 
 export interface AnnotationOverlayController {
     render(element: SemanticElement, annotation: RenderableAnnotation): void;
+    /**
+     * True while the note is drawn, false while its target is out of view (the clip hides it,
+     * or a live layout dropped it after the note was drawn), undefined before it was ever drawn.
+     */
+    inView(): boolean | undefined;
     clear(): void;
     sync(): void;
     destroy(): void;
@@ -512,10 +521,19 @@ export function createAnnotationOverlay({
     // whenever the renderer is resized or the host rescales the chart.
     let current: { element: SemanticElement; annotation: RenderableAnnotation } | undefined;
     let laidOut: string | undefined;
+    let inView: boolean | undefined;
 
     const clear = (): void => {
         current = undefined;
         laidOut = undefined;
+        inView = undefined;
+        annotationLayer.remove();
+    };
+    // A note whose target is out of view keeps its place in `current`, so it comes back on the
+    // sync after the target returns.
+    const hide = (): void => {
+        laidOut = undefined;
+        inView = false;
         annotationLayer.remove();
     };
     const render = (element: SemanticElement, annotation: RenderableAnnotation): void => {
@@ -533,13 +551,24 @@ export function createAnnotationOverlay({
             )
             : undefined;
         if (!item?.bounds) {
-            clear();
+            if (inView === undefined) clear();
+            else hide();
             return;
         }
         const rowPoint = segmentRowPoint(item, element.value, annotation.anchor);
+        const clip = item.interactionClip;
+        const visibility = rowPoint ? (pointInClip(rowPoint, clip) ? 'full' : 'none') : itemVisibility(item);
+        if (visibility === 'none') {
+            hide();
+            return;
+        }
+        inView = true;
+        // A shape the clip cuts connects to the part of it on screen.
         const subject = rowPoint
             ? { datum: item.datum, mark: item.mark, bounds: { x1: rowPoint.x, x2: rowPoint.x, y1: rowPoint.y, y2: rowPoint.y } }
-            : item;
+            : visibility === 'partial' && !item.interactionGeometry
+                ? { ...item, bounds: clippedBounds(item.bounds, clip) ?? item.bounds }
+                : item;
         if (!annotationLayer.isConnected) container.append(annotationLayer);
         if (getComputedStyle(container).position === 'static') container.style.position = 'relative';
 
@@ -578,7 +607,9 @@ export function createAnnotationOverlay({
             width: Math.abs(plotTrailing.x - plotLeading.x),
             height: Math.abs(plotTrailing.y - plotLeading.y),
         };
-        const sourceBounds = rowPoint ? subject.bounds : annotationSourceBounds(items, item);
+        const sourceBounds = rowPoint
+            ? subject.bounds
+            : clippedBounds(annotationSourceBounds(items, item), clip) ?? subject.bounds;
         const sourceLeading = toLayout({ x: sourceBounds.x1, y: sourceBounds.y1 });
         const sourceTrailing = toLayout({ x: sourceBounds.x2, y: sourceBounds.y2 });
         const markSourceRect: LayoutRect = {
@@ -779,6 +810,7 @@ export function createAnnotationOverlay({
 
     return {
         render,
+        inView: () => inView,
         clear,
         sync: () => {
             if (current) render(current.element, current.annotation);

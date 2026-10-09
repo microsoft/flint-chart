@@ -102,27 +102,6 @@ export function areaSpotlightOpacity(
     return selected ? authoredOpacity * 0.9 : currentOpacity;
 }
 
-export interface MarkClipRect {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-}
-
-/**
- * The plot-space rect Vega clips a `clip: true` mark to: its enclosing group.
- * Vega keeps the out-of-domain items of a clipped mark in the scenegraph, so a
- * restyle drawn from scene items has to apply the same clip itself. A series'
- * line sits in a faceted group that holds the clip instead, to the same rect.
- */
-export function markClipRect(item: any): MarkClipRect | undefined {
-    const group = item?.mark?.group;
-    const offset = item?.interactionGeometry?.offset as PlotPoint | undefined;
-    if ((item?.mark?.clip !== true && group?.mark?.clip !== true) || !offset) return undefined;
-    if (typeof group?.width !== 'number' || typeof group?.height !== 'number') return undefined;
-    return { x: offset.x, y: offset.y, width: group.width, height: group.height };
-}
-
 let focusClipSequence = 0;
 
 export function createFocusOverlay({
@@ -197,10 +176,13 @@ export function createFocusOverlay({
         focusLayer.setAttribute('viewBox', `0 0 ${space.logicalWidth} ${space.logicalHeight}`);
         const clipIds = new Map<string, string>();
         const clipTo = (element: SVGElement, item: any): void => {
-            const rect = markClipRect(item);
-            if (!rect) return;
-            const x = rect.x + space.originX;
-            const y = rect.y + space.originY;
+            // Vega keeps the out-of-domain items of a clipped mark in the scene, so a
+            // restyle drawn from scene items applies the same clip itself.
+            const clip = item.interactionClip as { x1: number; y1: number; x2: number; y2: number } | undefined;
+            if (!clip) return;
+            const rect = { width: Math.max(0, clip.x2 - clip.x1), height: Math.max(0, clip.y2 - clip.y1) };
+            const x = clip.x1 + space.originX;
+            const y = clip.y1 + space.originY;
             const signature = `${x},${y},${rect.width},${rect.height}`;
             let id = clipIds.get(signature);
             if (!id) {

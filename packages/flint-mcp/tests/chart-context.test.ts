@@ -118,6 +118,23 @@ describe('chartContext agent updates', () => {
     expect(lines.slice(3, 6)).toEqual(['- best:', '  ✓ note "Best mileage" at weight = 2000', '  ✓ note "Heaviest" at weight = 3200']);
   });
 
+  it('says which notes a zoom has left out of view', () => {
+    const note = (weight: number, label: string) => ({ op: 'set-annotation' as const, target: { select: { key: { weight } } }, value: { text: label } });
+    const updates: ChartUpdate[] = [{ id: 'best', ops: [note(2000, 'Best mileage'), note(3200, 'Heaviest')] }];
+    const annotations = [
+      { id: 'best', target: note(2000, '').target, text: 'Best mileage', inView: false },
+      { id: 'best', target: note(3200, '').target, text: 'Heaviest', inView: true },
+      { id: 'pin', target: { elements: [{ value: { weight: 2500 } }] }, text: 'Mine', inView: false },
+    ];
+    const lines = text({ state: state({ annotations }), updates }).split('\n');
+    expect(lines.slice(3, 6)).toEqual([
+      '- best:',
+      '  ✓ note "Best mileage" at weight = 2000 (out of view at the current zoom, so not drawn)',
+      '  ✓ note "Heaviest" at weight = 3200',
+    ]);
+    expect(lines).toContain('- pin: note "Mine" at weight = 2500 (out of view at the current zoom, so not drawn).');
+  });
+
   it('lists marks that share nothing, up to the limit', () => {
     const many = Array.from({ length: MARK_LIMIT + 3 }, (_, index) => ({ car: `car-${index}`, weight: index }));
     const updates = [emphasize('some', { car: 'x' })];

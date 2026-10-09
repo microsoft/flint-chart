@@ -207,10 +207,41 @@ function pathDataOf(mark: any): Record<string, unknown>[] {
     return (mark.items ?? []).map((pathItem: any) => pathItem.datum).filter(Boolean);
 }
 
+function intersectClip(clip: SelectionRect | undefined, rect: SelectionRect): SelectionRect {
+    if (!clip) return rect;
+    return {
+        x1: Math.max(clip.x1, rect.x1),
+        y1: Math.max(clip.y1, rect.y1),
+        x2: Math.min(clip.x2, rect.x2),
+        y2: Math.min(clip.y2, rect.y2),
+    };
+}
+
+/**
+ * The clip a scene node's children draw inside, in the space of their bounds, which starts at
+ * `offsetX`/`offsetY`: a clipped mark keeps its items inside its enclosing group, and a clipped
+ * group item keeps its marks inside itself.
+ */
+export function sceneContentClip(
+    node: any,
+    offsetX: number,
+    offsetY: number,
+    clip: SelectionRect | undefined,
+): SelectionRect | undefined {
+    if (node?.clip !== true) return clip;
+    const frame = node.marktype ? node.group : node.mark?.marktype === 'group' ? node : undefined;
+    if (typeof frame?.width !== 'number' || typeof frame?.height !== 'number') return clip;
+    return intersectClip(clip, { x1: offsetX, y1: offsetY, x2: offsetX + frame.width, y2: offsetY + frame.height });
+}
+
+/**
+ * Each item carries `interactionClip`, the rect Vega clips it to in the space of its bounds,
+ * or undefined when nothing clips it.
+ */
 export function sceneItems(view: any): any[] {
     const result: any[] = [];
     const pathDataByMark = new Map<object, Record<string, unknown>[]>();
-    const visit = (item: any, offsetX: number, offsetY: number, siblingIndex?: number): void => {
+    const visit = (item: any, offsetX: number, offsetY: number, siblingIndex?: number, clip?: SelectionRect): void => {
         if (!item) return;
         if (SUPPORTED_RENDER_MARKS.has(item.mark?.marktype) && keyOfDatum(item.datum) && item.bounds) {
             const interactionGeometry = pathGeometry(item, offsetX, offsetY, siblingIndex);
@@ -242,17 +273,82 @@ export function sceneItems(view: any): any[] {
                     y2: item.bounds.y2 + offsetY,
                 },
                 interactionGeometry,
+                interactionClip: clip,
             });
         }
         const isGroup = item.mark?.marktype === 'group';
         const childOffsetX = offsetX + (isGroup && typeof item.x === 'number' ? item.x : 0);
         const childOffsetY = offsetY + (isGroup && typeof item.y === 'number' ? item.y : 0);
+        const childClip = sceneContentClip(item, childOffsetX, childOffsetY, clip);
         if (Array.isArray(item.items)) {
-            item.items.forEach((child: any, index: number) => visit(child, childOffsetX, childOffsetY, index));
+            item.items.forEach((child: any, index: number) => visit(child, childOffsetX, childOffsetY, index, childClip));
         }
     };
     visit(view.scenegraph()?.root, 0, 0);
     return result;
+}
+
+export type ClipVisibility = 'full' | 'partial' | 'none';
+
+/** How far, in pixels, a point may sit outside a clip and still count as in view. */
+const CLIP_TOLERANCE = 0.5;
+
+function widenClip(clip: SelectionRect): SelectionRect {
+    return {
+        x1: clip.x1 - CLIP_TOLERANCE,
+        y1: clip.y1 - CLIP_TOLERANCE,
+        x2: clip.x2 + CLIP_TOLERANCE,
+        y2: clip.y2 + CLIP_TOLERANCE,
+    };
+}
+
+/** Whether a point lies inside a clip rect, its edges included. */
+export function pointInClip(point: PlotPoint, clip: SelectionRect | undefined): boolean {
+    return !clip || pointInRect(point, widenClip(clip));
+}
+
+/** The part of some bounds a clip leaves on screen, or undefined when none of it is. */
+export function clippedBounds(bounds: SelectionRect, clip: SelectionRect | undefined): SelectionRect | undefined {
+    if (!clip) return bounds;
+    const visible = intersectClip(widenClip(clip), bounds);
+    const width = bounds.x2 - bounds.x1;
+    const height = bounds.y2 - bounds.y1;
+    const visibleWidth = visible.x2 - visible.x1;
+    const visibleHeight = visible.y2 - visible.y1;
+    if (visibleWidth < 0 || visibleHeight < 0) return undefined;
+    // A mark beside the clip shares only its edge with it.
+    if ((width > CLIP_TOLERANCE && visibleWidth <= CLIP_TOLERANCE)
+        || (height > CLIP_TOLERANCE && visibleHeight <= CLIP_TOLERANCE)) return undefined;
+    return visible;
+}
+
+/**
+ * How much of a scene item its clip leaves on screen. A point or a text label is in view when
+ * its anchor is, so one at the very edge of a navigated domain stays in view though the clip
+ * cuts it; a path piece or a shape is in view as far as its geometry overlaps the clip.
+ */
+export function itemVisibility(item: any): ClipVisibility {
+    const clip: SelectionRect | undefined = item?.interactionClip;
+    if (!clip) return 'full';
+    const marktype = item.mark?.marktype;
+    if (marktype === 'symbol' || marktype === 'text') {
+        const anchor = typeof item.x === 'number' && typeof item.y === 'number'
+            ? { x: item.x, y: item.y }
+            : { x: (item.bounds.x1 + item.bounds.x2) / 2, y: (item.bounds.y1 + item.bounds.y2) / 2 };
+        return pointInClip(anchor, clip) ? 'full' : 'none';
+    }
+    const widened = widenClip(clip);
+    const geometry: PathGeometry | undefined = item.interactionGeometry ?? undefined;
+    if (geometry) {
+        if (geometry.points.every((point) => pointInRect(point, widened))) return 'full';
+        return geometryIntersectsRect(geometry, widened, false) ? 'partial' : 'none';
+    }
+    const visible = clippedBounds(item.bounds, clip);
+    if (!visible) return 'none';
+    const { bounds } = item;
+    return visible.x1 <= bounds.x1 && visible.y1 <= bounds.y1 && visible.x2 >= bounds.x2 && visible.y2 >= bounds.y2
+        ? 'full'
+        : 'partial';
 }
 
 export function facetPlotFrameAt(view: any, point: PlotPoint, fallback: PlotFrame): PlotFrame | undefined {

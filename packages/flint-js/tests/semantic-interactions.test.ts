@@ -73,6 +73,9 @@ import {
     sceneItems,
     tolerantInspectHits,
     continuousLegendSegmentCount,
+    clippedBounds,
+    itemVisibility,
+    pointInClip,
 } from '../src/vegalite/interactions/hit-adapter';
 import {
     AXIS_HOVER_STORE,
@@ -85,7 +88,6 @@ import {
     STYLE_SIGNAL,
 } from '../src/vegalite/interactions/stores';
 import {
-    markClipRect,
     mergeContiguousSelectionBounds,
     selectionBoundarySegments,
 } from '../src/vegalite/interactions/presentation/focus-overlay';
@@ -1269,43 +1271,95 @@ describe('Vega-Lite semantic interactions', () => {
         expect(segments).toContainEqual({ x1: 10, y1: 10, x2: 20, y2: 10 });
     });
 
-    it('clips focus restyles of a clipped mark to its enclosing group', () => {
-        const group = { width: 400, height: 300 };
-        const geometry = { interactionGeometry: { offset: { x: 12, y: 8 } } };
+    it('reads the clip of each scene item from its mark and its clipping groups', () => {
+        const point = (x: number, y: number) => ({ mark: { marktype: 'symbol' }, datum: { [INTERACTION_KEY]: `${x}` }, x, y, bounds: { x1: x - 3, x2: x + 3, y1: y - 3, y2: y + 3 } });
+        const clippedMark = { marktype: 'symbol', clip: true, items: [point(5, 5), point(150, 5)] } as any;
+        const unclippedMark = { marktype: 'symbol', items: [point(150, 50)] } as any;
+        const plot = { mark: { marktype: 'group' }, x: 10, y: 20, width: 100, height: 80, items: [clippedMark, unclippedMark] } as any;
+        clippedMark.group = plot;
+        unclippedMark.group = plot;
+        const cell = { mark: { marktype: 'group' }, x: 0, y: 0, width: 60, height: 80, clip: true, items: [] as any[] } as any;
+        const cellMark = { marktype: 'symbol', items: [point(70, 5)], group: cell } as any;
+        cell.items.push(cellMark);
+        const root = { marktype: 'group', items: [{ mark: { marktype: 'group' }, x: 0, y: 0, items: [{ marktype: 'group', items: [plot, cell] }] }] };
+        const items = sceneItems({ scenegraph: () => ({ root }) });
 
-        expect(markClipRect({ ...geometry, mark: { clip: true, group } }))
-            .toEqual({ x: 12, y: 8, width: 400, height: 300 });
-        expect(markClipRect({ ...geometry, mark: { clip: false, group } })).toBeUndefined();
-        expect(markClipRect({ mark: { clip: true, group } })).toBeUndefined();
-        // A zoomed series line: the clip moved to the faceted group around it.
-        expect(markClipRect({ ...geometry, mark: { group: { ...group, mark: { clip: true } } } }))
-            .toEqual({ x: 12, y: 8, width: 400, height: 300 });
+        const byX = (x: number) => items.find((item) => item.x === x)!;
+        expect(byX(15).interactionClip).toEqual({ x1: 10, y1: 20, x2: 110, y2: 100 });
+        expect(itemVisibility(byX(15))).toBe('full');
+        expect(itemVisibility(byX(160))).toBe('none');
+        expect(byX(160).interactionClip).toEqual({ x1: 10, y1: 20, x2: 110, y2: 100 });
+        expect(items.find((item) => item.y === 70)!.interactionClip).toBeUndefined();
+        expect(byX(70).interactionClip).toEqual({ x1: 0, y1: 0, x2: 60, y2: 80 });
+        expect(itemVisibility(byX(70))).toBe('none');
     });
 
-    it('clips a zoomed series line, whose clip sits on its faceted group', async () => {
-        const vl = compile({
+    it('clips each line of a zoomed multi-series chart to the plot', async () => {
+        const spec = assembleVegaLite({
+            chart_spec: { chartType: 'Line Chart', encodings: { x: { field: 'x' }, y: { field: 'y' }, color: { field: 's' } }, baseSize: { width: 200, height: 100 } },
+            semantic_types: { x: 'Number', y: 'Number', s: 'Category' },
             data: { values: [0, 1, 2, 3].flatMap((x) => ['a', 'b'].map((s) => ({ x, y: x * 2, s }))) },
-            mark: { type: 'line', clip: true },
-            width: 200,
-            height: 100,
-            encoding: {
-                x: { field: 'x', type: 'quantitative' },
-                y: { field: 'y', type: 'quantitative' },
-                color: { field: 's', type: 'nominal' },
-            },
-        } as any).spec as Record<string, any>;
-        injectVegaNavigationSignals(vl, ['x']);
-        const view = new View(parse(vl as any), { renderer: 'none' });
+        }) as any;
+        const { plan, compiled } = instrument(spec, [navigate({ axes: 'x' }), clickMark()]);
+        injectVegaNavigationSignals(compiled, plan!.navigationChannels);
+        const view = new View(parse(compiled), { renderer: 'none' });
         await view.runAsync();
-        const lineItem = (node: any): any => node?.mark?.marktype === 'line'
-            ? node
-            : (node?.items ?? []).map(lineItem).find(Boolean);
-        const line = lineItem(view.scenegraph().root);
+        const lines = sceneItems(view).filter((item) => item.mark.marktype === 'line');
 
-        expect(line.mark.clip).not.toBe(true);
-        expect(markClipRect({ ...line, interactionGeometry: { offset: { x: 0, y: 0 } } }))
-            .toMatchObject({ width: 200, height: 100 });
+        expect(new Set(lines.map((line) => line.datum.s))).toEqual(new Set(['a', 'b']));
+        for (const line of lines) {
+            const clip = line.interactionClip;
+            expect(clip).toBeDefined();
+            expect(clip.x2 - clip.x1).toBe(view.width());
+            expect(clip.y2 - clip.y1).toBe(view.height());
+        }
         view.finalize();
+    });
+
+    it('keeps a point on the clip edge in view and a bar beside the clip out of it', () => {
+        const clip = { x1: 0, y1: 0, x2: 100, y2: 50 };
+        expect(pointInClip({ x: 100, y: 25 }, clip)).toBe(true);
+        expect(pointInClip({ x: 100.3, y: 25 }, clip)).toBe(true);
+        expect(pointInClip({ x: 101, y: 25 }, clip)).toBe(false);
+        expect(pointInClip({ x: 500, y: 500 }, undefined)).toBe(true);
+
+        const edgePoint = { mark: { marktype: 'symbol' }, x: 0, y: 10, bounds: { x1: -4, x2: 4, y1: 6, y2: 14 }, interactionClip: clip };
+        expect(itemVisibility(edgePoint)).toBe('full');
+        const bar = (x1: number, x2: number) => ({ mark: { marktype: 'rect' }, bounds: { x1, x2, y1: 10, y2: 50 }, interactionClip: clip });
+        expect(itemVisibility(bar(100, 120))).toBe('none');
+        expect(itemVisibility(bar(90, 120))).toBe('partial');
+        expect(itemVisibility(bar(20, 40))).toBe('full');
+        expect(clippedBounds(bar(90, 120).bounds, clip)).toEqual({ x1: 90, x2: 100.5, y1: 10, y2: 50 });
+        const rule = { mark: { marktype: 'rule' }, bounds: { x1: 50, x2: 50, y1: 0, y2: 50 }, interactionClip: clip };
+        expect(itemVisibility(rule)).toBe('full');
+        const segment = (from: { x: number; y: number }, to: { x: number; y: number }) => ({
+            mark: { marktype: 'line' },
+            bounds: { x1: Math.min(from.x, to.x), x2: Math.max(from.x, to.x), y1: Math.min(from.y, to.y), y2: Math.max(from.y, to.y) },
+            interactionGeometry: { kind: 'segment', points: [from, to], offset: { x: 0, y: 0 } },
+            interactionClip: clip,
+        });
+        expect(itemVisibility(segment({ x: 80, y: 20 }, { x: 140, y: 20 }))).toBe('partial');
+        expect(itemVisibility(segment({ x: 120, y: 20 }, { x: 140, y: 20 }))).toBe('none');
+    });
+
+    it('marks the points a navigated viewport leaves behind as out of view', async () => {
+        const spec = assembleVegaLite({
+            chart_spec: { chartType: 'Scatter Plot', encodings: { x: { field: 'Year' }, y: { field: 'Share' } } },
+            semantic_types: { Year: 'Number', Share: 'Number' },
+            data: { values: [2000, 2005, 2010, 2015, 2020].map((Year) => ({ Year, Share: Year - 1990 })) },
+        }) as any;
+        const { plan, compiled } = instrument(spec, [navigate({ axes: 'x' }), clickMark()]);
+        const axes = injectVegaNavigationSignals(compiled, plan!.navigationChannels);
+        const view = new View(parse(compiled), { renderer: 'none' });
+        await view.runAsync();
+        const visibility = () => Object.fromEntries(sceneItems(view)
+            .filter((item) => item.mark.marktype === 'symbol')
+            .map((item) => [item.datum.Year, itemVisibility(item)]));
+        expect(Object.values(visibility()).every((value) => value === 'full')).toBe(true);
+
+        view.signal(axes.x!.signal, [2005, 2015]);
+        await view.runAsync();
+        expect(visibility()).toEqual({ 2000: 'none', 2005: 'full', 2010: 'full', 2015: 'full', 2020: 'none' });
     });
 
     it('keeps themed line vertices filled when expanding them for interaction', () => {

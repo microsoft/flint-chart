@@ -427,6 +427,14 @@ export interface EffectiveAnnotationEntry {
     value: NonNullable<AnnotationUpdate['value']>;
 }
 
+function annotationEntryKey(id: string, element: SemanticTarget['elements'][number]): string {
+    const renderKeys = semanticElementRenderKeys(element);
+    const targetIdentity = renderKeys.length > 0
+        ? renderKeys.join('\u001f')
+        : JSON.stringify([element.value, element.records ?? []]);
+    return `${id}\u001e${targetIdentity}`;
+}
+
 export function effectiveAnnotationEntries(updates: readonly ChartUpdate[]): EffectiveAnnotationEntry[] {
     const entries = new Map<string, EffectiveAnnotationEntry>();
     for (const update of updates) {
@@ -434,11 +442,7 @@ export function effectiveAnnotationEntries(updates: readonly ChartUpdate[]): Eff
             if (op.op !== 'set-annotation' || 'select' in op.target) continue;
             const element = op.target.elements[0];
             if (!element) continue;
-            const renderKeys = semanticElementRenderKeys(element);
-            const targetIdentity = renderKeys.length > 0
-                ? renderKeys.join('\u001f')
-                : JSON.stringify([element.value, element.records ?? []]);
-            const key = `${update.id}\u001e${targetIdentity}`;
+            const key = annotationEntryKey(update.id, element);
             if (op.value === null) entries.delete(key);
             else entries.set(key, { key, element, value: op.value });
         }
@@ -765,6 +769,7 @@ export function mountVegaInteractions(
     };
     const dataOverlay = createDataOverlay({
         view, container, scales: plan.overlayScales ?? {}, coordinateSpace, containerLayoutSize,
+        clipToPlot: Object.keys(plan.navigationAxes ?? {}).length > 0,
     });
     const initialDataRows = plan.initialDataRows ?? plan.sourceRecords;
     // Cached by identity: a retained update re-rendered must not swap in a fresh copy of the same rows.
@@ -882,7 +887,14 @@ export function mountVegaInteractions(
             const update = mergeRetainedPreview(retainedUpdates.get(id), previewUpdates.get(id));
             for (const op of update?.ops ?? []) {
                 if (op.op !== 'set-annotation' || !op.value) continue;
-                annotations.push({ id, target: op.target, ...(op.value.text !== undefined ? { text: op.value.text } : {}) });
+                const element = 'select' in op.target ? undefined : op.target.elements[0];
+                const inView = element ? annotationOverlays.get(annotationEntryKey(id, element))?.inView() : undefined;
+                annotations.push({
+                    id,
+                    target: op.target,
+                    ...(op.value.text !== undefined ? { text: op.value.text } : {}),
+                    ...(inView !== undefined ? { inView } : {}),
+                });
             }
         }
         return annotations;
@@ -1556,6 +1568,9 @@ export function mountVegaInteractions(
     };
     /** A frame of a host-requested viewport tween reports like a zoom or reset gesture. */
     const emitTransitionFrame = (phase: 'preview' | 'commit', operation: 'zoom' | 'reset'): void => {
+        // A tween moves the scales without a render pass, so overlays re-project on each frame.
+        if (phase === 'commit') syncOverlays();
+        else projectOverlays();
         if (!navigationInteraction) return;
         const base = toCanvasInteractionEvent(
             { type: 'navigation', phase, operation, axes: 'xy' },
@@ -3027,13 +3042,16 @@ export function mountVegaInteractions(
 
     // Overlays project scenegraph geometry into screen pixels, so every one of
     // them is re-projected whenever the rendered size changes.
-    const syncOverlays = (): void => {
+    const projectOverlays = (): void => {
         renderPathFocus();
         renderLegendRange();
         for (const overlay of annotationOverlays.values()) overlay.sync();
         dataOverlay.sync();
         regionGesture?.sync();
         reorderResetControls.layout();
+    };
+    const syncOverlays = (): void => {
+        projectOverlays();
         accessibleNavigation?.refresh();
     };
     let observedRenderer: Element | undefined;

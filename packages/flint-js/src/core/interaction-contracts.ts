@@ -334,6 +334,11 @@ export interface ChartAnnotation {
     readonly id: string;
     readonly target: UpdateTarget;
     readonly text?: string;
+    /**
+     * False while the note's target is outside the plot's current view, so the chart holds the
+     * note but does not draw it; absent until the chart has drawn the note.
+     */
+    readonly inView?: boolean;
 }
 
 /**
@@ -358,7 +363,7 @@ export interface ChartState {
     /** The category window of each rail. */
     readonly windows?: Partial<Record<'x' | 'y', ChartCategoryWindow>>;
     readonly categoryOrder?: readonly unknown[];
-    /** The notes the chart shows now, previews included. */
+    /** The notes the chart holds now, previews included; `inView` tells which ones it draws. */
     readonly annotations?: readonly ChartAnnotation[];
     /** The active filter of each field, set by filter controls; absent fields show every value. */
     readonly filters?: Readonly<Record<string, FilterValue>>;

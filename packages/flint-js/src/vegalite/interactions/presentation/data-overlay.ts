@@ -2,7 +2,7 @@ import type { ChartOverlaySpec } from '../../../core/interaction-contracts';
 import type { SemanticTarget } from '../../../core/interaction-semantics';
 import type { PlotPoint } from '../../../interactive/language/geometry';
 import type { PathProjection } from '../../../interactive/language/projections';
-import type { RendererCoordinateSpace } from '../hit-adapter';
+import { pointInClip, type RendererCoordinateSpace } from '../hit-adapter';
 
 export interface DataOverlayController {
     render(overlays: ReadonlyMap<string, ChartOverlaySpec>): void;
@@ -19,6 +19,8 @@ export interface DataOverlayOptions {
     scales: Partial<Record<'x' | 'y' | 'color', string>>;
     coordinateSpace(): RendererCoordinateSpace;
     containerLayoutSize(): { width: number; height: number };
+    /** Whether the chart clips its marks to the plot, as a navigated chart does; overlays then follow. */
+    clipToPlot?: boolean;
 }
 
 type OverlayChannel = 'x' | 'x2' | 'y' | 'y2';
@@ -84,6 +86,8 @@ export function projectPointToPath(
     return nearest;
 }
 
+let dataOverlayClipSequence = 0;
+
 /**
  * Renders data overlays in a sibling SVG plane. It never mutates the assembled
  * Vega/Vega-Lite mark tree, so template scale resolution and composition remain intact.
@@ -94,8 +98,10 @@ export function createDataOverlay({
     scales,
     coordinateSpace,
     containerLayoutSize,
+    clipToPlot = false,
 }: DataOverlayOptions): DataOverlayController {
     const layer = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    const clipId = `flint-overlay-clip-${dataOverlayClipSequence += 1}`;
     let current = new Map<string, ChartOverlaySpec>();
     const projectedVertices = new Map<string, { point: PlotPoint; record: Record<string, unknown> }[]>();
     const targetFor = (
@@ -144,6 +150,22 @@ export function createDataOverlay({
             height: `${rendererRect.height * scaleY}px`,
         });
         layer.setAttribute('viewBox', `0 0 ${space.logicalWidth} ${space.logicalHeight}`);
+        // Lines, rules, and rects are cut at the edge of the plot the scales draw into, like the
+        // chart's own marks; a point or a label is drawn whole while its anchor is in the plot,
+        // and not at all once it leaves.
+        const xRange = (xScale.range() as number[]).map(Number);
+        const yRange = (yScale.range() as number[]).map(Number);
+        const plot = clipToPlot && [...xRange, ...yRange].every(Number.isFinite)
+            ? {
+                x1: space.originX + Math.min(...xRange),
+                y1: space.originY + Math.min(...yRange),
+                x2: space.originX + Math.max(...xRange),
+                y2: space.originY + Math.max(...yRange),
+            }
+            : undefined;
+        const clipped = (element: SVGElement): void => {
+            if (plot) element.setAttribute('clip-path', `url(#${clipId})`);
+        };
 
         // On a band scale a rect spans its band from edge to edge, while a
         // point, line, rule, or text sits at the band's centre, as Vega-Lite
@@ -194,6 +216,7 @@ export function createDataOverlay({
                         rule.setAttribute('stroke', spec.style?.stroke ?? '#4c78a8');
                         rule.setAttribute('stroke-width', String(spec.style?.strokeWidth ?? 1));
                         if (spec.style?.strokeDash?.length) rule.setAttribute('stroke-dasharray', spec.style.strokeDash.join(' '));
+                        clipped(rule);
                         layer.append(rule);
                         return;
                     }
@@ -207,6 +230,7 @@ export function createDataOverlay({
                     rect.setAttribute('fill-opacity', String(spec.style?.fillOpacity ?? 0.2));
                     if (spec.style?.stroke) rect.setAttribute('stroke', spec.style.stroke);
                     if (spec.style?.strokeWidth !== undefined) rect.setAttribute('stroke-width', String(spec.style.strokeWidth));
+                    clipped(rect);
                     layer.append(rect);
                 });
                 continue;
@@ -249,6 +273,7 @@ export function createDataOverlay({
                 path.setAttribute('stroke-linecap', 'round');
                 path.setAttribute('stroke-linejoin', 'round');
                 path.setAttribute('vector-effect', 'non-scaling-stroke');
+                clipped(path);
                 layer.append(path);
                 continue;
             }
@@ -258,6 +283,7 @@ export function createDataOverlay({
                 if (!point) return;
                 const x = point.x + space.originX;
                 const y = point.y + space.originY;
+                if (!pointInClip({ x, y }, plot)) return;
                 if (spec.mark === 'point') {
                     const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                     identify(circle, rowIndex);
@@ -300,6 +326,17 @@ export function createDataOverlay({
         }
         if (layer.childElementCount === 0) layer.remove();
         else {
+            if (plot) {
+                const clipPath = document.createElementNS('http://www.w3.org/2000/svg', 'clipPath');
+                clipPath.setAttribute('id', clipId);
+                const clipRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                clipRect.setAttribute('x', String(plot.x1));
+                clipRect.setAttribute('y', String(plot.y1));
+                clipRect.setAttribute('width', String(Math.max(0, plot.x2 - plot.x1)));
+                clipRect.setAttribute('height', String(Math.max(0, plot.y2 - plot.y1)));
+                clipPath.append(clipRect);
+                layer.prepend(clipPath);
+            }
             if (!layer.isConnected) container.append(layer);
             if (getComputedStyle(container).position === 'static') container.style.position = 'relative';
         }

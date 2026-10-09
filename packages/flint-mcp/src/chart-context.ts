@@ -228,9 +228,11 @@ function targetText(target: Annotation['target'], columns: Columns): string {
   return Object.keys(shared).length > 0 ? pairs(shared) : plural(values.length, 'mark');
 }
 
+const OUT_OF_VIEW = ' (out of view at the current zoom, so not drawn)';
+
 function noteText(annotation: Annotation, columns: Columns): string {
   const text = annotation.text !== undefined ? ` "${annotation.text}"` : '';
-  return `note${text} at ${targetText(annotation.target, columns)}`;
+  return `note${text} at ${targetText(annotation.target, columns)}${annotation.inView === false ? OUT_OF_VIEW : ''}`;
 }
 
 function filterText(field: string, filter: Filter): string {
@@ -286,6 +288,11 @@ function updateLines(
       } else {
         [text, ...more] = emphasisLines(values, undefined);
       }
+    }
+    if (outcome.ok && op.op === 'set-annotation' && op.value) {
+      const note = state?.annotations?.find((annotation) =>
+        annotation.id === update.id && JSON.stringify(annotation.target) === JSON.stringify(op.target));
+      if (note?.inView === false) text += OUT_OF_VIEW;
     }
     lines.push(outcome.ok ? `  ✓ ${text}` : `  ✗ ${text}: ${outcome.reason}`, ...more.map((line) => `  ${line}`));
   });
