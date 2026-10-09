@@ -54,10 +54,12 @@ import {
     clientToPlotPoint,
     clientToRendererPoint,
     interactionModifiers,
+    isPickable,
     normalizeVegaElementEvent,
     nearestInteractiveSceneItem,
     nearestSceneItem,
     pathHoverPresentationKey,
+    pickBounds,
     polarFrameFromItems,
     polarGuideSegment,
     polarInspectHits,
@@ -279,7 +281,7 @@ export function nearestReorderHit(
     for (const item of items) {
         const hit = renderHit(item);
         const value = hit?.datum[field];
-        if (!hit || value === undefined || !item.bounds || slots.has(value)) continue;
+        if (!hit || value === undefined || !item.bounds || !isPickable(item, axis) || slots.has(value)) continue;
         slots.set(value, { hit, center: (item.bounds[start] + item.bounds[end]) / 2 });
     }
     let nearest: { hit: RenderHit; distance: number } | undefined;
@@ -462,7 +464,7 @@ export function keyboardTargetItems(scene: readonly any[], direction: SpatialDir
     const itemsByKey = new Map<string, any>();
     for (const item of scene) {
         const key = renderHit(item)?.datum[INTERACTION_KEY];
-        if (typeof key !== 'string' || !item.bounds) continue;
+        if (typeof key !== 'string' || !item.bounds || !isPickable(item)) continue;
         const existing = itemsByKey.get(key);
         if (!existing) {
             itemsByKey.set(key, item);
@@ -2148,9 +2150,19 @@ export function mountVegaInteractions(
                         ?? plan.overlayScales?.[valueAxis]
                     : undefined;
                 const valueScale = valueScaleName ? view.scale(valueScaleName) : undefined;
+                const valueRange = (valueScale?.range?.() as number[] | undefined)?.map(Number);
+                // A value the zoom cuts off keeps its readout; the label says where it lies.
+                const outOfView = (coordinate: number): string => {
+                    if (!plan.navigationAxes?.[valueAxis] || !valueRange?.every(Number.isFinite)) return '';
+                    const low = Math.min(...valueRange) - 0.5;
+                    const high = Math.max(...valueRange) + 0.5;
+                    if (coordinate < low) return valueAxis === 'y' ? ' (above view)' : ' (left of view)';
+                    if (coordinate > high) return valueAxis === 'y' ? ' (below view)' : ' (right of view)';
+                    return '';
+                };
                 const valueLabels = indexPolicy!.displayValue && valueScale?.invert
                     ? indexAcquisition.valueCoordinates.map((coordinate, index) => ({
-                        text: inspectValueText(valueScale.invert(coordinate)),
+                        text: `${inspectValueText(valueScale.invert(coordinate))}${outOfView(coordinate)}`,
                         color: indexAcquisition.valueColors?.[index],
                     }))
                     : undefined;
@@ -2503,8 +2515,9 @@ export function mountVegaInteractions(
         if (renderHit(eventItem)) return eventItem;
         const point = localPoint(event);
         return sceneItems(view).find((item) => {
-            const bounds = item.bounds;
-            return renderHit(item) && bounds
+            if (!item.bounds || !isPickable(item)) return false;
+            const bounds = pickBounds(item);
+            return renderHit(item)
                 && point.x >= bounds.x1 && point.x <= bounds.x2
                 && point.y >= bounds.y1 && point.y <= bounds.y2;
         });

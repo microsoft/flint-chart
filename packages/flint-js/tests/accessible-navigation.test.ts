@@ -4,13 +4,13 @@ import { compile } from 'vega-lite';
 import { assembleVegaLite } from '../src/vegalite/assemble';
 import { vlAllTemplateDefs } from '../src/vegalite/templates';
 import { TEST_GENERATORS, type TestCase } from '../src/test-data';
-import { accessibleNavigation, clickHighlight } from '../src/interactive/interactions';
+import { accessibleNavigation, clickHighlight, navigate } from '../src/interactive/interactions';
 import { accessibleNavigationTrigger } from '../src/interactive/triggers';
 import { resolveInteractionSpec } from '../src/interactive/spec/resolve';
 import { INTERACTION_PRESETS } from '../src/interactive/spec/registry';
 import { toCanvasInteractionEvent } from '../src/interactive/canvas-interaction';
 import { associateSemanticElementRenderKeys } from '../src/core/interaction-semantics';
-import { addVegaLiteInteractions, injectVegaInteractionStore } from '../src/vegalite/interactions/compile';
+import { addVegaLiteInteractions, injectVegaInteractionStore, injectVegaNavigationSignals } from '../src/vegalite/interactions/compile';
 import { INTERACTION_KEY } from '../src/vegalite/interactions/hit-adapter';
 import {
     ACCESSIBLE_NAVIGATION_HELP,
@@ -251,6 +251,39 @@ describe('accessible-navigation preset', () => {
 });
 
 describe('accessible navigation tree', () => {
+    it('reaches only the marks a navigated viewport shows, and says how many it hides', async () => {
+        const input: ChartAssemblyInput = {
+            semantic_types: { Year: 'Number', Share: 'Number' },
+            chart_spec: { chartType: 'Scatter Plot', encodings: { x: { field: 'Year' }, y: { field: 'Share' } }, baseSize: { width: 350, height: 240 } },
+            data: { values: [2000, 2005, 2010, 2015, 2020].map((Year) => ({ Year, Share: Year - 1990 })) },
+        } as ChartAssemblyInput;
+        const spec = assembleVegaLite(input) as Record<string, any>;
+        const plan = addVegaLiteInteractions(spec, [accessibleNavigation(), navigate({ axes: 'x' })], true)!;
+        const compiled = compile(spec as any).spec as Record<string, any>;
+        injectVegaInteractionStore(compiled, plan);
+        const axes = injectVegaNavigationSignals(compiled, plan.navigationChannels);
+        const view = new View(parse(compiled), { renderer: 'none' });
+        await view.runAsync();
+        const tree = () => buildAccessibleTree({
+            root: (view.scenegraph() as any).root,
+            chartType: 'Scatter Plot',
+            axisFields: plan.axisFields,
+            fields: plan.fields,
+        });
+        const years = (root: AccessibleNode) => accessibleNodes(child(root, 'data'))
+            .filter((node) => node.kind === 'mark')
+            .map((node) => node.content.match(/Year: (\d,\d{3})/)?.[1]);
+        expect(years(tree())).toHaveLength(5);
+        expect(tree().content).not.toContain('out of view');
+
+        view.signal(axes.x!.signal, [2004, 2016]);
+        await view.runAsync();
+        const zoomed = tree();
+        expect(years(zoomed)).toEqual(['2,005', '2,010', '2,015']);
+        expect(zoomed.content).toContain('3 points, 2 more out of view');
+        expect(child(zoomed, 'data').content).toContain('2 more out of view');
+    });
+
     it('describes a stacked bar chart: title, both axes, the legend, and every bar', async () => {
         const { root, view } = await accessibleTree(stackedBar);
         expect(root.children.map((node) => node.type)).toEqual(['Y axis', 'Title', 'X axis', 'Data', 'Color legend']);

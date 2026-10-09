@@ -16,7 +16,7 @@ import {
     PATH_KEY_SUFFIX,
     clientToLayoutPoint,
     clippedBounds,
-    itemVisibility,
+    pickBounds,
     plotToClientPoint,
     pointInClip,
     sceneContentClip,
@@ -557,7 +557,9 @@ export function createAnnotationOverlay({
         }
         const rowPoint = segmentRowPoint(item, element.value, annotation.anchor);
         const clip = item.interactionClip;
-        const visibility = rowPoint ? (pointInClip(rowPoint, clip) ? 'full' : 'none') : itemVisibility(item);
+        const visibility = rowPoint
+            ? (pointInClip(rowPoint, clip) ? 'full' : 'none')
+            : item.interactionVisibility ?? 'full';
         if (visibility === 'none') {
             hide();
             return;
@@ -567,7 +569,7 @@ export function createAnnotationOverlay({
         const subject = rowPoint
             ? { datum: item.datum, mark: item.mark, bounds: { x1: rowPoint.x, x2: rowPoint.x, y1: rowPoint.y, y2: rowPoint.y } }
             : visibility === 'partial' && !item.interactionGeometry
-                ? { ...item, bounds: clippedBounds(item.bounds, clip) ?? item.bounds }
+                ? { ...item, bounds: pickBounds(item) }
                 : item;
         if (!annotationLayer.isConnected) container.append(annotationLayer);
         if (getComputedStyle(container).position === 'static') container.style.position = 'relative';

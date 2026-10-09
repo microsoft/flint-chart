@@ -4,10 +4,14 @@ import type { RenderHit } from '../../../core/interaction-contracts';
 import {
     INTERACTION_KEY,
     INTERACTION_ROLE,
+    clippedBounds,
     legendTarget,
+    pointInClip,
     renderHit,
+    sceneContentClip,
     shapeReadingBounds,
     type LegendHitIdentity,
+    type SelectionRect,
 } from '../hit-adapter';
 
 /**
@@ -106,6 +110,8 @@ interface MarkEntry extends AccessibleMarkRef {
     readonly pathIndex: number;
     readonly rank: number;
     readonly pathOwner?: MarkEntry;
+    /** False when the chart's clip hides the mark, as a navigated viewport does. */
+    readonly inView: boolean;
 }
 
 interface TextRecord {
@@ -173,6 +179,8 @@ interface WalkContext {
     title?: 'chart' | 'scope' | 'header' | 'header-title';
     header?: HeaderRecord;
     headerKind?: 'column' | 'row';
+    /** The rect the scene clips the walked marks to, in the walk's space. */
+    clip?: SelectionRect;
 }
 
 function absoluteBounds(item: any, offsetX: number, offsetY: number): AccessibleBounds | undefined {
@@ -402,8 +410,11 @@ function collectScene(root: any, input: AccessibleTreeInput): SceneFacts {
     const descend = (item: any, offsetX: number, offsetY: number, context: WalkContext): void => {
         const childX = offsetX + (typeof item.x === 'number' ? item.x : 0);
         const childY = offsetY + (typeof item.y === 'number' ? item.y : 0);
+        const groupClip = sceneContentClip(item, childX, childY, context.clip);
         for (const childMark of item.items ?? []) {
-            (childMark?.items ?? []).forEach((child: any, index: number) => visitItem(child, childX, childY, context, index));
+            const clip = sceneContentClip(childMark, childX, childY, groupClip);
+            const childContext = clip === context.clip ? context : { ...context, clip };
+            (childMark?.items ?? []).forEach((child: any, index: number) => visitItem(child, childX, childY, childContext, index));
         }
     };
 
@@ -545,10 +556,14 @@ function collectScene(root: any, input: AccessibleTreeInput): SceneFacts {
                     }
                     : undefined)!
                 : bounds;
+            // A point is in view when its anchor is; a shape when any of it is.
+            const inView = vertex || marktype === 'symbol'
+                ? pointInClip({ x: readingBounds.x1, y: readingBounds.y1 }, context.clip)
+                : clippedBounds(bounds, context.clip) !== undefined;
             facts.marks.push({
                 item: vertex ? { ...item, bounds: markBounds } : item,
                 hit, key, bounds: markBounds, readingBounds, extent, scope: context.scope, path,
-                pathIndex: index, rank: markRank(marktype),
+                pathIndex: index, rank: markRank(marktype), inView,
             });
             return;
         }
@@ -592,7 +607,10 @@ function representativeMarks(marks: readonly MarkEntry[]): MarkEntry[] {
         const pathLength = (pathOwner?.path?.items ?? []).length;
         if (vertices.length > 1 && vertices.length >= pathLength) {
             const bounds = boundsOf(vertices.map((vertex) => vertex.extent))!;
-            result.push({ ...pathOwner!, item: { ...pathOwner!.item, bounds }, bounds, readingBounds: bounds, extent: bounds, wholePath: true, vertices });
+            result.push({
+                ...pathOwner!, item: { ...pathOwner!.item, bounds }, bounds, readingBounds: bounds, extent: bounds,
+                wholePath: true, vertices, inView: vertices.some((vertex) => vertex.inView),
+            });
         } else if (vertices.length > 1) {
             // Tied values on one path (an ECDF step, a repeated x) share a key but are separate points.
             const others = group.filter((candidate) => !candidate.path);
@@ -847,6 +865,20 @@ function membersWhere(marks: readonly MarkEntry[], predicate: (datum: Record<str
     return marks.filter((mark) => predicate((mark.hit.datum ?? {}) as Record<string, unknown>));
 }
 
+/**
+ * The marks a reader can reach: those in view, and of a whole path only its vertices in view.
+ * A navigated viewport keeps the rest in the scene, clipped away.
+ */
+function marksInView(marks: readonly MarkEntry[]): MarkEntry[] {
+    return marks.flatMap((mark) => {
+        if (!mark.inView) return [];
+        if (!mark.wholePath || !mark.vertices || mark.vertices.every((vertex) => vertex.inView)) return [mark];
+        const vertices = mark.vertices.filter((vertex) => vertex.inView);
+        const bounds = boundsOf(vertices.map((vertex) => vertex.extent))!;
+        return [{ ...mark, item: { ...mark.item, bounds }, bounds, readingBounds: bounds, extent: bounds, vertices }];
+    });
+}
+
 /** The whole walk for one rendered chart. */
 export function buildAccessibleTree(input: AccessibleTreeInput): AccessibleNode {
     const facts = collectScene(input.root, input);
@@ -873,7 +905,10 @@ export function buildAccessibleTree(input: AccessibleTreeInput): AccessibleNode 
         const field = input.axisFields?.[channel]?.field;
         if (field && axis.title?.text && !displayNames.has(field)) displayNames.set(field, axis.title.text);
     }
-    const marks = representativeMarks(facts.marks);
+    const representatives = representativeMarks(facts.marks);
+    const marks = marksInView(representatives);
+    const outOfView = representatives.length - marks.length;
+    const outOfViewText = outOfView > 0 ? `, ${outOfView} more out of view` : '';
     const children: AccessibleNode[] = [];
     const axisSummaries: string[] = [];
     const legendSummaries: string[] = [];
@@ -1182,6 +1217,7 @@ export function buildAccessibleTree(input: AccessibleTreeInput): AccessibleNode 
         children.push(nodeOf('data', 'data', 'Data',
             `${nounSummary(marks, context)}`
             + (panelled ? ` in ${dataChildren.length} panels` : seriesCount > 1 ? ` in ${seriesCount} series` : '')
+            + outOfViewText
             + measureRange(marks, input, context.label), {
                 bounds: boundsOf(marks.map((mark) => mark.bounds)),
                 readingBounds: boundsOf(marks.map((mark) => mark.readingBounds)),
@@ -1206,7 +1242,8 @@ export function buildAccessibleTree(input: AccessibleTreeInput): AccessibleNode 
         `${input.chartType}${title ? `: ${title}` : ''}`,
         subtitle,
         [...axisSummaries, ...legendSummaries].join('; '),
-        marks.length > 0 ? `${nounSummary(marks, context)}${panelled ? ` in ${panelNodes.size} panels` : ''}` : 'No data marks',
+        marks.length > 0 ? `${nounSummary(marks, context)}${panelled ? ` in ${panelNodes.size} panels` : ''}${outOfViewText}`
+            : outOfView > 0 ? `No data marks in view, ${outOfView} out of view` : 'No data marks',
     ].filter(Boolean).join('. ');
     const root = nodeOf('chart', 'chart', 'Chart', rootContent, { bounds: facts.rootBounds, children });
     finalize(root, chartReadingDirection(input));

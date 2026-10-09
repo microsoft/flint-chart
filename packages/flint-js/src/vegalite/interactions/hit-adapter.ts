@@ -236,7 +236,8 @@ export function sceneContentClip(
 
 /**
  * Each item carries `interactionClip`, the rect Vega clips it to in the space of its bounds,
- * or undefined when nothing clips it.
+ * or undefined when nothing clips it. A clipped item also carries `interactionVisibility`, and
+ * a partly visible shape `visibleBounds`, the part of its bounds on screen.
  */
 export function sceneItems(view: any): any[] {
     const result: any[] = [];
@@ -256,7 +257,7 @@ export function sceneItems(view: any): any[] {
                     pathDataByMark.set(item.mark, interactionPathData);
                 }
             }
-            result.push({
+            const entry: any = {
                 ...item,
                 interactionPathData,
                 x: typeof item.x === 'number' ? item.x + offsetX : item.x,
@@ -274,7 +275,14 @@ export function sceneItems(view: any): any[] {
                 },
                 interactionGeometry,
                 interactionClip: clip,
-            });
+            };
+            if (clip) {
+                entry.interactionVisibility = itemVisibility(entry);
+                if (entry.interactionVisibility === 'partial' && !interactionGeometry) {
+                    entry.visibleBounds = clippedBounds(entry.bounds, clip);
+                }
+            }
+            result.push(entry);
         }
         const isGroup = item.mark?.marktype === 'group';
         const childOffsetX = offsetX + (isGroup && typeof item.x === 'number' ? item.x : 0);
@@ -302,53 +310,97 @@ function widenClip(clip: SelectionRect): SelectionRect {
     };
 }
 
+/** Whether a span meets a clip's span on the same axis: a point on the edge does, a shape beside it does not. */
+function spanMeetsClip(start: number, end: number, low: number, high: number): boolean {
+    const overlap = Math.min(end, high + CLIP_TOLERANCE) - Math.max(start, low - CLIP_TOLERANCE);
+    return end - start > CLIP_TOLERANCE ? overlap > CLIP_TOLERANCE : overlap >= 0;
+}
+
+/** Where an item lies along one axis: the anchor of a point or a label, else the extent of its geometry. */
+function itemSpan(item: any, axis: 'x' | 'y'): [number, number] {
+    const marktype = item.mark?.marktype;
+    if ((marktype === 'symbol' || marktype === 'text') && typeof item[axis] === 'number') {
+        return [item[axis], item[axis]];
+    }
+    const points = item.interactionGeometry?.points as readonly PlotPoint[] | undefined;
+    if (points?.length) {
+        let start = Infinity;
+        let end = -Infinity;
+        for (const point of points) {
+            start = Math.min(start, point[axis]);
+            end = Math.max(end, point[axis]);
+        }
+        return [start, end];
+    }
+    if (marktype === 'symbol' || marktype === 'text') {
+        const middle = axis === 'x' ? (item.bounds.x1 + item.bounds.x2) / 2 : (item.bounds.y1 + item.bounds.y2) / 2;
+        return [middle, middle];
+    }
+    return axis === 'x' ? [item.bounds.x1, item.bounds.x2] : [item.bounds.y1, item.bounds.y2];
+}
+
+/**
+ * How much of an item one axis of its clip leaves on screen. A mark whose own stroke is all
+ * that reaches past the clip, such as the cap of a whisker at the plot edge, counts as whole.
+ */
+function visibilityAlong(item: any, clip: SelectionRect, axis: 'x' | 'y'): ClipVisibility {
+    const [start, end] = itemSpan(item, axis);
+    const low = axis === 'x' ? clip.x1 : clip.y1;
+    const high = axis === 'x' ? clip.x2 : clip.y2;
+    if (!spanMeetsClip(start, end, low, high)) return 'none';
+    const slack = Math.max(CLIP_TOLERANCE, Number(item.strokeWidth) || 0);
+    return start >= low - slack && end <= high + slack ? 'full' : 'partial';
+}
+
 /** Whether a point lies inside a clip rect, its edges included. */
 export function pointInClip(point: PlotPoint, clip: SelectionRect | undefined): boolean {
-    return !clip || pointInRect(point, widenClip(clip));
+    return !clip || (spanMeetsClip(point.x, point.x, clip.x1, clip.x2) && spanMeetsClip(point.y, point.y, clip.y1, clip.y2));
 }
 
 /** The part of some bounds a clip leaves on screen, or undefined when none of it is. */
 export function clippedBounds(bounds: SelectionRect, clip: SelectionRect | undefined): SelectionRect | undefined {
     if (!clip) return bounds;
-    const visible = intersectClip(widenClip(clip), bounds);
-    const width = bounds.x2 - bounds.x1;
-    const height = bounds.y2 - bounds.y1;
-    const visibleWidth = visible.x2 - visible.x1;
-    const visibleHeight = visible.y2 - visible.y1;
-    if (visibleWidth < 0 || visibleHeight < 0) return undefined;
-    // A mark beside the clip shares only its edge with it.
-    if ((width > CLIP_TOLERANCE && visibleWidth <= CLIP_TOLERANCE)
-        || (height > CLIP_TOLERANCE && visibleHeight <= CLIP_TOLERANCE)) return undefined;
-    return visible;
+    if (!spanMeetsClip(bounds.x1, bounds.x2, clip.x1, clip.x2) || !spanMeetsClip(bounds.y1, bounds.y2, clip.y1, clip.y2)) {
+        return undefined;
+    }
+    return intersectClip(widenClip(clip), bounds);
 }
 
 /**
  * How much of a scene item its clip leaves on screen. A point or a text label is in view when
  * its anchor is, so one at the very edge of a navigated domain stays in view though the clip
- * cuts it; a path piece or a shape is in view as far as its geometry overlaps the clip.
+ * cuts it; a shape is in view as far as it overlaps the clip on both axes, and a path piece as
+ * far as its segment crosses the clip.
  */
 export function itemVisibility(item: any): ClipVisibility {
     const clip: SelectionRect | undefined = item?.interactionClip;
     if (!clip) return 'full';
-    const marktype = item.mark?.marktype;
-    if (marktype === 'symbol' || marktype === 'text') {
-        const anchor = typeof item.x === 'number' && typeof item.y === 'number'
-            ? { x: item.x, y: item.y }
-            : { x: (item.bounds.x1 + item.bounds.x2) / 2, y: (item.bounds.y1 + item.bounds.y2) / 2 };
-        return pointInClip(anchor, clip) ? 'full' : 'none';
-    }
-    const widened = widenClip(clip);
+    const alongX = visibilityAlong(item, clip, 'x');
+    const alongY = visibilityAlong(item, clip, 'y');
+    if (alongX === 'none' || alongY === 'none') return 'none';
+    if (alongX === 'full' && alongY === 'full') return 'full';
     const geometry: PathGeometry | undefined = item.interactionGeometry ?? undefined;
-    if (geometry) {
-        if (geometry.points.every((point) => pointInRect(point, widened))) return 'full';
-        return geometryIntersectsRect(geometry, widened, false) ? 'partial' : 'none';
-    }
-    const visible = clippedBounds(item.bounds, clip);
-    if (!visible) return 'none';
-    const { bounds } = item;
-    return visible.x1 <= bounds.x1 && visible.y1 <= bounds.y1 && visible.x2 >= bounds.x2 && visible.y2 >= bounds.y2
-        ? 'full'
-        : 'partial';
+    // A diagonal segment can overlap the clip on each axis and still pass beside it.
+    if (geometry && !geometryIntersectsRect(geometry, widenClip(clip), false)) return 'none';
+    return 'partial';
+}
+
+/**
+ * Whether the pointer, the keyboard, or a reader can pick a scene item: only what is on
+ * screen. What a pick means still reads every item, so a series keeps its off-screen marks.
+ * With an axis, only that axis of the clip counts: an index readout at an x in view keeps the
+ * values its y range cuts off.
+ */
+export function isPickable(item: any, axis?: 'x' | 'y'): boolean {
+    const clip: SelectionRect | undefined = item?.interactionClip;
+    if (!clip) return true;
+    if (!axis) return (item.interactionVisibility ?? itemVisibility(item)) !== 'none';
+    return visibilityAlong(item, clip, axis) !== 'none';
+}
+
+/** The bounds of a scene item that are on screen. */
+export function pickBounds(item: any): SelectionRect {
+    return item.visibleBounds ?? item.bounds;
 }
 
 export function facetPlotFrameAt(view: any, point: PlotPoint, fallback: PlotFrame): PlotFrame | undefined {
@@ -696,7 +748,7 @@ export function polarInspectHits(
     const angle = ((Math.atan2(point.x - frame.center.x, frame.center.y - point.y) % (2 * Math.PI))
         + 2 * Math.PI) % (2 * Math.PI);
     return items
-        .filter((item) => item?.mark?.marktype === 'arc'
+        .filter((item) => item?.mark?.marktype === 'arc' && isPickable(item)
             && Number.isFinite(item.startAngle) && Number.isFinite(item.endAngle)
             && Math.hypot(item.x - frame.center.x, item.y - frame.center.y) <= 1
             && angularSegments(item.startAngle, item.endAngle).some(
@@ -713,6 +765,7 @@ export function angularRegionHits(
 ): RenderHit[] {
     return sceneItems(view)
         .filter((item) => {
+            if (!isPickable(item)) return false;
             if (arcIntersectsAngularSector(item, sector, contain)) return true;
             const markType = item?.mark?.marktype;
             if (markType === 'symbol' && typeof item.x === 'number' && typeof item.y === 'number') {
@@ -1137,7 +1190,7 @@ export function nearestItemByBounds(
     let best: { item: any; distance: number } | undefined;
     for (const item of items) {
         const bounds = item?.bounds;
-        if (!bounds) continue;
+        if (!bounds || !isPickable(item)) continue;
         const distance = distanceToItem(point, item);
         if (distance > maxDistance) continue;
         if (!best || distance < best.distance) best = { item, distance };
@@ -1182,7 +1235,7 @@ function distanceToItem(point: PlotPoint, item: any): number {
         return geometryDistance;
     }
     const polygon = arcPolygon(item);
-    if (!polygon) return item?.bounds ? distanceToBounds(point, item.bounds) : Number.POSITIVE_INFINITY;
+    if (!polygon) return item?.bounds ? distanceToBounds(point, pickBounds(item)) : Number.POSITIVE_INFINITY;
     if (pointInPolygon(point, polygon)) return 0;
     let distance = Number.POSITIVE_INFINITY;
     for (let index = 0; index < polygon.length; index += 1) {
@@ -1198,9 +1251,10 @@ export function nearestSceneItem(view: any, point: PlotPoint, maxDistance: numbe
 export type SpatialDirection = 'left' | 'right' | 'up' | 'down';
 
 function itemCenter(item: any): PlotPoint {
+    const bounds = pickBounds(item);
     return {
-        x: (item.bounds.x1 + item.bounds.x2) / 2,
-        y: (item.bounds.y1 + item.bounds.y2) / 2,
+        x: (bounds.x1 + bounds.x2) / 2,
+        y: (bounds.y1 + bounds.y2) / 2,
     };
 }
 
@@ -1218,7 +1272,7 @@ export function nextItemInDirection(
     const followsDiscreteAxis = discreteAxis === (horizontal ? 'x' : 'y');
     let best: { item: any; score: number } | undefined;
     for (const item of items) {
-        if (!item?.bounds) continue;
+        if (!item?.bounds || !isPickable(item)) continue;
         const center = itemCenter(item);
         const dx = center.x - from.x;
         const dy = center.y - from.y;
@@ -1274,12 +1328,13 @@ type InspectComparison = '<' | '<=' | '=' | '>=' | '>';
 
 /** Acquires marks around a raw inspect point without changing the guide position. */
 export function tolerantInspectHits(
-    items: readonly any[],
+    sceneCandidates: readonly any[],
     point: PlotPoint,
     mode: 'x' | 'y' | 'xy',
     predicate: { x?: InspectComparison; y?: InspectComparison },
     tolerance: { x: number; y: number },
 ): RenderHit[] {
+    const items = sceneCandidates.filter((item) => isPickable(item, mode === 'xy' ? undefined : mode));
     const xComparison = predicate.x;
     const yComparison = predicate.y;
     const directionalQuarter = mode === 'xy'
@@ -1482,10 +1537,9 @@ export function indexInspectAcquisition(
     assistDistance = 0,
 ): IndexInspectAcquisition {
     const specificSeries = typeof policy.show === 'object' ? policy.show.series : undefined;
-    const eligibleItems = typeof policy.show === 'object'
-        ? items.filter((item) => policy.seriesBy
-            && Object.is(item?.datum?.[policy.seriesBy], specificSeries))
-        : items;
+    const eligibleItems = items.filter((item) => isPickable(item, axis)
+        && (typeof policy.show !== 'object'
+            || (policy.seriesBy && Object.is(item?.datum?.[policy.seriesBy], specificSeries))));
 
     const itemAnchors = eligibleItems.flatMap((item) => {
         const geometry = item?.interactionGeometry;
@@ -1640,7 +1694,7 @@ export function regionHits(
         y1: Math.min(a.y, b.y), y2: Math.max(a.y, b.y),
     };
     return sceneItems(view)
-        .filter((item) => itemIntersectsRect(item, rect, contain))
+        .filter((item) => isPickable(item) && itemIntersectsRect(item, rect, contain))
         .map(renderHit)
         .filter((hit): hit is RenderHit => hit !== null);
 }
@@ -1649,11 +1703,12 @@ export function regionHits(
 function itemIntersectsRect(item: any, rect: SelectionRect, contain = false): boolean {
     if (item.interactionGeometry) return geometryIntersectsRect(item.interactionGeometry, rect, contain);
     if (item.mark?.marktype === 'arc') return arcIntersectsRect(item, rect, contain);
+    const bounds = pickBounds(item);
     if (contain) {
-        return item.bounds.x1 >= rect.x1 && item.bounds.x2 <= rect.x2
-            && item.bounds.y1 >= rect.y1 && item.bounds.y2 <= rect.y2;
+        return bounds.x1 >= rect.x1 && bounds.x2 <= rect.x2
+            && bounds.y1 >= rect.y1 && bounds.y2 <= rect.y2;
     }
-    return boundsIntersectRect(item.bounds, rect);
+    return boundsIntersectRect(bounds, rect);
 }
 
 /** Marks captured by a freeform lasso path. */
@@ -1665,8 +1720,8 @@ export function polygonHits(
     if (polygon.length < 3) return [];
     return sceneItems(view)
         .filter((item) => {
-            const bounds = item.bounds;
-            if (!bounds) return false;
+            if (!item.bounds || !isPickable(item)) return false;
+            const bounds = pickBounds(item);
             if (contain) {
                 return [
                     { x: bounds.x1, y: bounds.y1 },

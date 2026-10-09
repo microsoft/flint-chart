@@ -74,8 +74,13 @@ import {
     tolerantInspectHits,
     continuousLegendSegmentCount,
     clippedBounds,
+    isPickable,
     itemVisibility,
+    nearestSceneItem,
+    nextItemInDirection,
     pointInClip,
+    polygonHits,
+    regionHits,
 } from '../src/vegalite/interactions/hit-adapter';
 import {
     AXIS_HOVER_STORE,
@@ -103,7 +108,7 @@ import { INTERACTION_CAPABILITIES } from '../src/core/interaction-spec';
 import { lineChartDef } from '../src/vegalite/templates/line';
 import { bumpChartDef } from '../src/vegalite/templates/bump';
 import { slopeChartDef } from '../src/vegalite/templates/slope';
-import { enrichTargetWithSourceProvenance } from '../src/vegalite/interactions/runtime';
+import { enrichTargetWithSourceProvenance, keyboardTargetItems, nearestReorderHit } from '../src/vegalite/interactions/runtime';
 import { INTERACTION_ROW } from '../src/core/interaction-semantics';
 import { regressionDef } from '../src/vegalite/templates/scatter';
 import { mapDef, choroplethDef } from '../src/vegalite/templates/map';
@@ -1340,6 +1345,63 @@ describe('Vega-Lite semantic interactions', () => {
         });
         expect(itemVisibility(segment({ x: 80, y: 20 }, { x: 140, y: 20 }))).toBe('partial');
         expect(itemVisibility(segment({ x: 120, y: 20 }, { x: 140, y: 20 }))).toBe('none');
+    });
+
+    it('never picks a mark a navigated viewport has moved off the plot', async () => {
+        const spec = assembleVegaLite({
+            chart_spec: { chartType: 'Scatter Plot', encodings: { x: { field: 'Year' }, y: { field: 'Share' } }, baseSize: { width: 400, height: 300 } },
+            semantic_types: { Year: 'Number', Share: 'Number' },
+            data: { values: [2000, 2005, 2010, 2015, 2020].map((Year) => ({ Year, Share: 10 })) },
+        }) as any;
+        const { plan, compiled } = instrument(spec, [navigate({ axes: 'xy' }), clickMark()]);
+        const axes = injectVegaNavigationSignals(compiled, plan!.navigationChannels);
+        const view = new View(parse(compiled), { renderer: 'none' });
+        await view.runAsync();
+        // 2005 sits a few pixels left of the plot, 2010 well inside it.
+        view.signal(axes.x!.signal, [2005.2, 2015]);
+        await view.runAsync();
+        const items = sceneItems(view).filter((item) => item.mark.marktype === 'symbol');
+        const year = (item: any) => item?.datum?.Year;
+        const offPlot = items.find((item) => year(item) === 2005)!;
+        expect(offPlot.x).toBeLessThan(0);
+        expect(isPickable(offPlot)).toBe(false);
+        const edge = { x: 1, y: offPlot.y };
+        const rect = { x1: -30, y1: offPlot.y - 30, x2: 30, y2: offPlot.y + 30 };
+        const picks: Record<string, unknown[]> = {
+            nearest: [year(nearestSceneItem(view, edge, 40))],
+            nearestInteractive: [year(nearestInteractiveSceneItem(view, edge, 40))],
+            brush: regionHits(view, { x: rect.x1, y: rect.y1 }, { x: rect.x2, y: rect.y2 }).map((hit) => hit.datum.Year),
+            lasso: polygonHits(view, [{ x: rect.x1, y: rect.y1 }, { x: rect.x2, y: rect.y1 }, { x: rect.x2, y: rect.y2 }, { x: rect.x1, y: rect.y2 }]).map((hit) => hit.datum.Year),
+            inspect: tolerantInspectHits(items, edge, 'xy', {}, { x: 40, y: 40 }).map((hit) => hit.datum.Year),
+            index: indexInspectAcquisition(items, edge, 'x', { show: 'all' }, true, undefined, 40).hits.map((hit) => hit.datum.Year),
+            arrowLeft: [year(nextItemInDirection(items, { x: 60, y: offPlot.y }, 'left'))],
+            keyboard: keyboardTargetItems(items).map(year),
+            reorder: [nearestReorderHit(items, 'x', 'Year', -5)?.datum.Year],
+        };
+        for (const [name, years] of Object.entries(picks)) {
+            expect({ name, years }).toEqual({ name, years: expect.not.arrayContaining([2005]) });
+        }
+        expect(picks.keyboard).toEqual([2010, 2015]);
+    });
+
+    it('keeps an index readout at an x in view when the y range cuts the value off', async () => {
+        const spec = assembleVegaLite({
+            chart_spec: { chartType: 'Scatter Plot', encodings: { x: { field: 'Year' }, y: { field: 'Share' } }, baseSize: { width: 400, height: 300 } },
+            semantic_types: { Year: 'Number', Share: 'Number' },
+            data: { values: [{ Year: 2010, Share: 90 }, { Year: 2012, Share: 20 }] },
+        }) as any;
+        const { plan, compiled } = instrument(spec, [navigate({ axes: 'xy' }), clickMark()]);
+        const axes = injectVegaNavigationSignals(compiled, plan!.navigationChannels);
+        const view = new View(parse(compiled), { renderer: 'none' });
+        await view.runAsync();
+        view.signal(axes.y!.signal, [0, 50]);
+        await view.runAsync();
+        const items = sceneItems(view).filter((item) => item.mark.marktype === 'symbol');
+        const high = items.find((item) => item.datum.Year === 2010)!;
+        expect(isPickable(high)).toBe(false);
+        expect(isPickable(high, 'x')).toBe(true);
+        const readout = indexInspectAcquisition(items, { x: high.x, y: 100 }, 'x', { show: 'all' }, true);
+        expect(readout.hits.map((hit) => hit.datum.Year)).toEqual([2010]);
     });
 
     it('marks the points a navigated viewport leaves behind as out of view', async () => {
