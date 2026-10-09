@@ -161,14 +161,24 @@ export const updatesShape = {
             z
               .object({ op: z.enum(CHART_UPDATE_OPS) })
               .passthrough()
-              .describe('One ChartUpdate op; the shape per op is in flint://interaction-skill, "Change the chart".'),
+              .describe(
+                'One ChartUpdate op, by op: ' +
+                  'set-style { targets: UpdateTarget[], value: { state?, opacity?, visible?, fill?, stroke? } }; ' +
+                  "set-annotation { target: UpdateTarget, value: { text, anchor?: 'segment' | 'point' } | null }; " +
+                  "set-viewport { axes: 'x' | 'y' | 'xy', value: { x?: [lo, hi], y?: [lo, hi] } }; " +
+                  "set-order { scope: 'category', field, values }; " +
+                  'set-overlay { name, value: { mark, data: { values }, encodings: { x?, y?, x2?, y2? }, role, style? } | null }; ' +
+                  "set-freeform-overlay { name, value: { coordinateSpace: 'plot' | 'renderer', body } | null }; " +
+                  "set-data { source: 'main', value: { rows } }. " +
+                  'UpdateTarget is { select: { key: { field: value } } }.',
+              ),
           )
           .describe('The ops of this layer, applied in order.'),
       }),
     )
     .optional()
     .describe(
-      'ChartUpdate layers the chart shows at open: state, where interaction_spec is behaviour. Read flint://interaction-skill ("Change the chart") before you write one. To change an open chart, call create_chart_view again with new layers.',
+      'ChartUpdate layers the chart shows at open: state, where interaction_spec is behaviour. Read flint://interaction-skill ("Update the chart") before you write one. To change an open chart, call create_chart_view again with new layers.',
     ),
 };
 

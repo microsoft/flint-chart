@@ -126,6 +126,7 @@ import {
     isAnnotationSourceItem,
     isAnnotationObstacle,
     segmentMidpointConnectionPoint,
+    segmentRowPoint,
     valueEndConnectionPoint,
     valueSideConnectionPoint,
 } from '../src/vegalite/interactions/presentation/annotation-overlay';
@@ -1871,6 +1872,25 @@ describe('interaction definitions', () => {
         });
     });
 
+    it('asks the chart for its point placements when a note on a path has anchor: point', () => {
+        const element = { value: { Month: 1 }, records: [{ Month: 1 }] };
+        const presentUpdate = presentAnnotationUpdate((_element, _context, visual) => ({
+            connection: visual?.kind === 'path' ? 'segment-midpoint' : 'center',
+        }));
+        const update = (anchor?: 'segment' | 'point') => {
+            const base = annotationUpdate(element, { kind: 'path', role: 'line' }, 'note');
+            return { ...base, ops: [{ ...base.ops[0], value: { text: 'note', anchor } }] };
+        };
+        const context = { chartType: 'Line Chart', selected: [] };
+
+        expect(presentUpdate(update(), context).ops[0]).toMatchObject({
+            value: { candidates: [{ connection: 'segment-midpoint' }], subject: { kind: 'path' } },
+        });
+        expect(presentUpdate(update('point'), context).ops[0]).toMatchObject({
+            value: { candidates: [{ connection: 'center' }], subject: { kind: 'path' } },
+        });
+    });
+
     it('uses a rendered histogram count instead of an empty raw-field fallback', () => {
         const element = {
             value: { key: '4|4.5' },
@@ -2105,6 +2125,25 @@ describe('interaction definitions', () => {
             expect(sourceEdgeAttachment(source, upperLeftCard, 'top', { x: 256, y: 144 }))
                 .toEqual({ x: 248, y: 144 });
         });
+    });
+
+    it('finds the point of the row a segment annotation names, only with anchor: point', () => {
+        const item = {
+            datum: { Month: 1, Sales: 10 },
+            interactionGeometry: {
+                kind: 'segment',
+                annotationPoints: [{ x: 0, y: 60 }, { x: 40, y: 20 }],
+                endDatum: { Month: 2, Sales: 30 },
+            },
+        };
+
+        expect(segmentRowPoint(item, { Month: 1, Sales: 10 }, undefined)).toBeUndefined();
+        expect(segmentRowPoint(item, { Month: 1, Sales: 10 }, 'segment')).toBeUndefined();
+        expect(segmentRowPoint(item, { Month: 2, Sales: 30 }, undefined)).toBeUndefined();
+        expect(segmentRowPoint(item, { Month: 1, Sales: 10 }, 'point')).toEqual({ x: 0, y: 60 });
+        expect(segmentRowPoint(item, { Month: 2, Sales: 30 }, 'point')).toEqual({ x: 40, y: 20 });
+        expect(segmentRowPoint(item, { Month: 3, Sales: 50 }, 'point')).toBeUndefined();
+        expect(segmentRowPoint({ datum: { Month: 1 } }, { Month: 1 }, 'point')).toBeUndefined();
     });
 
     it('routes an area segment annotation normal to and away from the fill', () => {

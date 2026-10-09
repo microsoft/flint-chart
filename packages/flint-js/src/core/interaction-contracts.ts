@@ -121,6 +121,12 @@ export interface AnnotationCandidate {
 
 export interface AnnotationSpec {
     text?: string;
+    /**
+     * On a line or area, `segment` (the default) marks the segment that starts
+     * at the row; `point` marks the row's own point. The last point of a line
+     * starts no segment and is always marked at its point.
+     */
+    anchor?: 'segment' | 'point';
     candidates?: readonly AnnotationCandidate[];
     subject?: Partial<SemanticTarget['visual']>;
 }

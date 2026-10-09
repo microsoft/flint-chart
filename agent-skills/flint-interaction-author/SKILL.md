@@ -400,10 +400,10 @@ of thing:
 | Op | It is for | Effect | Shape | Needs |
 | --- | --- | --- | --- | --- |
 | `set-style` | The marks the chart already draws: emphasize some, fade some, hide some, recolour some. A highlight is this op with `state: 'emphasized'`. | Emphasize the targets and mute the rest; recolour; fade; hide. | `{ op, targets: UpdateTarget[], value: StyleSpec }` | marks |
-| `set-annotation` | One mark that should carry a note. | Pin a note on one mark; `null` clears it. | `{ op, target: UpdateTarget, value: { text } \| null }` | one resolved element |
+| `set-annotation` | One mark that should carry a note. | Pin a note on one mark; `null` clears it. | `{ op, target: UpdateTarget, value: { text, anchor?: 'segment' \| 'point' } \| null }` | one resolved element |
 | `set-viewport` | The range or region the chart should frame. | Frame a continuous domain. | `{ op, axes: 'x' \| 'y' \| 'xy', value: { x?: [lo, hi], y?: [lo, hi] } }`; on a multi-level map `value: { region: { key } }` | `navigate` or `brush-zoom` mounted on that axis |
 | `set-order` | The order of the categories on a discrete axis. | Reorder the axis; list every category in the order wanted. | `{ op, scope: 'category', field, values: unknown[] }` | `drag-reorder` mounted on that axis |
-| `set-overlay` | Marks the chart does not draw: a reference line, a threshold band, a forecast, a sketch of rows. | Draw new rows through the plot's own scales. | `{ op, name, value: { mark, data: { values }, encodings: { x, y, x2?, y2?, order?, color?, text? }, role, interactive?, projectable?, style? } \| null }` | x and y scales |
+| `set-overlay` | Marks the chart does not draw: a reference line, a threshold band, a forecast, a sketch of rows. | Draw new rows through the plot's own scales. | `{ op, name, value: { mark, data: { values }, encodings: { x?, y?, x2?, y2?, order?, color?, text? }, role, interactive?, projectable?, style? } \| null }` | x and y scales |
 | `set-freeform-overlay` | A custom shape with no data behind it. | Draw SVG, or a clone of marks, over the plot. | `{ op, name, value: { coordinateSpace: 'plot' \| 'renderer', body: [{ type: 'svg', content } \| { type: 'clone', targets, transform?, opacity? }] } \| null }` | — |
 | `set-data` | The rows the chart draws, for playback or a swap. | Replace every row; the rows carry every encoded field. | `{ op, source: 'main', value: { rows } }` | inline data |
 
@@ -445,7 +445,12 @@ A target is one of two forms:
   key may cover many marks (`{ Continent: 'Africa' }` takes every African
   mark); several fields narrow it; an annotation's key covers one. On a line
   or area chart, a key on the series field covers the whole line and a key on
-  the x field covers one segment, so a run of segments is one target per row.
+  the x field covers the segment that starts at that row, so a run of segments
+  is one target per row. The last row of a line starts no segment; its key
+  takes the segment that ends there. A note on an x key marks the segment, for
+  a change from one row to the next ("2019 → 2020: +4%"); `anchor: "point"`
+  marks the row's own point, for its value ("Dec 2022: $0.87B"). A note on
+  the last row is always at its point.
 - A field the chart does not encode resolves to nothing. Encode the identity
   field (`detail` on a scatter), or pass elements from `event.target`,
   `state.selected`, or `context.available` through as `{ visual, elements }`,
@@ -456,22 +461,26 @@ A target is one of two forms:
   nothing nearby is taken in its place.
 
 A key value, an overlay row, and a viewport bound hold what the parsed row
-holds, not the source text: a CSV `120` is the number `120`, and a temporal
-field (`Year`, `YearMonth`, `Date`, …) is UTC epoch milliseconds, so
-`"2014-01"` and a local-time value match nothing; `Date.UTC(2014, 0, 1)` is
-`1388534400000`. On a discrete axis the value is the category. Overlay rows
-need the fields their mark reads: `line`, `point`, `text` read `x` and `y`;
-`rule` and `rect` read `x`, `y`, `x2`, `y2`. A threshold is one `rule` row
-from the first `x` to the last. An overlay whose rows do not project is
+holds: a CSV `120` is the number `120`. A temporal field (`Year`,
+`YearMonth`, `Date`, …) takes a date written the way the data writes it
+(`"2014-01"`, `2014` on a `Year` field) or UTC epoch milliseconds. On a
+discrete axis the value is the category. Overlay rows need the fields their
+mark reads: `line`, `point`, `text` read `x` and `y`. A `rule` with only `x`
+is a vertical line across the plot, and one with only `y` a horizontal
+threshold; a `rect` with only `x` and `x2` is a full-height band, and one with
+only `y` and `y2` a full-width band. With all four channels, `rule` and `rect`
+run from (`x`, `y`) to (`x2`, `y2`). An overlay whose rows do not project is
 reported as unsupported.
 
 ```json
 { "id": "agent", "ops": [
   { "op": "set-style", "value": { "state": "emphasized" },
-    "targets": [{ "select": { "key": { "month": 1388534400000 } } }, { "select": { "key": { "month": 1391212800000 } } }] },
+    "targets": [{ "select": { "key": { "month": "2014-01" } } }, { "select": { "key": { "month": "2014-02" } } }] },
   { "op": "set-overlay", "name": "threshold", "value": { "mark": "rule", "role": "reference",
-    "data": { "values": [{ "x": 1388534400000, "y": 1e9, "x2": 1785542400000, "y2": 1e9 }] },
-    "encodings": { "x": { "field": "x" }, "y": { "field": "y" }, "x2": { "field": "x2" }, "y2": { "field": "y2" } } } }
+    "data": { "values": [{ "y": 1e9 }] }, "encodings": { "y": { "field": "y" } } } },
+  { "op": "set-overlay", "name": "period", "value": { "mark": "rect", "role": "band",
+    "data": { "values": [{ "start": "2022-11", "end": "2026-08" }] },
+    "encodings": { "x": { "field": "start" }, "x2": { "field": "end" } }, "style": { "fillOpacity": 0.12 } } }
 ] }
 ```
 
@@ -895,8 +904,7 @@ For an `interaction_spec`:
 For a `ChartUpdate`:
 
 1. Every `op` and `state` is one from the op table.
-2. Every selector key names encoded fields with values that exist in the rows,
-   in the parsed form (epoch milliseconds for a temporal field).
+2. Every selector key names encoded fields with values that exist in the rows.
 3. The update is the whole layer for its id; clearing uses `targets: []` with
    `state: 'normal'`.
 4. Ops that need a mounted preset have it, or `unsupportedOps` has been read

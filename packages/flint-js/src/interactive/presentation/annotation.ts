@@ -73,7 +73,11 @@ export function presentAnnotationUpdate(
             if (op.op !== 'set-annotation' || op.value === null || 'select' in op.target) return op;
             const element = op.target.elements[0];
             if (!element) return [];
-            const presentation = presentAnnotation(element, context, op.target.visual);
+            const presentation = presentAnnotation(
+                element,
+                context,
+                op.value.anchor === 'point' ? { ...op.target.visual, kind: 'mark' } : op.target.visual,
+            );
             const text = op.value.text ?? formatAnnotation(element, context, op.target.visual);
             if (!text) return [];
             return {

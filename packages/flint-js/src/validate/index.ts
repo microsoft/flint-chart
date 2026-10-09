@@ -23,7 +23,7 @@ import type {
     ChartTemplateDef,
     ChartWarning,
 } from '../core/types';
-import { CHART_UPDATE_OPS } from '../core/interaction-contracts';
+import { CHART_UPDATE_OPS, type ChartUpdateOp } from '../core/interaction-contracts';
 import { isRegistered } from '../core/type-registry';
 import { toTypeString } from '../core/field-semantics';
 import { resolveEncodingSort } from '../core/resolve-semantics';
@@ -347,7 +347,47 @@ export function validateInteractionSpec(
     }
 }
 
-/** Shape check of a ChartUpdate list from JSON; targets and op support are checked at mount. */
+const isObject = (value: unknown): value is Record<string, any> =>
+    !!value && typeof value === 'object' && !Array.isArray(value);
+const isTarget = (value: unknown): boolean =>
+    isObject(value) && ((isObject(value.select) && isObject(value.select.key)) || (isObject(value.visual) && Array.isArray(value.elements)));
+const isObjectOrNull = (value: unknown): boolean => value === null || isObject(value);
+const isName = (value: unknown): boolean => typeof value === 'string' && value.length > 0;
+
+type OpShape = { shape: string; fields: Record<string, (value: unknown) => boolean> };
+
+const OP_SHAPES = {
+    'set-style': {
+        shape: '{ op, targets: UpdateTarget[], value: StyleSpec }',
+        fields: { targets: (v: unknown) => Array.isArray(v) && v.every(isTarget), value: isObject },
+    },
+    'set-annotation': {
+        shape: "{ op, target: UpdateTarget, value: { text, anchor?: 'segment' | 'point' } | null }",
+        fields: { target: isTarget, value: isObjectOrNull },
+    },
+    'set-viewport': {
+        shape: "{ op, axes: 'x' | 'y' | 'xy', value: { x?: [lo, hi], y?: [lo, hi] } }",
+        fields: { axes: (v: unknown) => v === 'x' || v === 'y' || v === 'xy', value: isObject },
+    },
+    'set-order': {
+        shape: "{ op, scope: 'category' | 'series' | 'facet', field, values: [] }",
+        fields: { scope: isName, field: isName, values: Array.isArray },
+    },
+    'set-overlay': {
+        shape: '{ op, name, value: { mark, data: { values }, encodings: { x?, y?, x2?, y2? }, role } | null }',
+        fields: { name: isName, value: isObjectOrNull },
+    },
+    'set-freeform-overlay': {
+        shape: "{ op, name, value: { coordinateSpace: 'plot' | 'renderer', body: [] } | null }",
+        fields: { name: isName, value: isObjectOrNull },
+    },
+    'set-data': {
+        shape: "{ op, source: 'main', value: { rows: [] } }",
+        fields: { source: (v: unknown) => v === 'main', value: (v: unknown) => isObject(v) && Array.isArray(v.rows) },
+    },
+} satisfies Record<ChartUpdateOp['op'], OpShape>;
+
+/** Shape check of a ChartUpdate list from JSON; whether targets resolve is checked at mount. */
 export function validateChartUpdates(updates: unknown, label = 'updates'): ChartWarning[] {
     const fail = (message: string): ChartWarning[] => [{ severity: 'error', code: 'invalid_updates', message }];
     if (!Array.isArray(updates)) return fail(`${label} must be an array of { id, ops }.`);
@@ -365,6 +405,14 @@ export function validateChartUpdates(updates: unknown, label = 'updates'): Chart
             if (typeof name !== 'string' || !(CHART_UPDATE_OPS as readonly string[]).includes(name)) {
                 return fail(
                     `${entry} (${id}).ops[${opIndex}]: unknown op "${String(name)}". Known ops: ${CHART_UPDATE_OPS.join(', ')}.`,
+                );
+            }
+            const { shape, fields }: OpShape = OP_SHAPES[name as ChartUpdateOp['op']];
+            const bad = Object.entries(fields).find(([field, check]) => !check((op as Record<string, unknown>)[field]));
+            if (bad) {
+                const targetNote = bad[0].startsWith('target') ? ' UpdateTarget is { select: { key: { field: value } } }.' : '';
+                return fail(
+                    `${entry} (${id}).ops[${opIndex}]: ${name} has a missing or malformed "${bad[0]}". Shape: ${shape}.${targetNote}`,
                 );
             }
         }

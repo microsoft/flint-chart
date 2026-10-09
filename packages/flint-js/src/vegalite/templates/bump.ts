@@ -51,7 +51,9 @@ export const bumpChartDef: ChartTemplateDef = {
             renderSelectionStyles: { line: { strokeWidthMultiplier: 1.2 } },
             resolve: (event, context) => resolveSeriesTarget(event, context, seriesField),
             presentUpdate: presentAnnotationUpdate(
-                () => annotationCandidates('segment-midpoint', 'center', 'right', 'left'),
+                (_element, _context, visual) => visual?.kind === 'path'
+                    ? annotationCandidates('segment-midpoint', 'center', 'right', 'left')
+                    : annotationCandidates('center', 'right', 'left'),
                 transitionAnnotationText(resolvedEncodings.y?.field),
             ),
         };

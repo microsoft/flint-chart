@@ -4,6 +4,7 @@
 import { describe, expect, it } from 'vitest';
 import type { ChartOverlaySpec } from '../src/interactive/language/updates';
 import { orderedOverlayRows, overlayChannels, projectPointToPath } from '../src/vegalite/interactions/presentation/data-overlay';
+import { temporalFieldValue } from '../src/core/resolve-semantics';
 
 describe('retained data overlays', () => {
     it('orders a path by time when the order field holds dates', () => {
@@ -78,5 +79,17 @@ describe('overlay channels', () => {
         expect(overlayChannels(overlay('rule', ['x', 'x2']))).toBeUndefined();
         expect(overlayChannels(overlay('line', ['x']))).toBeUndefined();
         expect(overlayChannels(overlay('point', ['x', 'y']))).toEqual(['x', 'y']);
+    });
+});
+
+describe('temporal field values', () => {
+    it('reads a date the way the input rows are read', () => {
+        const types = { month: 'YearMonth', year: 'Year', region: 'Category' };
+        expect(temporalFieldValue('month', '2022-11', types)).toBe(Date.UTC(2022, 10, 1));
+        expect(temporalFieldValue('month', '2022-11-01', types)).toBe(Date.UTC(2022, 10, 1));
+        expect(temporalFieldValue('month', Date.UTC(2022, 10, 1), types)).toBe(Date.UTC(2022, 10, 1));
+        expect(temporalFieldValue('year', 2022, types)).toBe(Date.UTC(2022, 0, 1));
+        expect(temporalFieldValue('year', '2022', types)).toBe(Date.UTC(2022, 0, 1));
+        expect(temporalFieldValue('month', 'not a date', types)).toBe('not a date');
     });
 });

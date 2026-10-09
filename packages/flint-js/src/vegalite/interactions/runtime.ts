@@ -938,6 +938,27 @@ export function mountVegaInteractions(
             reorderAxes: currentReorderAxes,
         };
     };
+    const temporalValue = (field: string, value: unknown): unknown =>
+        plan.temporalValue && plan.temporalProvenanceFields.includes(field) ? plan.temporalValue(field, value) : value;
+    const axisValue = (axis: 'x' | 'y', value: unknown): unknown => {
+        const field = plan.axisFields?.[axis];
+        return field?.type === 'temporal' ? temporalValue(field.field, value) : value;
+    };
+    const withTemporalOverlayRows = (spec: ChartOverlaySpec | null): ChartOverlaySpec | null => spec && {
+        ...spec,
+        data: {
+            values: spec.data.values.map((row) => {
+                const next = { ...row };
+                for (const channel of ['x', 'x2', 'y', 'y2'] as const) {
+                    const field = spec.encodings[channel]?.field;
+                    if (field !== undefined && field in row) next[field] = axisValue(channel[0] as 'x' | 'y', row[field]);
+                }
+                return next;
+            }),
+        },
+    };
+    /** Targets resolved through a line's last point, which a note marks at its point. */
+    const lastPointTargets = new WeakSet<SemanticTargetRef>();
     const resolveUpdateTarget = (target: UpdateTarget): SemanticTargetRef | null => {
         if (!('select' in target)) {
             if (target.visual.kind === 'axis') {
@@ -981,7 +1002,22 @@ export function mountVegaInteractions(
 
         const entries = Object.entries(target.select.key);
         if (entries.length === 0) return null;
-        const hits = allHits().filter((hit) => matchesSemanticTargetSelector(target, plan.fields, hit.datum));
+        const selector = {
+            select: { ...target.select, key: Object.fromEntries(entries.map(([field, value]) => [field, temporalValue(field, value)])) },
+        };
+        const all = allHits();
+        let hits = all.filter((hit) => matchesSemanticTargetSelector(selector, plan.fields, hit.datum));
+        const lastPoint = hits.length === 0;
+        if (lastPoint) {
+            // The final point of a line or area starts no segment, so it is found as the end of the segment before it.
+            const startKeys = new Set(all.map((hit) => hit.datum[INTERACTION_KEY]));
+            hits = all.flatMap((hit): RenderHit[] => {
+                const end = hit.endDatum;
+                if (!end || startKeys.has(`${String(end[INTERACTION_KEY])}${PATH_KEY_SUFFIX}`)) return [];
+                if (!matchesSemanticTargetSelector(selector, plan.fields, end)) return [];
+                return [{ ...hit, datum: { ...end, [INTERACTION_KEY]: hit.datum[INTERACTION_KEY] }, endDatum: undefined }];
+            });
+        }
         if (hits.length === 0 || !resolve) return null;
         const resolved = withSourceProvenance(resolve({
             gesture: 'rectangle',
@@ -991,6 +1027,7 @@ export function mountVegaInteractions(
         if (!resolved) return null;
         if (target.select.visual?.kind && target.select.visual.kind !== resolved.visual.kind) return null;
         if (target.select.visual?.role && target.select.visual.role !== resolved.visual.role) return null;
+        if (lastPoint) lastPointTargets.add(resolved);
         return resolved;
     };
 
@@ -1032,10 +1069,14 @@ export function mountVegaInteractions(
                 if (!target || target.elements.length !== 1) unresolvedTargets.push(op.target);
                 else {
                     resolvedTargets += 1;
-                    ops.push({ ...op, target });
+                    ops.push({ ...op, target, value: lastPointTargets.has(target) ? { ...op.value, anchor: 'point' } : op.value });
                 }
             } else if (op.op === 'set-viewport') {
-                const supported = resolveSupportedOperation(op, plan);
+                const bound = (axis: 'x' | 'y') => {
+                    const domain = op.value[axis];
+                    return domain ? { [axis]: [axisValue(axis, domain[0]), axisValue(axis, domain[1])] as const } : {};
+                };
+                const supported = resolveSupportedOperation({ ...op, value: { ...op.value, ...bound('x'), ...bound('y') } }, plan);
                 if (supported.unsupported) unsupportedOps.push(op.op);
                 if (supported.op) ops.push(supported.op);
             } else if (op.op === 'set-order') {
@@ -1043,8 +1084,9 @@ export function mountVegaInteractions(
                 if (supported.unsupported) unsupportedOps.push(op.op);
                 if (supported.op) ops.push(supported.op);
             } else if (op.op === 'set-overlay') {
-                if (!plan.overlayScales?.x || !plan.overlayScales?.y || !overlayProjects(op.value)) unsupportedOps.push(op.op);
-                else ops.push(op);
+                const overlay = { ...op, value: withTemporalOverlayRows(op.value) };
+                if (!plan.overlayScales?.x || !plan.overlayScales?.y || !overlayProjects(overlay.value)) unsupportedOps.push(op.op);
+                else ops.push(overlay);
             } else if (op.op === 'set-freeform-overlay' && op.value !== null) {
                 const body: (typeof op.value.body)[number][] = [];
                 for (const component of op.value.body) {

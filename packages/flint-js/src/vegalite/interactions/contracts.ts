@@ -96,6 +96,8 @@ export interface VegaInteractionPlan {
     initialDataRows?: readonly Record<string, unknown>[];
     /** Brings host rows into the compiled data's form (temporal values as the compiler writes them). */
     prepareDataRows?: (rows: readonly Record<string, unknown>[]) => readonly Record<string, unknown>[];
+    /** A value of a temporal field as the compiled data holds it, read the way the input rows are. */
+    temporalValue?: (field: string, value: unknown) => unknown;
     /**
      * Cuts the current rows (`set-data` rows, or the input rows when none) to the category window.
      * Returns the same array while neither the rows nor the window change.

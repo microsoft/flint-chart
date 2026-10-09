@@ -16,8 +16,31 @@ describe('validateChartUpdates', () => {
         ])).toEqual([]);
     });
 
-    it('accepts every op name the contract lists', () => {
-        expect(validateChartUpdates([{ id: 'all', ops: CHART_UPDATE_OPS.map((op) => ({ op })) }])).toEqual([]);
+    it('accepts a well-formed op of every name the contract lists', () => {
+        const target = { select: { key: { a: 1 } } };
+        const ops = [
+            { op: 'set-style', targets: [target], value: { state: 'emphasized' } },
+            { op: 'set-annotation', target, value: null },
+            { op: 'set-viewport', axes: 'x', value: { x: [0, 1] } },
+            { op: 'set-order', scope: 'category', field: 'a', values: [2, 1] },
+            { op: 'set-overlay', name: 'line', value: null },
+            { op: 'set-freeform-overlay', name: 'shape', value: { coordinateSpace: 'plot', body: [] } },
+            { op: 'set-data', source: 'main', value: { rows: [] } },
+        ];
+        expect(ops.map((op) => op.op)).toEqual([...CHART_UPDATE_OPS]);
+        expect(validateChartUpdates([{ id: 'all', ops }])).toEqual([]);
+    });
+
+    it('names the first missing or malformed field of an op, with its shape', () => {
+        expect(message([{ id: 'a', ops: [{ op: 'set-annotation', foo: 1 }] }])).toBe(
+            'updates[0] (a).ops[0]: set-annotation has a missing or malformed "target". Shape: { op, target: UpdateTarget, value: { text, anchor?: \'segment\' | \'point\' } | null }. UpdateTarget is { select: { key: { field: value } } }.',
+        );
+        expect(message([{ id: 'a', ops: [{ op: 'set-annotation', annotations: [{ kind: 'rule', x: '2022-12-01' }] }] }]))
+            .toContain('missing or malformed "target"');
+        expect(message([{ id: 'a', ops: [{ op: 'set-style', targets: [{ region: 'East' }], value: {} }] }]))
+            .toContain('set-style has a missing or malformed "targets"');
+        expect(message([{ id: 'a', ops: [{ op: 'set-viewport', axes: 'time', value: {} }] }]))
+            .toContain('set-viewport has a missing or malformed "axes"');
     });
 
     it('returns one invalid_updates error that names the first bad entry', () => {

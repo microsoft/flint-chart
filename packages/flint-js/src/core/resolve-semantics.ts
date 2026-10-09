@@ -468,6 +468,22 @@ export function convertTemporalData(
     });
 }
 
+/**
+ * One value of a temporal field as the compiled chart holds it (UTC epoch ms),
+ * read the way {@link convertTemporalData} reads the input rows. A value that
+ * does not parse as a date is returned as given.
+ */
+export function temporalFieldValue(
+    field: string,
+    value: unknown,
+    semanticTypes: Record<string, string | SemanticAnnotation>,
+): unknown {
+    if (typeof value !== 'string' && typeof value !== 'number') return value;
+    const converted = convertTemporalData([{ [field]: value }], semanticTypes)[0][field];
+    const time = Date.parse(String(converted));
+    return Number.isFinite(time) ? time : value;
+}
+
 // ---------------------------------------------------------------------------
 // Public API: resolveChannelSemantics
 // ---------------------------------------------------------------------------

@@ -136,7 +136,7 @@ The selector field must exist in the chart's semantic data. Host-owned updates a
 
 A `ChartUpdate` has an `id` and an `ops` array. A single update can combine several operators.
 
-Key values, overlay rows, and viewport bounds hold what the parsed row holds: a number for a numeric field, UTC epoch milliseconds for a temporal field, the category for a discrete one. A target that matches nothing and an overlay whose rows do not project are reported in the `ChartUpdateResult`, never rebound to a near match.
+Key values, overlay rows, and viewport bounds hold what the parsed row holds: a number for a numeric field, a date written as the data writes it or UTC epoch milliseconds for a temporal field, the category for a discrete one. A rule or rect overlay that leaves out one axis spans the plot along it. A target that matches nothing and an overlay whose rows do not project are reported in the `ChartUpdateResult`, never rebound to a near match.
 
 ## Surface lifecycle
 
