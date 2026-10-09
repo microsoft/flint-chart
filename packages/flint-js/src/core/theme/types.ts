@@ -832,6 +832,18 @@ export interface ResolvedDataLabels {
      */
     segmentMinShare?: number;
     /**
+     * `segmentMinShare` as a value on a summed stack: the share of the tallest
+     * stack. Absent on a normalized stack, whose segments divide by their own
+     * bar's total.
+     */
+    segmentMinValue?: number;
+    /**
+     * The signal a live layout re-plans the labels through. Set when the
+     * visible rows can change after compile: the label layer is built even
+     * where these rows do not print it, and the signal decides whether it shows.
+     */
+    liveSignal?: string;
+    /**
      * Whether this chart could carry value labels *at all* — structurally
      * labelable, and not so dense that the numbers would be unreadable however
      * firmly they were asked for.

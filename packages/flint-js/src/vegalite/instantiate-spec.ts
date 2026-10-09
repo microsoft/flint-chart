@@ -1363,6 +1363,8 @@ export interface TemporalAxisPlanInputs {
     vertical: boolean;
     settings: Record<string, unknown>;
     fontSize: number;
+    /** The first and last instant in the data; ticks are planned over the data the domain shows, as at compile time. */
+    extent?: [number, number];
 }
 
 const TEMPORAL_PLAN_SETTING_KEYS = [
@@ -1387,10 +1389,12 @@ export function temporalAxisPlanInputs(encoding: object): TemporalAxisPlanInputs
 export function planTemporalTickValues(
     domain: unknown[], span: number, inputs: TemporalAxisPlanInputs,
 ): { values: number[]; labels: Record<string, string> } {
-    const start = +new Date(domain[0] as any);
-    const end = +new Date(domain[1] as any);
-    const plan = Number.isFinite(start) && Number.isFinite(end)
-        ? planTemporalTicks({ start, end, span, ...inputs })
+    const bounds = domain.map((value) => +new Date(value as any));
+    const [lo, hi] = [Math.min(...bounds), Math.max(...bounds)];
+    const start = Math.max(lo, inputs.extent?.[0] ?? lo);
+    const end = Math.min(hi, inputs.extent?.[1] ?? hi);
+    const plan = Number.isFinite(start) && Number.isFinite(end) && hi > lo
+        ? planTemporalTicks({ ...inputs, start, end, span: span * (end - start) / (hi - lo) })
         : undefined;
     if (!plan) return { values: [], labels: {} };
     return { values: plan.values.map(value => +new Date(value)), labels: plan.labels };
@@ -1701,6 +1705,7 @@ function vlApplyDefaultAxisFormat(
                     inputs: {
                         semanticType, utc, vertical: ch === 'y',
                         settings: temporalPlanSettings(formatting), fontSize,
+                        extent: [earliest, latest],
                     },
                 });
                 enc.axis = {

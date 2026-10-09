@@ -34,9 +34,9 @@ import {
     collectVegaAxisTargets,
     injectVegaInteractionStore,
     injectVegaNavigationSignals,
-    vegaLiteTemporalAxisPlans,
     injectVegaReorderSignal,
 } from '../src/vegalite/interactions/compile';
+import { vegaLiteTemporalAxisPlans } from '../src/vegalite/interactions/live-layout';
 import { angularSectorPath } from '../src/interactive/geometry/angular';
 import {
     arcIntersectsAngularSector,

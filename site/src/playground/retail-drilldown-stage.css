@@ -1,26 +1,13 @@
 .retail-drilldown-mount {
   position: relative;
   display: grid;
-  width: 900px;
+  place-items: center;
+  width: max-content;
+  min-width: 900px;
   height: 560px;
   overscroll-behavior: contain;
 }
 
-.retail-drilldown-mount > .retail-drilldown-layer {
-  grid-area: 1 / 1;
-  place-self: center;
-  min-width: 0;
-  width: max-content;
-}
-
-.retail-drilldown-layer svg.marks {
+.retail-drilldown-mount svg.marks {
   display: block;
-}
-
-.retail-drilldown-layer-pending {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: max-content;
-  pointer-events: none;
 }

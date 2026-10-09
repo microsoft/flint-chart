@@ -18,10 +18,18 @@ import {
     injectVegaNavigationSignals,
     injectVegaReorderSignal,
     findVegaAxisScale,
-    TEMPORAL_TICKS_FUNCTION,
-    vegaLiteTemporalAxisPlans,
     withoutSemanticInteractionField,
 } from './interactions/compile';
+import {
+    bindLiveLayout,
+    LIVE_LAYOUT_SIGNAL,
+    liveLayoutOf,
+    liveLayoutPlanner,
+    navigationDomainSignal,
+    TEMPORAL_TICKS_FUNCTION,
+    vegaLiteTemporalAxisPlans,
+    type LiveLayoutPlanner,
+} from './interactions/live-layout';
 import { mountVegaInteractions } from './interactions/runtime';
 
 /**
@@ -212,10 +220,16 @@ export function createVegaInteractiveRenderer(
         async mount(container, input) {
             // Tooltips are presentation, so the spec decides: off unless `options.addTooltips` is set.
             const interactiveInput: ChartAssemblyInput = input;
-            const assembled = assembleVegaLite(interactiveInput) as any;
+            // A viewport on x changes the rows in view, so the compile leaves room for a live layout.
+            const navigatesX = (options.interactions ?? []).some((interaction) => isCanvasInteraction(interaction)
+                && interaction.eventSource.type === 'navigation' && interaction.eventSource.axes !== 'y');
+            const mountedInput: ChartAssemblyInput = navigatesX
+                ? { ...interactiveInput, options: { ...interactiveInput.options, liveLayoutSignal: LIVE_LAYOUT_SIGNAL } }
+                : interactiveInput;
+            const assembled = assembleVegaLite(mountedInput) as any;
             const viewports = (assembled._viewports ?? []) as CategoryViewport[];
             // Only a windowed chart needs its first window assembled again.
-            const firstInput = viewports.length > 0 ? windowedInput(interactiveInput, viewports, {}) : interactiveInput;
+            const firstInput = viewports.length > 0 ? windowedInput(mountedInput, viewports, {}) : mountedInput;
             const vlSpec = viewports.length > 0 ? assembleVegaLite(firstInput) as any : assembled;
             const inputRows: readonly Record<string, unknown>[] = interactiveInput.data.values ?? [];
             // The windows over the rows now current: a filter leaves fewer categories to scroll through.
@@ -251,6 +265,7 @@ export function createVegaInteractiveRenderer(
             const filtersRows = interactions.some((interaction) =>
                 isFilterControls(interaction) && (interaction.filterControls.options.mode ?? 'filter') === 'filter');
             const relaidSignals = filtersRows ? layoutSignals(vegaSpec) : [];
+            let livePlanner: LiveLayoutPlanner | undefined;
             if (interactionPlan) {
                 interactionPlan.axisTargets = collectVegaAxisTargets(
                     vegaSpec,
@@ -263,6 +278,16 @@ export function createVegaInteractiveRenderer(
                 );
                 if (interactionPlan.semanticStores) {
                     injectVegaInteractionStore(vegaSpec, interactionPlan);
+                }
+                // A bar on a navigated x axis follows the rows in view: Flint plans its layout again for them.
+                const liveField = interactionPlan.axisFields?.x?.field;
+                const xScale = findVegaAxisScale(vegaSpec, 'x')?.name;
+                if (!interactionPlan.geoNavigation && interactionPlan.navigationChannels?.includes('x')
+                    && viewports.length === 0 && liveField && xScale) {
+                    const planner = liveLayoutPlanner(interactiveInput, liveField, liveLayoutOf(vlSpec, liveField));
+                    if (bindLiveLayout(vegaSpec, xScale, findVegaAxisScale(vegaSpec, 'y')?.name, planner)) {
+                        livePlanner = planner;
+                    }
                 }
                 interactionPlan.navigationAxes = interactionPlan.geoNavigation
                     ? injectVegaGeoNavigationSignals(vegaSpec, interactionPlan.navigationChannels)
@@ -350,6 +375,20 @@ export function createVegaInteractiveRenderer(
                 : undefined;
 
             let destroyed = false;
+            if (livePlanner) {
+                const planner = livePlanner;
+                let shown = planner.initial;
+                view.addSignalListener(navigationDomainSignal('x'), (_name, domain) => {
+                    const next = planner.layoutFor(domain);
+                    if (!next || next === shown) return;
+                    shown = next;
+                    queueMicrotask(() => {
+                        if (destroyed) return;
+                        view.signal(LIVE_LAYOUT_SIGNAL, next);
+                        void view.runAsync();
+                    });
+                });
+            }
             let running = false;
             let updateTimer: number | undefined;
             let requestedVersion = 0;

@@ -131,6 +131,9 @@ export interface GroundingContext {
      */
     valueLabels?: 'on' | 'off';
 
+    /** The signal through which a live layout re-plans value labels for the rows in view. */
+    liveLayoutSignal?: string;
+
     /**
      * The geometries the chart template builds. Geometry the template cannot
      * build is dropped rather than carried to a renderer that would ignore it.
@@ -1279,6 +1282,7 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
     let totalSegments = 0;
     let thinSegments = 0;
     let segmentMinShare: number | undefined;
+    let segmentMinValue: number | undefined;
     if (stacked && measureField && signals.hasBandedAxis) {
         // Along the measure axis, a segment gets the share of the plot its
         // value has of the tallest stack — or, on a normalized chart, of its
@@ -1299,6 +1303,7 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
         const tallest = Math.max(0, ...totals.values());
         const minPx = (valueLabel.fontSize ?? 10) + 4;
         if (extent > 0) segmentMinShare = minPx / extent;
+        if (segmentMinShare !== undefined && stacked !== 'normalize') segmentMinValue = segmentMinShare * tallest;
         for (const row of ctx.table) {
             const v = row?.[measureField];
             if (typeof v !== 'number' || !Number.isFinite(v)) continue;
@@ -1344,11 +1349,16 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
                 : '`whenTheyFit` resolved to false — no banded axis to key values to');
         }
     }
+    // A live layout builds the labels wherever some window of rows could print
+    // them, so the layer is placed as if they print.
+    const liveSignal = ctx.liveLayoutSignal && labelable && dlShowPolicy !== 'never' && dlShowPolicy !== undefined
+        ? ctx.liveLayoutSignal
+        : undefined;
     // A stacked segment's number belongs in the middle of the segment and
     // nowhere else. Outside the mark is the top of the *stack*, which is a
     // different quantity, and the segment edge is the running total — the very
     // reading a stacked label has to avoid.
-    if (dlShow && stacked && dlPlacement !== 'atMark') {
+    if ((dlShow || liveSignal) && stacked && dlPlacement !== 'atMark') {
         say('dataLabels.placement',
             `\`${dlPlacement}\` printed in the segment instead — outside a stacked bar is the top of the stack, not the end of the segment`);
         dlPlacement = 'atMark';
@@ -1735,6 +1745,8 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
             ...(valueUnit ? { unit: valueUnit } : {}),
             insideMinValue,
             ...(segmentMinShare !== undefined ? { segmentMinShare } : {}),
+            ...(segmentMinValue !== undefined ? { segmentMinValue } : {}),
+            ...(liveSignal ? { liveSignal } : {}),
         },
         // A house that dots the end of a line is saying where the story stops.
         // Only the policy is decided here: whether the chart *has* a line to

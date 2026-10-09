@@ -3988,7 +3988,8 @@ function isStacked(node: any, measureChannel: 'x' | 'y'): boolean {
 }
 
 function applyDataLabels(spec: any, d: DesignDecisions, table: any[], say: (p: string, m: string) => void): any {
-    if (!d.dataLabels.show) return undefined;
+    const live = d.dataLabels.liveSignal;
+    if (!d.dataLabels.show && !live) return undefined;
 
     // A concatenation is several charts side by side. Labelling only the first
     // panel is worse than labelling none.
@@ -4066,6 +4067,7 @@ function inkScaleOnRamp(enc: any, stops: string[], light: string, dark: string):
 }
 
 function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], say: (p: string, m: string) => void): any {
+    const live = d.dataLabels.liveSignal;
     const units = body.layer
         ? body.layer.filter((n: any) => DATA_MARKS.has(markTypeOf(n.mark) ?? ''))
         : (markTypeOf(body.mark) ? [body] : []);
@@ -4405,7 +4407,7 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
                 const tallest = Math.max(0, ...totals.values());
                 if (tallest > 0) {
                     const minValue = minShare * tallest;
-                    stackedKeepTest = `${v} >= ${minValue}`;
+                    stackedKeepTest = live ? `${v} >= ${live}.labels.minValue` : `${v} >= ${minValue}`;
                     const dropped = table.filter((row) => {
                         const val = row?.[measure.field];
                         return typeof val === 'number' && Math.abs(val) < minValue;
@@ -4475,13 +4477,25 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
     if (stackedKeepTest) {
         labelEncoding.opacity = { condition: { test: stackedKeepTest, value: 1 }, value: 0 };
     }
+    if (live && d.dataLabels.format && !d.dataLabels.unit && !measure.aggregate
+        && labelEncoding.text?.field === measure.field && labelEncoding.text.format === d.dataLabels.format) {
+        labelEncoding.text = { value: { expr: `format(datum[${JSON.stringify(measure.field)}], ${live}.labels.format)` } };
+    }
+    if (live) {
+        const kept = labelEncoding.opacity?.condition?.test;
+        const shown = `${live}.labels.show`;
+        labelEncoding.opacity = { condition: { test: kept ? `${shown} && (${kept})` : shown, value: 1 }, value: 0 };
+    }
     // The order index has to exist before the stack is computed, so it goes
     // in front of whatever else the label layer derives.
+    // Under a live layout, labels the plan does not print leave the data rather than
+    // the view; all of them leave together, so no stack is cut.
     const labelTransforms = [
         ...(stackOrderTransform ? [stackOrderTransform] : []),
         ...(stackedTransform ?? []),
+        ...(live ? [{ filter: `${live}.labels.show` }] : []),
     ];
-    if (labelTransforms.length > 0) layer.transform = labelTransforms;
+    if (labelTransforms.length > 0) layer.transform = [...(live ? layer.transform ?? [] : []), ...labelTransforms];
     if (perCategoryInk || (cells && labelEncoding.color?.field)) {
         // Vega-Lite merges scales of the same channel across a layer, so the
         // label's ink range and the mark's fill range are two answers to one

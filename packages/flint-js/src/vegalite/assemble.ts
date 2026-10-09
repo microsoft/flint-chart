@@ -870,6 +870,7 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
             ? 'off'
             : resolveValueLabelChoice(chartProperties),
         geometryKinds: chartTemplate.geometryKinds,
+        liveLayoutSignal: input.options?.liveLayoutSignal,
     });
 
     let themeDecisions: any;
@@ -881,6 +882,19 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
         };
     } else {
         realizeValueLabelsVegaLite(vgObj, design, values);
+    }
+    const liveLabels = design.dataLabels.liveSignal;
+    if (liveLabels) {
+        vgObj.params = [...(vgObj.params ?? []), {
+            name: liveLabels,
+            value: {
+                labels: {
+                    show: design.dataLabels.show,
+                    minValue: design.dataLabels.segmentMinValue ?? 0,
+                    format: design.dataLabels.format ?? '',
+                },
+            },
+        }];
     }
 
     chartTemplate.postProcess?.(vgObj, instantiateContext);

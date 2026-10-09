@@ -43,6 +43,7 @@ export function createReorderResetControls({
     });
 
     const layout = (): void => {
+        if (controls.length === 0) return;
         const renderer = container.querySelector('svg.marks') as SVGSVGElement | null;
         if (!renderer) {
             for (const { control } of controls) control.setVisible(false);
