@@ -15,14 +15,14 @@ import { useApp } from '@modelcontextprotocol/ext-apps/react';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { ChartAssemblyInput, ChartOption, ChartUpdate, ChartWarning } from 'flint-chart';
-import { THEME_PRESETS, DEFAULT_THEME_ICON } from 'flint-chart';
-import type { ChartChange } from 'flint-chart/interactive';
+import { THEME_PRESETS, DEFAULT_THEME_ICON, getChartTransform } from 'flint-chart';
+import type { ChartChange, ChartState, InteractiveChartSurface } from 'flint-chart/interactive';
 import { FlintChart } from 'flint-chart/react';
 import { expressionInterpreter } from 'vega-interpreter';
 
 import { assemblePreviewSpec, renderFlintSvg, usesAutoPreviewSize, withAppPreviewDefaults } from './render';
 import { chartIconFor } from './chart-icons';
-import { chartContext } from './chart-context';
+import { chartContext, chartView, type ChartGesture } from './chart-context';
 import {
   buildPanelModel,
   setProperty,
@@ -33,6 +33,8 @@ import {
 } from './options';
 
 declare const __FLINT_MCP_VERSION__: string;
+
+const UPDATE_WARNINGS = new Set(['unsupported_update', 'partially_applied_update']);
 
 /** Control descriptor shared by chart properties and encoding actions. */
 type ControlSpec =
@@ -877,16 +879,59 @@ export function FlintAppInner(props: {
   // picks the size, scaled down when the spec states its own.
   const autoSize = usesAutoPreviewSize(current);
   const previewInput = useMemo(() => withAppPreviewDefaults(current), [current]);
-  // Each committed change replaces the model context, so the next user
-  // message sees what the chart shows now. A preview is too frequent for it.
-  const sendContext = useCallback((change: ChartChange) => {
-    if (change.phase !== 'commit') return;
-    const context = chartContext(change.state, previewInput, { action: change.action, geometry: change.geometry });
+  // Each send replaces the model context, so every send carries the whole chart:
+  // after each build (mount, new updates, panel edit) and each committed gesture.
+  const lastContext = useRef<string | null>(null);
+  const shownSurface = useRef<InteractiveChartSurface | null>(null);
+  const shownWarnings = useRef<readonly ChartWarning[]>([]);
+  const gestures = useRef(new Map<string, ChartGesture>());
+  const agentView = useMemo(() => {
+    try {
+      return chartView(input, getChartTransform(input));
+    } catch {
+      return chartView(input);
+    }
+  }, [input]);
+  const shownView = useMemo(() => chartView(current, model), [current, model]);
+  const sendContext = useCallback((state: ChartState) => {
+    const context = chartContext({
+      state,
+      agent: input,
+      shown: current,
+      agentView,
+      shownView,
+      updates,
+      warnings: shownWarnings.current,
+      gestures: gestures.current,
+    });
+    if (context.text === lastContext.current) return;
+    lastContext.current = context.text;
     void app.updateModelContext({
       content: [{ type: 'text', text: context.text }],
       structuredContent: context.data,
     }).catch((err) => console.warn('The host declined the chart context', err));
-  }, [app, previewInput]);
+  }, [app, input, current, agentView, shownView, updates]);
+  const handleRender = useCallback(async (surface: InteractiveChartSurface) => {
+    const mounted = shownSurface.current !== surface;
+    if (mounted) gestures.current.clear();
+    shownSurface.current = surface;
+    // Read here: the `onWarnings` state may not have landed when the chart renders.
+    const mountWarnings = await surface.warnings;
+    if (shownSurface.current !== surface) return;
+    // The mount's update warnings describe the updates it mounted with; after new
+    // updates, the agent section reports what each one matched instead.
+    const kept = mounted ? mountWarnings : mountWarnings.filter((warning) => !UPDATE_WARNINGS.has(warning.code));
+    shownWarnings.current = [...assembled.warnings, ...kept];
+    const state = surface.getState();
+    if (state) sendContext(state);
+  }, [assembled.warnings, sendContext]);
+  // Host updates also report changes; the render after them sends the context once.
+  // A preview is too frequent for it.
+  const handleChange = useCallback((change: ChartChange) => {
+    if (change.phase !== 'commit' || change.source === 'host') return;
+    if (change.interactionId) gestures.current.set(change.interactionId, { action: change.action, geometry: change.geometry });
+    sendContext(change.state);
+  }, [sendContext]);
   const warnings = [...assembled.warnings, ...surfaceWarnings];
   const shownError = assembled.error;
 
@@ -926,7 +971,8 @@ export function FlintAppInner(props: {
               fit={autoSize ? 'relayout' : 'scale-down'}
               fallback={<span className="chart-pending">Rendering…</span>}
               onWarnings={setSurfaceWarnings}
-              onChange={sendContext}
+              onRender={handleRender}
+              onChange={handleChange}
             />
           </div>
         )}

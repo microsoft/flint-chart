@@ -376,17 +376,27 @@ container.addEventListener('flint-interaction', (e) => {
 ### Step 1 — read the state
 
 A host hands the model the chart input and the state, as text or as data. The
-MCP chart view does this after every committed gesture:
+MCP chart view does this after every build (first mount, new `updates`, a
+panel edit) and every committed gesture, and each send replaces the last:
 
 ```
-The chart "Life expectancy" emphasizes 3 marks where continent = Asia.
-Hidden: Africa.
+Chart "Life expectancy": Line Chart, theme economist.
+Edited in panel: theme default → economist.
+Encodings: x = year, y = life, color = continent.
+Agent updates (yours):
+- asia: emphasizes 3 marks where continent = Asia.
+- oceania: matched no marks.
+User interactions:
+- Hidden: Africa.
 The y axis shows life from 70 to 86.
+Warnings:
+- Update "oceania" was unsupported: 1 target matched nothing.
 ```
 
-The state is in field terms: which marks are emphasized and by which values,
-which legend values are hidden, the viewport on view when the chart
-navigates, the category order when it reorders. From it, decide what the
+The state is in field terms: what the chart is after the reader's panel edits,
+what each of your updates emphasizes or notes (an update that matched nothing
+says so), what the reader selected, hid or filtered, and the viewport on view
+when the chart navigates. From it, decide what the
 reader should see next: which rows stand out, what one note says, which range
 frames them. The rows you were given are the source of every value; the chart
 hands over no copy of the data, and nothing is computed that the chart cannot

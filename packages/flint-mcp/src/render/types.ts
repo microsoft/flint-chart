@@ -23,6 +23,8 @@ export interface RenderOptions {
   disableFileReference?: boolean;
   /** Base directory for resolving relative `data.url` paths. Defaults to cwd. */
   cwd?: string;
+  /** Client project folders, tried in order for a relative `data.url`. */
+  roots?: readonly string[];
 }
 
 /** A rendered artifact plus the assembly warnings that produced it. */

@@ -29,7 +29,7 @@ renders **locally**.
 | `list_chart_types` | `backend?` | chart types, encoding channels, and supported interaction presets per backend |
 | `list_interaction_presets` | `chartType?`, `type?` | interaction presets: what each does, what it needs from the chart, reset gestures, and every option it accepts |
 | `list_themes` | optional preset `id` | shipped visual themes, plus guidance for a selected theme |
-| `create_chart_view` | spec + optional `updates` | interactive chart **UI** (MCP App): live SVG preview + customization panel, opened with the given ChartUpdate layers applied |
+| `create_chart_view` | spec + optional `updates` | live chart **UI** (MCP App): SVG preview + editing panel, opened with the given ChartUpdate layers applied |
 
 ## Visual themes
 
@@ -56,10 +56,10 @@ See the full
 [ThemeSpec guide](https://microsoft.github.io/flint-chart/#/documentation/theme-spec)
 for supported fields and merge behavior.
 
-## MCP App: interactive chart view
+## MCP App: live chart view
 
 In hosts that support MCP App UIs (e.g. Claude Desktop), `create_chart_view`
-opens an interactive view that renders the spec live (Vega-Lite → SVG) and shows
+opens a view that renders the spec live (Vega-Lite → SVG) and shows
 a customization panel built from Flint's own option model — chart type, channel
 bindings, chart properties (corner radius, stack mode, donut hole, …), and
 encoding actions (sort), plus Flint's visual theme presets. Rendering and edits

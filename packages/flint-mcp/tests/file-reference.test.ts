@@ -51,6 +51,20 @@ describe('trust mode (default): local data.url loading', () => {
     }
   });
 
+  it('reads a relative reference from the first client root that has it', () => {
+    mkdirSync(join(root, 'empty'));
+    mkdirSync(join(root, 'project'));
+    writeFileSync(join(root, 'project', 'sales.csv'), CSV);
+    const out = resolveDataSource(inputWithUrl('sales.csv'), { roots: [join(root, 'empty'), join(root, 'project')] });
+    expect((out.data as any).values).toHaveLength(3);
+  });
+
+  it('lists every place it looked and asks for an absolute path when a relative reference is missing', () => {
+    expect(() => resolveDataSource(inputWithUrl('missing.csv'), { roots: [root] })).toThrow(
+      new RegExp(`looked in: ${join(root, 'missing.csv')}, .*missing\\.csv\\); pass an absolute path$`),
+    );
+  });
+
   it('reads a "./"-prefixed relative reference', () => {
     writeFileSync(join(root, 'sales.csv'), CSV);
     const previousCwd = process.cwd();

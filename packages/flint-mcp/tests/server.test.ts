@@ -4,6 +4,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
+import { ListRootsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import { pathToFileURL } from 'node:url';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { createServer } from '../src/server.js';
 
@@ -47,6 +49,34 @@ beforeAll(async () => {
 afterAll(async () => {
   await client?.close();
   await server?.close();
+});
+
+describe('MCP server with client roots', () => {
+  it('looks up a relative data.url in the folders the client announces', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'flint-roots-'));
+    writeFileSync(join(dir, 'sales.csv'), 'region,revenue\nEast,120\nWest,90\n');
+    const rootsServer = createServer();
+    const rootsClient = new Client({ name: 'flint-mcp-roots', version: '0.0.0' }, { capabilities: { roots: {} } });
+    rootsClient.setRequestHandler(ListRootsRequestSchema, async () => ({ roots: [{ uri: pathToFileURL(dir).href }] }));
+    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+    await rootsServer.connect(serverTransport);
+    await rootsClient.connect(clientTransport);
+    try {
+      const result: any = await rootsClient.callTool({
+        name: 'validate_chart',
+        arguments: {
+          backend: 'vegalite',
+          data: { url: 'sales.csv' },
+          chart_spec: { chartType: 'Bar Chart', encodings: { x: 'region', y: 'revenue' } },
+        },
+      });
+      expect(JSON.parse(result.content[0].text).valid).toBe(true);
+    } finally {
+      await rootsClient.close();
+      await rootsServer.close();
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });
 
 describe('MCP server', () => {
@@ -234,6 +264,35 @@ describe('MCP server', () => {
     const viewBad: any = await client.callTool({ name: 'create_chart_view', arguments: { ...base, updates: [{ id: '', ops: [] }] } });
     expect(viewBad.isError).toBe(true);
     expect(viewBad.content[0].text).toBe('updates[0]: "id" must be a non-empty string.');
+  });
+
+  it('a misshapen op is rejected with its shape, and the schema lists every op shape', async () => {
+    const base = {
+      data: { values: [{ region: 'East', revenue: 120 }, { region: 'West', revenue: 90 }] },
+      chart_spec: { chartType: 'Bar Chart', encodings: { x: 'region', y: 'revenue' } },
+    };
+    const note = { op: 'set-annotation', target: { select: { key: { region: 'West' } } }, value: { text: 'Lowest' } };
+    const ok: any = await client.callTool({
+      name: 'validate_chart',
+      arguments: { ...base, backend: 'vegalite', updates: [{ id: 'agent', ops: [note] }] },
+    });
+    expect(JSON.parse(ok.content[0].text).valid).toBe(true);
+    for (const op of [
+      { op: 'set-annotation', foo: 1 },
+      { op: 'set-annotation', annotations: [{ kind: 'rule', x: '2022-12-01', label: 'ChatGPT launch' }] },
+    ]) {
+      const bad: any = await client.callTool({
+        name: 'create_chart_view',
+        arguments: { ...base, updates: [{ id: 'agent', ops: [op] }] },
+      });
+      expect(bad.isError).toBe(true);
+      expect(bad.content[0].text).toContain('set-annotation has a missing or malformed "target". Shape:');
+    }
+    const { tools } = await client.listTools();
+    const view = tools.find((tool) => tool.name === 'create_chart_view')!;
+    const schemaText = JSON.stringify(view.inputSchema);
+    expect(schemaText).toContain("set-annotation { target: UpdateTarget, value: { text, anchor?: 'segment' | 'point' } | null }");
+    expect(view.description).toContain('pass interaction_spec');
   });
 
   it('render_chart surfaces assembly errors as isError', async () => {

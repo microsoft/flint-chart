@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 
 import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { RootsListChangedNotificationSchema } from '@modelcontextprotocol/sdk/types.js';
 import {
   registerAppResource,
   registerAppTool,
@@ -102,7 +104,8 @@ function dataAccessNote(options: CreateServerOptions): string {
   }
   return (
     ' Local data: reference a local CSV/TSV/JSON file by path in data.url ' +
-    '(relative paths resolve against the working directory) or pass rows inline ' +
+    '(a relative path is looked up in the client\'s project folders, then the ' +
+    'server\'s working directory; an absolute path always works) or pass rows inline ' +
     'via data.values. For data you download or generate, create a folder in the ' +
     'current project (e.g. ./flint-data) and reference files from it. Remote ' +
     'URLs are not fetched.'
@@ -147,9 +150,10 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
       instructions:
         'Flint compiles one semantic chart spec (ChartAssemblyInput) into ' +
         'Vega-Lite, ECharts, or Chart.js. By DEFAULT, prefer create_chart_view ' +
-        'to return an interactive, customizable chart whenever the host ' +
-        'supports MCP App UIs — it renders the chart live and lets the user ' +
-        'tweak it. Fall back to render_chart for a static PNG/SVG artifact only ' +
+        'to show a chart whenever the host supports MCP App UIs — it renders ' +
+        'the chart live with an editing panel. The editing panel is not ' +
+        'interactivity: when the user asks for an interactive chart (hover, ' +
+        'click, brush, zoom), add an interaction_spec. Fall back to render_chart for a static PNG/SVG artifact only ' +
         'when the host has no App UI support or the user explicitly wants a ' +
         'static image. Use compile_chart for the backend spec JSON, ' +
         'validate_chart to check a spec, and list_chart_types to discover chart ' +
@@ -171,6 +175,20 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
         dataAccessNote(options),
     },
   );
+
+  let roots: Promise<string[]> | undefined;
+  server.server.setNotificationHandler(RootsListChangedNotificationSchema, async () => {
+    roots = undefined;
+  });
+  /** The client's project folders, where a relative data.url is looked up first. */
+  const clientRoots = (): Promise<string[]> => {
+    if (options.disableFileReference || !server.server.getClientCapabilities()?.roots) return Promise.resolve([]);
+    roots ??= server.server
+      .listRoots()
+      .then((result) => result.roots.filter((root) => root.uri.startsWith('file:')).map((root) => fileURLToPath(root.uri)))
+      .catch(() => []);
+    return roots;
+  };
 
   // --- render_chart -------------------------------------------------------
   server.registerTool(
@@ -210,6 +228,7 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
           scale: args.scale,
           background: args.background,
           disableFileReference: dataSourceOptions.disableFileReference,
+          roots: await clientRoots(),
         });
         const note =
           `${res.backend} · ${res.format} · ${res.width}×${res.height}px` +
@@ -248,7 +267,7 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
     async (args: any) => {
       try {
         const input = toAssemblyInput(args as AssemblyInputArgs);
-        return jsonResult(compileChart(input, args.backend as RenderBackend, dataSourceOptions));
+        return jsonResult(compileChart(input, args.backend as RenderBackend, { ...dataSourceOptions, roots: await clientRoots() }));
       } catch (err) {
         return errorResult(err);
       }
@@ -270,7 +289,7 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
     async (args: any) => {
       try {
         const input = toAssemblyInput(args as AssemblyInputArgs);
-        const result = validateChart(input, args.backend as RenderBackend, dataSourceOptions);
+        const result = validateChart(input, args.backend as RenderBackend, { ...dataSourceOptions, roots: await clientRoots() });
         const updateErrors = args.updates === undefined ? [] : validateChartUpdates(args.updates);
         if (updateErrors.length === 0) return jsonResult(result);
         return jsonResult({
@@ -356,21 +375,24 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
     },
   );
 
-  // --- create_chart_view (MCP App: interactive chart + config UI) ---------
+  // --- create_chart_view (MCP App: live chart + editing panel) -----------
   registerAppTool(
     server,
     'create_chart_view',
     {
-      title: 'Create interactive chart view',
+      title: 'Create live chart view',
       description:
         'PREFERRED DEFAULT for showing a chart when the host supports MCP App ' +
-        'UIs. Open an interactive Flint chart view: renders the spec live as SVG ' +
+        'UIs. Open a live, editable Flint chart view: renders the spec live as SVG ' +
         'and ' +
-        'offers a customization panel (chart type, channel bindings, chart ' +
+        'offers an editing panel (chart type, channel bindings, chart ' +
         'properties, sort) built from Flint\'s option model. Rendering and edits ' +
         'happen entirely in the host UI (Vega-Lite); no data leaves the host. ' +
         'Use this whenever the user wants to see a chart, not just when they ask ' +
         'to tweak it; fall back to render_chart only for a static image. ' +
+        'The editing panel does not make the chart respond to the reader: ' +
+        'for hover, click, brush, or zoom, pass interaction_spec ' +
+        '(list_interaction_presets has the presets for each chart type). ' +
         'Pass updates to open the chart in a state (emphasis, a note, a range), ' +
         'and call it again with new updates to change an open chart.',
       inputSchema: { ...assemblyInputShape, ...updatesShape },
@@ -384,7 +406,7 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
         // that already carry inline values.
         const input = resolveDataSource(
           toAssemblyInput(args as AssemblyInputArgs),
-          dataSourceOptions,
+          { ...dataSourceOptions, roots: await clientRoots() },
         );
         const updates = args.updates as ChartUpdate[] | undefined;
         const updateErrors = updates === undefined ? [] : validateChartUpdates(updates);
@@ -396,7 +418,7 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
           ? `${summary.computedSize.width}×${summary.computedSize.height}px`
           : 'auto size';
         const note = summary.valid
-          ? `Interactive chart view ready: ${summary.chartType} (${size})` +
+          ? `Chart view ready: ${summary.chartType} (${size})` +
             (summary.warnings.length ? `, ${summary.warnings.length} warning(s)` : '') +
             (updates?.length ? `, ${updates.length} update layer(s)` : '')
           : `Chart spec has errors: ${summary.errors.map((e) => e.message).join('; ')}`;

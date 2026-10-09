@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { readFileSync, realpathSync, statSync } from 'node:fs';
-import { extname, resolve as resolvePath } from 'node:path';
+import { extname, isAbsolute, resolve as resolvePath } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { ChartAssemblyInput } from 'flint-chart';
 
@@ -26,6 +26,8 @@ export interface DataSourceOptions {
    * hand-edited `chart.json` can reference `./data.csv` next to it.
    */
   cwd?: string;
+  /** Client project folders, tried in order for a relative path before the working directory. */
+  roots?: readonly string[];
 }
 
 /**
@@ -74,7 +76,7 @@ export function resolveDataSource(
     );
   }
 
-  const filePath = resolveTrustedDataPath(data.url, options.cwd);
+  const filePath = resolveTrustedDataPath(data.url, options.cwd, options.roots);
   const rows = readLocalRows(filePath, options);
   return { ...input, data: { values: rows } } as ChartAssemblyInput;
 }
@@ -89,8 +91,8 @@ function isRemoteReference(rawUrl: string): boolean {
  * governs the agent's file access. Relative references resolve against `cwd` (or
  * the working directory when not specified).
  */
-function resolveTrustedDataPath(rawUrl: string, cwd?: string): string {
-  const candidatePaths = trustedReferenceToPaths(rawUrl.trim(), cwd);
+function resolveTrustedDataPath(rawUrl: string, cwd?: string, roots?: readonly string[]): string {
+  const candidatePaths = trustedReferenceToPaths(rawUrl.trim(), cwd, roots);
   let lastError: unknown;
   for (const candidatePath of candidatePaths) {
     try {
@@ -106,12 +108,13 @@ function resolveTrustedDataPath(rawUrl: string, cwd?: string): string {
   if (lastError instanceof Error && !/no such file or directory/i.test(lastError.message)) {
     throw lastError;
   }
+  const hint = isAbsolute(rawUrl.trim()) ? '' : '; pass an absolute path';
   throw new Error(
-    `data.url local file not found: ${rawUrl} (looked in: ${candidatePaths.join(', ')})`,
+    `data.url local file not found: ${rawUrl} (looked in: ${candidatePaths.join(', ')})${hint}`,
   );
 }
 
-function trustedReferenceToPaths(rawReference: string, cwd?: string): string[] {
+function trustedReferenceToPaths(rawReference: string, cwd?: string, roots: readonly string[] = []): string[] {
   if (/^[a-zA-Z][a-zA-Z\d+.-]*:/.test(rawReference)) {
     const parsedUrl = new URL(rawReference);
     if (parsedUrl.protocol !== 'file:') {
@@ -122,10 +125,9 @@ function trustedReferenceToPaths(rawReference: string, cwd?: string): string[] {
     }
     return [fileURLToPath(parsedUrl)];
   }
-  // Absolute paths are used as given; relative paths resolve against cwd when
-  // given, or the process working directory otherwise.
   if (cwd) return [resolvePath(cwd, rawReference)];
-  return [resolvePath(rawReference)];
+  if (isAbsolute(rawReference)) return [rawReference];
+  return [...new Set([...roots.map((root) => resolvePath(root, rawReference)), resolvePath(rawReference)])];
 }
 
 function readLocalRows(
