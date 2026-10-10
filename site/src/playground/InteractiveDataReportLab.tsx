@@ -1,5 +1,5 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type DragEvent, type ReactNode } from 'react';
-import { ArrowUp, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, GripVertical, Pause, Pencil, Play, Plus, Scan, Sparkles, Trash2, X } from 'lucide-react';
+import { ArrowUp, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, GripVertical, Pause, Pencil, Play, Plus, Trash2, X } from 'lucide-react';
 import { FlintChart } from 'flint-chart/react';
 import { expressionInterpreter } from 'vega-interpreter';
 import { AGENT, ARTICLE, COUNTRIES, DEFAULT_STORY, OPENING, SCALES, SELECTION_CHAT, STORY } from './interactive-data-report-content';
@@ -29,6 +29,7 @@ import {
 } from './interactive-data-report-ui';
 import type { ChartChange } from 'flint-chart/interactive';
 import type { OpenAIConnection } from './openai-chat-client';
+import { withHouseId } from '../shared/test-case-utils';
 import './interaction-transport.css';
 import './interactive-data-report-chat.css';
 import './interactive-data-report.css';
@@ -302,8 +303,9 @@ function brushedQuarters(
   });
 }
 
-/** A conversation: the reader asks for the chart, the agent answers with it, and the brushed range waits above the composer as context. */
-export function SelectionChatDemo({ spec, editable }: { spec: typeof SELECTION_CHAT; editable?: boolean }) {
+/** A conversation: the reader asks for the chart, the agent answers with it, and the brushed range waits in the composer as context. */
+export function SelectionChatDemo({ spec, editable, themeId }: { spec: typeof SELECTION_CHAT; editable?: boolean; themeId?: string | null }) {
+  const chartInput = useMemo(() => withHouseId(spec.fixture.input, themeId), [spec.fixture.input, themeId]);
   const { presets } = useEditableSpec(spec);
   const [quarters, setQuarters] = useState<{ label: string; value: number | undefined }[]>([]);
   const spending = useMemo(() => new Map((spec.fixture.input.data.values ?? []).map((row) => [
@@ -319,14 +321,14 @@ export function SelectionChatDemo({ spec, editable }: { spec: typeof SELECTION_C
   }, [spending]);
   const first = quarters[0]?.label;
   const last = quarters[quarters.length - 1]?.label;
+  const value = (quarter: typeof quarters[number]) => quarter.value !== undefined ? ` · $${quarter.value.toFixed(2)}B` : '';
+  const context = quarters.length === 0 ? 'No selection'
+    : quarters.length === 1 ? `${first}${value(quarters[0])}`
+    : `${first} – ${last} · ${quarters.length} quarters`;
   return (
     <article className="it-example idr-section" id={`section-${spec.id}`}>
       <SectionHeader spec={spec} presets={presets} editable={editable} />
       <section className="it-workspace idr-selection-chat idr-chat-window" aria-label="Chat">
-        <div className="idr-chat-window-bar">
-          <span className="idr-chat-window-avatar" aria-hidden="true"><Sparkles size={13} strokeWidth={2} /></span>
-          <span className="idr-chat-window-title">AI assistant</span>
-        </div>
         <div className="idr-chat-messages">
           <div className="idr-chat-turn idr-chat-turn-user">
             <span className="idr-chat-turn-label">You</span>
@@ -336,7 +338,7 @@ export function SelectionChatDemo({ spec, editable }: { spec: typeof SELECTION_C
             <span className="idr-chat-turn-label">Assistant</span>
             <div className="idr-chat-bubble idr-chat-chart-bubble">
               <FlintChart
-                spec={spec.fixture.input}
+                spec={chartInput}
                 interactions={spec.interactions}
                 chartId={spec.id}
                 ariaLabel={spec.fixture.title}
@@ -347,27 +349,15 @@ export function SelectionChatDemo({ spec, editable }: { spec: typeof SELECTION_C
           </div>
         </div>
         <div className="idr-chat-window-foot">
-          {quarters.length > 0 && (
-            <div className="idr-chat-context-block">
-              <p>
-                <Scan size={12} strokeWidth={2} aria-hidden="true" />
-                <strong>Agent context:</strong> the user selected {quarters.length === 1
-                  ? first
-                  : `${quarters.length} quarters, ${first} – ${last}`}
-              </p>
-              <p className="idr-chat-context-points">
-                {quarters.map((quarter, index) => (
-                  <Fragment key={quarter.label}>
-                    {index > 0 && <span className="idr-chat-context-sep" aria-hidden="true">|</span>}
-                    {`${quarter.label} ${quarter.value !== undefined ? `$${quarter.value.toFixed(2)}B` : ''}`.trim()}
-                  </Fragment>
-                ))}
-              </p>
+          <div className="idr-chat-composer">
+            <span className={quarters.length > 0 ? 'idr-composer-context' : 'idr-composer-context is-empty'}
+              title={quarters.map((quarter) => `${quarter.label}${value(quarter)}`).join('\n') || undefined}>
+              {context}
+            </span>
+            <div className="idr-composer-input" aria-hidden="true">
+              <span>{quarters.length > 0 ? 'Ask about the selected quarters …' : 'Drag across the chart to add context, then ask …'}</span>
+              <span className="idr-chat-window-send"><ArrowUp size={13} strokeWidth={2.2} /></span>
             </div>
-          )}
-          <div className="idr-chat-window-composer" aria-hidden="true">
-            <span>Interact with the chart and ask questions …</span>
-            <span className="idr-chat-window-send"><ArrowUp size={13} strokeWidth={2.2} /></span>
           </div>
         </div>
       </section>

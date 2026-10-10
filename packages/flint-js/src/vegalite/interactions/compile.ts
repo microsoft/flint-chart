@@ -742,8 +742,18 @@ export function collectVegaAxisTargets(
                     + `data('${AXIS_HOVER_STORE}')[0].scale === ${JSON.stringify(axis.scale)} && `
                     + `data('${AXIS_HOVER_STORE}')[0].value === datum.value`
                 : undefined;
+            // The label's own colour, so the hover rule does not repaint a themed axis in the default ink.
+            const config = vegaSpec.config ?? {};
+            const orient = String(axis.orient);
+            const themedLabelColor = [
+                axis.labelColor,
+                config[`axis${orient[0].toUpperCase()}${orient.slice(1)}`]?.labelColor,
+                config[`axis${channel.toUpperCase()}`]?.labelColor,
+                config.axis?.labelColor,
+            ].find((color) => color !== undefined);
             const existingLabelFill = hoverColor
-                ? axis.encode?.labels?.update?.fill ?? axis.encode?.labels?.enter?.fill ?? { value: '#4a4a4a' }
+                ? axis.encode?.labels?.update?.fill ?? axis.encode?.labels?.enter?.fill
+                    ?? (typeof themedLabelColor === 'string' ? { value: themedLabelColor } : themedLabelColor ?? { value: '#4a4a4a' })
                 : undefined;
             const existingFontWeight = hoverColor
                 ? axis.encode?.labels?.update?.fontWeight ?? axis.encode?.labels?.enter?.fontWeight ?? { value: 'normal' }

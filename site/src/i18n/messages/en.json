@@ -381,6 +381,11 @@
     "ctaDocs": "Read the docs",
     "news": {
       "title": "Updates",
+      "release100": {
+        "date": "October 19, 2026",
+        "dateTime": "2026-10-19",
+        "text": "Flint 1.0 introduces Flint Interactive: interaction presets, semantic events, and an interaction API that connects charts to your app."
+      },
       "release051": {
         "date": "August 12, 2026",
         "dateTime": "2026-08-12",
@@ -413,7 +418,7 @@
       }
     },
     "howItWorks": "How it works?",
-    "howItWorksBody": "Flint starts with a compact spec: the data, semantic types, and the chart spec. From there, the compiler produces a complete backend-native spec (shown here in Vega-Lite) filling with the necessary low-level details and renders a good-looking chart. An interaction spec makes the chart interactive: hover a cell to highlight its row.",
+    "howItWorksBody": "A Flint spec consists of the data, semantic types, the chart spec, and optional theme and interaction specs. Instead of relying on complex user-side logic to glue them together, the compiler does the heavy lifting: it resolves each part against the others and composes a complete backend-native spec (shown here in Vega-Lite), filling in the necessary low-level details, and renders a good-looking, interactive chart.",
     "overviewAlt": "Flint workflow: an agent infers a dataSpec from a raw table, a short chartSpec is written, and Flint compiles it into a faceted line chart, then a grouped bar, waterfall, heatmap, and sunburst as the spec is edited.",
     "leadBefore": "Flint is a visualization intermediate language that lets",
     "leadHighlight1": "AI agents reliably create expressive, good-looking and interactive charts from simple, human-editable chart specs",
@@ -430,6 +435,8 @@
     "backendAria": "Rendering backend",
     "prevExample": "Previous example",
     "nextExample": "Next example",
+    "applicationCode": "View the full code.",
+    "applicationNote": "The chart is specified above; its interactions are written with the <api>Flint interaction API</api>.",
     "exampleAria": "Example",
     "seeGallery": "See more in the gallery",
     "closingTitle": "Start building with Flint.",
@@ -438,28 +445,20 @@
     "contributors": "Contributors",
     "features": {
       "semantic": {
-        "title": "Specify with semantic types",
-        "body": "Flint uses semantic types to capture meanings of data fields (e.g., Rank, YearMonth, Delta, Temperature), and uses them to infer the low-level chart configuration like parsing, scale, axes, formatting and color schemes."
+        "title": "Describe data with <hl>semantic types</hl>",
+        "body": "Data fields in Flint are described with semantic types (e.g., Rank, YearMonth, Delta, Temperature) and their intrinsic information, such as domains and units. The Flint compiler uses them to infer parsing, scales, axes, formatting, and colors."
       },
-      "layout": {
-        "title": "Automatic layout optimization",
-        "body": "Flint optimizes the chart layout based on an elastic layout model and banking principles. The compiler dynamically manages sizing, spacing, and arrangement so the chart nicely fits into the canvas, even as the data grows denser."
-      },
-      "adapt": {
-        "title": "Easy to generate and adapt",
-        "body": "Without fragile low-level parameters, Flint specs can be easily generated and adapted by users. Changing a chart design requires only switching the chart type and rebinding visual encodings, and the compiler cascades the new encoding choices to the low-level settings."
-      },
-      "backends": {
-        "title": "Render with different backends",
-        "body": "Flint supports {{chartTypes}} chart types across Vega-Lite, ECharts, Chart.js, and Plotly, with {{examples}} backend-specific examples in the gallery, and can emit native Excel charts through Office.js. Despite their different APIs and programming models, Flint hides them behind a unified interface, so switching backends needs no change to the spec."
+      "chart": {
+        "title": "Build charts with <hl>library-agnostic chart specs</hl>",
+        "body": "Charts are defined with high-level chart types and encodings. The compiler automatically optimizes the low-level settings based on the data's characteristics, for example as the data gets denser. The same spec renders across Vega-Lite, ECharts, Chart.js, and Plotly, or as native Excel charts."
       },
       "themes": {
-        "title": "Render with different themes",
-        "body": "A Flint theme is a formal specification that guides the layout algorithm, applies presentation rules by semantic role, and defines geometry, typography, and color as one visual system. Switching themes needs no change to the data or encodings."
+        "title": "Unify the look with a <hl>theme spec</hl>",
+        "body": "Geometry, typography, and color are defined as reusable formal specs that apply across the whole library, independent of the data and chart type. Pick one of {{themes}} preset themes, or write your own for coherent branding."
       },
       "interactions": {
-        "title": "Add interactions",
-        "body": "Flint maps user gestures to semantic events about the data, so an interaction spec can name presets like hover readouts, brushing, or legend toggles, and the compiler wires them to the chart for you, with no event-handling code.",
+        "title": "Add interactions with an <hl>interaction spec</hl>",
+        "body": "Flint provides {{presets}} interaction presets and a programming API for building interactive charts into applications. The compiler automatically resolves user interaction events into semantic information, so your app only needs to answer with high-level chart updates.",
         "demoLabel": "Live · try it"
       }
     },
@@ -513,16 +512,19 @@
         "subtitle": "Life expectancy against GDP per capita, 142 countries in 2007; bubble size is population"
       },
       "penguins": {
-        "label": "Clustered scatter",
+        "label": "Lasso selection",
         "caption": "Three penguin species; lasso a cluster or toggle a species in the legend.",
         "title": "Three species, three clusters",
         "subtitle": "Body mass against flipper length, 342 Palmer Station penguins"
       },
-      "unemployment": {
-        "label": "Line with brush",
-        "caption": "Unemployment over two decades; brush a span of years or hover to read a year.",
-        "title": "Two shocks in two decades",
-        "subtitle": "U.S. unemployment rate, 2000–2023, percent"
+      "worldCup": { "label": "Click a team" },
+      "selectionChat": { "label": "Brush for the agent" },
+      "countryTable": { "label": "Table to chart" },
+      "continentTable": { "label": "Continent table" },
+      "movingAverage": { "label": "Moving average" },
+      "climatePhase": {
+        "label": "Climate phase portrait",
+        "hint": "Click and drag a point along its trajectory to see how the other cities change with it."
       }
     }
   },

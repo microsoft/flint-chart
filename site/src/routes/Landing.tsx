@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useState, type ComponentType, type CSSProperties, type ReactNode } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { LocaleLink } from '../i18n/LocaleLink';
 import { TEST_GENERATORS, makeField, makeEncodingItem, buildMetadata, type TestCase } from 'flint-chart/test-data';
 import { INTERACTION_PRESET_TYPES, THEME_PRESETS, type ChartAssemblyInput, type InteractionSpec } from 'flint-chart';
 import { FlintChart } from 'flint-chart/react';
+import type { ChartChange } from 'flint-chart/interactive';
 import { SiteNavBar, MicrosoftDisclosures, GitHubIcon } from '../components/SiteShell';
 import { WallChart } from '../components/WallChart';
 import { ScaleToFit } from '../components/ScaleToFit';
@@ -12,12 +13,13 @@ import { GalleryOptionsBar, ThemeControl } from '../components/GalleryOptionsBar
 import { SpecPipelineFigure } from '../components/SpecPipelineFigure';
 import { CodeBlock } from '../components/CodeBlock';
 import stringify from 'json-stringify-pretty-compact';
-import { testCaseToFlintSummary, testCaseToAssemblyInput, withHouse } from '../shared/test-case-utils';
+import { testCaseToFlintSummary, testCaseToAssemblyInput, withHouse, withHouseId } from '../shared/test-case-utils';
 import { buildPanelModel, withoutEchoedOverrides } from '../shared/chart-options';
 import { CHART_CATEGORIES } from '../shared/chart-categories';
 import { MOVIE_RATINGS } from './movie-ratings-data';
 import gapminderCsv from '../assets/gapminder-five-year.csv?raw';
 import classicDatasets from '../data/classic-datasets.json';
+import { version as FLINT_VERSION } from '../../../packages/flint-js/package.json';
 import { csvParseRows } from 'd3-dsv';
 import {
   ALL_BACKENDS,
@@ -49,6 +51,8 @@ export function Landing() {
             <img src={flintLogo} alt="" aria-hidden="true" style={heroLogoStyle} />
             <div style={heroHeadingBlockStyle}>
               <h1 style={heroTitleStyle}>{t('landing.heroTitle')}</h1>
+              <a className="site-text-link" style={heroVersionStyle} href={`${GITHUB_REPO}/blob/main/CHANGELOG.md`}
+                target="_blank" rel="noreferrer">v{FLINT_VERSION}</a>
             </div>
           </div>
 
@@ -201,15 +205,20 @@ export function Landing() {
           <h2 style={newsHeadingStyle}>{t('landing.news.title')}</h2>
           <div style={newsListStyle}>
             {([
+              { key: 'release100', to: '/interactions', linkLabel: 'Interactive' },
               { key: 'release051', href: `${GITHUB_REPO}/blob/main/CHANGELOG.md`, linkLabel: 'Changelog' },
               { key: 'release050', href: `${GITHUB_REPO}/releases/tag/0.5.0`, linkLabel: 'v0.5.0' },
-              { key: 'release040', href: `${GITHUB_REPO}/releases/tag/0.4.0`, linkLabel: 'v0.4.0' },
-            ] as const).map((update) => (
+            ] as { key: string; href?: string; to?: string; linkLabel: string }[]).map((update) => (
               <article className="landing-news-item" style={newsItemStyle} key={update.key}>
                 <time style={newsDateStyle} dateTime={t(`landing.news.${update.key}.dateTime`)}>
                   {t(`landing.news.${update.key}.date`)}
                 </time>
                 <p style={newsTextStyle}>{t(`landing.news.${update.key}.text`)}</p>
+                {update.to && (
+                  <LocaleLink className="site-text-link" style={newsLinkStyle} to={update.to}>
+                    {update.linkLabel}
+                  </LocaleLink>
+                )}
                 {update.href && (
                   <a
                     className="site-text-link"
@@ -254,7 +263,7 @@ export function Landing() {
                   <h2 style={featureTitleStyle}>
                     <span style={featureNumberStyle}>{i + 1}.</span>
                     {feature.isNew ? <span aria-hidden="true" style={attentionStarStyle}>★</span> : null}
-                    {feature.title}
+                    <span>{feature.title}</span>
                   </h2>
                   <p style={featureBodyStyle}>{feature.body}</p>
                 </div>
@@ -342,7 +351,24 @@ type ShowcaseExampleKey =
   | 'sortedBar'
   | 'gapminder'
   | 'penguins'
-  | 'unemployment';
+  | 'worldCup'
+  | 'selectionChat'
+  | 'countryTable'
+  | 'continentTable'
+  | 'movingAverage'
+  | 'climatePhase';
+
+interface ShowcaseApplication {
+  /** The Advanced Interactions case that carries the application's full code, when it has one. */
+  caseId?: string;
+  /** The width the application is laid out at before it is scaled into the pane. */
+  width: number;
+  /** How far the pane may enlarge it; text-heavy applications stay at their own size. */
+  maxScale?: number;
+  /** The house the application opens in; the reader can still switch it. */
+  theme?: string;
+  load(): Promise<{ Demo: ComponentType<{ themeId: string | null }>; spec: ChartAssemblyInput }>;
+}
 
 interface ShowcaseExample {
   id: string;
@@ -359,6 +385,12 @@ interface ShowcaseExample {
   defaultChartProperties?: Record<string, unknown>;
   /** Presets the chart mounts with; only the Vega-Lite backend runs them. */
   interactions?: InteractionSpec['interactions'];
+  /** An application built around the chart; the spec pane shows only the chart's spec. */
+  application?: ShowcaseApplication;
+  /** Shown with the applications, as an interaction rather than a chart type. */
+  interactionGroup?: boolean;
+  /** Lines for a callout over the chart while the reader has a selection. */
+  summarizeSelection?: (rows: readonly Record<string, unknown>[]) => string[];
 }
 
 /* ---- Chart-property examples (real data-formulator "movies" dataset) ---- */
@@ -485,6 +517,18 @@ function palmerPenguins(): TestCase {
   return { ...sample, data };
 }
 
+/** What a lasso around some penguins caught: how many, of which species, and their average build. */
+function penguinSelectionSummary(rows: readonly Record<string, unknown>[]): string[] {
+  const species = new Map<string, number>();
+  for (const row of rows) species.set(String(row.Species), (species.get(String(row.Species)) ?? 0) + 1);
+  const mean = (field: string) => rows.reduce((total, row) => total + Number(row[field]), 0) / rows.length;
+  return [
+    `${rows.length} penguin${rows.length === 1 ? '' : 's'} selected`,
+    [...species].map(([name, count]) => `${name} ${count}`).join(' · '),
+    `Avg flipper ${mean('Flipper length (mm)').toFixed(0)} mm · Avg mass ${Math.round(mean('Body mass (g)')).toLocaleString('en-US')} g`,
+  ];
+}
+
 /**
  * The canvas every showcase example is drawn on.
  *
@@ -538,23 +582,10 @@ const SHOWCASE_EXAMPLES: ShowcaseExample[] = [
     interactions: [{ type: 'hover-group-focus', options: { groupBy: 'City' } }],
   },
   {
-    id: 'penguins',
-    exampleKey: 'penguins',
-    testCase: palmerPenguins(),
-    interactions: [{ type: 'lasso-select' }, { type: 'legend-toggle' }],
-  },
-  {
     id: 'sunburst',
     exampleKey: 'sunburst',
     generator: 'Omni: Sunburst',
     index: 0,
-  },
-  {
-    id: 'unemployment',
-    exampleKey: 'unemployment',
-    generator: 'Line Chart',
-    testTitle: 'US unemployment rate, 2000–2023 (%)',
-    interactions: [{ type: 'brush-x' }, { type: 'inspect-index' }],
   },
   {
     id: 'donut',
@@ -566,7 +597,6 @@ const SHOWCASE_EXAMPLES: ShowcaseExample[] = [
     id: 'regression',
     exampleKey: 'regression',
     testCase: moviesRegression(),
-    interactions: [{ type: 'select' }],
   },
   {
     id: 'sorted-bar',
@@ -574,7 +604,106 @@ const SHOWCASE_EXAMPLES: ShowcaseExample[] = [
     testCase: moviesSortedBar(),
     interactions: [{ type: 'click-highlight', options: { targets: ['mark', 'discreteAxis'] } }],
   },
+  {
+    id: 'country-table',
+    exampleKey: 'countryTable',
+    application: {
+      width: 560,
+      theme: 'powerbi-light',
+      load: () => withApplicationStyles(Promise.all([
+        import('../playground/ExternalToChartLab'),
+        import('../playground/interaction-demo-data'),
+      ]).then(([lab, data]) => ({ Demo: lab.CountryTableStage, spec: data.countriesFixture.input }))),
+    },
+  },
+  {
+    id: 'continent-table',
+    exampleKey: 'continentTable',
+    application: {
+      width: 560,
+      theme: 'powerbi-light',
+      load: () => withApplicationStyles(Promise.all([
+        import('../playground/ExternalToChartLab'),
+        import('../playground/interaction-demo-data'),
+      ]).then(([lab, data]) => ({ Demo: lab.ContinentTableStage, spec: data.countriesFixture.input }))),
+    },
+  },
+  {
+    id: 'penguins',
+    exampleKey: 'penguins',
+    testCase: palmerPenguins(),
+    interactions: [{ type: 'lasso-select' }, { type: 'legend-toggle' }],
+    interactionGroup: true,
+    summarizeSelection: penguinSelectionSummary,
+  },
+  {
+    id: 'world-cup',
+    exampleKey: 'worldCup',
+    application: {
+      caseId: 'click-a-team',
+      theme: 'nyt',
+      width: 760,
+      load: () => withApplicationStyles(import('../playground/WorldCupScorersDemo')
+        .then((module) => ({ Demo: module.WorldCupScorersDemo, spec: module.TEAMS_SPEC }))),
+    },
+  },
+  {
+    id: 'selection-chat',
+    exampleKey: 'selectionChat',
+    application: {
+      caseId: 'brush-for-the-agent',
+      theme: 'economist',
+      width: 600,
+      maxScale: 1,
+      load: () => withApplicationStyles(Promise.all([
+        import('../playground/InteractiveDataReportLab'),
+        import('../playground/interactive-data-report-content'),
+      ]).then(([lab, content]) => ({
+        Demo: ({ themeId }) => <div className="it-page idr-page app-demo-embed"><lab.SelectionChatDemo spec={content.SELECTION_CHAT} editable={false} themeId={themeId} /></div>,
+        spec: content.SELECTION_CHAT.fixture.input,
+      }))),
+    },
+  },
+  {
+    id: 'moving-average',
+    exampleKey: 'movingAverage',
+    application: {
+      caseId: 'moving-average',
+      theme: 'swiss',
+      width: 640,
+      load: () => withApplicationStyles(import('../playground/MovingAverageStage')
+        .then((module) => ({ Demo: module.MovingAverageStage, spec: module.SPEC }))),
+    },
+  },
+  {
+    id: 'climate-phase',
+    exampleKey: 'climatePhase',
+    application: {
+      caseId: 'climate-phase-portrait',
+      theme: 'datawrapper',
+      width: 640,
+      load: () => withApplicationStyles(import('../playground/ClimatePhaseStage')
+        .then((module) => ({
+          Demo: function ClimateDemo({ themeId }: { themeId: string | null }) {
+            const { t } = useTranslation();
+            return <module.ClimatePhaseStage compact height={440} showReadout hint={t('landing.examples.climatePhase.hint')} themeId={themeId} />;
+          },
+          spec: module.READOUT_CHART_INPUT,
+        }))),
+    },
+  },
 ];
+
+/** The stylesheets the Advanced Interactions page loads for its applications. */
+function withApplicationStyles<T>(module: Promise<T>): Promise<T> {
+  return Promise.all([
+    module,
+    import('../playground/click-focus-lab.css'),
+    import('../playground/interaction-transport.css'),
+    import('../playground/bespoke-interaction-lab.css'),
+    import('../playground/release-examples/application-demos.css'),
+  ]).then(([loaded]) => loaded);
+}
 
 
 function HeroCTA({
@@ -668,10 +797,23 @@ function HeroShowcase() {
     [example.defaultChartProperties, tempOptions],
   );
 
+  const [selectionSummary, setSelectionSummary] = useState<string[] | null>(null);
   useEffect(() => {
     setTempOptions({});
     setPreviewTheme(null);
+    setSelectionSummary(null);
   }, [exampleIdx, backend]);
+
+  const summarize = example.summarizeSelection;
+  const handleChartChange = useCallback((change: ChartChange) => {
+    const rows = change.state.selected.map((element) => element.value as Record<string, unknown>);
+    setSelectionSummary(summarize && rows.length > 0 ? summarize(rows) : null);
+  }, [summarize]);
+
+  const preferredTheme = example.application?.theme;
+  useEffect(() => {
+    if (preferredTheme) setThemeId(preferredTheme);
+  }, [exampleIdx, preferredTheme]);
 
   const canTheme = backend === 'vegalite';
   const activeTheme = canTheme ? (previewTheme ? previewTheme.id : themeId) : undefined;
@@ -718,7 +860,7 @@ function HeroShowcase() {
     [displayInput, backend],
   );
 
-  if (!testCase) return null;
+  if (!testCase && !example.application) return null;
 
   const count = SHOWCASE_EXAMPLES.length;
   const goPrev = () => setExampleIdx((i) => (i - 1 + count) % count);
@@ -726,6 +868,29 @@ function HeroShowcase() {
 
   return (
     <section style={heroShowcaseSectionStyle}>
+      <div className="landing-example-tabs" style={exampleTabsStyle} role="tablist" aria-label={t('landing.exampleAria')}>
+        {SHOWCASE_EXAMPLES.map((ex, i) => {
+          // The interactions follow the single charts, set off by a rule.
+          const inGroup = (entry?: ShowcaseExample) => Boolean(entry?.application || entry?.interactionGroup);
+          const firstApplication = inGroup(ex) && !inGroup(SHOWCASE_EXAMPLES[i - 1]);
+          return (
+            <Fragment key={ex.id}>
+              {firstApplication && <span aria-hidden="true" style={exampleTabRuleStyle} />}
+              <button
+                type="button"
+                role="tab"
+                className="landing-example-tab"
+                aria-selected={i === exampleIdx}
+                onClick={() => setExampleIdx(i)}
+                style={exampleTabStyle(i === exampleIdx)}
+              >
+                {firstApplication && <span aria-hidden="true" style={{ ...attentionStarStyle, marginRight: 5 }}>★</span>}
+                {t(`landing.examples.${ex.exampleKey}.label`)}
+              </button>
+            </Fragment>
+          );
+        })}
+      </div>
       <div className="landing-showcase-row" style={carouselRowStyle}>
         <button
           className="landing-carousel-arrow"
@@ -738,6 +903,24 @@ function HeroShowcase() {
           <ChevronIcon dir="left" />
         </button>
 
+        {example.application ? (
+          <ShowcaseApplicationCard
+            key={example.id}
+            exampleKey={example.exampleKey}
+            application={example.application}
+            themeId={previewTheme ? previewTheme.id : themeId}
+            themeControl={(
+              <ThemeControl
+                themeId={themeId}
+                onTheme={chooseTheme}
+                onPreview={(id) => setPreviewTheme({ id })}
+                onPreviewEnd={() => setPreviewTheme(null)}
+                placement="bottom"
+                prominent
+              />
+            )}
+          />
+        ) : testCase && (
         <div className="landing-showcase-card" style={{ ...showcaseCardStyle, flex: 1, minWidth: 0 }}>
           <div className="landing-spec-pane" style={{ ...showcasePaneStyle, ...specPaneStyle }}>
             <div style={paneHeaderRowStyle}>
@@ -806,8 +989,17 @@ function HeroShowcase() {
                     themeId={activeTheme}
                     useThemeCanvas={canTheme}
                     headline={headline}
+                    onChange={summarize ? handleChartChange : undefined}
                   />
                 </ScaleToFit>
+                {selectionSummary && (
+                  <div style={selectionCalloutStyle} aria-live="polite">
+                    {selectionSummary.map((line, index) => (
+                      <div key={line} style={index === 0 ? { fontWeight: 600, color: siteTheme.text } : undefined}>{line}</div>
+                    ))}
+                    <span aria-hidden="true" style={selectionCalloutTailStyle} />
+                  </div>
+                )}
               </div>
               {panelModel && displayInput && (
                 <div className="landing-canvas-options" style={canvasOptionsStyle}>
@@ -833,6 +1025,7 @@ function HeroShowcase() {
             </div>
           </div>
         </div>
+        )}
 
         <button
           className="landing-carousel-arrow"
@@ -845,25 +1038,79 @@ function HeroShowcase() {
           <ChevronIcon dir="right" />
         </button>
       </div>
-      {/* Example pager dots */}
-      <div style={{ ...dotsRowStyle, marginTop: 16 }} role="tablist" aria-label={t('landing.exampleAria')}>
-        {SHOWCASE_EXAMPLES.map((ex, i) => {
-          const label = t(`landing.examples.${ex.exampleKey}.label`);
-          return (
-          <button
-            key={ex.id}
-            type="button"
-            role="tab"
-            aria-selected={i === exampleIdx}
-            aria-label={label}
-            title={label}
-            onClick={() => setExampleIdx(i)}
-            style={dotStyle(i === exampleIdx)}
-          />
-          );
-        })}
-      </div>
     </section>
+  );
+}
+
+function ShowcaseApplicationCard({
+  exampleKey,
+  application,
+  themeId,
+  themeControl,
+}: {
+  exampleKey: ShowcaseExampleKey;
+  application: ShowcaseApplication;
+  /** The carousel's house; none is Flint's default. */
+  themeId: string | undefined;
+  themeControl: ReactNode;
+}) {
+  const { t } = useTranslation();
+  const [loaded, setLoaded] = useState<Awaited<ReturnType<ShowcaseApplication['load']>> | null>(null);
+  useEffect(() => {
+    let live = true;
+    void application.load().then((next) => { if (live) setLoaded(next); });
+    return () => { live = false; };
+  }, [application]);
+  const house = themeId ?? null;
+  const specText = useMemo(() => {
+    if (!loaded) return '';
+    // The application's own code is on the Advanced Interactions page; here only the chart is specified.
+    const spec: Record<string, unknown> = { ...withHouseId(loaded.spec, house) };
+    delete spec.data;
+    delete spec.options;
+    return stringify(spec, { maxLength: 52 }).replace(/^{\n/, '{\n  "data": {...},\n');
+  }, [loaded, house]);
+
+  return (
+    <div className="landing-showcase-card" style={{ ...showcaseCardStyle, flex: 1, minWidth: 0 }}>
+      <div className="landing-spec-pane" style={{ ...showcasePaneStyle, ...specPaneStyle }}>
+        <div style={paneHeaderRowStyle}>
+          <span style={paneLabelStyle}>{t('landing.flintSpec')}</span>
+        </div>
+        {loaded && <CodeBlock language="json" variant="light" wrapLongLines customStyle={specPreStyle}>{specText}</CodeBlock>}
+        {loaded && (
+          <p style={applicationNoteStyle}>
+            <Trans
+              i18nKey="landing.applicationNote"
+              components={{ api: <LocaleLink className="site-text-link" to="/documentation/interaction-api" /> }}
+            />
+            {application.caseId && (
+              <>
+                {' '}
+                <LocaleLink className="site-text-link" to={`/interactions/advanced?case=${application.caseId}`}>
+                  {t('landing.applicationCode')}
+                </LocaleLink>
+              </>
+            )}
+          </p>
+        )}
+      </div>
+      <div className="landing-chart-pane" style={{ ...showcasePaneStyle, ...chartPaneStyle, borderLeft: `1px solid ${HAIRLINE}` }}>
+        <div className="landing-pane-header" style={paneHeaderRowStyle}>
+          {themeControl}
+          <span style={paneLabelStyle}>{t(`landing.examples.${exampleKey}.label`)}</span>
+        </div>
+        <div className="landing-chart-canvas landing-application" style={chartCanvasStyle}>
+          <div style={chartViewportStyle}>
+            {loaded && (
+              <ScaleToFit fill height={465} padding={8} maxScale={application.maxScale ?? 1.3}>
+                <div style={{ width: application.width }} data-app={exampleKey}><loaded.Demo themeId={house} /></div>
+              </ScaleToFit>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -994,15 +1241,11 @@ const INTERACTION_ROSTER_PREVIEW = [
   { mode: 'legend-toggle', label: 'Legend toggle' },
   { mode: 'filter-controls', label: 'Filters' },
 ] as const;
-const CHART_GALLERY_ENTRY_COUNT = CHART_CATEGORIES.reduce(
-  (count, category) => count + category.charts.length,
-  0,
-);
 
 // Lead paragraph shown in the hero (the single intro to Flint).
 interface Feature {
   id: string;
-  title: string;
+  title: ReactNode;
   body: string;
   // Before/after demo shown alongside the text, illustrating the feature.
   demo?: () => FeatureDemoConfig;
@@ -1012,45 +1255,33 @@ interface Feature {
 }
 
 function getFeatures(t: TFunction): Feature[] {
+  const title = (id: string) => (
+    <Trans i18nKey={`landing.features.${id}.title`} components={{ hl: <span style={featureTitleHighlightStyle} /> }} />
+  );
   return [
     {
       id: 'semantic',
-      title: t('landing.features.semantic.title'),
+      title: title('semantic'),
       body: t('landing.features.semantic.body'),
       demo: demoSemanticTypes,
     },
     {
-      id: 'layout',
-      title: t('landing.features.layout.title'),
-      body: t('landing.features.layout.body'),
+      id: 'chart',
+      title: title('chart'),
+      body: t('landing.features.chart.body'),
       demo: demoLayout,
     },
     {
-      id: 'adapt',
-      title: t('landing.features.adapt.title'),
-      body: t('landing.features.adapt.body'),
-      demo: demoAdapt,
-    },
-    {
-      id: 'backends',
-      title: t('landing.features.backends.title'),
-      body: t('landing.features.backends.body', {
-        chartTypes: CHART_FAMILY_COUNT,
-        examples: CHART_GALLERY_ENTRY_COUNT,
-      }),
-      demo: demoBackends,
-    },
-    {
       id: 'themes',
-      title: t('landing.features.themes.title'),
-      body: t('landing.features.themes.body'),
+      title: title('themes'),
+      body: t('landing.features.themes.body', { themes: Object.keys(THEME_PRESETS).length }),
       demo: demoThemes,
       isNew: true,
     },
     {
       id: 'interactions',
-      title: t('landing.features.interactions.title'),
-      body: t('landing.features.interactions.body'),
+      title: title('interactions'),
+      body: t('landing.features.interactions.body', { presets: INTERACTION_PRESET_TYPES.length }),
       visual: <InteractionDemo label={t('landing.features.interactions.demoLabel')} />,
       isNew: true,
     },
@@ -1098,11 +1329,6 @@ interface FeatureDemoConfig {
 /** First test case for an Omni generator key. */
 function omni(key: string): TestCase {
   return TEST_GENERATORS[key]!()[0];
-}
-
-/** Clone a test case, changing only its chart type (encodings preserved). */
-function asChartType(base: TestCase, chartType: string): TestCase {
-  return { ...base, chartType };
 }
 
 /** A synthetic grouped bar chart with `nCats` categories × `nGroups` series (for layout demos). */
@@ -1153,83 +1379,7 @@ function demoLayout(): FeatureDemoConfig {
   };
 }
 
-// Card 3: same encoding, different chart type — a faceted bar becomes a pyramid.
-//
-// Real data: U.S. resident population by 5-year age band and sex, 2000 census
-// (the same source Vega-Lite's own population-pyramid example draws from).
-const US_POP_2000: Array<[band: string, male: number, female: number]> = [
-  ['0–4', 9735380, 9310714],
-  ['5–9', 10552146, 10069564],
-  ['10–14', 10563233, 10022524],
-  ['15–19', 10237419, 9692669],
-  ['20–24', 9731315, 9324244],
-  ['25–29', 9659493, 9518507],
-  ['30–34', 10205879, 10119296],
-  ['35–39', 11475182, 11635647],
-  ['40–44', 11320252, 11488578],
-  ['45–49', 9925006, 10261253],
-  ['50–54', 8507934, 8911133],
-  ['55–59', 6459082, 6921268],
-  ['60–64', 5123399, 5668961],
-  ['65–69', 4453623, 4804784],
-  ['70–74', 3792145, 5184855],
-  ['75–79', 2912655, 4355644],
-  ['80–84', 1902638, 3221898],
-  ['85–89', 970357, 1981156],
-  ['90+', 336303, 1064581],
-];
-
-/** Long-format population table built from the real 2000 census slice (millions). */
-function usPopulationPyramid(): TestCase {
-  const data: Array<Record<string, unknown>> = [];
-  for (const [band, male, female] of US_POP_2000) {
-    data.push({ 'Age Band': band, Sex: 'Male', People: Math.round(male / 1e5) / 10 });
-    data.push({ 'Age Band': band, Sex: 'Female', People: Math.round(female / 1e5) / 10 });
-  }
-  return {
-    title: 'U.S. population by age and sex (2000)',
-    description: '',
-    tags: [],
-    chartType: 'Pyramid Chart',
-    data,
-    fields: [makeField('Age Band'), makeField('People'), makeField('Sex')],
-    metadata: buildMetadata(data),
-    encodingMap: {
-      y: makeEncodingItem('Age Band'),
-      x: makeEncodingItem('People'),
-      color: makeEncodingItem('Sex'),
-    },
-  };
-}
-
-function demoAdapt(): FeatureDemoConfig {
-  const pyr = usPopulationPyramid();
-  const facetedBar: TestCase = {
-    ...pyr,
-    chartType: 'Bar Chart',
-    encodingMap: {
-      x: makeEncodingItem('Age Band'),
-      y: makeEncodingItem('People'),
-      column: makeEncodingItem('Sex'),
-    },
-  };
-  return {
-    before: { kind: 'chart', label: 'Faceted bar', testCase: facetedBar, backend: 'vegalite' },
-    after: { kind: 'chart', label: 'Pyramid', testCase: pyr, backend: 'vegalite' },
-  };
-}
-
-// Card 4: a Vega-Lite faceted bar and an ECharts sunburst of the same story.
-function demoBackends(): FeatureDemoConfig {
-  const line = omni('Omni: Line');
-  const sun = omni('Omni: Sunburst');
-  return {
-    before: { kind: 'chart', label: 'Vega-Lite faceted bar', testCase: asChartType(line, 'Bar Chart'), backend: 'vegalite' },
-    after: { kind: 'chart', label: 'ECharts sunburst', testCase: sun, backend: 'echarts' },
-  };
-}
-
-// Card 5: the data and ChartSpec stay fixed; only the formal theme changes.
+// Card 3: the data and ChartSpec stay fixed; only the formal theme changes.
 // A grouped bar exposes the whole system at once: palette, bar geometry,
 // axes/grid, legend, labels, typography, and spacing.
 function demoThemes(): FeatureDemoConfig {
@@ -1258,7 +1408,7 @@ function demoThemes(): FeatureDemoConfig {
   };
 }
 
-// Card 6: the gallery's two-line food-price case, read with the inspect-index preset.
+// Card 4: the gallery's two-line food-price case, read with the inspect-index preset.
 function InteractionDemo({ label }: { label: string }) {
   const [spec, setSpec] = useState<ChartAssemblyInput | null>(null);
   useEffect(() => {
@@ -1501,18 +1651,18 @@ const howItWorksSectionStyle: CSSProperties = {
 const newsSectionStyle: CSSProperties = {
   ...sectionStyle,
   display: 'grid',
-  gridTemplateColumns: '140px minmax(0, 1fr)',
-  gap: 32,
-  paddingTop: 28,
-  paddingBottom: 28,
+  gridTemplateColumns: '110px minmax(0, 1fr)',
+  gap: 24,
+  paddingTop: 16,
+  paddingBottom: 16,
   borderTop: `1px solid ${HAIRLINE}`,
   borderBottom: `1px solid ${HAIRLINE}`,
 };
 
 const newsHeadingStyle: CSSProperties = {
   margin: 0,
-  fontSize: 22,
-  lineHeight: 1.4,
+  fontSize: 17,
+  lineHeight: 1.5,
   fontWeight: 650,
 };
 
@@ -1522,14 +1672,14 @@ const newsListStyle: CSSProperties = {
 
 const newsItemStyle: CSSProperties = {
   display: 'grid',
-  gridTemplateColumns: '118px minmax(0, 1fr) 64px',
-  gap: 18,
-  padding: '5px 0',
+  gridTemplateColumns: '112px minmax(0, 1fr) 72px',
+  gap: 16,
+  padding: '2px 0',
 };
 
 const newsDateStyle: CSSProperties = {
   color: siteTheme.textMuted,
-  fontSize: 13,
+  fontSize: 12.5,
   lineHeight: 1.6,
   fontVariantNumeric: 'tabular-nums',
 };
@@ -1537,13 +1687,13 @@ const newsDateStyle: CSSProperties = {
 const newsTextStyle: CSSProperties = {
   margin: 0,
   color: siteTheme.text,
-  fontSize: 14,
-  lineHeight: 1.6,
+  fontSize: 13.5,
+  lineHeight: 1.55,
 };
 
 const newsLinkStyle: CSSProperties = {
   color: siteTheme.accent,
-  fontSize: 13,
+  fontSize: 12.5,
   lineHeight: 1.6,
   textAlign: 'right',
   whiteSpace: 'nowrap',
@@ -1558,6 +1708,15 @@ const heroTitleStyle: CSSProperties = {
   maxWidth: 960,
   fontWeight: 700,
   letterSpacing: '-0.02em',
+};
+
+const heroVersionStyle: CSSProperties = {
+  display: 'inline-block',
+  marginTop: 8,
+  color: siteTheme.textMuted,
+  fontSize: 14,
+  fontVariantNumeric: 'tabular-nums',
+  textDecoration: 'none',
 };
 
 const heroLockupStyle: CSSProperties = {
@@ -1716,6 +1875,108 @@ const landingInteractiveStyles = `
     text-indent: -6ch;
   }
 
+  .landing-example-tab:hover {
+    color: ${siteTheme.text} !important;
+  }
+
+  .landing-example-tab:focus-visible {
+    outline: 2px solid ${siteTheme.accent};
+    outline-offset: -2px;
+  }
+
+  /* The pane header already names the application. */
+  .landing-application .it-example-header {
+    display: none;
+  }
+
+  /* The pane is the card, so the application's own frame would be a second one. */
+  .landing-application .it-workspace {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  /* The chart takes the conversation's width; the text keeps its size. */
+  .landing-application .idr-chat-window .idr-chat-chart-bubble {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* The pane is taller than wide: the chart leads and the table runs beneath it. */
+  .landing-application :is([data-app='countryTable'], [data-app='continentTable']) .it-workspace-external {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+  }
+
+  .landing-application :is([data-app='countryTable'], [data-app='continentTable']) .it-chart-panel {
+    order: -1;
+    padding: 0 0 10px;
+    border-left: 0;
+  }
+
+  .landing-application :is([data-app='countryTable'], [data-app='continentTable']) .it-control-panel {
+    padding: 14px 0 0;
+    border-top: 1px solid #e9edef;
+  }
+
+  .landing-application :is([data-app='countryTable'], [data-app='continentTable']) .it-control-content {
+    margin-top: 8px;
+  }
+
+  .landing-application [data-app='countryTable'] .it-country-table-scroll {
+    max-height: 112px;
+  }
+
+  /* The climate readout runs as one row under the chart rather than a column beside it. */
+  .landing-application .climate-phase-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .landing-application .climate-phase-shell .ic-flint-dimpvis-panel {
+    border: 0;
+    background: transparent;
+  }
+
+  .landing-application .climate-phase-hint {
+    margin: 8px 4px 0;
+    color: #57606a;
+    font-size: 13px;
+  }
+
+  .landing-application .climate-phase-readout {
+    grid-column: 1;
+    grid-row: auto;
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    margin: 10px 0 0;
+    padding: 0 4px;
+  }
+
+  .landing-application .climate-phase-readout-header {
+    gap: 10px;
+    margin: 0;
+  }
+
+  .landing-application .climate-phase-readout dl {
+    grid-auto-flow: column;
+    grid-template-rows: auto auto;
+    column-gap: 28px;
+    row-gap: 0;
+  }
+
+  .landing-application .climate-phase-readout dd {
+    margin: 0;
+    font-size: 18px;
+  }
+
   @media (min-width: 901px) {
     .landing-showcase-card {
       grid-template-columns: minmax(300px, 1.05fr) minmax(0, 1.55fr);
@@ -1846,6 +2107,10 @@ const landingInteractiveStyles = `
 
     .landing-carousel-arrow {
       order: 2;
+    }
+
+    .landing-example-tabs {
+      margin: 0 0 12px !important;
     }
 
     .landing-canvas-options {
@@ -1986,6 +2251,38 @@ const chartViewportStyle: CSSProperties = {
   width: '100%',
 };
 
+const selectionCalloutStyle: CSSProperties = {
+  position: 'absolute',
+  top: 10,
+  right: 10,
+  zIndex: 5,
+  display: 'grid',
+  gap: 2,
+  padding: '8px 12px',
+  border: `1px solid ${HAIRLINE}`,
+  borderRadius: 8,
+  background: 'rgba(255, 255, 255, 0.94)',
+  boxShadow: '0 4px 14px rgba(0, 0, 0, 0.08)',
+  color: siteTheme.textMuted,
+  fontSize: 12,
+  lineHeight: 1.45,
+  fontVariantNumeric: 'tabular-nums',
+  pointerEvents: 'none',
+};
+
+// A notch on the callout's lower edge, pointing down into the chart.
+const selectionCalloutTailStyle: CSSProperties = {
+  position: 'absolute',
+  bottom: -5,
+  left: 22,
+  width: 9,
+  height: 9,
+  background: 'rgb(255, 255, 255)',
+  borderRight: `1px solid ${HAIRLINE}`,
+  borderBottom: `1px solid ${HAIRLINE}`,
+  transform: 'rotate(45deg)',
+};
+
 const canvasOptionsStyle: CSSProperties = {
   flex: '0 0 auto',
   width: '100%',
@@ -2100,24 +2397,49 @@ const pagerArrowStyle: CSSProperties = {
   fontFamily: 'inherit',
 };
 
-const dotsRowStyle: CSSProperties = {
+// Aligned with the card: the pager arrows and their gap sit either side of it.
+const exampleTabsStyle: CSSProperties = {
   display: 'flex',
-  justifyContent: 'center',
-  gap: 10,
+  flexWrap: 'wrap',
+  alignItems: 'center',
+  gap: '0 2px',
+  margin: '0 48px 14px',
+  borderBottom: `1px solid ${HAIRLINE}`,
 };
 
-function dotStyle(active: boolean): CSSProperties {
+const exampleTabRuleStyle: CSSProperties = {
+  alignSelf: 'center',
+  width: 1,
+  height: 14,
+  margin: '0 6px',
+  background: HAIRLINE,
+};
+
+function exampleTabStyle(active: boolean): CSSProperties {
   return {
-    width: active ? 22 : 9,
-    height: 9,
-    padding: 0,
+    minHeight: 30,
+    padding: '6px 7px',
+    marginBottom: -1,
     border: 0,
-    borderRadius: 999,
-    background: active ? siteTheme.accent : 'rgba(0,0,0,0.18)',
+    borderBottom: `2px solid ${active ? siteTheme.accent : 'transparent'}`,
+    background: 'transparent',
+    color: active ? siteTheme.text : siteTheme.textMuted,
+    fontFamily: 'inherit',
+    fontSize: 12.5,
+    fontWeight: active ? 600 : 500,
+    whiteSpace: 'nowrap',
     cursor: 'pointer',
-    transition: 'width 0.15s ease, background 0.15s ease',
   };
 }
+
+const applicationNoteStyle: CSSProperties = {
+  margin: '4px 16px 16px',
+  paddingTop: 12,
+  borderTop: `1px solid ${HAIRLINE}`,
+  color: siteTheme.textMuted,
+  fontSize: 13,
+  lineHeight: 1.5,
+};
 
 const specPreStyle: CSSProperties = {
   margin: 0,
@@ -2269,6 +2591,13 @@ const featureTitleStyle: CSSProperties = {
   lineHeight: 1.35,
   fontWeight: 500,
   margin: '0 0 14px',
+};
+
+const featureTitleHighlightStyle: CSSProperties = {
+  textDecoration: 'underline',
+  textDecorationColor: 'rgba(0, 0, 0, 0.22)',
+  textDecorationThickness: 2,
+  textUnderlineOffset: 5,
 };
 
 const featureNumberStyle: CSSProperties = {

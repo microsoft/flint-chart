@@ -15,10 +15,11 @@ interface FlintViewProps {
   compact?: boolean;
   /** Text shown before the error message. */
   errorPrefix?: string;
+  onChange?: FlintChartProps['onChange'];
 }
 
 /** A `FlintChart` that shows its compile error (and optionally warnings) in place. */
-export function FlintView({ spec, backend, renderer = 'canvas', chartId, ariaLabel, showWarnings = false, compact = false, errorPrefix }: FlintViewProps) {
+export function FlintView({ spec, backend, renderer = 'canvas', chartId, ariaLabel, showWarnings = false, compact = false, errorPrefix, onChange }: FlintViewProps) {
   const [warnings, setWarnings] = useState<readonly ChartWarning[]>([]);
   const [error, setError] = useState<string | null>(null);
   const onError = useCallback((err: Error) => setError(err.message), []);
@@ -39,6 +40,7 @@ export function FlintView({ spec, backend, renderer = 'canvas', chartId, ariaLab
           ariaLabel={ariaLabel}
           onWarnings={showWarnings ? setWarnings : undefined}
           onError={onError}
+          onChange={onChange}
         />
       )}
       {error && (

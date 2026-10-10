@@ -206,6 +206,21 @@ export function withHouse<T extends { chart_spec: Record<string, unknown> }>(
 }
 
 /**
+ * Redraw an application's chart in another house, keeping its own sizing and any tweaks it layers
+ * on its house. `undefined` keeps the house it was authored with; `null` is Flint's default, which
+ * drops the tweaks too: without a house beneath them they would stand as a whole theme with no inks.
+ */
+export function withHouseId<T extends { theme_spec?: string | ThemeSpec }>(input: T, theme: string | null | undefined): T {
+  if (theme === undefined) return input;
+  const { theme_spec: authored, ...rest } = input;
+  if (theme === null) return rest as T;
+  if (authored && typeof authored === 'object' && 'extends' in authored) {
+    return { ...input, theme_spec: { ...authored, extends: theme } };
+  }
+  return { ...rest, theme_spec: theme } as T;
+}
+
+/**
  * The case each chart type shows first: a real, unfaceted one when there is one, else the first.
  * One pass over every generator; the labs index the result by chart type.
  */

@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import type { ThemeSpec } from 'flint-chart';
+import type { FlintChartProps } from 'flint-chart/react';
 import type { TestCase } from 'flint-chart/test-data';
 import { FlintView } from './FlintView';
 import { testCaseToAssemblyInput, thumbnailCanvasSize, withHouse, type CanvasSize } from '../shared/test-case-utils';
@@ -20,6 +21,7 @@ export function WallChart({
   themeSpec,
   useThemeCanvas = false,
   headline,
+  onChange,
 }: {
   testCase: TestCase;
   backend: PreviewBackend;
@@ -44,6 +46,7 @@ export function WallChart({
    * the caller supplies one where the chart is shown to readers.
    */
   headline?: { title?: string; subtitle?: string };
+  onChange?: FlintChartProps['onChange'];
 }) {
   const input = useMemo(() => {
     const base = testCaseToAssemblyInput(testCase, canvasSize ?? thumbnailCanvasSize(testCase));
@@ -63,5 +66,5 @@ export function WallChart({
     return { ...themed, chart_spec: spec };
   }, [testCase, canvasSize, chartPropertyOverrides, themeId, themeSpec, useThemeCanvas, backend, headline?.title, headline?.subtitle]);
 
-  return <FlintView spec={input} backend={backend} compact />;
+  return <FlintView spec={input} backend={backend} compact onChange={onChange} />;
 }

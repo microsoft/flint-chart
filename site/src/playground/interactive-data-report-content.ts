@@ -225,7 +225,9 @@ const dataCentersFixture: InteractionDemoFixture = {
       title: 'Data center construction spending has grown thirtyfold since 2014',
       subtitle: 'United States, quarterly average of monthly construction spending on data centers',
       encodings: { x: 'Month', y: 'Spending' },
-      baseSize: { width: 520, height: 320 },
+      baseSize: { width: 640, height: 394 },
+      // Without a canvas the layout narrows the 51-quarter plot and lets it grow tall.
+      canvasSize: { width: 640, height: 394 },
       chartProperties: { showPoints: true },
     },
   } as ChartAssemblyInput,

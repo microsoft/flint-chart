@@ -12,6 +12,7 @@ import {
   type InteractiveChartSurface,
 } from 'flint-chart/interactive';
 import { FlintChart, type FlintChartHandle } from 'flint-chart/react';
+import { withHouseId } from '../shared/test-case-utils';
 import { ScaleToFit } from '../components/ScaleToFit';
 import { CLIMATE_CITIES, CLIMATE_MONTHS, type ClimateCity } from './climate-phase-data';
 import './interaction-candidates.css';
@@ -201,7 +202,7 @@ function chartInput(): ChartAssemblyInput {
 }
 
 const CHART_INPUT = chartInput();
-const READOUT_CHART_INPUT: ChartAssemblyInput = {
+export const READOUT_CHART_INPUT: ChartAssemblyInput = {
   ...CHART_INPUT,
   theme_spec: {
     extends: 'datawrapper',
@@ -223,7 +224,8 @@ const READOUT_CHART_INPUT: ChartAssemblyInput = {
   },
 };
 
-export function ClimatePhaseStage({ compact = false, height = compact ? 300 : 540, showReadout = false }: { compact?: boolean; height?: number; showReadout?: boolean } = {}) {
+export function ClimatePhaseStage({ compact = false, height = compact ? 300 : 540, showReadout = false, hint, themeId }: { compact?: boolean; height?: number; showReadout?: boolean; hint?: string; themeId?: string | null } = {}) {
+  const spec = useMemo(() => withHouseId(showReadout ? READOUT_CHART_INPUT : CHART_INPUT, themeId), [showReadout, themeId]);
   const [selectedCity, setSelectedCity] = useState('Seattle');
   const [activePhase, setActivePhase] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -343,7 +345,7 @@ export function ClimatePhaseStage({ compact = false, height = compact ? 300 : 54
           <div className="ic-flint-dimpvis-mount">
             <FlintChart
               ref={chartRef}
-              spec={showReadout ? READOUT_CHART_INPUT : CHART_INPUT}
+              spec={spec}
               interactions={interactions}
               renderer="svg"
               ariaLabel="Seasonal climate phase portrait"
@@ -354,6 +356,7 @@ export function ClimatePhaseStage({ compact = false, height = compact ? 300 : 54
           </div>
         </ScaleToFit>
       </div>
+      {hint && <p className="climate-phase-hint">{hint}</p>}
       {!showReadout && <div className="ic-toolbar climate-phase-footer">
         <button
           type="button"

@@ -152,19 +152,28 @@ function mountCanvasFurniture(container: HTMLElement, items: ReturnType<typeof r
     const rendered = container.querySelector(':scope > canvas, :scope > svg');
     if (items.length === 0 || !rendered) return;
     if (getComputedStyle(container).position === 'static') container.style.position = 'relative';
-    // SVG elements have no offsetLeft, so measure rects and undo any CSS scale on an ancestor.
-    const box = container.getBoundingClientRect();
-    const at = rendered.getBoundingClientRect();
-    const scale = container.offsetWidth > 0 ? box.width / container.offsetWidth : 1;
-    const left = (at.left - box.left) / (scale || 1) - container.clientLeft;
-    const top = (at.top - box.top) / (scale || 1) - container.clientTop;
     const layer = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     layer.setAttribute('aria-hidden', 'true');
     layer.setAttribute('class', 'flint-canvas-furniture');
-    layer.style.cssText = `position:absolute;left:${left}px;top:${top}px;`
-        + 'width:1px;height:1px;overflow:visible;pointer-events:none;';
+    layer.style.cssText = 'position:absolute;width:1px;height:1px;overflow:visible;pointer-events:none;';
     layer.innerHTML = canvasFurnitureMarkup(items);
     rendered.after(layer);
+    // SVG elements have no offsetLeft, so measure rects and undo any CSS scale on an ancestor.
+    const place = (): void => {
+        if (!layer.isConnected) {
+            observer?.disconnect();
+            return;
+        }
+        const box = container.getBoundingClientRect();
+        const at = rendered.getBoundingClientRect();
+        const scale = container.offsetWidth > 0 ? box.width / container.offsetWidth : 1;
+        layer.style.left = `${(at.left - box.left) / (scale || 1) - container.clientLeft}px`;
+        layer.style.top = `${(at.top - box.top) / (scale || 1) - container.clientTop}px`;
+    };
+    // The chart can move inside its host after mount, as when the host is resized and centres it.
+    const observer = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(place);
+    observer?.observe(container);
+    place();
 }
 
 /**

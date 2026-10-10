@@ -3211,10 +3211,14 @@ function applySeriesInk(spec: any, d: DesignDecisions, table: any[], say: (p: st
                             `the categories carry a sign — ${signed.domain.map((v, i) => `${v} is ${signed.roles[i]}`).join(', ')}`);
                         saidStatus = true;
                     }
-                } else {
-                    setColorRange(enc, [s.status.negative, s.status.neutral, s.status.positive].filter(Boolean) as string[]);
+                    continue;
                 }
-                continue;
+                // Categories with no sign between them (cities on a scatter whose x runs below zero)
+                // are an ordinary set; handing them negative/neutral/positive by index would repeat inks.
+                if (isContinuousColor(enc)) {
+                    setColorRange(enc, [s.status.negative, s.status.neutral, s.status.positive].filter(Boolean) as string[]);
+                    continue;
+                }
             }
             if ((s.mode === 'sequential' || s.mode === 'diverging') && s.range?.length) {
                 const quantize = s.quantize && enc.type === 'quantitative';

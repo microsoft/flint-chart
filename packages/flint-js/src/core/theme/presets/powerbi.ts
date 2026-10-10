@@ -35,7 +35,8 @@ export const powerbi: ThemePreset = {
                 "inverse": "#1b1a19"
             },
             "structure": {
-                "grid": "#3b3a39",
+                // A quiet grid is drawn part-way to the plot; from #3b3a39 it fell to #323130, near invisible on #1b1a19.
+                "grid": "#5a5856",
                 "axis": "#3b3a39",
                 "rule": "#3b3a39",
                 "connector": "#797775"

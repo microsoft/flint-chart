@@ -20,7 +20,7 @@ import { ClimatePhaseStage } from '../playground/ClimatePhaseStage';
 import { RetailDrilldownStage } from '../playground/RetailDrilldownStage';
 import { YouDrawItStage } from '../playground/YouDrawItStage';
 import { FreeformExplodedDetailStage } from '../playground/ExplodedDetailStage';
-import { ContinentCohortStage, CountryTableStage } from '../playground/ExternalToChartLab';
+import { ContinentCohortStage, ContinentTableStage, CountryTableStage } from '../playground/ExternalToChartLab';
 import {
   CaseCard, interactionCases,
 } from '../playground/InteractionGallery';
@@ -237,6 +237,9 @@ const curatedExamples = [
   { label: 'Table to chart', mode: 'country-table', implementation: 'Preset-level app integration', item: undefined,
     interactionLabel: 'External selection', icon: Table2,
     caption: 'Selecting a country in the Gapminder table highlights its point and annotates its income and life expectancy.' },
+  { label: 'Continent table', mode: 'continent-table', implementation: 'Preset-level app integration', item: undefined,
+    interactionLabel: 'Bidirectional group selection', icon: Table2,
+    caption: 'Selecting a continent in the summary table highlights its countries; clicking a country selects its continent in the table.' },
   { label: 'DimpVis', mode: 'climate-phase', implementation: 'Custom API', item: undefined,
     interactionLabel: 'Temporal dragging (DimpVis)', icon: Move,
     caption: "Dragging a city's seasonal path moves all cities through the year; playback animates the same cycle." },
@@ -297,6 +300,7 @@ function InteractionExamples({ selected, onSelect }: {
       <figure key={selected} className="ig-curated-example" data-example-mode={selected} aria-label={active.label}>
         {active.mode === 'continent-cohort' ? <ContinentCohortStage />
           : active.mode === 'country-table' ? <CountryTableStage />
+          : active.mode === 'continent-table' ? <ContinentTableStage />
           : active.mode === 'climate-phase' ? <ClimatePhaseStage compact height={440} showReadout />
           : active.mode === 'semantic-zoom' ? <RetailDrilldownStage />
           : active.mode === 'you-draw-it' ? <YouDrawItStage />

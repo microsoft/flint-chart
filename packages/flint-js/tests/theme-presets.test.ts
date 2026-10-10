@@ -1937,3 +1937,18 @@ describe('house icons', () => {
         }
     });
 });
+
+describe('status ink needs categories that carry a sign', () => {
+    it('gives cities on a scatter whose x runs below zero a colour each', () => {
+        const rows = [['Chicago', -2.8, 1.7], ['Houston', 10.4, 3.3], ['Los Angeles', 11.8, 2.8], ['New York', 1.1, 3.3], ['Seattle', 4.2, 5.7]]
+            .map(([City, Temperature, Precipitation]) => ({ City, Temperature, Precipitation }));
+        const vl: any = assembleVegaLite({
+            data: { values: rows },
+            semantic_types: { City: 'City', Temperature: 'Quantity', Precipitation: 'Quantity' },
+            theme_spec: 'nyt',
+            chart_spec: { chartType: 'Scatter Plot', encodings: { x: 'Temperature', y: 'Precipitation', color: 'City' } },
+        } as any);
+        const range: string[] = vl.encoding.color.scale.range;
+        expect(new Set(range.slice(0, rows.length)).size).toBe(rows.length);
+    });
+});

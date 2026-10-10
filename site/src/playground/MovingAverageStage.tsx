@@ -8,6 +8,7 @@ import {
   type InteractionDef,
 } from 'flint-chart/interactive';
 import { FlintChart } from 'flint-chart/react';
+import { withHouseId } from '../shared/test-case-utils';
 import { expressionInterpreter } from 'vega-interpreter';
 import prices from '../data/cpi-food-prices.json';
 import './moving-average-stage.css';
@@ -72,7 +73,7 @@ function averageOps(mean: number, label: string): ChartUpdate['ops'] {
 
 const MOUNT_AVERAGE: readonly ChartUpdate[] = [{ id: AVERAGE_ID, ops: averageOps(ALL_MEAN, `All months $${ALL_MEAN.toFixed(2)}`) }];
 
-const SPEC = {
+export const SPEC = {
   data: { values: [...ROWS] },
   semantic_types: {
     [MONTH]: 'YearMonth',
@@ -110,7 +111,8 @@ function selectionOf(event: FlintInteractionEventDetail['event']): Selection | n
   return { months: sorted.map((row) => row[MONTH]), mean: meanOf(sorted.map((row) => row[PRICE])) };
 }
 
-export function MovingAverageStage() {
+export function MovingAverageStage({ themeId }: { themeId?: string | null } = {}) {
+  const spec = useMemo(() => withHouseId(SPEC, themeId), [themeId]);
   const [selection, setSelection] = useState<Selection | null>(null);
 
   const interactions = useMemo<readonly InteractionDef[]>(() => {
@@ -164,7 +166,7 @@ export function MovingAverageStage() {
       <div className="ic-flint-dimpvis-panel">
         <div className="ic-flint-dimpvis-mount moving-average-mount">
           <FlintChart
-            spec={SPEC}
+            spec={spec}
             interactions={interactions}
             updates={MOUNT_AVERAGE}
             chartId={CHART_ID}

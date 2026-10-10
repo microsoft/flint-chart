@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type {
   InteractionDef,
   FlintInteractionEventDetail,
@@ -7,6 +7,7 @@ import { clickGroupFocus, externalInteraction } from 'flint-chart/interactive';
 import type { FlintChartHandle } from 'flint-chart/react';
 import { ScaleToFit } from '../components/ScaleToFit';
 import { InteractionDemoChart } from './InteractionDemoChart';
+import { withHouseId } from '../shared/test-case-utils';
 import {
   countriesFixture,
   ganttFixture,
@@ -44,6 +45,109 @@ function selectorKey(match: Record<string, unknown>): Record<string, unknown> {
   ]));
 }
 
+const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+
+/** One country picked in the table or on the chart: the point emphasised and its numbers noted on it. */
+function countrySelection(row: Record<string, unknown>): MatchPayload {
+  const country = String(row.Country);
+  return {
+    label: country,
+    match: { Country: country },
+    annotation: `${country}\nGDP/person: ${currency.format(Number(row['GDP per capita ($)']))}\nLife expectancy: ${Number(row['Life expectancy']).toFixed(1)} years`,
+  };
+}
+
+function CountryTable({ rows, activeLabel, onSelect }: {
+  rows: Record<string, unknown>[];
+  activeLabel?: string;
+  onSelect: (option: ControlOption) => void;
+}) {
+  const scroller = useRef<HTMLDivElement>(null);
+  // A pick on the chart brings its row into view, scrolling the table alone rather than the page.
+  useEffect(() => {
+    const box = scroller.current;
+    const row = box?.querySelector<HTMLElement>('tr.active');
+    if (!box || !row) return;
+    const head = box.querySelector('thead')?.getBoundingClientRect().height ?? 0;
+    const top = row.offsetTop - head;
+    if (top < box.scrollTop || row.offsetTop + row.offsetHeight > box.scrollTop + box.clientHeight) {
+      box.scrollTop = Math.max(0, top - (box.clientHeight - head - row.offsetHeight) / 2);
+    }
+  }, [activeLabel]);
+  return (
+    <div className="it-country-table-scroll" ref={scroller}>
+      <table className="it-country-table" aria-label="Gapminder country statistics, 2007">
+        <thead><tr><th scope="col">Country</th><th scope="col">GDP/person</th><th scope="col">Life (yr)</th></tr></thead>
+        <tbody>{rows.map(row => {
+          const country = String(row.Country);
+          return <tr key={country} className={activeLabel === country ? 'active' : undefined}
+            onClick={() => onSelect(countrySelection(row))}>
+            <td><button type="button" aria-pressed={activeLabel === country}>{country}</button></td>
+            <td>{currency.format(Number(row['GDP per capita ($)']))}</td>
+            <td>{Number(row['Life expectancy']).toFixed(1)}</td>
+          </tr>;
+        })}</tbody>
+      </table>
+    </div>
+  );
+}
+
+/** One row per continent, so a pick names a whole group rather than one point. */
+function ContinentTable({ rows, activeLabel, onSelect }: {
+  rows: Record<string, unknown>[];
+  activeLabel?: string;
+  onSelect: (option: ControlOption) => void;
+}) {
+  const continents = useMemo(() => {
+    const groups = new Map<string, Record<string, unknown>[]>();
+    for (const row of rows) groups.set(String(row.Continent), [...(groups.get(String(row.Continent)) ?? []), row]);
+    return [...groups].sort(([a], [b]) => a.localeCompare(b)).map(([continent, members]) => {
+      const incomes = members.map(row => Number(row['GDP per capita ($)'])).sort((a, b) => a - b);
+      const middle = Math.floor(incomes.length / 2);
+      return {
+        continent,
+        count: members.length,
+        income: incomes.length % 2 ? incomes[middle] : (incomes[middle - 1] + incomes[middle]) / 2,
+        life: members.reduce((total, row) => total + Number(row['Life expectancy']), 0) / members.length,
+      };
+    });
+  }, [rows]);
+  return (
+    <table className="it-country-table" aria-label="Gapminder continents, 2007">
+      <thead><tr><th scope="col">Continent</th><th scope="col">Countries</th><th scope="col">Median GDP/person</th><th scope="col">Life (yr)</th></tr></thead>
+      <tbody>{continents.map(({ continent, count, income, life }) => (
+        <tr key={continent} className={activeLabel === continent ? 'active' : undefined}
+          onClick={() => onSelect({ label: continent, match: { Continent: continent } })}>
+          <td><button type="button" aria-pressed={activeLabel === continent}>{continent}</button></td>
+          <td>{count}</td>
+          <td>{currency.format(income)}</td>
+          <td>{life.toFixed(1)}</td>
+        </tr>
+      ))}</tbody>
+    </table>
+  );
+}
+
+// Where the browser's English region name differs from Gapminder's.
+const GAPMINDER_REGIONS: Record<string, string> = {
+  BA: 'Bosnia and Herzegovina', CD: 'Congo, Dem. Rep.', CG: 'Congo, Rep.', CI: "Cote d'Ivoire",
+  CZ: 'Czech Republic', HK: 'Hong Kong, China', KP: 'Korea, Dem. Rep.', KR: 'Korea, Rep.',
+  MM: 'Myanmar', PS: 'West Bank and Gaza', RE: 'Reunion', SK: 'Slovak Republic',
+  ST: 'Sao Tome and Principe', TT: 'Trinidad and Tobago', YE: 'Yemen, Rep.',
+};
+
+/** The reader's own country, read from the browser locale, when the data has it. */
+function browserCountry(rows: Record<string, unknown>[]): Record<string, unknown> | undefined {
+  try {
+    const region = new Intl.Locale(navigator.language).maximize().region;
+    if (!region) return undefined;
+    const name = GAPMINDER_REGIONS[region] ?? new Intl.DisplayNames(['en'], { type: 'region' }).of(region);
+    return rows.find(row => row.Country === name);
+  } catch {
+    return undefined;
+  }
+}
+
 function ExternalControlContent({
   demo,
   activeLabel,
@@ -78,26 +182,11 @@ function ExternalControlContent({
   }
 
   if (demo.id === 'country-table') {
-    const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
-    return (
-      <div className="it-country-table-scroll">
-        <table className="it-country-table" aria-label="Gapminder country statistics, 2007">
-          <thead><tr><th scope="col">Country</th><th scope="col">GDP/person</th><th scope="col">Life (yr)</th></tr></thead>
-          <tbody>{(demo.fixture.input.data.values ?? []).map(row => {
-            const country = String(row.Country);
-            return <tr key={country} className={activeLabel === country ? 'active' : undefined}
-              onClick={() => onSelect({
-                label: country, match: { Country: country },
-                annotation: `${country}\nGDP/person: ${currency.format(Number(row['GDP per capita ($)']))}\nLife expectancy: ${Number(row['Life expectancy']).toFixed(1)} years`,
-              })}>
-              <td><button type="button" aria-pressed={activeLabel === country}>{country}</button></td>
-              <td>{currency.format(Number(row['GDP per capita ($)']))}</td>
-              <td>{Number(row['Life expectancy']).toFixed(1)}</td>
-            </tr>;
-          })}</tbody>
-        </table>
-      </div>
-    );
+    return <CountryTable rows={demo.fixture.input.data.values ?? []} activeLabel={activeLabel} onSelect={onSelect} />;
+  }
+
+  if (demo.id === 'continent-table') {
+    return <ContinentTable rows={demo.fixture.input.data.values ?? []} activeLabel={activeLabel} onSelect={onSelect} />;
   }
 
   if (demo.id === 'country-finder') {
@@ -244,10 +333,11 @@ const demos: ExternalDemo[] = [
   },
 ];
 
-function ExternalDemoRow({ demo, compact = false, bidirectional = false }: {
+function ExternalDemoRow({ demo, compact = false, bidirectional }: {
   demo: ExternalDemo;
   compact?: boolean;
-  bidirectional?: boolean;
+  /** The chart answers back: a click picks a whole continent, or one country with its numbers. */
+  bidirectional?: 'continent' | 'country';
 }) {
   const chartRef = useRef<FlintChartHandle>(null);
   const payloadRef = useRef<MatchPayload | null>(demo.defaultSelection ?? null);
@@ -269,19 +359,32 @@ function ExternalDemoRow({ demo, compact = false, bidirectional = false }: {
           }] : [])]
         : [{ op: 'set-style', targets: [], value: { state: 'normal' } }],
     }),
-  }), ...(bidirectional ? [clickGroupFocus({ groupBy: 'Continent' })] : [])], [interactionId, bidirectional]);
+  }), ...(bidirectional ? [clickGroupFocus({ groupBy: bidirectional === 'country' ? 'Country' : 'Continent' })] : [])], [interactionId, bidirectional]);
   // Each new mount starts from the control's current selection.
   const handleRender = useCallback(() => {
     if (payloadRef.current) void chartRef.current?.dispatch(interactionId, payloadRef.current);
   }, [interactionId]);
   const handleSemanticEvent = useCallback((detail: FlintInteractionEventDetail) => {
     if (!bidirectional || detail.event.phase === 'start' || detail.event.phase === 'cancel') return;
-    const continent = detail.event.target?.elements[0]?.value.Continent;
+    const value = detail.event.target?.elements[0]?.value;
+    if (bidirectional === 'country') {
+      // The clicked country gets the same note a table pick gives it.
+      const row = typeof value?.Country === 'string'
+        ? (demo.fixture.input.data.values ?? []).find(candidate => candidate.Country === value.Country)
+        : undefined;
+      const payload = row ? countrySelection(row) : null;
+      payloadRef.current = payload;
+      setLastPayload(payload);
+      if (payload) void chartRef.current?.dispatch(interactionId, payload);
+      else void chartRef.current?.clearUpdate(interactionId);
+      return;
+    }
+    const continent = value?.Continent;
     const payload = typeof continent === 'string' ? { label: continent, match: { Continent: continent } } : { label: 'All' };
     payloadRef.current = payload;
     setLastPayload(payload);
     void chartRef.current?.clearUpdate(interactionId);
-  }, [bidirectional, interactionId]);
+  }, [bidirectional, interactionId, demo.fixture]);
   const dispatch = async (payload: MatchPayload) => {
     payloadRef.current = payload;
     setLastPayload(payload);
@@ -344,15 +447,35 @@ const continentCohortDemo: ExternalDemo = {
 };
 
 export function ContinentCohortStage() {
-  return <ExternalDemoRow demo={continentCohortDemo} compact bidirectional />;
+  return <ExternalDemoRow demo={continentCohortDemo} compact bidirectional="continent" />;
 }
 
-export function CountryTableStage() {
+export function CountryTableStage({ themeId }: { themeId?: string | null } = {}) {
+  const fixture = useMemo(() => ({ ...countriesFixture, input: withHouseId(countriesFixture.input, themeId) }), [themeId]);
+  const defaultSelection = useMemo(() => {
+    const rows = countriesFixture.input.data.values ?? [];
+    const row = browserCountry(rows) ?? rows.find(candidate => candidate.Country === 'United States');
+    return row ? countrySelection(row) : undefined;
+  }, []);
   return <ExternalDemoRow demo={{
-    id: 'country-table', fixture: countriesFixture, title: 'Country table selection',
+    id: 'country-table', fixture, title: 'Country table selection',
     description: 'Country statistics linked to income and life expectancy.',
-    controlLabel: 'Gapminder countries, 2007', options: [],
-  }} compact />;
+    controlLabel: 'Gapminder countries, 2007', options: [], defaultSelection,
+  }} compact bidirectional="country" />;
+}
+
+/** The same table-to-chart link, a level up: a continent row lights its countries, and a country picks its continent. */
+export function ContinentTableStage({ themeId }: { themeId?: string | null } = {}) {
+  const fixture = useMemo(() => ({ ...countriesFixture, input: withHouseId(countriesFixture.input, themeId) }), [themeId]);
+  const defaultSelection = useMemo(() => {
+    const continent = String(browserCountry(countriesFixture.input.data.values ?? [])?.Continent ?? 'Americas');
+    return { label: continent, match: { Continent: continent } };
+  }, []);
+  return <ExternalDemoRow demo={{
+    id: 'continent-table', fixture, title: 'Continent table selection',
+    description: 'Continent summaries linked to every country they hold.',
+    controlLabel: 'Gapminder continents, 2007', options: [], defaultSelection,
+  }} compact bidirectional="continent" />;
 }
 
 export function ExternalToChartLab() {

@@ -4580,6 +4580,28 @@ describe('set-style visibility', () => {
         view.finalize();
     });
 
+    it('keeps a themed axis label colour outside the hover', async () => {
+        const compiled = compile({
+            data: { values: [{ Column: 'A', Value: 1 }] },
+            mark: 'bar',
+            encoding: {
+                x: { field: 'Column', type: 'nominal' },
+                y: { field: 'Value', type: 'quantitative' },
+            },
+            config: { axisX: { labelColor: '#c8c6c4' } },
+        }).spec as Record<string, any>;
+        collectVegaAxisTargets(compiled, {
+            x: { field: 'Column', type: 'nominal' },
+            y: { field: 'Value', type: 'quantitative' },
+        }, [], '#123456');
+        injectVegaInteractionStore(compiled);
+        const view = new View(parse(compiled), { renderer: 'none' });
+        await view.runAsync();
+        const label = allSceneItems(view).find((item) => item.mark?.role === 'axis-label' && item.datum?.value === 'A');
+        expect(label?.fill).toBe('#c8c6c4');
+        view.finalize();
+    });
+
     it('turns an axis target into a style update without accepting mark targets', () => {
         const interaction = axisHighlight({ axis: 'x', dimOpacity: 0.2 });
         const context = { chartType: 'Bar Chart', selected: [] };

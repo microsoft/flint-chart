@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   BarChart3, Braces, Brush, ChevronRight, Crosshair, Globe, Link2, Map as MapIcon, MessageSquare, MousePointerClick,
   Move, Pencil, PenLine, Play, Route, ScrollText, ShoppingBasket, Sigma, SquareDashed, Thermometer, TrendingUp, ZoomIn,
@@ -354,6 +355,10 @@ function CaseRail({ scroller }: { scroller: RefObject<HTMLElement | null> }) {
 
 export function AdvancedInteractions() {
   const scroller = useRef<HTMLElement>(null);
+  const linkedCase = useSearchParams()[0].get('case');
+  useEffect(() => {
+    if (linkedCase) document.getElementById(linkedCase)?.scrollIntoView({ block: 'start' });
+  }, [linkedCase]);
   return (
     <SiteShell>
       <main className="bespoke-public-scroll" ref={scroller}>

@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ChartAssemblyInput } from 'flint-chart';
 import type { ChartChange } from 'flint-chart/interactive';
 import { FlintChart } from 'flint-chart/react';
 import { expressionInterpreter } from 'vega-interpreter';
 import worldCup from '../data/world-cup-2026.json';
+import { withHouseId } from '../shared/test-case-utils';
 
 type Scorer = (typeof worldCup.scorers)[number];
 
@@ -23,7 +24,7 @@ function ranksOf(scorers: Scorer[]): number[] {
 }
 
 /** The click highlight comes from the spec itself, so the chart needs no definitions from the page. */
-const TEAMS_SPEC = {
+export const TEAMS_SPEC = {
   data: { values: TEAMS.map((team) => ({ Team: team.team, Goals: team.goals })) },
   semantic_types: { Team: 'Category', Goals: 'Count' },
   chart_spec: {
@@ -43,7 +44,8 @@ function pinnedTeam(change: ChartChange): string | null {
   return team === undefined ? null : String(team);
 }
 
-export function WorldCupScorersDemo() {
+export function WorldCupScorersDemo({ themeId }: { themeId?: string | null } = {}) {
+  const spec = useMemo(() => withHouseId(TEAMS_SPEC, themeId), [themeId]);
   const [team, setTeam] = useState<string | null>(null);
   const [open, setOpen] = useState<string | null>(null);
   const handleChange = useCallback((change: ChartChange) => setTeam(pinnedTeam(change)), []);
@@ -63,7 +65,7 @@ export function WorldCupScorersDemo() {
       <div className="it-workspace it-workspace-outbound">
         <section className="it-chart-panel">
           <FlintChart
-            spec={TEAMS_SPEC}
+            spec={spec}
             chartId="world-cup-teams"
             ariaLabel="Goals by team"
             renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%"

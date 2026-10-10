@@ -426,31 +426,6 @@
   background: #f6f7f8;
 }
 
-.idr-chat-window-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border-bottom: 1px solid #e6eaed;
-  padding: 10px 16px;
-  background: #fff;
-}
-
-.idr-chat-window-avatar {
-  display: inline-grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--it-accent);
-  color: #fff;
-}
-
-.idr-chat-window-title {
-  color: var(--it-ink);
-  font-size: 12px;
-  font-weight: 600;
-}
-
 .idr-chat-window .idr-chat-messages {
   flex: 1 1 auto;
   gap: 16px;
@@ -505,8 +480,7 @@
 
 .idr-chat-chart-bubble .it-chart-mount { min-height: 0; }
 
-.idr-chat-window-foot { display: grid; gap: 8px; margin: 0 14px 14px; }
-.idr-chat-window-foot .idr-chat-window-composer { margin: 0; }
+.idr-chat-window-foot { margin: 0 14px 14px; }
 
 .idr-chat-context-chip {
   display: inline-flex;
@@ -521,37 +495,49 @@
   font-weight: 600;
 }
 
-.idr-chat-context-block {
+.idr-chat-composer {
   display: grid;
-  gap: 4px;
-  padding: 8px 10px;
+  gap: 8px;
+  padding: 8px 9px 9px 10px;
+  border: 1px solid var(--it-line);
+  border-radius: 12px;
+  background: #fff;
+}
+
+/* One line whatever is selected, so the composer never changes height. */
+.idr-composer-context {
+  justify-self: start;
+  max-width: 100%;
+  overflow: hidden;
+  padding: 2px 8px;
   border: 1px solid #cfe4dc;
-  border-radius: 8px;
+  border-radius: 6px;
   background: #f3f8f6;
   color: #2f4b40;
   font-size: 12px;
-  line-height: 1.5;
+  line-height: 18px;
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.idr-chat-context-block p { margin: 0; }
-.idr-chat-context-block p:first-child { display: flex; align-items: center; gap: 5px; }
-.idr-chat-context-block svg { flex: none; color: var(--it-accent); }
-.idr-chat-context-points { color: #5b6d66; font-variant-numeric: tabular-nums; }
-.idr-chat-context-sep { margin: 0 6px; color: #b8c4bf; }
 
-.idr-chat-window-composer {
+.idr-composer-context.is-empty {
+  border-style: dashed;
+  border-color: #d5dbdf;
+  background: transparent;
+  color: #8a949b;
+}
+
+.idr-composer-input {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin: 0 14px 14px;
-  padding: 9px 9px 9px 14px;
-  border: 1px solid var(--it-line);
-  border-radius: 999px;
-  background: #fff;
+  padding-left: 4px;
   color: #9aa3aa;
   font-size: 14px;
 }
 
-.idr-chat-window-composer > span:first-child { flex: 1; }
+.idr-composer-input > span:first-child { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .idr-chat-window-send {
   display: inline-grid;
