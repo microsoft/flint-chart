@@ -28,6 +28,14 @@ const LINE_DASHES: ReadonlyArray<'solid' | readonly number[]> = ['solid', [8, 4]
 /** Stroke of a strokeDash legend sample when colour varies, as the sample stands for every colour. */
 const DASH_KEY_COLOR = '#777777';
 
+/**
+ * Name of the empty series behind a dash value's legend entry when colour varies:
+ * the dash label and a zero-width space. Legend entries toggle series by name, so
+ * a dash value equal to a colour value keeps its own entry and leaves that
+ * colour's lines alone, while the entry still reads as the dash label.
+ */
+const dashKeyName = (label: string): string => `${label}\u200b`;
+
 function dashPattern(index: number): 'solid' | number[] {
     const dash = LINE_DASHES[index % LINE_DASHES.length];
     return typeof dash === 'string' ? dash : [...dash];
@@ -361,16 +369,16 @@ export const ecLineChartDef: ChartTemplateDef = {
                 option.legend = {
                     data: [
                         ...names.map((name) => ({ name, lineStyle: { type: 'solid' } })),
-                        ...dashLabels.map((name, i) => ({
-                            name,
+                        ...dashLabels.map((label, i) => ({
+                            name: dashKeyName(label),
                             lineStyle: { type: dashPattern(i), color: DASH_KEY_COLOR },
                             itemStyle: { color: DASH_KEY_COLOR, opacity: 0 },
                         })),
                     ],
                 };
-                dashLabels.forEach((name, i) => {
+                dashLabels.forEach((label, i) => {
                     option.series.push({
-                        name,
+                        name: dashKeyName(label),
                         type: 'line',
                         data: [],
                         silent: true,

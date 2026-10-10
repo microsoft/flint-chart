@@ -40,8 +40,9 @@ function lineInput(
 }
 
 const drawn = (option: any) => option.series.filter((s: any) => s.data.length > 0);
+/** Legend entries as they read: a dash entry's name ends in a zero-width space. */
 const legendNames = (option: any) =>
-  option.legend.data.map((d: any) => (typeof d === 'string' ? d : d.name));
+  option.legend.data.map((d: any) => (typeof d === 'string' ? d : d.name).replace(/\u200b$/, ''));
 
 /** The axis tooltip at one category, as ECharts calls the formatter with one item per line. */
 function axisTooltip(option: any, categoryIndex: number, series: any[] = drawn(option)): string {
@@ -114,9 +115,30 @@ describe('ECharts Line Chart — strokeDash', () => {
     it('backs each dash entry with an empty proxy series', () => {
       const proxies = option.series.filter((s: any) => s.data.length === 0);
       expect(proxies.map((s: any) => [s.name, s.lineStyle.type, s.itemStyle.color])).toEqual([
-        ['Consumption', 'solid', '#777777'],
-        ['Limit', DASHED, '#777777'],
+        ['Consumption\u200b', 'solid', '#777777'],
+        ['Limit\u200b', DASHED, '#777777'],
       ]);
+    });
+
+    it('keeps a dash value equal to a colour value its own legend entry', () => {
+      // 'Limit' is both a colour value and a dash value.
+      const clash = assembleECharts(lineInput(
+        { x: 'period', y: 'value', color: 'constraint', strokeDash: 'measure' },
+        [
+          { period: 'P1', value: 8, constraint: 'Limit', measure: 'Consumption' },
+          { period: 'P1', value: 9, constraint: 'Limit', measure: 'Limit' },
+          { period: 'P1', value: 5, constraint: 'C1', measure: 'Consumption' },
+        ],
+      )) as any;
+      expect(legendNames(clash)).toEqual(['Limit', 'C1', 'Consumption', 'Limit']);
+      // A legend entry toggles the series of its name: the colour entry its two
+      // lines, the dash entry its empty proxy alone.
+      const toggledBy = (entry: any) => clash.series
+        .filter((s: any) => s.name === entry.name)
+        .map((s: any) => (s.data.length > 0 ? 'line' : 'proxy'));
+      const [limitColour, , , limitDash] = clash.legend.data;
+      expect(toggledBy(limitColour)).toEqual(['line', 'line']);
+      expect(toggledBy(limitDash)).toEqual(['proxy']);
     });
 
     it('names each line after its colour and dash values in the axis tooltip', () => {
