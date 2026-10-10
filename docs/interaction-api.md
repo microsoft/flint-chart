@@ -199,6 +199,25 @@ await surface.dispatch('filters', { reset: true });
 
 With `render: false` the preset draws nothing; your application draws its own controls and calls `dispatch` with `{ field, value }`, `{ filters }`, or `{ reset: true }`. The preset is skipped, with a warning, on a chart that has viewports from `navigate` or `brush-zoom`.
 
+`contextMenu` is the other widget: a menu of your application's actions that opens beside the marks the reader picks. `gesture` sets how they pick them: a `rectangle` (the default) or a brush that stays on screen to move or resize, a `lasso`, a `click`, a `right-click`, or a `long-press`. Picking an item emits a `flint-interaction` event with `action: 'menu-select'`, the item's id in `event.item`, and the picked marks as `event.target`; your application performs the action. The menu closes when the selection clears, on Escape, or on a click elsewhere. With `render: false` it draws nothing, and you open your own menu from the selection's `commit` events.
+
+```ts
+import { mountChart, contextMenu } from 'flint-chart/interactive';
+
+mountChart(container, input, {
+  interactions: [
+    contextMenu({
+      gesture: 'lasso',
+      items: [{ id: 'chat', label: 'Send to chat' }, { id: 'report', label: 'Add to report' }],
+    }),
+  ],
+});
+container.addEventListener('flint-interaction', (event) => {
+  const { action, item, target } = event.detail.event;
+  if (action === 'menu-select') runAction(item, target.elements);
+});
+```
+
 ## Update operators and host responses
 
 `set-style` controls emphasis or visibility, `set-annotation` adds or clears a label, and `set-viewport` changes the visible domains. Other operators reorder categories, add overlays, or replace data. A single handler can return multiple operators in one update.

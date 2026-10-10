@@ -418,18 +418,18 @@ const wallStyles = `
     font-weight: 700;
     letter-spacing: 0;
   }
-  .themes-prose { font-size: 16px; line-height: 1.75; color: ${siteTheme.text}; }
+  .themes-prose { font-size: 16.5px; line-height: 1.65; color: ${siteTheme.text}; }
   .themes-prose p { margin: 0 0 20px; }
   .themes-intro { margin-bottom: 24px; }
   .themes-how {
     margin-top: 40px;
     padding-top: 28px;
     border-top: 1px solid ${siteTheme.border};
-    font-size: 15px;
+    font-size: 16px;
     line-height: 1.75;
     color: ${siteTheme.text};
   }
-  .themes-how h2 { margin: 0 0 20px; font-size: 22px; line-height: 1.4; }
+  .themes-how h2 { margin: 0 0 20px; font-size: 22px; line-height: 1.35; }
   .themes-how h3 { margin: 28px 0 14px; font-size: 18px; line-height: 1.4; }
   .themes-how p { margin: 0 0 20px; }
   .themes-code {
@@ -470,20 +470,20 @@ const wallStyles = `
     width: fit-content;
     max-width: 100%;
     box-sizing: border-box;
-    min-height: 36px;
+    min-height: 44px;
     display: inline-flex;
     align-items: center;
-    gap: 7px;
-    padding: 8px 12px;
-    border: 1px solid ${siteTheme.text};
-    border-radius: 6px;
+    gap: 8px;
+    padding: 11px 18px;
+    border: 1px solid rgba(0, 0, 0, 0.24);
+    border-radius: ${siteTheme.radius}px;
     background: ${siteTheme.surface};
     color: ${siteTheme.text};
-    font-size: 15px;
-    font-weight: 500;
-    line-height: 1.4;
+    font-size: 14.5px;
+    font-weight: 600;
+    line-height: 1.2;
     text-decoration: none;
-    transition: background 120ms ease, color 120ms ease;
+    transition: background 0.12s ease, border-color 0.12s ease, transform 0.12s ease;
   }
   .themes-cta-icon {
     width: 18px;
@@ -497,11 +497,12 @@ const wallStyles = `
   }
   .themes-cta:hover,
   .themes-cta:focus-visible {
-    background: ${siteTheme.text};
-    color: ${siteTheme.surface};
+    background: ${siteTheme.hover};
+    border-color: rgba(0, 0, 0, 0.42);
+    transform: translateY(-1px);
   }
   .themes-cta:focus-visible {
-    outline: 2px solid ${siteTheme.text};
+    outline: 2px solid ${siteTheme.accent};
     outline-offset: 2px;
   }
   .themes-controls-row {

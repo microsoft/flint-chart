@@ -144,6 +144,7 @@ export interface StyleSpec {
 export interface OverlayStyleSpec {
     fill?: string;
     fillOpacity?: number;
+    /** On text, the halo behind the glyphs: the chart's background by default, `'none'` for no halo. */
     stroke?: string;
     strokeWidth?: number;
     strokeDash?: readonly number[];

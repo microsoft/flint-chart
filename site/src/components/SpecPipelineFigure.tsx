@@ -1,10 +1,12 @@
 import { useMemo } from 'react';
+import stringify from 'json-stringify-pretty-compact';
 import { assembleVegaLite } from 'flint-chart';
-import { TEST_GENERATORS, type TestCase } from 'flint-chart/test-data';
+import { buildMetadata, makeEncodingItem, makeField, type TestCase } from 'flint-chart/test-data';
+import { CodeBlock } from './CodeBlock';
 import { ScaleToFit } from './ScaleToFit';
 import { WallChart } from './WallChart';
 import { siteTheme } from '../shared/theme';
-import { testCaseToAssemblyInput, testCaseToFlintSummary } from '../shared/test-case-utils';
+import { testCaseToAssemblyInput, testCaseToFlintSummary, withHouse } from '../shared/test-case-utils';
 
 const PAPER = '#ffffff';
 const HAIRLINE = 'rgba(0, 0, 0, 0.12)';
@@ -13,6 +15,59 @@ const OMITTED = '__omitted__';
 const MAX_COMPILED_SPEC_LINES = 38;
 const MAX_MOBILE_COMPILED_SPEC_LINES = 24;
 type FigureOrientation = 'horizontal' | 'vertical';
+const THEME = 'nyt';
+
+const HOVER_ROW = { interactions: [{ type: 'hover-group-focus', options: { groupBy: 'City' } }] } as const;
+// Hand-indented so the interaction reads in a few lines; it is the same object as HOVER_ROW.
+const HOVER_ROW_TEXT = `  "interaction_spec": {
+    "interactions": [{
+      "type": "hover-group-focus",
+      "options": {
+        "groupBy": "City"
+      }
+    }]
+  }`;
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+// Monthly mean temperature (°C), rounded 1991–2020 climate normals; north to south, so the seasons flip at the equator.
+const CLIMATE_NORMALS: Record<string, number[]> = {
+  'Reykjavík': [-1, 0, 0, 3, 6, 9, 11, 10, 8, 4, 1, 0],
+  Moscow: [-6, -6, -1, 7, 13, 17, 19, 17, 11, 6, 0, -4],
+  London: [5, 5, 8, 10, 13, 16, 19, 18, 16, 12, 8, 6],
+  'New York': [1, 2, 6, 12, 17, 22, 25, 25, 21, 15, 9, 4],
+  Beijing: [-3, 0, 7, 15, 21, 25, 27, 26, 21, 14, 5, -1],
+  Cairo: [14, 15, 18, 22, 26, 28, 29, 29, 27, 24, 20, 16],
+  Mumbai: [24, 25, 27, 29, 30, 29, 28, 27, 28, 29, 28, 26],
+  Singapore: [27, 27, 28, 28, 28, 28, 28, 28, 28, 28, 27, 26],
+  Nairobi: [19, 20, 21, 20, 19, 17, 16, 17, 18, 20, 19, 19],
+  'São Paulo': [23, 23, 22, 21, 18, 17, 17, 18, 19, 20, 21, 22],
+  Sydney: [23, 23, 22, 19, 16, 14, 13, 14, 16, 18, 20, 22],
+  'Cape Town': [22, 22, 21, 18, 16, 14, 13, 14, 15, 17, 19, 21],
+};
+
+function climateNormals(): TestCase {
+  const data = Object.entries(CLIMATE_NORMALS).flatMap(([City, temps]) =>
+    temps.map((Temperature, index) => ({ Month: MONTHS[index], City, Temperature })));
+  const metadata = buildMetadata(data);
+  metadata.Month.semanticType = 'Month';
+  metadata.City.semanticType = 'City';
+  metadata.Temperature.semanticType = 'Temperature';
+  return {
+    title: 'Monthly mean temperature by city',
+    description: '',
+    tags: [],
+    chartType: 'Heatmap',
+    data,
+    fields: [makeField('Month'), makeField('City'), makeField('Temperature')],
+    metadata,
+    encodingMap: {
+      x: makeEncodingItem('Month'),
+      y: makeEncodingItem('City'),
+      color: makeEncodingItem('Temperature'),
+    },
+    interactionSpec: HOVER_ROW,
+  };
+}
 
 /**
  * Static three-panel pipeline figure: compact Flint spec → compiled
@@ -21,11 +76,12 @@ type FigureOrientation = 'horizontal' | 'vertical';
  */
 export function SpecPipelineFigure({ orientation = 'horizontal' }: { orientation?: FigureOrientation }) {
   const vertical = orientation === 'vertical';
-  const testCase = useMemo(() => TEST_GENERATORS['Omni: Heatmap']()[0], []);
+  const testCase = useMemo<TestCase>(() => climateNormals(), []);
   const specText = useMemo(() => {
     const summary = testCaseToFlintSummary(testCase);
     const body = JSON.stringify({ data: '{...}', ...summary }, null, 2);
-    return body.replace('"{...}"', '{...}');
+    return body.replace('"{...}"', '{...}')
+      .replace(/\n}$/, `,\n  "theme_spec": "${THEME}",\n${HOVER_ROW_TEXT}\n}`);
   }, [testCase]);
   const compiledSpecText = useMemo(
     () => buildCompiledSpecExcerpt(testCase, vertical ? MAX_MOBILE_COMPILED_SPEC_LINES : MAX_COMPILED_SPEC_LINES),
@@ -38,7 +94,7 @@ export function SpecPipelineFigure({ orientation = 'horizontal' }: { orientation
         <div style={vertical ? verticalPaneHeaderStyle : paneHeaderStyle}>
           <span style={vertical ? verticalPaneTitleStyle : paneTitleStyle}>Flint spec</span>
         </div>
-        <pre style={vertical ? verticalSpecPreStyle : specPreStyle}>{specText}</pre>
+        <CodeBlock language="json" variant="light" wrapLongLines customStyle={vertical ? verticalSpecPreStyle : specPreStyle}>{specText}</CodeBlock>
       </div>
 
       <ArrowColumn orientation={orientation} />
@@ -47,7 +103,7 @@ export function SpecPipelineFigure({ orientation = 'horizontal' }: { orientation
         <div style={vertical ? verticalChartHeaderStyle : chartHeaderStyle}>
           <span style={vertical ? verticalPaneTitleStyle : paneTitleStyle}>Compiled spec <span style={backendLabelStyle}>(Vega-Lite)</span></span>
         </div>
-        <pre style={vertical ? verticalCompiledPreStyle : compiledPreStyle}>{compiledSpecText}</pre>
+        <CodeBlock language="json" variant="light" wrapLongLines customStyle={vertical ? verticalCompiledPreStyle : compiledPreStyle}>{compiledSpecText}</CodeBlock>
       </div>
 
       <ArrowColumn orientation={orientation} />
@@ -57,8 +113,9 @@ export function SpecPipelineFigure({ orientation = 'horizontal' }: { orientation
           <span style={vertical ? verticalPaneTitleStyle : paneTitleStyle}>Visualization</span>
         </div>
         <div style={vertical ? verticalChartBodyStyle : chartBodyStyle}>
-          <ScaleToFit height={vertical ? 360 : 560} minHeight={vertical ? 260 : 520} padding={0} adaptiveHeight>
-            <WallChart testCase={testCase} backend="vegalite" canvasSize={FIGURE_CANVAS} />
+          {/* The theme sizes the chart below the pane, so let it grow to fill the column. */}
+          <ScaleToFit height={vertical ? 360 : 560} minHeight={vertical ? 260 : 520} padding={0} adaptiveHeight maxScale={2}>
+            <WallChart testCase={testCase} backend="vegalite" canvasSize={FIGURE_CANVAS} themeId={THEME} />
           </ScaleToFit>
         </div>
       </div>
@@ -67,7 +124,7 @@ export function SpecPipelineFigure({ orientation = 'horizontal' }: { orientation
 }
 
 function buildCompiledSpecExcerpt(testCase: TestCase, maxLines: number): string {
-  const spec = assembleVegaLite(testCaseToAssemblyInput(testCase, FIGURE_CANVAS));
+  const spec = assembleVegaLite(withHouse(testCaseToAssemblyInput(testCase, FIGURE_CANVAS), THEME));
   const excerpt = {
     data: spec.data ? OMITTED : undefined,
     mark: spec.mark,
@@ -76,8 +133,39 @@ function buildCompiledSpecExcerpt(testCase: TestCase, maxLines: number): string 
     encoding: spec.encoding,
     ...(spec.config ? { config: compactConfig(spec.config) } : {}),
   };
-  const text = JSON.stringify(excerpt, null, 2).split(`"${OMITTED}"`).join('{...}');
+  const text = condensedJson(excerpt, 36).split(`"${OMITTED}"`).join('{...}');
   return cropCompiledSpec(text, maxLines);
+}
+
+/** Short objects stay on one line, and value lists (a sort order) pack into a few lines. */
+function condensedJson(value: unknown, width: number): string {
+  const arrays: unknown[][] = [];
+  const replaced = JSON.parse(JSON.stringify(value), (_key, entry) => {
+    if (Array.isArray(entry) && entry.length > 4 && entry.every((item) => item === null || typeof item !== 'object')) {
+      arrays.push(entry);
+      return `__list${arrays.length - 1}__`;
+    }
+    return entry;
+  });
+  let text = stringify(replaced, { maxLength: width });
+  arrays.forEach((items, index) => {
+    const token = `"__list${index}__"`;
+    const at = text.indexOf(token);
+    const column = at - text.lastIndexOf('\n', at) - 1;
+    const rows: string[] = [];
+    let row = '';
+    for (const item of items.map((entry) => JSON.stringify(entry))) {
+      if (row && column + 1 + row.length + item.length + 2 > width) {
+        rows.push(row);
+        row = '';
+      }
+      row += row ? ` ${item},` : `${item},`;
+    }
+    rows.push(row);
+    const packed = `[${rows.join(`\n${' '.repeat(column + 1)}`).replace(/,$/, '')}]`;
+    text = text.slice(0, at) + packed + text.slice(at + token.length);
+  });
+  return text;
 }
 
 function cropCompiledSpec(text: string, maxLines: number): string {
@@ -87,7 +175,7 @@ function cropCompiledSpec(text: string, maxLines: number): string {
   const hiddenLines = lines.slice(visibleLineCount);
   return [
     ...lines.slice(0, visibleLineCount),
-    `  ... // ${hiddenLines.length} more lines`,
+    `  ... // ${hiddenLines.length} more lines (excluding interaction)`,
   ].join('\n');
 }
 
@@ -115,7 +203,7 @@ const figureStyle: React.CSSProperties = {
   maxWidth: '100%',
   minHeight: 680,
   display: 'grid',
-  gridTemplateColumns: 'minmax(0, 1fr) 34px minmax(0, 1.1fr) 34px minmax(0, 1.55fr)',
+  gridTemplateColumns: 'minmax(0, 1.3fr) 34px minmax(0, 1fr) 34px minmax(0, 1.4fr)',
   columnGap: 14,
   padding: '0 18px',
   boxSizing: 'border-box',

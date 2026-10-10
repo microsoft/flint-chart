@@ -5,9 +5,8 @@
     "themes": "Themes",
     "gallery": "Gallery",
     "chartGallery": "Chart Gallery",
-    "interactionGallery": "Interaction Gallery",
-    "bespokeInteractions": "Bespoke Interactions",
-    "interactionApplications": "Interaction Applications",
+    "interactionGallery": "Interaction Presets",
+    "advancedInteractions": "Advanced Interactions",
     "interactions": "Interactions",
     "documentation": "Documentation",
     "playgrounds": "Playgrounds",
@@ -40,7 +39,7 @@
     "demoAria": "Demo themes",
     "inspiration": "Need inspiration?",
     "demos": {
-        "google-material": "Google Material",
+      "google-material": "Google Material",
       "microsoft-fluent": "Microsoft Fluent",
       "peoples-daily": "People's Daily"
     },
@@ -374,13 +373,8 @@
   },
   "landing": {
     "heroTitle": "Flint: A Visualization Language for the AI Era",
-    "attribution": "A Microsoft Research project",
-    "installNpm": "Install Flint with <npmLink>npm</npmLink> (TypeScript / JavaScript).",
-    "installMcp": "For agents, use the <mcpLink>MCP server</mcpLink>; see the <skillLink>Agent Skill</skillLink> for standalone guidance.",
-    "installGallery": "Explore {{chartTypes}} chart types and {{examples}} examples in the <galleryLink>gallery</galleryLink>, or compare <themesLink>visual themes</themesLink>.",
-    "themeLead": "Flint employs a formal theme specification so designers can define a visual identity once and apply it consistently across an entire chart library.",
-    "installThemeLab": "Create a custom visual system in <themeLabLink>Theme Lab</themeLabLink>.",
     "ctaThemes": "Visual Themes",
+    "ctaInteractions": "Interactions",
     "ctaGallery": "Explore Gallery",
     "ctaMcp": "Get MCP Server",
     "ctaGithub": "Visit GitHub",
@@ -419,14 +413,17 @@
       }
     },
     "howItWorks": "How it works?",
-    "howItWorksBody": "Flint starts with a compact spec: the data, semantic types, and the chart spec. From there, the compiler produces a complete backend-native spec (shown here in Vega-Lite) filling with the necessary low-level details and renders a good-looking chart.",
+    "howItWorksBody": "Flint starts with a compact spec: the data, semantic types, and the chart spec. From there, the compiler produces a complete backend-native spec (shown here in Vega-Lite) filling with the necessary low-level details and renders a good-looking chart. An interaction spec makes the chart interactive: hover a cell to highlight its row.",
     "overviewAlt": "Flint workflow: an agent infers a dataSpec from a raw table, a short chartSpec is written, and Flint compiles it into a faceted line chart, then a grouped bar, waterfall, heatmap, and sunburst as the spec is edited.",
     "leadBefore": "Flint is a visualization intermediate language that lets",
-    "leadHighlight1": "AI agents reliably create expressive, good-looking charts from simple, human-editable chart specs",
-    "leadMiddle": ". Instead of requiring verbose low-level parameters such as scales, axes, spacing, and layout, the Flint compiler derives optimized chart settings from the data, semantic types, chart type, and encodings.",
-    "leadHighlight2": "Flint supports {{chartTypes}} chart types across {{backends}} rendering backends through one unified interface",
+    "leadHighlight1": "AI agents reliably create expressive, good-looking and interactive charts from simple, human-editable chart specs",
+    "leadStop": ". ",
+    "leadAvailability": "It is available as an <mcp>MCP server</mcp> for everyday use with your agent, and as an <npm>npm library</npm> for building interactive applications.",
+    "leadHighlight2": "Flint supports {{chartTypes}} chart types across {{backends}} rendering backends through one unified interface, with {{themes}} themes and {{presets}} interaction presets",
+    "leadAfter": "To create bespoke visualizations, you can design custom themes in the <themeLab>Theme Lab</themeLab> and build <advanced>advanced interactions</advanced> with the Flint API.",
     "backendRosterLabel": "Backends",
     "themeRosterLabel": "Themes",
+    "interactionRosterLabel": "Interactions",
     "themeRosterMore": "+ {{count}} more",
     "flintSpec": "Flint spec",
     "compiledChart": "Compiled chart",
@@ -438,32 +435,32 @@
     "closingTitle": "Start building with Flint.",
     "closingBody": "Open source and ready to use. Start from GitHub or browse examples in the gallery.",
     "viewGithub": "View on GitHub",
-    "closingCollab": "Flint is built by <msr>Microsoft Research</msr> in collaboration with the <ideas>IDEAS Lab</ideas>, Renmin University of China.",
+    "contributors": "Contributors",
     "features": {
       "semantic": {
         "title": "Specify with semantic types",
-        "body": "Flint uses semantic types to capture meanings of data fields (e.g., Rank, YearMonth, Delta, Temperature), and uses them to infer the low-level chart configuration like parsing, scale, axes, formatting and color schemes.",
-        "example": "For this heatmap of net new users gains by game and month, Flint determines the temporal value parser, axis formatting, and diverging color scheme and midpoint based on the semantic types of the fields."
+        "body": "Flint uses semantic types to capture meanings of data fields (e.g., Rank, YearMonth, Delta, Temperature), and uses them to infer the low-level chart configuration like parsing, scale, axes, formatting and color schemes."
       },
       "layout": {
         "title": "Automatic layout optimization",
-        "body": "Flint optimizes the chart layout based on an elastic layout model and banking principles. The compiler dynamically manages sizing, spacing, and arrangement so the chart nicely fits into the canvas.",
-        "example": "As the grouped bar chart number increases, Flint stretches the canvas and reduces the band width so the dense version still fits the canvas nicely, similar to how springs settle into an expandable container."
+        "body": "Flint optimizes the chart layout based on an elastic layout model and banking principles. The compiler dynamically manages sizing, spacing, and arrangement so the chart nicely fits into the canvas, even as the data grows denser."
       },
       "adapt": {
         "title": "Easy to generate and adapt",
-        "body": "Without fragile low-level parameters, Flint specs can be easily generated and adapted by users. Changing a chart design requires only switching the chart type and rebinding visual encodings, and the compiler cascades the new encoding choices to the low-level settings.",
-        "example": "The user can easily turn a faceted bar chart of the 2000 U.S. Census population distribution by gender and age into a pyramid chart by switching the chart type. The compiler handles the rest."
+        "body": "Without fragile low-level parameters, Flint specs can be easily generated and adapted by users. Changing a chart design requires only switching the chart type and rebinding visual encodings, and the compiler cascades the new encoding choices to the low-level settings."
       },
       "backends": {
         "title": "Render with different backends",
-        "body": "Flint supports {{chartTypes}} chart types across Vega-Lite, ECharts, Chart.js, and Plotly, with {{examples}} backend-specific examples in the gallery, and can emit native Excel charts through Office.js. Despite their different APIs and programming models, Flint hides them behind a unified interface.",
-        "example": "Switch backends to use their native strengths: ECharts for hierarchical sunbursts, Plotly for statistical and analytical traces, or Excel for editable charts embedded in a workbook."
+        "body": "Flint supports {{chartTypes}} chart types across Vega-Lite, ECharts, Chart.js, and Plotly, with {{examples}} backend-specific examples in the gallery, and can emit native Excel charts through Office.js. Despite their different APIs and programming models, Flint hides them behind a unified interface, so switching backends needs no change to the spec."
       },
       "themes": {
         "title": "Render with different themes",
-        "body": "A Flint theme is a formal specification that guides the layout algorithm, applies presentation rules by semantic role, and defines geometry, typography, and color as one visual system.",
-        "example": "When changing the visual theme from Economist to Swiss, the data and encodings remain fixed while spacing, structure, labels, marks, typography, and color adapt to reflect each theme’s visual language."
+        "body": "A Flint theme is a formal specification that guides the layout algorithm, applies presentation rules by semantic role, and defines geometry, typography, and color as one visual system. Switching themes needs no change to the data or encodings."
+      },
+      "interactions": {
+        "title": "Add interactions",
+        "body": "Flint maps user gestures to semantic events about the data, so an interaction spec can name presets like hover readouts, brushing, or legend toggles, and the compiler wires them to the chart for you, with no event-handling code.",
+        "demoLabel": "Live · try it"
       }
     },
     "examples": {

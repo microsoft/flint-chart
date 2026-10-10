@@ -4,6 +4,7 @@ import { INTERACTION_PRESETS, listInteractionPresets } from '../src/interactive/
 import type { InteractionPresetSpec } from '../src/interactive/spec/types';
 import { resolveInteractionSpec } from '../src/interactive/spec/resolve';
 import { brushX, navigate } from '../src/interactive/interactions';
+import { contextMenu, isContextMenu, menuSelection } from '../src/interactive/context-menu';
 
 /** The comparable half of a definition: everything but the handler and the origin tag. */
 const dataOnly = (definition: object): Record<string, unknown> => Object.fromEntries(
@@ -14,6 +15,7 @@ const dataOnly = (definition: object): Record<string, unknown> => Object.fromEnt
 const REQUIRED: Partial<Record<string, Record<string, unknown>>> = {
     'hover-group-focus': { groupBy: 'Country' },
     'linked-brush': { groupBy: 'Country' },
+    'context-menu': { items: [{ id: 'chat', label: 'Send to chat' }] },
 };
 
 describe('interaction preset registry', () => {
@@ -160,5 +162,47 @@ describe('resolveInteractionSpec', () => {
     it('has no place for retained state', () => {
         // Updates are a host signal (applyUpdate, setUpdates, dispatch), not behaviour.
         expect('updates' in resolveInteractionSpec({ interactions: [] })).toBe(false);
+    });
+});
+
+describe('context menu', () => {
+    const items = [{ id: 'chat', label: 'Send to chat' }, { id: 'tag', label: 'Tag' }];
+    const detail = (action: string, interactionId: string, extra: Record<string, unknown> = {}) => ({
+        chartId: 'c', interactionId, timestamp: 0,
+        event: { action, phase: 'commit', geometry: {}, target: { visual: { kind: 'mark', role: 'mark' }, elements: [{ value: { A: 1 } }] }, ...extra },
+    }) as never;
+
+    it('resolves from a spec as one preset that brings its own selection gesture', () => {
+        const { interactions: [menu] } = resolveInteractionSpec({ interactions: [{ type: 'context-menu', options: { items } }] });
+        expect(isContextMenu(menu)).toBe(true);
+        expect(menu).toMatchObject({ id: 'context-menu', preset: 'context-menu', eventSource: { type: 'region', mode: 'stateful' } });
+        const gesture = (value: string) => contextMenu({ items, gesture: value as never }).eventSource;
+        expect(gesture('brush-x')).toMatchObject({ type: 'region', axis: 'x', mode: 'stateful' });
+        expect(gesture('lasso')).toMatchObject({ regionGeometry: 'lasso' });
+        expect(gesture('click')).toMatchObject({ type: 'element', gesture: 'click' });
+        expect(gesture('right-click')).toMatchObject({ gesture: 'context' });
+        expect(gesture('long-press')).toMatchObject({ gesture: 'long-press' });
+        // Every mark gesture shows the mark it would act on before the reader commits.
+        for (const value of ['click', 'right-click', 'long-press'] as const) {
+            expect(contextMenu({ items, gesture: value }).affordances.mark?.hover, value).toBeTruthy();
+        }
+    });
+
+    it('refuses a menu without items, an item without a label, and a repeated id', () => {
+        expect(() => contextMenu({ items: [] })).toThrow('items must list at least one');
+        expect(() => contextMenu({ items: [{ id: 'a' } as never] })).toThrow('string id and label');
+        expect(() => contextMenu({ items: [items[0], items[0]] })).toThrow('appears twice');
+    });
+
+    it('opens on its own committed selection, closes when it clears, and ignores the rest', () => {
+        expect(menuSelection(detail('select-region', 'menu'), 'menu')?.elements).toHaveLength(1);
+        expect(menuSelection(detail('brush-x', 'menu'), 'menu')).toBeTruthy();
+        expect(menuSelection(detail('click-element', 'menu'), 'menu')).toBeTruthy();
+        expect(menuSelection(detail('context-element', 'menu'), 'menu')).toBeTruthy();
+        expect(menuSelection(detail('select-region', 'menu', { operation: 'clear' }), 'menu')).toBeNull();
+        expect(menuSelection(detail('select-region', 'menu', { target: { elements: [] } }), 'menu')).toBeNull();
+        expect(menuSelection(detail('select-region', 'menu', { phase: 'preview' }), 'menu')).toBeUndefined();
+        expect(menuSelection(detail('menu-select', 'menu'), 'menu')).toBeUndefined();
+        expect(menuSelection(detail('select-region', 'select'), 'menu')).toBeUndefined();
     });
 });

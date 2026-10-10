@@ -30,7 +30,7 @@ import { ReleaseExamples100 } from './playground/release-examples/1.0.0';
 import { TestExamples } from './playground/release-examples/test-examples';
 import { OverflowViewportLab } from './playground/OverflowViewportLab';
 import { FlintInteractive, InteractionGallery } from './routes/InteractionGallery';
-import { InteractionApplications } from './routes/InteractionApplications';
+import { AdvancedInteractions } from './routes/AdvancedInteractions';
 import { ClickFocusLab } from './playground/ClickFocusLab';
 import { InteractionCoverageLab } from './playground/InteractionCoverageLab';
 import { InteractionConflictsLab } from './playground/InteractionConflictsLab';
@@ -40,7 +40,6 @@ import { InteractionDashboardLab } from './playground/InteractionDashboardLab';
 import { InteractionCandidates } from './playground/InteractionCandidates';
 import { ExternalToChartLab } from './playground/ExternalToChartLab';
 import { ChartToExternalLab } from './playground/ChartToExternalLab';
-import { BespokeInteractionLab } from './playground/BespokeInteractionLab';
 import { InteractiveDataReportLab } from './playground/InteractiveDataReportLab';
 import { StyleReferences } from './playground/StyleReferences';
 import { FullTestCases } from './playground/FullTestCases';
@@ -70,8 +69,10 @@ function AppRoutes({ locale }: { locale: Locale }) {
         <Route path="interactions" element={<FlintInteractive />} />
         <Route path="interactions/gallery" element={<InteractionGallery />} />
         <Route path="interactions/gallery/:mode" element={<InteractionGallery />} />
-        <Route path="interactions/bespoke" element={<BespokeInteractionLab publicPage />} />
-        <Route path="interactions/applications" element={<InteractionApplications />} />
+        <Route path="interactions/advanced" element={<AdvancedInteractions />} />
+        {/* Bespoke interactions and applications merged into one page. */}
+        <Route path="interactions/bespoke" element={<Navigate to={localePath('/interactions/advanced', locale)} replace />} />
+        <Route path="interactions/applications" element={<Navigate to={localePath('/interactions/advanced', locale)} replace />} />
         <Route path="interactions/:mode" element={<InteractionGallery />} />
         {/* Keep old /wall links working; /gallery is canonical. */}
         <Route path="wall" element={<WallRedirect />} />
@@ -104,7 +105,7 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="release-examples">
             <Route index element={<Navigate to="1.0.0" replace />} />
             <Route path="1.0.0" element={<ReleaseExamples100 />} />
-            <Route path="application-demos" element={<Navigate to={localePath('/interactions/applications', locale)} replace />} />
+            <Route path="application-demos" element={<Navigate to={localePath('/interactions/advanced', locale)} replace />} />
             <Route path="test-examples" element={<TestExamples />} />
           </Route>
           <Route path="wrapping-examples" element={<Navigate to="../release-examples/1.0.0" replace />} />
@@ -118,7 +119,7 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="interaction-dashboard" element={<InteractionDashboardLab />} />
           <Route path="external-to-chart" element={<ExternalToChartLab />} />
           <Route path="chart-to-external" element={<ChartToExternalLab />} />
-          <Route path="bespoke-interaction" element={<Navigate to={localePath('/interactions/bespoke', locale)} replace />} />
+          <Route path="bespoke-interaction" element={<Navigate to={localePath('/interactions/advanced', locale)} replace />} />
           <Route path="interactive-data-report" element={<InteractiveDataReportLab />} />
           <Route path="interaction-candidates" element={<InteractionCandidates />} />
           <Route path="style-references/:house?" element={<StyleReferences />} />

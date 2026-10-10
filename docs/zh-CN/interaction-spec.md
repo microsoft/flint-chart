@@ -45,6 +45,7 @@
 | `hover-group-focus` | 悬停标记以预览其组（必须提供 `groupBy`）。 | 元素 | 无 |
 | `click-annotate` | 点击标记以固定一个带数值的注释。 | 元素 | click-none, escape |
 | `context-activate` | 右键或长按，把上下文目标交给宿主。 | 元素 | 无 |
+| `context-menu` | 读者用一种 `gesture` 选取标记（默认 `rectangle`，另有 `lasso`、`brush-x`、`brush-y`、`click`、`right-click`、`long-press`），并在其旁打开宿主操作菜单；选中某项会发出 `menu-select`，`item` 为该项 id，目标为选取的标记。矩形与刷选在屏幕上保留，可移动或调整（`items` 必填，另有 `gesture`、`dimOpacity`、`reset`、`render`）。 | 元素、笛卡尔区域 | click-none、escape |
 | `long-press` | 长按标记以激活。 | 元素 | click-none, escape |
 | `double-activate` | 双击标记以激活。 | 元素 | click-none, escape |
 | `inspect` | 在绘图区移动，读取最近标记的值。 | 元素 | 无 |

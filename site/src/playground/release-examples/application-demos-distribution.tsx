@@ -39,7 +39,9 @@ const BINS = 13;
 const Y_MAX = 70;
 const HOUR = 60;
 const DATA_INK = '#d1495b';
-const SKETCH_INK = '#1f2328';
+// One hue for the sketch: light bars, and a dark line and knobs that read against them.
+const SKETCH_BAR = '#b9cfe6';
+const SKETCH_INK = '#24476b';
 const HANDLE_RADIUS = 12;
 
 const binValue = (bin: number) => FIRST + bin * WIDTH;
@@ -109,7 +111,7 @@ function sketchUpdate(rows: readonly Row[], cue: Cue = { kind: 'none' }): ChartU
           role: 'sketch',
           data: { values },
           encodings,
-          style: { stroke: SKETCH_INK, strokeWidth: 1.5, opacity: 0.8 },
+          style: { stroke: SKETCH_INK, strokeWidth: 2 },
         },
       },
       {
@@ -120,7 +122,7 @@ function sketchUpdate(rows: readonly Row[], cue: Cue = { kind: 'none' }): ChartU
           role: 'handle',
           data: { values },
           encodings,
-          style: { fill: SKETCH_INK, stroke: '#ffffff', strokeWidth: 2, pointRadius: 6 },
+          style: { fill: SKETCH_INK, pointRadius: 3.5 },
         },
       },
       {
@@ -132,7 +134,7 @@ function sketchUpdate(rows: readonly Row[], cue: Cue = { kind: 'none' }): ChartU
             role: 'handle',
             data: { values: cued },
             encodings,
-            style: { fill: SKETCH_INK, stroke: '#ffffff', strokeWidth: 2.5, pointRadius: 9 },
+            style: { fill: SKETCH_INK, pointRadius: 6 },
           }
           : null,
       },
@@ -181,6 +183,7 @@ const SPEC = {
     [COUNT]: { semanticType: 'Count', intrinsicDomain: [0, Y_MAX] },
   },
   options: { addTooltips: false },
+  theme_spec: { ink: { series: { single: SKETCH_BAR } } },
   chart_spec: {
     chartType: 'Bar Chart',
     title: 'How long until Old Faithful erupts again?',

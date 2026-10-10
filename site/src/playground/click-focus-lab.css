@@ -49,33 +49,44 @@
 
 .ig-layout { width: 100%; box-sizing: border-box; padding: 28px 24px 48px; }
 .ig-content { width: 100%; min-width: 0; }
-.ig-gallery-header { width: min(100%, 960px); margin: 0 auto 28px; padding-bottom: 20px; border-bottom: 1px solid #d8dee4; }
+/* The page rail takes part of the viewport, so a spacious card stays within the grid. */
+.ig-content .cf-probe-spacious { width: 100%; }
+.ig-gallery-header { width: min(100%, 960px); margin: 0 auto 32px; padding-bottom: 28px; border-bottom: 2px solid #1f2328; }
 .ig-gallery-title-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px 16px; }
+nav.ig-breadcrumb { display: flex; align-items: center; gap: 8px; margin: 0 0 14px; color: #59626b; font-size: 13.5px; font-weight: 400; line-height: 1.4; }
+nav.ig-breadcrumb a { color: #59626b; text-decoration: none; }
+nav.ig-breadcrumb a:hover, nav.ig-breadcrumb a:focus-visible { color: #1f2328; text-decoration: underline; text-underline-offset: 3px; }
+nav.ig-breadcrumb [aria-current] { color: #1f2328; }
+/* Same button as the landing and Themes pages. */
+.ig-entry-links { display: flex; flex-wrap: wrap; gap: 12px; max-width: 832px; margin: 0 auto 36px; }
+.ig-article .ig-entry-link { min-height: 44px; display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px; box-sizing: border-box; border: 1px solid rgba(0, 0, 0, 0.24); border-radius: 6px; background: #fff; color: #1f2328; font-size: 14.5px; font-weight: 600; line-height: 1.2; text-decoration: none; transition: background 0.12s ease, border-color 0.12s ease, transform 0.12s ease; }
+.ig-article .ig-entry-link:hover, .ig-article .ig-entry-link:focus-visible { border-color: rgba(0, 0, 0, 0.42); background: rgba(0, 0, 0, 0.04); transform: translateY(-1px); }
+.ig-article .ig-entry-link:focus-visible { outline: 2px solid #0078d4; outline-offset: 2px; }
 .ig-gallery-title-row [role="radiogroup"] { max-width: 100%; box-sizing: border-box; flex-wrap: wrap; }
-.ig-gallery-header h1 { margin: 0; color: #1f2328; font-size: 28px; font-weight: 600; line-height: 1.25; }
-.ig-gallery-header p { max-width: 760px; margin: 10px 0 0; color: #1f2328; font-size: 14px; line-height: 1.65; }
+.ig-gallery-header h1 { margin: 0; color: #1f2328; font-size: 32px; font-weight: 700; line-height: 1.2; }
+.ig-gallery-header p { margin: 12px 0 0; color: #1f2328; font-size: 15px; line-height: 1.7; }
 .ig-gallery-header .site-text-link { color: #0067b8; text-decoration-line: underline; text-decoration-color: currentColor; }
 .ig-gallery-header .site-text-link:hover, .ig-gallery-header .site-text-link:focus-visible { color: #004578 !important; text-decoration-thickness: 2px; }
-.ig-content .cf-heading p, .ig-content .cf-interaction-detail ul { color: #1f2328; font-size: 14px; line-height: 1.65; }
+.ig-content .cf-heading p, .ig-content .cf-interaction-detail ul { color: #40474e; font-size: 14px; line-height: 1.65; }
 .ig-content .cf-interaction-detail h2 { font-size: 14px; }
-.ig-content .cf-emitted-events h2 { font-size: 13px; }
-.ig-content .cf-interaction-detail code { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace; font-size: 12.5px; }
-.ig-content .cf-heading .cf-emitted-events ul { font-size: 12px; line-height: 1.5; }
-.ig-content .cf-emitted-events li code { font-size: 11.5px; }
+.ig-content .cf-emitted-events h2 { font-size: 14px; }
+.ig-content .cf-interaction-detail code { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace; font-size: 12px; }
+.ig-content .cf-heading .cf-emitted-events ul { font-size: 13px; line-height: 1.6; }
+.ig-content .cf-emitted-events li code { font-size: 12px; }
 .ig-content .cf-probe-header p { color: #4b525a; font-size: 12px; line-height: 1.5; }
-.ig-content .cf-heading-title h2 { font-size: 20px; }
+.ig-content .cf-heading-title h2 { font-size: 20px; font-weight: 700; line-height: 1.35; }
 .ig-content .cf-heading-with-code { gap: 20px; }
 .ig-content .cf-heading .cf-interaction-detail { margin-top: 8px; }
 .ig-content .cf-preset-description { padding: 0; border: 0; border-radius: 0; background: transparent; }
 .ig-content .cf-heading .cf-preset-description p,
-.ig-content .cf-heading .cf-preset-description ul { font-size: 13px; line-height: 1.5; }
+.ig-content .cf-heading .cf-preset-description ul { font-size: 14px; line-height: 1.65; }
 .ig-content .cf-preset-description ul { gap: 4px; }
 .ig-content .cf-emitted-events .cf-events-doc-link { margin-top: 6px; }
 .ig-content .cf-preset-code .cf-source-toggle button { padding: 3px 8px; font-size: 11px; }
 .ig-content .cf-preset-code .cf-gallery-spec { margin-top: 6px; }
 @media (max-width: 640px) {
-  .ig-gallery-header h1 { font-size: 26px; line-height: 1.16; }
-  .ig-gallery-header p, .ig-content .cf-heading p, .ig-content .cf-interaction-detail ul { font-size: 15.5px; line-height: 1.6; }
+  .ig-gallery-header h1 { font-size: 28px; line-height: 1.16; }
+  .ig-gallery-header p, .ig-content .cf-heading p, .ig-content .cf-interaction-detail ul { font-size: 14.5px; line-height: 1.6; }
 }
 .ig-article-page { min-height: 100vh; display: flex; flex-direction: column; background: #fff; }
 .ig-article-main { flex: 1; width: 100%; background-image: linear-gradient(90deg, rgba(0, 0, 0, 0.02) 1px, transparent 1px), linear-gradient(0deg, rgba(0, 0, 0, 0.02) 1px, transparent 1px); background-size: 24px 24px; }
@@ -86,7 +97,7 @@
 .ig-article h1 { margin: 0 0 34px; font-size: 36px; line-height: 1.2; font-weight: 700; letter-spacing: 0; }
 .ig-article .ig-overview-intro { margin: 0; color: #1f2328; font-size: 16px; line-height: 1.75; }
 .ig-article .ig-overview-intro p { margin: 0 auto 20px; }
-.ig-article .ig-overview-intro h2 { margin: 40px auto 18px; font-size: 22px; font-weight: 700; }
+.ig-article .ig-overview-intro h2 { margin: 40px auto 18px; font-size: 22px; font-weight: 700; line-height: 1.35; }
 .ig-article .ig-overview-intro ul { padding-left: 22px; }
 .ig-article .ig-overview-intro li + li { margin-top: 4px; }
 .ig-article .ig-curated-examples { margin-top: 0; }
@@ -103,8 +114,6 @@
 .ig-curated-examples { width: min(100%, 832px); margin: 24px auto 0; color: #1f2328; }
 .ig-example-header { display: flex; align-items: baseline; gap: 12px; width: 100%; max-width: 100%; box-sizing: border-box; margin: 24px 0 0; border-bottom: 1px solid #d8dee4; }
 .ig-example-label { flex: 0 0 auto; padding: 7px 0; font-size: 13px; font-weight: 600; color: #66707a; }
-.ig-example-link { padding: 0; border: 0; background: transparent; color: #0078d4; font: inherit; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
-.ig-example-link:focus-visible { outline: 2px solid #0067b8; outline-offset: 2px; }
 .ig-example-tabs { display: flex; flex: 1; min-width: 0; flex-wrap: wrap; gap: 0 6px; }
 .ig-example-tabs button { min-width: 0; max-width: 100%; min-height: 34px; box-sizing: border-box; padding: 7px 8px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: #4b525a; font: inherit; font-size: 13px; text-align: left; overflow-wrap: anywhere; cursor: pointer; }
 .ig-example-tabs button[aria-selected="true"] { border-bottom-color: #0067b8; color: #1f2328; }
@@ -204,12 +213,15 @@
   .climate-phase-readout dd { grid-row: 2; margin-bottom: 0; font-size: 18px; }
   .climate-phase-unit { font-size: 12px; }
 }
-.ig-usage-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; max-width: 832px; margin: 0 auto; padding: 24px 0; }
+.ig-usage-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 28px; max-width: 832px; margin: 0 auto; padding: 24px 0; }
 .ig-usage-row + .ig-usage-row { border-top: 1px solid #d8dee4; }
 .ig-usage-description, .ig-usage-code { min-width: 0; }
-.ig-usage-subtitle { margin: 0 0 14px; font-size: 16px; font-weight: 600; }
+.ig-usage-subtitle { margin: 0 0 14px; font-size: 18px; font-weight: 700; line-height: 1.4; }
 .ig-article .ig-usage-description > :last-child { margin-bottom: 0; }
-.ig-usage-prompt { max-width: 832px; margin: 0 auto 20px; padding: 8px 14px; border-left: 2px solid #d8dee4; box-sizing: border-box; color: #4b525a; font-size: 15px; line-height: 1.5; }
+.ig-chat { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 8px; padding: 10px; border: 1px solid #d8dee4; border-radius: 8px; background: #f6f8fa; }
+.ig-article .ig-chat p { margin: 0; font-size: 13px; line-height: 1.45; }
+.ig-article .ig-chat-user { justify-self: end; max-width: 85%; padding: 7px 11px; border-radius: 10px 10px 2px 10px; background: #0078d4; color: #fff; }
+.ig-chat-agent { display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; gap: 4px; padding: 8px 10px; border: 1px solid #e3e6e9; border-radius: 10px 10px 10px 2px; background: #fff; }
 @media (max-width: 760px) { .ig-usage-row { grid-template-columns: minmax(0, 1fr); gap: 18px; } }
 .ig-mechanism-logic { max-width: 832px; margin: 0 auto 20px; padding-left: 22px; box-sizing: border-box; }
 .ig-mechanism-layout { display: grid; grid-template-columns: minmax(0, 1fr) 192px; gap: 16px 20px; align-items: center; max-width: 832px; margin: 0 auto; }
@@ -411,6 +423,27 @@
   background: #eef1f3;
 }
 
+.cf-heading-with-code > .cf-navigation-controls {
+  grid-column: 1 / -1;
+  flex-wrap: nowrap;
+  margin-top: 0;
+}
+
+.cf-heading-with-code > .cf-navigation-controls label {
+  flex: 1 1 0;
+  width: auto;
+}
+
+@media (max-width: 760px) {
+  .cf-heading-with-code > .cf-navigation-controls {
+    flex-wrap: wrap;
+  }
+
+  .cf-heading-with-code > .cf-navigation-controls label {
+    flex-basis: 160px;
+  }
+}
+
 .cf-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr));
@@ -509,6 +542,120 @@
   color: #3f6b57;
 }
 
+/* Compositions: one row per pair, the chart on the left, what it does and its spec on the right. */
+.cmp-intro {
+  max-width: 760px;
+  margin: 6px 0 0;
+  color: #40474e;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.cmp-list {
+  display: grid;
+  gap: 24px;
+  width: min(100%, 960px);
+}
+
+.cmp-case {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  align-items: start;
+  gap: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e3e6e9;
+}
+
+.cmp-detail h3 {
+  margin: 0;
+  color: #1f2328;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.cmp-question {
+  margin: 4px 0 10px;
+  color: #59626b;
+  font-size: 14px;
+  font-style: italic;
+}
+
+.cmp-detail ul {
+  display: grid;
+  gap: 4px;
+  margin: 0 0 12px;
+  padding-left: 18px;
+  color: #40474e;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.cmp-detail .cf-gallery-spec {
+  margin-top: 6px;
+}
+
+@media (max-width: 820px) {
+  .cmp-case {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Ephemeral | stateful switch on the selection and brush pages, in the site's primary blue. */
+.cf-mode-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  grid-column: 1 / -1;
+}
+
+.cf-mode-controls-label {
+  color: #1f2328;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.cf-mode-controls .cf-source-toggle {
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #0078d4;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.cf-mode-controls .cf-source-toggle button {
+  min-width: 96px;
+  border: 0;
+  border-radius: 0;
+  padding: 6px 14px;
+  color: #0078d4;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.cf-mode-controls .cf-source-toggle button + button {
+  border-left: 1px solid #0078d4;
+}
+
+.cf-mode-controls .cf-source-toggle button[aria-pressed="true"] {
+  background: #0078d4;
+  color: #fff;
+  box-shadow: none;
+}
+
+.cf-mode-controls .cf-source-toggle button[aria-pressed="false"]:hover {
+  background: #eff6fc;
+}
+
+.cf-mode-controls p {
+  margin: 0;
+  color: #4b525a;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 .cf-status-loading,
 .cf-status-unsupported {
   color: #806327;
@@ -578,7 +725,7 @@
   background: #4d5963;
 }
 
-.ig-layout .ig-action-rail {
+.ig-layout .ig-action-rail, .ia-page .ig-action-rail {
   top: 52px;
   bottom: 8px;
   height: fit-content;
@@ -587,7 +734,7 @@
 }
 
 @media (max-width: 1319px), (max-height: 764px) {
-  .ig-layout .ig-action-rail {
+  .ig-layout .ig-action-rail, .ia-page .ig-action-rail {
     position: static;
     bottom: auto;
     display: flex;
@@ -602,12 +749,12 @@
     transform: none;
     overflow: visible;
   }
-  .ig-action-rail a {
+  .ig-action-rail a, .ig-action-rail button {
     flex: 0 0 auto;
     width: auto;
     box-sizing: border-box;
   }
-  .ig-action-rail a:focus-visible { outline: 2px solid #0067b8; outline-offset: -2px; }
+  .ig-action-rail a:focus-visible, .ig-action-rail button:focus-visible { outline: 2px solid #0067b8; outline-offset: -2px; }
   .ig-action-rail .cf-action-divider {
     display: none;
   }

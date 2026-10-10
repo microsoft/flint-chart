@@ -103,7 +103,7 @@ function trajectoryOverlayUpdate(city: ClimateCity, phase: number): ChartUpdate 
             y: { field: 'Precipitation' },
             text: { field: 'Month' },
           },
-          style: { fill: '#69737d', fontSize: 92, fontWeight: 'bold', opacity: 0.1 },
+          style: { fill: '#69737d', fontSize: 92, fontWeight: 'bold', opacity: 0.1, stroke: 'none' },
         },
       },
       {

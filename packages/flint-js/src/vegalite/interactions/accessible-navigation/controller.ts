@@ -149,9 +149,13 @@ export function mountAccessibleNavigation(options: AccessibleNavigationControlle
         body.textContent = node.kind === 'chart' ? description.text : description.content;
         const hint = document.createElement('div');
         Object.assign(hint.style, { color: '#59636e', marginTop: '2px', fontSize: '11px' });
-        hint.textContent = node.children.length > 0
-            ? `Arrows: move · Enter: ${node.children.length} inside · Esc: back · H: help`
-            : 'Arrows: move · Esc: back · H: help';
+        hint.textContent = [
+            node.parent ? 'Tab: next' : '',
+            'Arrows: move',
+            node.children.length > 0 ? `Enter: ${node.children.length} inside` : '',
+            'Esc: back',
+            'H: help',
+        ].filter(Boolean).join(' · ');
         caption.replaceChildren(heading, body, hint);
         floatingCaption.show();
     };
@@ -240,6 +244,9 @@ export function mountAccessibleNavigation(options: AccessibleNavigationControlle
     const onFocusOut = (event: FocusEvent): void => {
         if (event.relatedTarget instanceof Node && layer.contains(event.relatedTarget)) return;
         setActive(false);
+        // Coming back starts at the chart summary, behind the Enter gate, like the first visit.
+        const root = navigator.root;
+        if (navigator.current !== root && navigator.focus(root.id)) update(root);
     };
     const onKeyDown = (event: KeyboardEvent): void => {
         const command = accessibleCommandForKey(event);
@@ -247,6 +254,8 @@ export function mountAccessibleNavigation(options: AccessibleNavigationControlle
         activation += 1;
         navigator.refresh();
         const move = navigator.run(command);
+        // Tab never traps: on the chart itself or past either end of a level, focus moves on.
+        if (event.key === 'Tab' && !move.moved) return;
         if (move.exited) {
             // Escape on the chart itself leaves the walk; other presets may still reset on it.
             setActive(false);

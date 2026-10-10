@@ -3,12 +3,15 @@ import { useTranslation, Trans } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { LocaleLink } from '../i18n/LocaleLink';
 import { TEST_GENERATORS, makeField, makeEncodingItem, buildMetadata, type TestCase } from 'flint-chart/test-data';
-import { THEME_PRESETS } from 'flint-chart';
-import { SiteNavBar, MicrosoftDisclosures, GitHubIcon, LabIcon } from '../components/SiteShell';
+import { INTERACTION_PRESET_TYPES, THEME_PRESETS, type ChartAssemblyInput } from 'flint-chart';
+import { FlintChart } from 'flint-chart/react';
+import { SiteNavBar, MicrosoftDisclosures, GitHubIcon } from '../components/SiteShell';
 import { WallChart } from '../components/WallChart';
 import { ScaleToFit } from '../components/ScaleToFit';
 import { GalleryOptionsBar, ThemeControl } from '../components/GalleryOptionsBar';
 import { SpecPipelineFigure } from '../components/SpecPipelineFigure';
+import { CodeBlock } from '../components/CodeBlock';
+import stringify from 'json-stringify-pretty-compact';
 import { testCaseToFlintSummary, testCaseToAssemblyInput, withHouse } from '../shared/test-case-utils';
 import { buildPanelModel, withoutEchoedOverrides } from '../shared/chart-options';
 import { CHART_CATEGORIES } from '../shared/chart-categories';
@@ -43,7 +46,6 @@ export function Landing() {
             <img src={flintLogo} alt="" aria-hidden="true" style={heroLogoStyle} />
             <div style={heroHeadingBlockStyle}>
               <h1 style={heroTitleStyle}>{t('landing.heroTitle')}</h1>
-              <div style={heroAttributionStyle}>{t('landing.attribution')}</div>
             </div>
           </div>
 
@@ -52,14 +54,30 @@ export function Landing() {
               <p style={leadStyle}>
                 {t('landing.leadBefore')}{' '}
                 <LeadHighlight>{t('landing.leadHighlight1')}</LeadHighlight>
-                {t('landing.leadMiddle')}{' '}
-                <LeadHighlight>
-                  {t('landing.leadHighlight2', {
-                    chartTypes: CHART_FAMILY_COUNT,
-                    backends: BACKEND_ROSTER_LINKS.length,
-                  })}
-                </LeadHighlight>
-                . {t('landing.themeLead')}
+                {t('landing.leadStop')}
+                <Trans
+                  i18nKey="landing.leadAvailability"
+                  components={{
+                    mcp: <LocaleLink className="site-text-link" style={contributorLinkStyle} to="/mcp" />,
+                    npm: <a className="site-text-link" style={contributorLinkStyle} href="https://www.npmjs.com/package/flint-chart" target="_blank" rel="noreferrer" />,
+                  }}
+                />
+              </p>
+              <p style={{ ...leadStyle, marginTop: 14 }}>
+                {t('landing.leadHighlight2', {
+                  chartTypes: CHART_FAMILY_COUNT,
+                  backends: BACKEND_ROSTER_LINKS.length,
+                  themes: Object.keys(THEME_PRESETS).length,
+                  presets: INTERACTION_PRESET_TYPES.length,
+                })}
+                {t('landing.leadStop')}
+                <Trans
+                  i18nKey="landing.leadAfter"
+                  components={{
+                    themeLab: <LocaleLink className="site-text-link" style={contributorLinkStyle} to="/theme-lab" />,
+                    advanced: <LocaleLink className="site-text-link" style={contributorLinkStyle} to="/interactions/advanced" />,
+                  }}
+                />
               </p>
 
               <div style={rostersStyle}>
@@ -99,76 +117,39 @@ export function Landing() {
                     </LocaleLink>
                   </span>
                 </div>
-              </div>
-
-              <div style={installLinesStyle}>
-                <div style={installLineStyle}>
-                  <span style={promptMarkStyle}>&gt;</span>{' '}
-                  <Trans
-                    i18nKey="landing.installNpm"
-                    components={{
-                      npmLink: (
-                        <LocaleLink
-                          to="/documentation/getting-started#javascript-typescript"
-                          className="landing-skill-link"
-                          style={installLineLinkStyle}
-                        />
-                      ),
-                    }}
-                  />
-                </div>
-                <div style={installLineStyle}>
-                  <span style={promptMarkStyle}>&gt;</span>{' '}
-                  <Trans
-                    i18nKey="landing.installMcp"
-                    components={{
-                      mcpLink: (
-                        <LocaleLink to="/mcp" className="landing-skill-link" style={installLineLinkStyle} />
-                      ),
-                      skillLink: (
-                        <a
-                          href="https://skills.sh/microsoft/flint-chart/flint-chart-author"
-                          className="landing-skill-link"
-                          style={installLineLinkStyle}
-                          target="_blank"
-                          rel="noreferrer"
-                        />
-                      ),
-                    }}
-                  />
-                </div>
-                <div style={installLineStyle}>
-                  <span style={promptMarkStyle}>&gt;</span>{' '}
-                  <Trans
-                    i18nKey="landing.installGallery"
-                    values={{ chartTypes: CHART_FAMILY_COUNT, examples: CHART_GALLERY_ENTRY_COUNT }}
-                    components={{
-                      galleryLink: (
-                        <LocaleLink to="/gallery" className="landing-skill-link" style={installLineLinkStyle} />
-                      ),
-                      themesLink: (
-                        <LocaleLink to="/themes" className="landing-skill-link" style={installLineLinkStyle} />
-                      ),
-                    }}
-                  />
-                </div>
-                <div style={installLineStyle}>
-                  <span style={{ ...promptMarkStyle, display: 'inline-flex', verticalAlign: '-2px' }} aria-hidden="true">
-                    <LabIcon size={14} />
-                  </span>{' '}
-                  <Trans
-                    i18nKey="landing.installThemeLab"
-                    components={{
-                      themeLabLink: (
-                        <LocaleLink to="/theme-lab" className="landing-skill-link" style={installLineLinkStyle} />
-                      ),
-                    }}
-                  />
+                <div className="landing-backend-roster" style={backendRosterStyle} aria-label={t('landing.interactionRosterLabel')}>
+                  <span className="landing-backend-roster-label" style={backendRosterLabelStyle}>
+                    {t('landing.interactionRosterLabel')}
+                  </span>
+                  {INTERACTION_ROSTER_PREVIEW.map((preset, index) => (
+                    <span key={preset.mode} style={backendRosterItemStyle}>
+                      {index > 0 && <span aria-hidden="true" style={backendRosterSeparatorStyle} />}
+                      <LocaleLink
+                        className="landing-backend-link"
+                        to={`/interactions/gallery/${preset.mode}`}
+                        style={backendRosterLinkStyle}
+                      >
+                        {preset.label}
+                      </LocaleLink>
+                    </span>
+                  ))}
+                  <span style={backendRosterItemStyle}>
+                    <span aria-hidden="true" style={backendRosterSeparatorStyle} />
+                    <LocaleLink className="landing-backend-link" to="/interactions/gallery" style={backendRosterMoreLinkStyle}>
+                      {t('landing.themeRosterMore', { count: INTERACTION_PRESET_TYPES.length - INTERACTION_ROSTER_PREVIEW.length })}
+                    </LocaleLink>
+                  </span>
                 </div>
               </div>
             </div>
             <div className="landing-hero-actions" style={leadButtonsColStyle}>
               <div style={actionBoxStyle}>
+                <HeroCTA
+                  to="/interactions"
+                  label={t('landing.ctaInteractions')}
+                  attention
+                  variant="secondary"
+                />
                 <HeroCTA
                   to="/themes"
                   label={t('landing.ctaThemes')}
@@ -279,11 +260,7 @@ export function Landing() {
                     <FeatureDemoView build={feature.demo} />
                   </div>
                 )}
-                {feature.example && (
-                  <p style={featureExampleStyle} aria-label={`Example: ${feature.example}`}>
-                    {feature.example}
-                  </p>
-                )}
+                {feature.visual && <div style={featureGridVisualStyle}>{feature.visual}</div>}
               </article>
             ))}
           </div>
@@ -305,36 +282,47 @@ export function Landing() {
               {t('landing.seeGallery')}
             </LocaleLink>
           </div>
-          <p style={{ margin: '32px 0 0', color: siteTheme.text, fontSize: 16, lineHeight: 1.7 }}>
-            <Trans
-              i18nKey="landing.closingCollab"
-              components={{
-                msr: (
-                  <a
-                    className="site-text-link"
-                    style={contributorLinkStyle}
-                    href="https://www.microsoft.com/en-us/research/"
-                    target="_blank"
-                    rel="noreferrer"
-                  />
-                ),
-                ideas: (
-                  <a
-                    className="site-text-link"
-                    style={contributorLinkStyle}
-                    href="https://ideas-lab.net/"
-                    target="_blank"
-                    rel="noreferrer"
-                  />
-                ),
-              }}
-            />
-          </p>
+          <div style={{ margin: '40px 0 0', color: siteTheme.text, fontSize: 14, lineHeight: 1.5 }}>
+            <Contributors label={t('landing.contributors')} />
+          </div>
         </section>
       </main>
       <MicrosoftDisclosures />
     </div>
   );
+}
+
+// GitHub snapshot by contribution count; refreshed from the API when it is reachable.
+const CONTRIBUTORS_SNAPSHOT = [
+  'Chenglong-MS', 'xavier-shaw', 'IAMkecheng', 'zl190', 'lx9days', 'spboyer', 'taoche', 'zhb-y-agent',
+  'zhnd', 'yelper', 'chen1plus', 'FGRibreau', 'Hughhhhcoder', 'joshpoll', 'nyxst4ck', 'fix2015',
+];
+
+function Contributors({ label }: { label: string }) {
+  const [logins, setLogins] = useState(CONTRIBUTORS_SNAPSHOT);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch('https://api.github.com/repos/microsoft/flint-chart/contributors?per_page=100', { signal: controller.signal })
+      .then(response => (response.ok ? response.json() : null))
+      .then((rows: { login?: unknown; type?: unknown }[] | null) => {
+        const users = rows?.filter(row => row.type === 'User' && typeof row.login === 'string').map(row => row.login as string);
+        if (users?.length) setLogins(users);
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, []);
+  return <>
+    <a className="site-text-link" style={{ ...contributorLinkStyle, color: siteTheme.text, fontSize: 15, fontWeight: 600 }}
+      href={`${GITHUB_REPO}/graphs/contributors`} target="_blank" rel="noreferrer">{label}</a>
+    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '10px 18px', maxWidth: 760, margin: '14px auto 0' }}>
+      {logins.map(login => <a key={login} className="site-text-link" style={contributorChipStyle}
+        href={`https://github.com/${encodeURIComponent(login)}`} target="_blank" rel="noreferrer">
+        <img src={`https://github.com/${encodeURIComponent(login)}.png?size=56`} alt="" width={28} height={28}
+          loading="lazy" style={contributorAvatarStyle} />
+        {login}
+      </a>)}
+    </div>
+  </>;
 }
 
 /* ------------------------------------------------------------------ */
@@ -843,10 +831,22 @@ function FlintSpecCode({
         : {}),
     };
     const withCanvas = withHouse({ ...summary, chart_spec: chartSpec }, themeId, useThemeCanvas);
-    const body = JSON.stringify(withCanvas, null, 2);
-    return body.replace(/^{\n/, '{\n  "data": {...},\n');
+    // The chart_spec's objects get one entry per line; the rest stays compact.
+    const expanded = ['encodings', 'chartProperties', 'canvasSize', 'baseSize'] as const;
+    const chartSpecOut: Record<string, unknown> = { ...withCanvas.chart_spec };
+    for (const key of expanded) {
+      if (chartSpecOut[key] && typeof chartSpecOut[key] === 'object') chartSpecOut[key] = `__${key}__`;
+    }
+    let text = stringify({ ...withCanvas, chart_spec: chartSpecOut }, { maxLength: 52 });
+    for (const key of expanded) {
+      const value = (withCanvas.chart_spec as Record<string, unknown>)[key];
+      if (value && typeof value === 'object') {
+        text = text.replace(`"__${key}__"`, JSON.stringify(value, null, 2).replace(/\n/g, '\n    '));
+      }
+    }
+    return text.replace(/^{\n/, '{\n  "data": {...},\n');
   }, [testCase, canvasSize, chartPropertyOverrides, themeId, useThemeCanvas, headline?.title, headline?.subtitle]);
-  return <pre style={specPreStyle}>{text}</pre>;
+  return <CodeBlock language="json" variant="light" wrapLongLines customStyle={specPreStyle}>{text}</CodeBlock>;
 }
 
 /* ------------------------------------------------------------------ */
@@ -900,6 +900,14 @@ const THEME_ROSTER_PREVIEW = [
   THEME_PRESETS.pop,
 ];
 const THEME_ROSTER_REMAINDER = Object.keys(THEME_PRESETS).length - THEME_ROSTER_PREVIEW.length;
+const INTERACTION_ROSTER_PREVIEW = [
+  { mode: 'click-highlight', label: 'Click highlight' },
+  { mode: 'brush-x', label: 'Brush' },
+  { mode: 'inspect-index', label: 'Hover readout' },
+  { mode: 'brush-zoom', label: 'Zoom' },
+  { mode: 'legend-toggle', label: 'Legend toggle' },
+  { mode: 'filter-controls', label: 'Filters' },
+] as const;
 const CHART_GALLERY_ENTRY_COUNT = CHART_CATEGORIES.reduce(
   (count, category) => count + category.charts.length,
   0,
@@ -910,10 +918,10 @@ interface Feature {
   id: string;
   title: string;
   body: string;
-  // Optional concrete example rendered as a callout beneath the body.
-  example?: string;
   // Before/after demo shown alongside the text, illustrating the feature.
   demo?: () => FeatureDemoConfig;
+  // A live visual in place of the before/after cards.
+  visual?: ReactNode;
   isNew?: boolean;
 }
 
@@ -923,21 +931,18 @@ function getFeatures(t: TFunction): Feature[] {
       id: 'semantic',
       title: t('landing.features.semantic.title'),
       body: t('landing.features.semantic.body'),
-      example: t('landing.features.semantic.example'),
       demo: demoSemanticTypes,
     },
     {
       id: 'layout',
       title: t('landing.features.layout.title'),
       body: t('landing.features.layout.body'),
-      example: t('landing.features.layout.example'),
       demo: demoLayout,
     },
     {
       id: 'adapt',
       title: t('landing.features.adapt.title'),
       body: t('landing.features.adapt.body'),
-      example: t('landing.features.adapt.example'),
       demo: demoAdapt,
     },
     {
@@ -947,15 +952,20 @@ function getFeatures(t: TFunction): Feature[] {
         chartTypes: CHART_FAMILY_COUNT,
         examples: CHART_GALLERY_ENTRY_COUNT,
       }),
-      example: t('landing.features.backends.example'),
       demo: demoBackends,
     },
     {
       id: 'themes',
       title: t('landing.features.themes.title'),
       body: t('landing.features.themes.body'),
-      example: t('landing.features.themes.example'),
       demo: demoThemes,
+      isNew: true,
+    },
+    {
+      id: 'interactions',
+      title: t('landing.features.interactions.title'),
+      body: t('landing.features.interactions.body'),
+      visual: <InteractionDemo label={t('landing.features.interactions.demoLabel')} />,
       isNew: true,
     },
   ];
@@ -1162,6 +1172,46 @@ function demoThemes(): FeatureDemoConfig {
   };
 }
 
+// Card 6: the gallery's two-line food-price case, read with the inspect-index preset.
+function InteractionDemo({ label }: { label: string }) {
+  const [spec, setSpec] = useState<ChartAssemblyInput | null>(null);
+  useEffect(() => {
+    let alive = true;
+    // Loaded on demand so the price table stays out of the landing bundle.
+    import('../data/cpi-food-prices.json').then(({ default: foodPrices }) => {
+      if (!alive) return;
+      const values = foodPrices.values
+        .filter(({ item }) => item === 'Eggs' || item === 'White bread')
+        .map(({ month, price, item }) => ({ Month: month, Price: price, Food: item }));
+      setSpec({
+        data: { values },
+        semantic_types: { Month: 'Date', Price: 'Currency', Food: 'Category' },
+        field_display_names: { Price: 'Average price (USD)' },
+        chart_spec: {
+          chartType: 'Line Chart',
+          title: 'U.S. food prices',
+          encodings: { x: { field: 'Month' }, y: { field: 'Price' }, color: { field: 'Food' } },
+          baseSize: { width: 420, height: 240 },
+        },
+        interaction_spec: { interactions: [{ type: 'inspect-index', options: { show: 'all' } }] },
+      } as ChartAssemblyInput);
+    });
+    return () => { alive = false; };
+  }, []);
+  return (
+    <div style={featureLiveStyle}>
+      <div style={featureLiveCardStyle}>
+        <span style={stackBadgeStyle}>{label}</span>
+        {spec && (
+          <ScaleToFit height={300} padding={6}>
+            <FlintChart spec={spec} renderer="svg" ariaLabel="U.S. food prices" />
+          </ScaleToFit>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function themedRevenue(): TestCase {
   const markets = ['North America', 'Europe', 'East Asia', 'South Asia', 'Latin America', 'Africa'];
   const products = ['Cloud', 'Devices', 'Services'];
@@ -1195,9 +1245,9 @@ function pickBackend(t: TestCase, want: PreviewBackend): PreviewBackend {
   return supported.includes(want) ? want : supported[0] ?? 'vegalite';
 }
 
-/** A Flint spec with the data spec (semantic types) block color-highlighted. */
+/** A Flint spec with the data spec (semantic types) block highlighted. */
 function HighlightedFlintSpec({ testCase }: { testCase: TestCase }) {
-  const lines = useMemo(() => {
+  const { json, hotLines } = useMemo(() => {
     const json = JSON.stringify(testCaseToFlintSummary(testCase), null, 2);
     const all = json.split('\n');
     // Mark the lines that make up the "semantic_types" (data spec) block.
@@ -1220,17 +1270,14 @@ function HighlightedFlintSpec({ testCase }: { testCase: TestCase }) {
         }
       }
     }
-    return all.map((text, i) => ({ text, hot: start !== -1 && i >= start && i <= end }));
+    const hotLines = start === -1 ? [] : Array.from({ length: end - start + 1 }, (_, i) => start + i + 1);
+    return { json, hotLines };
   }, [testCase]);
 
   return (
-    <pre style={demoSpecPreStyle}>
-      {lines.map((ln, i) => (
-        <div key={i} style={ln.hot ? demoSpecHotLineStyle : undefined}>
-          {ln.text || ' '}
-        </div>
-      ))}
-    </pre>
+    <CodeBlock language="json" variant="light" highlightLines={hotLines} customStyle={demoSpecPreStyle}>
+      {json}
+    </CodeBlock>
   );
 }
 
@@ -1446,14 +1493,6 @@ const heroLogoStyle: CSSProperties = {
   marginTop: 7,
 };
 
-const heroAttributionStyle: CSSProperties = {
-  margin: '14px 0 0',
-  color: siteTheme.textMuted,
-  fontSize: 13,
-  fontWeight: 500,
-  letterSpacing: '0.03em',
-};
-
 const leadColumnsStyle: CSSProperties = {
   display: 'flex',
   flexDirection: 'row',
@@ -1557,32 +1596,6 @@ const backendRosterSeparatorStyle: CSSProperties = {
   background: HAIRLINE,
 };
 
-const installLinesStyle: CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 8,
-  margin: '28px 0 0',
-};
-
-const installLineStyle: CSSProperties = {
-  color: siteTheme.text,
-  fontSize: 15.5,
-  lineHeight: 1.65,
-};
-
-const promptMarkStyle: CSSProperties = {
-  fontFamily: siteTheme.fontMono,
-  color: siteTheme.textMuted,
-  userSelect: 'none',
-};
-
-const installLineLinkStyle: CSSProperties = {
-  color: siteTheme.accent,
-  fontWeight: 500,
-  textDecoration: 'none',
-  transition: 'color 120ms ease',
-};
-
 const landingInteractiveStyles = `
   .landing-hero-cta:focus-visible {
     outline: 2px solid ${siteTheme.accent};
@@ -1608,6 +1621,13 @@ const landingInteractiveStyles = `
 
   .landing-pipeline-figure--mobile {
     display: none;
+  }
+
+  /* A long string that wraps continues under its key, not at the left edge. */
+  .landing-spec-pane code > span {
+    display: block;
+    padding-left: 6ch;
+    text-indent: -6ch;
   }
 
   @media (min-width: 901px) {
@@ -1790,6 +1810,20 @@ const contributorLinkStyle: CSSProperties = {
   color: siteTheme.accent,
   textDecoration: 'none',
   fontWeight: 500,
+};
+
+const contributorChipStyle: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 8,
+  color: siteTheme.text,
+  textDecoration: 'none',
+};
+
+const contributorAvatarStyle: CSSProperties = {
+  borderRadius: '50%',
+  border: `1px solid ${siteTheme.border}`,
+  background: siteTheme.hover,
 };
 
 const overviewSectionStyle: CSSProperties = {
@@ -2097,6 +2131,20 @@ const featureStackCardStyle: CSSProperties = {
   willChange: 'opacity',
 };
 
+const featureLiveStyle: CSSProperties = {
+  height: '100%',
+  boxSizing: 'border-box',
+  padding: '10px 12px 24px 10px',
+};
+
+const featureLiveCardStyle: CSSProperties = {
+  ...featureStackCardStyle,
+  height: '100%',
+  boxSizing: 'border-box',
+  padding: '30px 14px 12px',
+  boxShadow: SOFT_SHADOW,
+};
+
 const stackBadgeStyle: CSSProperties = {
   position: 'absolute',
   top: 8,
@@ -2125,12 +2173,6 @@ const demoSpecPreStyle: CSSProperties = {
   color: siteTheme.text,
   background: PAPER,
   overflow: 'hidden',
-};
-
-const demoSpecHotLineStyle: CSSProperties = {
-  background: siteTheme.accentBg,
-  boxShadow: `inset 2px 0 0 ${siteTheme.accent}`,
-  color: siteTheme.text,
 };
 
 const featureTitleStyle: CSSProperties = {
@@ -2162,26 +2204,6 @@ const attentionStarStyle: CSSProperties = {
   color: '#b26a00',
   fontSize: 13,
   lineHeight: 1,
-};
-
-function featureExampleRowStyle(): CSSProperties {
-  return {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 14,
-    margin: '12px 0 0',
-    // Paragraph stays first so its left border lines up with the text above;
-    // the arrow trails on the right.
-    flexDirection: 'row',
-  };
-}
-
-const featureExampleStyle: CSSProperties = {
-  margin: '0',
-  padding: 0,
-  fontSize: 14,
-  lineHeight: 1.7,
-  color: siteTheme.textMuted,
 };
 
 const codeStyle: CSSProperties = {

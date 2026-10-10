@@ -124,6 +124,8 @@ export function createDataOverlay({
         const xScale = view.scale(scales.x);
         const yScale = view.scale(scales.y);
         const colorScale = scales.color ? view.scale(scales.color) : undefined;
+        const background = typeof view.background === 'function' ? view.background() : undefined;
+        const chartBackground = typeof background === 'string' && background !== 'transparent' ? background : '#ffffff';
         if (typeof xScale !== 'function' || typeof yScale !== 'function') {
             layer.remove();
             return;
@@ -282,6 +284,15 @@ export function createDataOverlay({
                         ? colorScale?.(row[spec.encodings.color.field])
                         : undefined;
                     text.setAttribute('fill', spec.style?.fill ?? colorValue ?? '#333333');
+                    // Overlay text sits on the data, so it is haloed in the chart's own background unless told not to.
+                    const halo = spec.style?.stroke ?? chartBackground;
+                    if (halo !== 'none') {
+                        const fontSize = spec.style?.fontSize ?? 11;
+                        text.setAttribute('stroke', halo);
+                        text.setAttribute('stroke-width', String(spec.style?.strokeWidth ?? Math.min(4, Math.max(2, fontSize / 4))));
+                        text.setAttribute('stroke-linejoin', 'round');
+                        text.setAttribute('paint-order', 'stroke');
+                    }
                     text.textContent = String(spec.encodings.text ? row[spec.encodings.text.field] ?? '' : '');
                     layer.append(text);
                     return;

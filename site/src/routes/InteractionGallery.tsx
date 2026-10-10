@@ -1,23 +1,28 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
-import { ArrowDown, ArrowLeftRight, Brush, Focus, GripVertical, Keyboard, LayoutGrid, MousePointerClick, Move, Pencil, Ruler, Scan, SlidersHorizontal, Table2, UserRound, ZoomIn } from 'lucide-react';
+import { ArrowDown, ArrowLeftRight, Brush, Focus, GripVertical, Keyboard, Layers, LayoutGrid, MousePointerClick, Move, Pencil, Ruler, Scan, SlidersHorizontal, Table2, UserRound, ZoomIn } from 'lucide-react';
 import { Navigate, useLocation, useParams } from 'react-router-dom';
-import type { CanvasInteractionAction } from 'flint-chart/interactive';
+import { INTERACTION_PRESET_TYPES, type CanvasInteractionAction } from 'flint-chart/interactive';
 import { CodeBlock } from '../components/CodeBlock';
 import { MicrosoftDisclosures, SiteNavBar, SiteShell } from '../components/SiteShell';
 import { LocaleLink } from '../i18n/LocaleLink';
 import { useLocale } from '../i18n/LocaleContext';
 import { siteTheme } from '../shared/theme';
 import '../playground/playground.css';
-import { ClickFocusLab } from '../playground/ClickFocusLab';
+import { ClickFocusLab, compositionInteractionModes, unitInteractionModes, type InteractionMode } from '../playground/ClickFocusLab';
+import foodPrices from '../data/cpi-food-prices.json';
+import { FlintChart } from 'flint-chart/react';
+import type { ChartAssemblyInput } from 'flint-chart';
+import { ScaleToFit } from '../components/ScaleToFit';
 import { ThemePicker } from '../playground/ThemePicker';
 import { FilterControlsGallery } from '../playground/FilterControlsGallery';
+import { CompositionsGallery } from '../playground/CompositionsGallery';
 import { ClimatePhaseStage } from '../playground/ClimatePhaseStage';
 import { RetailDrilldownStage } from '../playground/RetailDrilldownStage';
 import { YouDrawItStage } from '../playground/YouDrawItStage';
 import { FreeformExplodedDetailStage } from '../playground/ExplodedDetailStage';
 import { ContinentCohortStage, CountryTableStage } from '../playground/ExternalToChartLab';
 import {
-  CaseCard, compositionInteractionModes, interactionCases, unitInteractionModes, type InteractionMode,
+  CaseCard, interactionCases,
 } from '../playground/InteractionGallery';
 
 function MechanismArrows() {
@@ -139,24 +144,25 @@ function InteractionMechanism() {
 
 // Not an InteractionMode: its page is FilterControlsGallery, not a ClickFocusLab case set.
 const filterControlsMode = { value: 'filter-controls', label: 'Filter controls', icon: SlidersHorizontal } as const;
-type GalleryMode = InteractionMode | typeof filterControlsMode.value;
-const galleryModes = [...unitInteractionModes, ...compositionInteractionModes, filterControlsMode];
+const compositionsMode = { value: 'compositions', label: 'Compositions', icon: Layers } as const;
+type GalleryMode = InteractionMode | typeof filterControlsMode.value | typeof compositionsMode.value;
+const galleryModes = [...unitInteractionModes, ...compositionInteractionModes, filterControlsMode, compositionsMode];
 
 const supportedGroups = [
   { label: 'Highlight', icon: MousePointerClick, description: 'Emphasize a mark, category, or related group.',
     modes: ['click-highlight', 'click-group-focus', 'hover-group-focus', 'long-press', 'double-activate'] },
-  { label: 'Select', icon: Scan, description: 'Select regions or matching groups across linked views.',
-    modes: ['select', 'lasso', 'linked-brush'] },
-  { label: 'Brush', icon: Brush, description: 'Select axis intervals or angular sectors, with editable retained selections.',
-    modes: ['brush-x', 'brush-y', 'brush-angle', 'brush-x-stateful', 'brush-y-stateful', 'brush-angle-stateful'] },
+  { label: 'Select & brush', icon: Scan, description: 'Select regions, axis intervals, or angular sectors, optionally editable, and match groups across linked views.',
+    modes: ['select', 'brush-x', 'brush-y', 'brush-angle', 'lasso', 'linked-brush'] },
   { label: 'Inspect & annotate', icon: Ruler, description: 'Read values at a position or attach a value label to a mark.',
     modes: ['inspect', 'inspect-index', 'annotate'] },
   { label: 'Change the view', icon: Move, description: 'Explore domains, reorder categories, or toggle series visibility.',
     modes: ['navigate', 'brush-zoom', 'drag-reorder', 'legend-toggle'] },
-  { label: 'Filter', icon: SlidersHorizontal, description: 'Narrow the data with checkboxes, ranges, and switches placed beside the chart.',
-    modes: ['filter-controls'] },
-  { label: 'Keyboard & context', icon: Keyboard, description: 'Navigate chart elements accessibly and combine selection with host actions.',
-    modes: ['accessible-navigation', 'keyboard-focus', 'select-context'] },
+  { label: 'Widgets', icon: SlidersHorizontal, description: 'Controls the chart draws for the reader: filters beside it, and a menu of host actions beside a selection.',
+    modes: ['filter-controls', 'context-menu'] },
+  { label: 'Keyboard', icon: Keyboard, description: 'Navigate chart elements accessibly and activate them from the keyboard.',
+    modes: ['accessible-navigation'] },
+  { label: 'Compositions', icon: Layers, description: 'Presets that stack on one chart, each pair answering a two-step question.',
+    modes: ['compositions'] },
 ] as const satisfies readonly { label: string; icon: typeof Move; description: string; modes: readonly GalleryMode[] }[];
 
 const sections = supportedGroups.map(group => ({
@@ -321,21 +327,44 @@ function InteractionExamples({ selected, onSelect }: {
   </section>;
 }
 
-const behaviors: Record<InteractionMode, readonly { trigger: string; update: string }[]> = {
+const behaviors: Partial<Record<InteractionMode, readonly { trigger: string; update: string }[]>> = {
   'click-highlight': [
     { trigger: 'Click a mark, a legend entry, or a discrete axis label', update: 'Highlight matching data and dim unrelated marks.' },
+    { trigger: 'Shift-click (or Ctrl- or ⌘-click) another one', update: 'Add it to the highlight; doing it again on a highlighted one takes it out.' },
   ],
-  'click-group-focus': [{ trigger: 'Click a mark', update: 'Highlight all marks sharing its configured group and dim unrelated marks.' }],
+  'click-group-focus': [
+    { trigger: 'Click a mark', update: 'Highlight all marks sharing its configured group and dim unrelated marks.' },
+    { trigger: 'Shift-click (or Ctrl- or ⌘-click) a mark in another group', update: 'Add that group to the highlight, or take it out again.' },
+  ],
   'hover-group-focus': [{ trigger: 'Hover over a mark', update: 'Temporarily emphasize its group without changing the retained selection.' }],
   annotate: [{ trigger: 'Click a mark', update: 'Add a value label in nearby free space, connected to the mark.' }],
-  select: [{ trigger: 'Drag a rectangle across the plot', update: 'Highlight enclosed marks and dim marks outside the rectangle.' }],
+  select: [
+    { trigger: 'Drag a rectangle across the plot', update: 'Highlight enclosed marks and dim marks outside the rectangle.' },
+    { trigger: 'Drag inside a stateful rectangle or on its edge', update: 'Move or resize the rectangle and update the highlighted marks.' },
+    { trigger: 'Click outside a stateful rectangle', update: 'Clear the rectangle and restore all marks.' },
+  ],
+  'select-stateful': [
+    { trigger: 'Drag a rectangle across the plot', update: 'Create a retained rectangle and highlight enclosed marks.' },
+    { trigger: 'Drag inside the rectangle or on an edge', update: 'Move or resize the rectangle and update the highlighted marks.' },
+    { trigger: 'Click outside the rectangle', update: 'Clear the rectangle and restore all marks.' },
+  ],
   'linked-brush': [{ trigger: 'Drag a rectangle across the plot', update: 'Highlight matching groups across linked views and dim unrelated groups.' }],
   'brush-x': [
     { trigger: 'Drag horizontally across the plot', update: 'Highlight marks within the X interval and dim the rest.' },
     { trigger: 'Drag around the center of a compatible polar chart', update: 'Highlight marks within the angular sector.' },
+    { trigger: 'Drag inside a stateful interval or on its edge', update: 'Move or resize the interval and update the highlighted marks.' },
+    { trigger: 'Click outside a stateful interval', update: 'Clear the interval and restore all marks.' },
   ],
-  'brush-y': [{ trigger: 'Drag vertically across the plot', update: 'Highlight marks within the Y range and dim the rest.' }],
-  'brush-angle': [{ trigger: 'Drag around the chart center', update: 'Highlight marks within the angular sector and dim the rest.' }],
+  'brush-y': [
+    { trigger: 'Drag vertically across the plot', update: 'Highlight marks within the Y range and dim the rest.' },
+    { trigger: 'Drag inside a stateful range or on its edge', update: 'Move or resize the range and update the highlighted marks.' },
+    { trigger: 'Click outside a stateful range', update: 'Clear the range and restore all marks.' },
+  ],
+  'brush-angle': [
+    { trigger: 'Drag around the chart center', update: 'Highlight marks within the angular sector and dim the rest.' },
+    { trigger: 'Drag inside a stateful sector or on a boundary', update: 'Move or resize the sector and update the highlighted marks.' },
+    { trigger: 'Click outside a stateful sector', update: 'Clear the sector and restore all marks.' },
+  ],
   'brush-x-stateful': [
     { trigger: 'Drag horizontally across the plot', update: 'Create a retained interval and highlight matching marks.' },
     { trigger: 'Drag inside the interval or on an edge', update: 'Move or resize the interval and update the highlighted marks.' },
@@ -366,23 +395,27 @@ const behaviors: Record<InteractionMode, readonly { trigger: string; update: str
     { trigger: 'Drag a rectangle across the plot', update: 'Zoom the continuous axes into the selected region.' },
     { trigger: 'Press Escape or double-click', update: 'Restore the initial viewport.' },
   ],
-  'accessible-navigation': [{ trigger: 'Focus the chart and press arrow keys, Enter, or Escape', update: 'Move between chart elements, update the focus indicator, and announce the focused content.' }],
+  'accessible-navigation': [
+    { trigger: 'Focus the chart and press arrow keys, Enter, or Escape', update: 'Move between chart elements, update the focus indicator, and announce the focused content.' },
+    { trigger: 'Press Tab after Enter', update: 'Step through the elements at that level; past the last one, Tab moves on from the chart.' },
+  ],
   'keyboard-focus': [
     { trigger: 'Click a mark', update: 'Highlight its data and dim unrelated marks.' },
     { trigger: 'Use arrow keys while the chart is focused, then press Enter', update: 'Move between marks and activate the focused mark.' },
   ],
-  'select-context': [
-    { trigger: 'Drag a rectangle across the plot', update: 'Highlight enclosed marks and dim marks outside the rectangle.' },
-    { trigger: 'Right-click a mark', update: 'Open a context menu for that mark in these examples; the host supplies the menu actions.' },
+  'context-menu': [
+    { trigger: 'Pick marks with the gesture chosen below (a rectangle, a lasso, a click, a right-click, or a long press)', update: 'Highlight them and open a menu of actions beside them.' },
+    { trigger: 'Pick a menu item', update: 'Hand the action and the picked marks to the host, which performs it.' },
   ],
 };
 
-const eventActions: Record<InteractionMode, readonly CanvasInteractionAction[]> = {
+const eventActions: Partial<Record<InteractionMode, readonly CanvasInteractionAction[]>> = {
   'click-highlight': ['click-element', 'click-legend', 'click-axis'],
   'click-group-focus': ['click-element'],
   'hover-group-focus': ['hover-element'],
   annotate: ['click-element'],
   select: ['select-region'],
+  'select-stateful': ['select-region'],
   'linked-brush': ['select-region'],
   'brush-x': ['brush-x', 'brush-angle'],
   'brush-y': ['brush-y'],
@@ -401,7 +434,7 @@ const eventActions: Record<InteractionMode, readonly CanvasInteractionAction[]> 
   'brush-zoom': ['select-region'],
   'accessible-navigation': ['focus-element'],
   'keyboard-focus': ['click-element', 'focus-element', 'activate-element'],
-  'select-context': ['select-region', 'context-element'],
+  'context-menu': ['menu-select'],
 };
 
 const eventDescriptions: Partial<Record<CanvasInteractionAction, string>> = {
@@ -425,17 +458,28 @@ const eventDescriptions: Partial<Record<CanvasInteractionAction, string>> = {
   'focus-element': 'The focused chart element and its represented content.',
   'activate-element': 'The keyboard-activated element and its represented data.',
   'context-element': 'The mark resolved for a contextual action.',
+  'menu-select': 'The item the reader picked (event.item), with the selected marks as the target.',
 };
+
+// The chart an agent would answer the example chat with.
+const CHAT_SPEC = {
+  data: {
+    values: foodPrices.values
+      .filter(({ item }) => item === 'Eggs' || item === 'White bread')
+      .map(({ month, price, item }) => ({ Month: month, Price: price, Food: item })),
+  },
+  semantic_types: { Month: 'Date', Price: 'Currency', Food: 'Category' },
+  field_display_names: { Price: 'Average price (USD)' },
+  chart_spec: {
+    chartType: 'Line Chart',
+    encodings: { x: 'Month', y: 'Price', color: 'Food' },
+    baseSize: { width: 380, height: 200 },
+  },
+  interaction_spec: { interactions: [{ type: 'inspect-index', options: { show: 'all' } }] },
+} as ChartAssemblyInput;
 
 export function FlintInteractive() {
   const [selectedExample, setSelectedExample] = useState<CuratedExampleMode>('linked-brush');
-  const showExample = (mode: CuratedExampleMode) => {
-    setSelectedExample(mode);
-    window.requestAnimationFrame(() => {
-      document.getElementById(`ig-example-tab-${mode}`)?.focus({ preventScroll: true });
-      document.querySelector('.ig-curated-examples')?.scrollIntoView({ block: 'start' });
-    });
-  };
   return <div className="ig-article-page" style={{ fontFamily: siteTheme.fontSans, color: siteTheme.text }}>
     <SiteNavBar flush />
     <main className="ig-article-main">
@@ -443,117 +487,82 @@ export function FlintInteractive() {
         <header>
           <h1>Flint Interactive</h1>
           <section className="ig-overview-intro" aria-label="About Flint-interactive">
-            <p>Flint-interactive is a language for creating interactive data visualizations on top of Flint. It allows you to create dashboards, interactive data stories, and interactive artifacts more easily.</p>
-            <ul>
-              <li>Use one of the 21 preset interactions to make your Flint chart interactive. <button type="button" className="ig-example-link" onClick={() => showExample('linked-brush')}>Example: linked brushing</button>.</li>
-              <li>Or use the lower-level Flint API to create bespoke interactions that map semantic events to custom chart updates or responses in external applications. <button type="button" className="ig-example-link" onClick={() => showExample('freeform-detail')}>Example: fisheye detail</button>.</li>
-            </ul>
-            <p>The magic behind Flint-interactive is that Flint leverages its compiler to map user interactions to <strong>semantic events</strong> that reflect the meaning of the items users interact with, and provides high-level operators to specify visual updates in response to both internal and external events. This shifts the heavy burden of resolving complex dependencies between interaction and visual logic to the compiler, so the user (or the agent) can easily describe expressive interactions with high-level specifications.</p>
+            <p>Flint-interactive is a language for creating interactive data visualizations on top of Flint. It allows you to create dashboards, interactive data stories, and interactive artifacts more easily. You can use {INTERACTION_PRESET_TYPES.length} <LocaleLink to="/interactions/gallery">presets</LocaleLink> to quickly make a chart interactive, and use the <LocaleLink to="/documentation/interaction-api">Flint API</LocaleLink> to compose <LocaleLink to="/interactions/advanced">advanced interactions</LocaleLink> that connect to external apps. Flint-interactive is available both in the <LocaleLink to="/mcp">MCP server</LocaleLink>, for interactive charts right in your chat with an agent, and in the <a href="https://www.npmjs.com/package/flint-chart" target="_blank" rel="noreferrer">npm library</a>, for building interactive apps, dashboards, and data stories.</p>
+            <p>The magic behind Flint-interactive is its compiler that maps user interactions to <strong>semantic events</strong> that reflect the meaning of the items users interact with, and provides <strong>high-level operators</strong> to perform visual updates based on internal and external events. The separation of interaction and visual logic allows us to design high-level yet expressive interactions for agents to create rich interactive visualizations.</p>
           </section>
         </header>
+        <nav className="ig-entry-links" aria-label="Interaction galleries">
+          <LocaleLink to="/interactions/gallery" className="ig-entry-link">
+            <LayoutGrid size={17} aria-hidden="true" /> Interaction Presets
+          </LocaleLink>
+          <LocaleLink to="/interactions/advanced" className="ig-entry-link">
+            <Pencil size={17} aria-hidden="true" /> Advanced Interactions
+          </LocaleLink>
+        </nav>
         <InteractionExamples selected={selectedExample} onSelect={setSelectedExample} />
         <section className="ig-overview-intro" aria-labelledby="ig-usage-title">
           <h2 id="ig-usage-title">How to use</h2>
           <section className="ig-usage-row" aria-labelledby="ig-usage-chat">
             <div className="ig-usage-description">
               <h3 id="ig-usage-chat" className="ig-usage-subtitle">1. Use Flint in your chat</h3>
-              <p>Use Flint Interactive directly in your chat or canvas environment through Flint-MCP and MCP Apps, following the <LocaleLink to="/documentation/setup-flint-mcp">MCP setup guide</LocaleLink>. With the latest release, tell your agent what to chart and which interactions you want; it can generate an <code>interaction_spec</code> alongside the Flint chart spec and render the interactive chart in your conversation.</p>
-              <blockquote className="ig-usage-prompt">Create an income vs. life expectancy scatterplot. Let me click a country to highlight it and drag a rectangle to zoom.</blockquote>
+              <p>Use Flint Interactive directly in your chat or canvas environment through Flint-MCP and MCP Apps, following the <LocaleLink to="/mcp">MCP setup guide</LocaleLink>.</p>
+              <p>With the latest release, tell your agent what to chart and which interactions you want; it can generate an <code>interaction_spec</code> alongside the Flint chart spec and render the interactive chart in your conversation.</p>
             </div>
-            <div className="ig-usage-code">
-            <CodeBlock language="json" variant="light" customStyle={{ margin: 0, overflowX: 'auto', fontSize: 11 }}>{`{
-  "data": { "values": [
-    { "Country": "Japan", "GDP": 31656, "Life": 82.6 },
-    { "Country": "Brazil", "GDP": 9066, "Life": 72.4 },
-    { "Country": "Nigeria", "GDP": 2014, "Life": 46.9 }
-  ] },
-  "semantic_types": { "Country": "Country", "GDP": "Quantity", "Life": "Quantity" },
-  "chart_spec": {
-    "chartType": "Scatter Plot",
-    "title": "Income and life expectancy, 2007",
-    "encodings": { "x": "GDP", "y": "Life", "detail": "Country" }
-  },
-  "interaction_spec": {
-    "interactions": [
-      { "type": "click-highlight", "options": { "targets": ["mark"] } },
-      { "type": "brush-zoom", "options": { "axes": "xy" } }
-    ]
-  }
-}`}</CodeBlock>
+            <div className="ig-usage-code ig-chat" aria-label="Example chat">
+              <p className="ig-chat-user">Visualize U.S. egg and bread prices since 2015. Let me hover to read both at any month.</p>
+              <div className="ig-chat-agent">
+                <p>Here it is. Hover along the timeline to read both prices.</p>
+                <ScaleToFit height={220} adaptiveHeight padding={0}>
+                  <FlintChart spec={CHAT_SPEC} renderer="svg" ariaLabel="U.S. egg and bread prices" />
+                </ScaleToFit>
+              </div>
             </div>
           </section>
           <section className="ig-usage-row" aria-labelledby="ig-usage-app">
             <div className="ig-usage-description">
               <h3 id="ig-usage-app" className="ig-usage-subtitle">2. Build an interactive app with Flint</h3>
-              <p>Build interactive charts in a dashboard, data story, or other application with Flint Interactive Canvas. Your app can read <LocaleLink to="/documentation/interaction-design#24-the-surface">what the chart shows</LocaleLink> with <code>getState()</code>, and respond to chart changes with <code>onChange</code>, or to the gestures themselves with <code>onInteraction</code>, for example to filter a table, update another chart, or change application state. To let your app's widgets control how the chart updates, send <LocaleLink to="/documentation/interaction-api#update-operators-and-host-responses">update operators</LocaleLink> to Flint Canvas.</p>
+              <p>Build interactive charts in a dashboard, data story, or apps with Flint Canvas. You can define how your app responds to Flint's semantic interaction events to update app state, or send <LocaleLink to="/documentation/interaction-api#update-operators-and-host-responses">update operators</LocaleLink> (e.g., <code>set-style</code> to highlight, <code>set-viewport</code> to zoom) to instruct Flint to update the chart in response to external events.</p>
               <p>To get started, share the <a href="https://github.com/microsoft/flint-chart/blob/main/agent-skills/flint-interaction-author/SKILL.md" target="_blank" rel="noreferrer">interaction-author skill</a> with your coding agent to generate presets for your app.</p>
             </div>
             <div className="ig-usage-code">
-            <CodeBlock language="typescript" variant="light" customStyle={{ margin: 0, overflowX: 'auto', fontSize: 11 }}>{`import { FlintChart } from 'flint-chart/react';
-
-<FlintChart
-  spec={flintSpec}
-  // Respond to what the chart shows during and after changes
+            <CodeBlock language="tsx" variant="light" wrapLongLines customStyle={{ margin: 0, fontSize: 12 }}>{`<FlintChart
+  spec={{
+    chart_spec: { chartType: "Scatter Plot", … },
+    interaction_spec: {
+      interactions: [{ type: "brush-x" }]
+    }
+  }}
   onChange={({ phase, state }) => {
-    const values = state.selected.map(element => element.value);
-    if (phase === 'preview') table.highlight(values);
-    if (phase === 'commit') table.filter(values);
+    const rows = state.selected.map(…);
+    if (phase === "preview") table.highlight(rows);
+    if (phase === "commit") table.filter(rows);
   }}
-  // Respond to the gestures directly
-  onInteraction={({ event }) => {
-    console.log(event.action, event.target?.elements);
-  }}
-/>;`}</CodeBlock>
+/>`}</CodeBlock>
             </div>
           </section>
           <section className="ig-usage-row" aria-labelledby="ig-usage-bespoke">
             <div className="ig-usage-description">
               <h3 id="ig-usage-bespoke" className="ig-usage-subtitle">3. Create bespoke interactions</h3>
-              <p>To create bespoke interactions beyond Flint's presets, define a trigger and a custom <code>handle</code> function with the <LocaleLink to="/documentation/interaction-api">programming API</LocaleLink> that maps semantic events to custom chart update sequences. For example, this handler highlights a clicked country and labels it by name. It combines <code>set-style</code> and <code>set-annotation</code> without manipulating renderer-specific marks.</p>
-              <p>Share the <a href="https://github.com/microsoft/flint-chart/blob/main/agent-skills/flint-interaction-author/SKILL.md" target="_blank" rel="noreferrer">interaction-author skill</a> with your coding agent for preset conventions, and use the programming guide and <LocaleLink to="/interactions/bespoke">bespoke interaction examples</LocaleLink> to help it build custom interactions for your app.</p>
+              <p>To create bespoke interactions beyond Flint's presets, define a trigger and a custom <code>handle</code> function with the <LocaleLink to="/documentation/interaction-api">programming API</LocaleLink> that maps semantic events to custom chart update sequences.</p>
+              <p>Share the <a href="https://github.com/microsoft/flint-chart/blob/main/agent-skills/flint-interaction-author/SKILL.md" target="_blank" rel="noreferrer">interaction-author skill</a> with your coding agent for preset conventions, and use the programming guide to help it build custom interactions for your app. Check out some bespoke interactions we built in <LocaleLink to="/interactions/advanced">Advanced Interactions</LocaleLink>.</p>
             </div>
             <div className="ig-usage-code">
-              <CodeBlock language="typescript" variant="light" customStyle={{ margin: 0, overflow: 'auto', fontSize: 11, maxHeight: 440 }}>{`import { FlintChart } from 'flint-chart/react';
-import type { CanvasInteractionDef } from 'flint-chart/interactive';
-
-const countryDetails: CanvasInteractionDef = {
-  id: 'country-details',
-  eventSource: { type: 'element', gesture: 'click' },
-  affordances: {
-    mark: { cursor: 'activate', hover: 'target' },
-  },
-  reset: ['click-none', 'escape'],
-  handle(event) {
-    if (event.action !== 'click-element'
-        || event.phase === 'start'
-        || event.phase === 'cancel') return null;
-    const target = event.target;
-    const country = target?.elements[0]?.value.Country;
-    if (!target || typeof country !== 'string')
-      return null;
-    return {
-      id: 'country-details',
-      ops: [
-        {
-          op: 'set-style',
-          targets: [target],
-          value: {
-            state: 'emphasized', mutedOpacity: 0.25,
-          },
-        },
-        {
-          op: 'set-annotation', target,
-          value: { text: country },
-        },
-      ],
-    };
-  },
+              <CodeBlock language="tsx" variant="light" wrapLongLines customStyle={{ margin: 0, fontSize: 12 }}>{`const countryDetails = {
+  id: "country-details",
+  eventSource: { gesture: "click", … },
+  // target: the clicked country, as data
+  handle: ({ target }) => ({ ops: [
+    { op: "set-style", targets: [target],
+      value: { state: "emphasized" } },
+    { op: "set-annotation", target,
+      value: { text: … } },
+    { op: "set-overlay", name: "continent-avg",
+      value: { mark: "rule", data: …, encodings: … } },
+  ] }),
 };
 
-<FlintChart
-  spec={input}
-  interactions={() => [countryDetails]}
-/>;`}</CodeBlock>
+<FlintChart spec={…}
+  interactions={[countryDetails]} />`}</CodeBlock>
             </div>
           </section>
         </section>
@@ -587,9 +596,9 @@ const countryDetails: CanvasInteractionDef = {
         </section>
         <section className="ig-overview-intro" aria-labelledby="ig-try-title">
           <h2 id="ig-try-title">Try It Now!</h2>
-          <p><strong>Chart users:</strong> <LocaleLink to="/documentation/setup-flint-mcp">Set up Flint in your chat</LocaleLink> and ask your agent to create an interactive chart. Find inspiration in the <LocaleLink to="/interactions/gallery">interaction gallery</LocaleLink>.</p>
+          <p><strong>Chart users:</strong> <LocaleLink to="/documentation/setup-flint-mcp">Set up Flint in your chat</LocaleLink> and ask your agent to create an interactive chart. Find inspiration in the <LocaleLink to="/interactions/gallery">interaction presets</LocaleLink>.</p>
           <p><strong>App builders:</strong> Build interactive dashboards, data stories, and connected views with the <LocaleLink to="/documentation/interaction-api">programming API</LocaleLink>. Share the <a href="https://github.com/microsoft/flint-chart/blob/main/agent-skills/flint-interaction-author/SKILL.md" target="_blank" rel="noreferrer">interaction-author skill</a> with your coding agent to add presets to your app.</p>
-          <p><strong>Interaction designers:</strong> Explore the <LocaleLink to="/interactions/bespoke">bespoke examples</LocaleLink>, design a new interaction, and turn it into a reusable preset. <a href="https://github.com/microsoft/flint-chart/issues/new" target="_blank" rel="noreferrer">Propose a preset on GitHub</a> and share your prototype or implementation to help expand Flint's interaction vocabulary.</p>
+          <p><strong>Interaction designers:</strong> Explore the <LocaleLink to="/interactions/advanced">advanced examples</LocaleLink>, design a new interaction, and turn it into a reusable preset. <a href="https://github.com/microsoft/flint-chart/issues/new" target="_blank" rel="noreferrer">Propose a preset on GitHub</a> and share your prototype or implementation to help expand Flint's interaction vocabulary.</p>
         </section>
       </article>
     </main>
@@ -607,7 +616,13 @@ export function InteractionGallery() {
     ?? (!mode ? unitInteractionModes[0] : undefined);
   useEffect(() => { scrollRef.current?.scrollTo(0, 0); }, [mode]);
 
+  if (mode === 'select-context') return <Navigate to={lp('/interactions/gallery/context-menu')} replace />;
+  if (mode === 'keyboard-focus') return <Navigate to={lp('/interactions/gallery/compositions')} replace />;
   if (!selected) return <Navigate to={lp('/interactions')} replace />;
+  // Stateful brushes are shown on their brush page, behind its mode switch.
+  if (selected.value.endsWith('-stateful')) {
+    return <Navigate to={lp(`/interactions/gallery/${selected.value.replace(/-stateful$/, '')}`)} replace />;
+  }
   if (mode && !pathname.includes('/interactions/gallery/')) {
     return <Navigate to={lp(`/interactions/gallery/${mode}`)} replace />;
   }
@@ -618,12 +633,15 @@ export function InteractionGallery() {
         <div className="ig-layout">
           <main className="ig-content">
             <header className="ig-gallery-header">
+              <nav className="ig-breadcrumb" aria-label="Breadcrumb">
+                <LocaleLink to="/interactions">Flint Interactive</LocaleLink><span aria-hidden="true">/</span><span aria-current="page">Interaction Presets</span>
+              </nav>
               <div className="ig-gallery-title-row">
-                <h1>Interaction Gallery</h1>
+                <h1>Interaction Presets</h1>
                 <ThemePicker themeId={themeId} onTheme={setThemeId} />
               </div>
-              <p>This gallery showcases {galleryModes.length} interaction presets that are reusable across chart types. The presets support {sections.length} families of common interactions: {sections.map(section => section.label).join(', ')}.</p>
-              <p>You can use these presets directly in a declarative specification or through the functional API in your application. To create bespoke interactions, refer to the <LocaleLink to="/interactions/bespoke" className="site-text-link">Bespoke Interactions page</LocaleLink>.</p>
+              <p>This page showcases {sections.reduce((count, section) => count + section.modes.length, 0)} interaction presets that are reusable across chart types. The presets support {sections.length} families of common interactions: {sections.map(section => section.label).join(', ')}.</p>
+              <p>You can use these presets directly in a declarative specification or through the functional API in your application. To create bespoke interactions, refer to the <LocaleLink to="/interactions/advanced" className="site-text-link">Advanced Interactions page</LocaleLink>.</p>
             </header>
             <nav className="cf-action-rail ig-action-rail" aria-label="Interaction navigation">
               {sections.map((section, index) => (
@@ -640,6 +658,8 @@ export function InteractionGallery() {
             </nav>
             {selected.value === filterControlsMode.value
               ? <FilterControlsGallery themeId={themeId} />
+              : selected.value === compositionsMode.value
+              ? <CompositionsGallery themeId={themeId} />
               : <ClickFocusLab key={selected.value} source="spec" mode={selected.value} embedded
                 headingLevel={2}
                 themeId={themeId} showThemePicker={false}

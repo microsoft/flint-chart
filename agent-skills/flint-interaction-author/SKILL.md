@@ -102,7 +102,7 @@ out.
 | `inspect` | Moves over the plot; a guide follows the pointer and the nearest mark on the chosen axes reads out. `mode` picks the axes and a comparison (`"x>"` reads every mark past the pointer). | What is at this x, this y, or beyond it? | elements | none |
 | `inspect-index` | Moves along the index axis; every series reads out at that position on one guide, each value labelled in its series colour and the position named at the axis. `show: "single"` reads one series and switches it through the legend; `seriesBy` names the series field when the chart draws one series at a time; `displayValue: false` keeps the guides and drops the labels. | What does each series hold at this point? | index axis | escape |
 | **Focus a region** | | | | |
-| `select` | Drags a rectangle; the marks inside emphasise. | Which marks lie in this area? | elements, cartesian region | click-none, escape |
+| `select` | Drags a rectangle; the marks inside emphasise. `mode: "stateful"` keeps the rectangle on screen to move and resize. | Which marks lie in this area? | elements, cartesian region | click-none, escape |
 | `lasso-select` | Draws a freehand region; the marks inside emphasise. | Which marks lie in this irregular cluster? | elements, cartesian region | click-none, escape |
 | `brush-x`, `brush-y` | Drags an interval along one axis; the marks in it emphasise. `mode: "stateful"` keeps the interval on screen to move and resize. On a polar chart the x brush is a sector. | Which marks fall in this period or this range? | elements, cartesian region | click-none, escape |
 | `brush-angle` | Drags an angular sector on a pie, donut, rose, or radar; the slices in it emphasise. | Which adjacent slices make up this share? | elements, angular region | click-none, escape |
@@ -120,8 +120,9 @@ out.
 | `double-activate` | Double-clicks a mark; the mark activates and the host reads it. | Which record should the app open? | elements | click-none, escape |
 | `long-press` | Holds a mark (500 ms); the mark activates. The touch spelling of the same activation. | Which record should the app open, on touch? | elements | click-none, escape |
 | `context-activate` | Right-clicks or long-presses a mark; the host receives a context target and draws its own menu. | What can the app do with this mark? | elements | none |
+| `context-menu` | The reader picks marks and a menu of the app's actions opens beside them; picking one emits `menu-select` with the item's id and the marks. `gesture` picks how: `rectangle` (default), `lasso`, `brush-x`, `brush-y`, `click`, `right-click`, `long-press`. `items` is required: `[{ "id", "label" }]`. One entry; it brings its own selection. | What can the app do with these marks? | elements, cartesian region | click-none, escape |
 | **Read without a pointer** | | | | |
-| `accessible-navigation` | Tabs into the chart and walks titles, axes, legends, facet headers, series, and marks with the arrow keys; each step says what the element is and emphasises its data. Space on a focused element runs the click presets. | What is on this chart, from the keyboard or a screen reader? | elements | none |
+| `accessible-navigation` | Tabs into the chart and walks titles, axes, legends, facet headers, series, and marks with the arrow keys; Enter goes a level in, and inside a level Tab steps through it before moving on. Each step says what the element is and emphasises its data. Space on a focused element runs the click presets. | What is on this chart, from the keyboard or a screen reader? | elements | none |
 
 Within a family the rows answer neighbouring questions, so one chart takes
 one of them: `inspect` reads the marks near the pointer, `inspect-index` reads
@@ -277,8 +278,8 @@ const timebox: CanvasInteractionDef = {
 
 `match` is `'intersect'` (default) or `'contain'` and decides which marks the
 region's `target` lists. `guide` styles the drawn shape; `false` hides it. A
-region is ephemeral: its guide and its preview end at the commit. An axis brush
-with `mode: 'stateful'` keeps the interval on screen and editable, and
+region is ephemeral: its guide and its preview end at the commit. A brush or
+`select` with `mode: 'stateful'` keeps its region on screen and editable, and
 `event.operation` reads `create`, `move`, `resize-leading`, `resize-trailing`,
 or `clear`. Spread a trigger to tune it:
 `{ ...hoverTrigger, defaultAssistDistance: 28 }` acquires the nearest mark
@@ -433,7 +434,10 @@ fields of the overlay's own rows, projected through the chart's x, y, and
 colour scales. `style` takes `stroke`, `strokeWidth`, `strokeDash`, `fill`,
 `fillOpacity`, `opacity`, `pointRadius`, `fontSize`, `fontWeight`, `textAlign`
 (`start`, `middle`, `end`), `dx`, `dy`. A `line` takes its stroke and a `text`
-its fill from the `color` encoding; a `point` takes `style.fill`.
+its fill from the `color` encoding; a `point` takes `style.fill`. A `text` sits on
+the data, so it draws a halo in the chart's background; `stroke` sets another
+colour, `strokeWidth` its width, and `stroke: 'none'` drops it, as a faint
+watermark wants.
 
 Two ops need a preset the chart mounts: `set-viewport` needs `navigate` or
 `brush-zoom` on that axis, `set-order` needs `drag-reorder`. The host says

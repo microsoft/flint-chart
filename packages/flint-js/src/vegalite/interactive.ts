@@ -167,6 +167,26 @@ function mountCanvasFurniture(container: HTMLElement, items: ReturnType<typeof r
 }
 
 /**
+ * Vega's canvas handler picks from raw client pixels, so under an ancestor CSS scale the picked
+ * item drifts from the pointer. Undo the scale before picking; the SVG handler picks from the
+ * event target and needs no change.
+ */
+export function scaleAwareCanvasPicking(handler: any): void {
+    if (typeof handler?.canvas !== 'function' || typeof handler.context !== 'function') return;
+    handler.pickEvent = (event: { clientX: number; clientY: number }) => {
+        const canvas: HTMLCanvasElement | null = handler.canvas();
+        if (!canvas) return null;
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.offsetWidth > 0 ? rect.width / canvas.offsetWidth : 1;
+        const scaleY = canvas.offsetHeight > 0 ? rect.height / canvas.offsetHeight : 1;
+        const x = (event.clientX - rect.left) / (scaleX || 1) - (canvas.clientLeft || 0);
+        const y = (event.clientY - rect.top) / (scaleY || 1) - (canvas.clientTop || 0);
+        const [originX, originY] = handler._origin ?? [0, 0];
+        return handler.pick(handler._scene, x, y, x - originX, y - originY);
+    };
+}
+
+/**
  * The size signals a filter re-lays out: a banded axis's step (its size follows the band count)
  * and a plain width or height. Flint's layout for the remaining rows sets them on each filter.
  */
@@ -356,6 +376,8 @@ export function createVegaInteractiveRenderer(
             view.tooltip((handler, event, item, value) => {
                 tooltip.call(handler, event, item, withoutSemanticInteractionField(value));
             });
+            // After the tooltip: setting it re-initializes the view's event handler.
+            scaleAwareCanvasPicking((view as any)._handler);
             await view.runAsync();
             mountCanvasFurniture(container, readCanvasFurniture(vlSpec));
             const mountedInteractions = mountedInteractionList(interactions, interactionPlan?.interactions ?? canvasInteractions);

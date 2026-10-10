@@ -57,6 +57,7 @@ Each step is read as `<type> <i> of <n>. <content>.`:
 | Right / Left | Next / previous sibling in horizontal order, stopping at the ends |
 | Down / Up | Next / previous sibling in vertical order, stopping at the ends |
 | Enter | Go into the focused element. On a leaf that can be activated, activate it. |
+| Tab / Shift+Tab | Once inside, next / previous element at this level in default order. On the chart itself, and past either end of a level, focus moves on from the chart. |
 | Escape, Backspace | Go back out. On the chart itself, leave the walk. |
 | Home / End | First / last sibling |
 | Page Down / Page Up | Jump ten siblings |
@@ -210,8 +211,13 @@ activation and exit.
   left edge then top edge; Up/Down sorts by top edge then left edge. Exact ties
   preserve canonical order, and both pairs stop at their respective boundaries.
   Alternate sorting never mutates the canonical list or ids. Enter/Escape changes
-  levels; numbering, entry, Home/End and Page Up/Down use default canonical order;
-  Tab leaves the chart.
+  levels; numbering, entry, Home/End and Page Up/Down use default canonical order.
+  Enter is the gate: on the chart itself Tab leaves at once, so a reader skimming
+  the page passes each chart with one keypress. Inside, Tab and Shift+Tab step
+  through the current level in the same order, and past either end focus moves on
+  from the chart, so Tab never traps. Once focus leaves the chart, the walk
+  returns to the chart itself: the next visit reads the summary again and passes
+  with one Tab, the same as the first.
 - The chart defaults to horizontal reading, including scatter and radial charts.
   A categorical/time Y with a quantitative X reads vertically, as do Bar Table,
   Sparkline, Gantt, Bullet, and Pyramid. Axes use their own orientation, legends

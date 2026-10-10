@@ -95,13 +95,18 @@
 .app-demo-gdp-panel .app-demo-field { grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: 10px; margin-bottom: 18px; font-size: 13px; }
 .app-demo-gdp-panel .app-demo-field strong { grid-column: 1 / -1; font-weight: 500; font-size: 12px; color: #61676d; }
 .app-demo-gdp-panel .it-detail-heading { margin-bottom: 6px; }
-.app-demo-timeline { flex: 1; min-height: 0; overflow-y: auto; margin: 4px 0 0; padding: 2px 0; list-style: none; display: grid; align-content: start; gap: 0; }
+.app-demo-timeline { flex: 1; min-height: 0; overflow-y: auto; margin: 4px 0 0; padding: 5px 6px 5px 0; list-style: none; display: grid; align-content: start; gap: 0; }
 .app-demo-timeline li { position: relative; padding: 0 0 13px 22px; }
 .app-demo-timeline li::before { content: ''; position: absolute; left: 5px; top: 0; bottom: 0; width: 2px; background: #d4d8dc; }
 .app-demo-timeline li:first-child::before { top: 6px; }
 .app-demo-timeline li:last-child::before { bottom: auto; height: 6px; }
 .app-demo-timeline li::after { content: ''; position: absolute; left: 0; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: #176a92; box-shadow: 0 0 0 2px #fff; }
 .app-demo-timeline button { display: grid; grid-template-columns: 3.2em minmax(0, 1fr); gap: 10px; align-items: baseline; width: 100%; padding: 0; border: 0; background: none; text-align: left; font: inherit; cursor: pointer; }
+/* The list scrolls, so the ring sits close enough to stay inside it. */
+.app-demo-timeline button:hover strong { color: #176a92; }
+.app-demo-timeline li.is-future button:hover { opacity: 0.8; }
+.app-demo-timeline button:focus-visible { outline: 2px solid #176a92; outline-offset: 3px; border-radius: 3px; }
+.app-demo-timeline button:focus:not(:focus-visible) { outline: none; }
 .app-demo-timeline button span { font-size: 12px; color: #8a9096; font-variant-numeric: tabular-nums; }
 .app-demo-timeline button strong { overflow: hidden; font-size: 13px; font-weight: 500; color: #1f2328; text-overflow: ellipsis; white-space: nowrap; }
 .app-demo-timeline button small { font-size: 11px; line-height: 1.4; color: #61676d; }

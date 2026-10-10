@@ -624,7 +624,7 @@ export function mountVegaInteractions(
             && interaction.eventSource.gesture === 'drag')
         : [];
     const hoverPresentationInteractions = interactionsForHoverPresentation(
-        [...markClickInteractions, ...legendClickInteractions, ...longPressInteractions, ...doubleInteractions],
+        [...markClickInteractions, ...legendClickInteractions, ...longPressInteractions, ...doubleInteractions, ...contextInteractions],
         markHoverInteractions,
         elementDragInteractions,
         inspectInteractions,
@@ -698,8 +698,9 @@ export function mountVegaInteractions(
         // final plot translation. The rendered root-frame CTM is authoritative.
         const rootFrame = svg?.querySelector<SVGGraphicsElement>('.mark-group.role-frame.root');
         const rootMatrix = rootFrame?.getCTM();
-        const logicalWidth = svg?.viewBox.baseVal.width || rect.width;
-        const logicalHeight = svg?.viewBox.baseVal.height || rect.height;
+        // A canvas's layout size is its renderer size; its client rect also carries any ancestor CSS scale.
+        const logicalWidth = svg?.viewBox.baseVal.width || renderer?.offsetWidth || rect.width;
+        const logicalHeight = svg?.viewBox.baseVal.height || renderer?.offsetHeight || rect.height;
         const origin = rendererPlotOrigin(rootMatrix, { x: viewOriginX, y: viewOriginY });
         const originX = origin.x;
         const originY = origin.y;
@@ -1133,6 +1134,9 @@ export function mountVegaInteractions(
         };
     };
 
+    // A retained region survives a pan or zoom; new rows or a new category order clear it.
+    let shownLayout: { rows: unknown; order: string } | undefined;
+    let onLayoutChange: (() => void) | undefined;
     const renderUpdates = async (): Promise<void> => {
         // A preview overlays the same interaction's retained state. It replaces
         // only operation identities that it supplies, so a transient drag ghost
@@ -1276,6 +1280,13 @@ export function mountVegaInteractions(
         }
         else dragPreviewOverlay.clear();
         const keys = [...selectedKeys()];
+        const layout = {
+            rows: hostRows,
+            order: JSON.stringify(displayUpdates.flatMap((update) => update.ops).filter((op) => op.op === 'set-order')),
+        };
+        const layoutChanged = shownLayout !== undefined
+            && (shownLayout.rows !== layout.rows || shownLayout.order !== layout.order);
+        shownLayout = layout;
         // A windowed chart shows only the rows inside its category window, cut from whatever rows are current.
         if (plan.windowDataRows) dataRows = preparedRows(plan.windowDataRows(hostRows));
         if (plan.mutableDataSource && dataRows !== renderedDataRows) {
@@ -1318,6 +1329,7 @@ export function mountVegaInteractions(
         // following pointer-down, even while unrelated Vega work is pending.
         dataOverlay.render(overlays);
         await view.runAsync();
+        if (layoutChanged) onLayoutChange?.();
         restoreAxisStyles();
         const rendererSvg = container.querySelector('svg') as SVGSVGElement | null;
         if (rendererSvg) {
@@ -2286,6 +2298,11 @@ export function mountVegaInteractions(
         selectedLegend = null;
         void renderUpdates().then(() => notifyChange({ phase: 'commit', source: 'reader' }));
     };
+    onLayoutChange = () => {
+        if (!regionInteraction || !retainedUpdates.has(regionInteraction.id)) return;
+        resetInteraction(regionInteraction);
+        void renderUpdates().then(() => notifyChange({ phase: 'commit', source: 'reader', interactionId: regionInteraction.id }));
+    };
     const resetOnClick = (event: MouseEvent, item: any): void => {
         if (suppressClick || isInteractiveControlTarget(event.target)) return;
         if (consumeDismissClick) {
@@ -2722,7 +2739,28 @@ export function mountVegaInteractions(
         sync: renderUpdates,
         setSuppressClick: (suppress) => { suppressClick = suppress; },
         setDragging: (dragging) => { regionDragging = dragging; },
+        navigableScale: (axis) => {
+            const navigable = plan.navigationAxes?.[axis];
+            return navigable && navigable.type !== 'geo' ? view.scale(navigable.scale) : undefined;
+        },
     }) : undefined;
+    // A pan or zoom moves the domain under a retained brush; it follows on every viewport frame.
+    const viewportSignals = regionGesture
+        ? Object.values(plan.navigationAxes ?? {}).filter((axis) => axis.type !== 'geo').map((axis) => axis.signal)
+        : [];
+    // Every render re-sets the viewport signals; only a domain that moved re-projects the brush.
+    let followedDomains = '';
+    const projectRegion = (): void => {
+        const domains = JSON.stringify(Object.values(plan.navigationAxes ?? {})
+            .filter((axis) => axis.type !== 'geo')
+            .map((axis) => view.scale(axis.scale)?.domain()));
+        if (domains === followedDomains) return;
+        followedDomains = domains;
+        regionGesture?.sync();
+    };
+    // A signal listener runs mid-evaluation, before the scale takes the new domain; project once the run ends.
+    const followViewport = (): void => { view.runAfter(projectRegion); };
+    for (const signal of viewportSignals) view.addSignalListener(signal, followViewport);
     const navigationGesture = navigationInteraction ? mountVegaNavigationGesture({
         container,
         interaction: navigationInteraction,
@@ -2739,8 +2777,18 @@ export function mountVegaInteractions(
         if (event.key !== 'Escape') return;
         runReset('escape');
     };
+    let pointerFocusOutline: string | undefined;
     const focusOnPointer = (): void => {
-        if (!container.contains(document.activeElement)) container.focus({ preventScroll: true });
+        if (container.contains(document.activeElement)) return;
+        // Focus taken by a press draws no ring, as a clicked button draws none; Tab still shows it.
+        pointerFocusOutline ??= container.style.outline;
+        container.style.outline = 'none';
+        container.focus({ preventScroll: true });
+    };
+    const restoreFocusOutline = (): void => {
+        if (pointerFocusOutline === undefined) return;
+        container.style.outline = pointerFocusOutline;
+        pointerFocusOutline = undefined;
     };
     // Accessible navigation brings its own tab stop into the chart, and owns the arrow keys there.
     const accessibleNavigationRequested = !!resolve
@@ -2750,6 +2798,7 @@ export function mountVegaInteractions(
         // the tab order, so the chart is one tab stop rather than an unlabeled one and then the walk.
         if (container.tabIndex < 0) container.tabIndex = accessibleNavigationRequested ? -1 : 0;
         container.addEventListener('pointerdown', focusOnPointer, true);
+        container.addEventListener('blur', restoreFocusOutline);
         container.addEventListener('keydown', resetKeyDown);
     }
 
@@ -3025,6 +3074,8 @@ export function mountVegaInteractions(
         if (hoverClearTimer !== undefined) clearTimeout(hoverClearTimer);
         if (escapeResets) {
             container.removeEventListener('pointerdown', focusOnPointer, true);
+            container.removeEventListener('blur', restoreFocusOutline);
+            restoreFocusOutline();
             container.removeEventListener('keydown', resetKeyDown);
         }
         if (keyboardEnabled) {
@@ -3049,6 +3100,7 @@ export function mountVegaInteractions(
             container.removeEventListener('wheel', inspectWheel);
             container.removeEventListener('contextmenu', inspectContext);
         }
+        for (const signal of viewportSignals) view.removeSignalListener(signal, followViewport);
         regionGesture?.destroy();
         navigationGesture?.destroy();
         if (elementDragInteraction) {

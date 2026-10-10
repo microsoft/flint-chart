@@ -82,6 +82,24 @@ describe('heatmap color defaults', () => {
     expect(spec.encoding.color.scale.domainMid).toBe(0);
   });
 
+  it('draws no grid through the cells, even on a banded temporal axis', () => {
+    const input = {
+      data: { values: [
+        { month: '2025-01-01', game: 'A', users: 3 },
+        { month: '2025-02-01', game: 'A', users: 5 },
+        { month: '2025-01-01', game: 'B', users: 4 },
+        { month: '2025-02-01', game: 'B', users: 1 },
+      ] },
+      semantic_types: { month: 'YearMonth', game: 'Category', users: 'Count' },
+      chart_spec: { chartType: 'Heatmap', encodings: { x: { field: 'month' }, y: { field: 'game' }, color: { field: 'users' } } },
+    };
+    const spec = assembleVegaLite(input) as any;
+
+    expect(spec.encoding.x.type).toBe('temporal');
+    expect(spec.encoding.x.axis.grid).toBe(false);
+    expect(spec.encoding.y.axis?.grid).toBeUndefined();
+  });
+
   it('renders null values as intentional no-data cells', () => {
     const input = heatmapInput({ showValueLabels: true }) as any;
     input.data.values[0].value = null;

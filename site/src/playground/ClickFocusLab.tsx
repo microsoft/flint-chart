@@ -26,7 +26,7 @@ import {
   clickAnnotate,
   clickGroupFocus,
   clickHighlight,
-  contextActivate,
+  contextMenu,
   doubleActivate,
   dragReorder,
   hoverGroupFocus,
@@ -39,6 +39,8 @@ import {
   navigate,
   select as rectangleSelect,
   type FlintInteractionEventDetail,
+  type ContextMenuGesture,
+  type InteractionDef,
   type CanvasInteractionAction,
   type InspectIndexShow,
 } from 'flint-chart/interactive';
@@ -50,21 +52,25 @@ import { CodeBlock } from '../components/CodeBlock';
 import { ScaleToFit } from '../components/ScaleToFit';
 import { SiteRange } from '../components/SiteRange';
 import foodPrices from '../data/cpi-food-prices.json';
+import classicDatasets from '../data/classic-datasets.json';
+import oldFaithful from '../data/old-faithful.json';
+import gapminderCsv from '../assets/gapminder-five-year.csv?raw';
+import { csvParseRows } from 'd3-dsv';
 import { BACKENDS } from '../shared/supported-backends';
 import { siteTheme } from '../shared/theme';
 import { representativeCasesByChartType, testCaseToAssemblyInput } from '../shared/test-case-utils';
 import { ThemePicker } from './ThemePicker';
 import { navigationDemoCases } from './navigation-demo-data';
-import { gapminderRows } from './gapminder-dashboard-data';
 import './click-focus-lab.css';
 
-export type InteractionMode = 'click-highlight' | 'click-group-focus' | 'annotate' | 'select'
+export type InteractionMode = 'click-highlight' | 'click-group-focus' | 'annotate' | 'select' | 'select-stateful'
   | 'linked-brush' | 'hover-group-focus'
   | 'brush-x' | 'brush-y' | 'brush-angle' | 'brush-x-stateful' | 'brush-y-stateful' | 'brush-angle-stateful'
   | 'navigate' | 'drag-reorder'
   | 'lasso' | 'inspect' | 'inspect-index'
   | 'long-press' | 'double-activate' | 'legend-toggle' | 'brush-zoom'
-  | 'keyboard-focus' | 'select-context' | 'accessible-navigation';
+  | 'keyboard-focus' | 'context-menu' | ContextMenuVariant | 'accessible-navigation';
+type ContextMenuVariant = 'context-menu-lasso' | 'context-menu-click' | 'context-menu-right-click' | 'context-menu-long-press';
 type ProbeStatus = 'loading' | 'ready' | 'unsupported' | 'error';
 /** Where a card's interactions come from: factory calls in code, or `interaction_spec` JSON. */
 export type InteractionSource = 'code' | 'spec';
@@ -75,7 +81,7 @@ export interface NavigationGuard {
   overscrollFraction: number;
 }
 
-const unitInteractionModes = [
+export const unitInteractionModes = [
   { value: 'click-highlight', label: 'Click highlight', icon: MousePointerClick },
   { value: 'click-group-focus', label: 'Click group focus', icon: Layers3 },
   { value: 'hover-group-focus', label: 'Hover group focus', icon: Target },
@@ -88,6 +94,7 @@ const unitInteractionModes = [
   { value: 'brush-x-stateful', label: 'X brush (edit)', icon: MoveHorizontal },
   { value: 'brush-y-stateful', label: 'Y brush (edit)', icon: MoveVertical },
   { value: 'brush-angle-stateful', label: 'Angle brush (edit)', icon: RotateCcw },
+  { value: 'select-stateful', label: 'Select (edit)', icon: Scan },
   { value: 'navigate', label: 'Pan & zoom', icon: Move },
   { value: 'drag-reorder', label: 'Drag reorder', icon: GripVertical },
   { value: 'lasso', label: 'Lasso', icon: Lasso },
@@ -98,14 +105,23 @@ const unitInteractionModes = [
   { value: 'legend-toggle', label: 'Legend toggle', icon: EyeOff },
   { value: 'brush-zoom', label: 'Brush zoom', icon: ZoomIn },
   { value: 'accessible-navigation', label: 'Accessible navigation', icon: Accessibility },
+  { value: 'context-menu', label: 'Context menu', icon: Menu },
 ] as const;
 
-const compositionInteractionModes = [
+export const compositionInteractionModes = [
   { value: 'keyboard-focus', label: 'Focus + keyboard', icon: Keyboard },
-  { value: 'select-context', label: 'Select + context', icon: Menu },
 ] as const;
 
-type MountedInteraction = ReturnType<typeof clickHighlight>;
+/** The host actions the context-menu cases list; the lab reports which one was picked. */
+const CONTEXT_MENU_ITEMS = [
+  { id: 'chat', label: 'Send to chat' },
+  { id: 'report', label: 'Add to report' },
+  { id: 'copy', label: 'Copy values' },
+];
+
+const contextMenuGesture = (mode: InteractionMode): ContextMenuGesture =>
+  mode === 'context-menu' ? 'rectangle' : mode.replace('context-menu-', '') as ContextMenuGesture;
+
 
 /**
  * Each named unit mode mounts its corresponding preset; explicitly named compositions are separate.
@@ -116,17 +132,18 @@ function modeInteractions(
   navigationGuard: NavigationGuard | undefined,
   groupBy: string | readonly string[] | undefined,
   indexInspection: InteractionCase['indexInspection'],
-): MountedInteraction[] {
+): InteractionDef[] {
   switch (mode) {
     case 'click-highlight': return [clickHighlight({ targets: ['mark', 'legend', 'discreteAxis'] })];
     case 'click-group-focus': return [clickGroupFocus({ groupBy })];
     case 'hover-group-focus': return groupBy ? [hoverGroupFocus({ groupBy })] : [];
     case 'annotate': return [clickAnnotate()];
-    case 'select': return [rectangleSelect()];
+    case 'select': return [rectangleSelect({ mode: 'ephemeral' })];
+    case 'select-stateful': return [rectangleSelect({ mode: 'stateful' })];
     case 'linked-brush': return groupBy ? [linkedBrush({ groupBy })] : [];
-    case 'brush-x': return [brushX()];
-    case 'brush-y': return [brushY()];
-    case 'brush-angle': return [brushAngle()];
+    case 'brush-x': return [brushX({ mode: 'ephemeral' })];
+    case 'brush-y': return [brushY({ mode: 'ephemeral' })];
+    case 'brush-angle': return [brushAngle({ mode: 'ephemeral' })];
     case 'brush-x-stateful': return [brushX({ mode: 'stateful' })];
     case 'brush-y-stateful': return [brushY({ mode: 'stateful' })];
     case 'brush-angle-stateful': return [brushAngle({ mode: 'stateful' })];
@@ -135,7 +152,12 @@ function modeInteractions(
     case 'inspect': return [inspect({ mode: 'y' })];
     case 'inspect-index': return indexInspection ? [inspectIndex(indexInspection)] : [];
     case 'keyboard-focus': return [clickHighlight({ targets: ['mark'] })];
-    case 'select-context': return [rectangleSelect(), contextActivate()];
+    case 'context-menu':
+    case 'context-menu-lasso':
+    case 'context-menu-click':
+    case 'context-menu-right-click':
+    case 'context-menu-long-press':
+      return [contextMenu({ items: CONTEXT_MENU_ITEMS, gesture: contextMenuGesture(mode) })];
     case 'legend-toggle': return [legendToggle()];
     case 'long-press': return [longPress()];
     case 'double-activate': return [doubleActivate()];
@@ -191,11 +213,12 @@ function modeSpec(
     case 'click-group-focus': return { interactions: [entry('click-group-focus', groupBy ? { groupBy } : undefined)] };
     case 'hover-group-focus': return { interactions: groupBy ? [entry('hover-group-focus', { groupBy })] : [] };
     case 'annotate': return { interactions: [entry('click-annotate')] };
-    case 'select': return { interactions: [entry('select')] };
+    case 'select': return { interactions: [entry('select', { mode: 'ephemeral' })] };
+    case 'select-stateful': return { interactions: [entry('select', { mode: 'stateful' })] };
     case 'linked-brush': return { interactions: groupBy ? [entry('linked-brush', { groupBy })] : [] };
-    case 'brush-x': return { interactions: [entry('brush-x')] };
-    case 'brush-y': return { interactions: [entry('brush-y')] };
-    case 'brush-angle': return { interactions: [entry('brush-angle')] };
+    case 'brush-x': return { interactions: [entry('brush-x', { mode: 'ephemeral' })] };
+    case 'brush-y': return { interactions: [entry('brush-y', { mode: 'ephemeral' })] };
+    case 'brush-angle': return { interactions: [entry('brush-angle', { mode: 'ephemeral' })] };
     case 'brush-x-stateful': return { interactions: [entry('brush-x', { mode: 'stateful' })] };
     case 'brush-y-stateful': return { interactions: [entry('brush-y', { mode: 'stateful' })] };
     case 'brush-angle-stateful': return { interactions: [entry('brush-angle', { mode: 'stateful' })] };
@@ -204,7 +227,12 @@ function modeSpec(
     case 'inspect': return { interactions: [entry('inspect', { mode: 'y' })] };
     case 'inspect-index': return { interactions: indexInspection ? [entry('inspect-index', { ...indexInspection })] : [] };
     case 'keyboard-focus': return { interactions: [entry('click-highlight', { targets: ['mark'] })], keyboardTargeting: true };
-    case 'select-context': return { interactions: [entry('select'), entry('context-activate')] };
+    case 'context-menu':
+    case 'context-menu-lasso':
+    case 'context-menu-click':
+    case 'context-menu-right-click':
+    case 'context-menu-long-press':
+      return { interactions: [entry('context-menu', { items: CONTEXT_MENU_ITEMS, gesture: contextMenuGesture(mode) })] };
     case 'legend-toggle': return { interactions: [entry('legend-toggle')] };
     case 'long-press': return { interactions: [entry('long-press')] };
     case 'double-activate': return { interactions: [entry('double-activate')] };
@@ -266,10 +294,68 @@ function interactionCase(testCase: TestCase, suffix = ''): InteractionCase {
   };
 }
 
+const tableRows = ({ columns, rows }: { columns: string[]; rows: unknown[][] }): Record<string, unknown>[] =>
+  rows.map((row) => Object.fromEntries(columns.map((column, index) => [column, row[index]])));
+
+const penguinRows = tableRows(classicDatasets.penguins);
+const eruptionRows = oldFaithful.rows.map(({ eruption }) => ({ 'Duration (min)': eruption }));
+export const gapminderRows = csvParseRows(gapminderCsv).slice(1)
+  .map(([Country, year, population, Continent, lifeExpectancy, gdpPerCapita]) => ({
+    Country,
+    Continent,
+    Year: Number(year),
+    Population: Number(population),
+    'Life expectancy': Number(lifeExpectancy),
+    'GDP per capita': Number(gdpPerCapita),
+  }));
+
+// The shared fixtures carry small samples; the lab mounts these classic datasets in full.
+const FULL_DATASETS: Record<string, { rows: Record<string, unknown>[]; description: string }> = {
+  'Palmer Penguins — flipper length vs body mass': {
+    rows: penguinRows,
+    description: 'Three species form crisp clusters across all 342 measured penguins (Palmer Station LTER, CC0).',
+  },
+  'Penguin body mass by species': {
+    rows: penguinRows,
+    description: 'Gentoo penguins are markedly heavier than Adélie and Chinstrap (342 penguins, Palmer Station LTER, CC0).',
+  },
+  'Auto MPG — horsepower vs fuel economy': {
+    rows: tableRows(classicDatasets.autoMpg),
+    description: 'The classic inverse relationship across 392 cars: more horsepower, fewer miles per gallon (UCI / StatLib Auto MPG).',
+  },
+  'Keeling Curve — atmospheric CO₂ at Mauna Loa': {
+    rows: tableRows(classicDatasets.keeling),
+    description: 'The defining climate record: annual-mean CO₂ rising from 316 ppm (1959) to 427 ppm (2025) (NOAA GML / Scripps).',
+  },
+  'Old Faithful — distribution of eruption durations': {
+    rows: eruptionRows,
+    description: 'Two humps across all 272 eruptions: short (~2 min) and long (~4.5 min) — a mean would hide this (R "faithful").',
+  },
+  'Old Faithful — eruption duration density': {
+    rows: eruptionRows,
+    description: 'The same bimodal shape as a smooth density curve, from all 272 eruptions (R "faithful").',
+  },
+  'Iris petal length by species': {
+    rows: tableRows(classicDatasets.iris),
+    description: 'Setosa petals are tiny and tightly clustered; the other two overlap more (all 150 flowers, Fisher 1936).',
+  },
+};
+
+function withFullData(testCase: TestCase): TestCase {
+  const full = FULL_DATASETS[testCase.title];
+  if (!full) return testCase;
+  const fields = Object.keys(testCase.data[0] ?? {});
+  return {
+    ...testCase,
+    description: full.description,
+    data: full.rows.map((row) => Object.fromEntries(fields.map((field) => [field, row[field]]))),
+  };
+}
+
 function representativeCases(): InteractionCase[] {
   const cases = [...representativeCasesByChartType().values()]
     .filter((testCase) => BACKENDS.vegalite.getTemplateDef(testCase.chartType))
-    .map((testCase) => interactionCase(testCase));
+    .map((testCase) => interactionCase(withFullData(testCase)));
   const horizontalBar = genBarTests().find((testCase) => testCase.description.includes('Horizontal'));
   if (horizontalBar) cases.push(interactionCase(horizontalBar, '-horizontal'));
   return cases.sort((left, right) => left.chartType.localeCompare(right.chartType) || left.id.localeCompare(right.id));
@@ -277,16 +363,7 @@ function representativeCases(): InteractionCase[] {
 
 function multiLegendCase(kind: 'shape' | 'size'): InteractionCase {
   const shapeCase = {
-    data: [
-      ['Adelie', 'Male', 181, 3750], ['Adelie', 'Male', 190, 3650],
-      ['Adelie', 'Female', 186, 3800], ['Adelie', 'Female', 195, 3250],
-      ['Chinstrap', 'Male', 196, 3900], ['Chinstrap', 'Male', 193, 3650],
-      ['Chinstrap', 'Female', 192, 3500], ['Chinstrap', 'Female', 188, 3525],
-      ['Gentoo', 'Male', 230, 5700], ['Gentoo', 'Male', 218, 5700],
-      ['Gentoo', 'Female', 211, 4500], ['Gentoo', 'Female', 210, 4450],
-    ].map(([Species, Sex, flipper, mass]) => ({
-      Species, Sex, 'Flipper length (mm)': flipper, 'Body mass (g)': mass,
-    })),
+    data: penguinRows.filter(({ Sex }) => Sex),
     semanticTypes: {
       Species: 'Category', Sex: 'Category',
       'Flipper length (mm)': 'Quantity', 'Body mass (g)': 'Quantity',
@@ -299,22 +376,9 @@ function multiLegendCase(kind: 'shape' | 'size'): InteractionCase {
     expectation: 'Species and sex legends each highlight their cohort across the other grouping.',
   };
   const sizeCase = {
-    data: [
-      ['Norway', 64800, 82.3, 'Europe', 'Under 100M'],
-      ['Germany', 50900, 81.0, 'Europe', 'Under 100M'],
-      ['Russia', 25800, 72.4, 'Europe', '100M+'],
-      ['United States', 62600, 78.6, 'Americas', '100M+'],
-      ['Brazil', 15600, 75.7, 'Americas', '100M+'],
-      ['Chile', 25200, 80.0, 'Americas', 'Under 100M'],
-      ['China', 16800, 76.7, 'Asia', '100M+'],
-      ['Japan', 39300, 84.2, 'Asia', '100M+'],
-      ['Qatar', 116900, 80.1, 'Asia', 'Under 100M'],
-      ['Nigeria', 5300, 54.3, 'Africa', '100M+'],
-      ['Ethiopia', 2000, 66.2, 'Africa', '100M+'],
-      ['South Africa', 13000, 63.9, 'Africa', 'Under 100M'],
-    ].map(([Country, gdp, life, Continent, populationBand]) => ({
-      Country, 'GDP per capita': gdp, 'Life expectancy': life,
-      Continent, 'Population band': populationBand,
+    data: gapminderRows.filter(({ Year }) => Year === 2007).map(({ Country, Continent, Population, ...measures }) => ({
+      Country, 'GDP per capita': measures['GDP per capita'], 'Life expectancy': measures['Life expectancy'],
+      Continent, 'Population band': Population >= 100_000_000 ? '100M+' : 'Under 100M',
     })),
     semanticTypes: {
       Country: 'Category', Continent: 'Category', 'Population band': 'Category',
@@ -440,8 +504,8 @@ function indexInspectCases(): InteractionCase[] {
       'inspect-index-line-multi',
       'BLS food prices — track one series',
       blsFoodPriceSeries(['Bananas', 'Eggs', 'Ground beef', 'White bread', 'Whole milk']),
-      'Tracking starts on the first food. Click a legend item to switch the tracked series.',
-      'single', 'Date',
+      'Tracking starts on whole milk. Click a legend item to switch the tracked series.',
+      { series: 'Whole milk' }, 'Date',
     ),
     makeScatterCase(
       'inspect-index-scatter-near-x',
@@ -492,6 +556,36 @@ function realFacetedCases(): InteractionCase[] {
     encodingMap: { ...barEncodings, column: sourceFacet },
     chartProperties: { ...electricityMix.chartProperties, facetColumns: 3 },
   }, '-faceted');
+  const linkedYears: InteractionCase = {
+    id: 'Scatter Plot-Gapminder-faceted-years',
+    chartType: 'Scatter Plot',
+    title: 'Gapminder — linked countries across 1952 and 2007',
+    groupBy: 'Country',
+    expectation: 'Pick countries in either year to highlight the same countries in both panels (Gapminder).',
+    input: {
+      semantic_types: {
+        Country: 'Country',
+        Continent: 'Category',
+        Year: 'Year',
+        Population: 'Quantity',
+        'GDP per capita': 'Quantity',
+        'Life expectancy': 'Quantity',
+      },
+      chart_spec: {
+        chartType: 'Scatter Plot',
+        encodings: {
+          x: { field: 'GDP per capita' },
+          y: { field: 'Life expectancy' },
+          color: { field: 'Continent' },
+          detail: { field: 'Country' },
+          column: { field: 'Year' },
+        },
+        chartProperties: { facetColumns: 2, logScale_x: true },
+        baseSize: SIZE,
+      },
+      data: { values: gapminderRows.filter(({ Year }) => Year === 1952 || Year === 2007) },
+    },
+  };
   return [
     {
       ...barCase,
@@ -499,35 +593,13 @@ function realFacetedCases(): InteractionCase[] {
       groupBy: 'Country',
       wide: true,
     },
+    linkedYears,
     {
-      id: 'Scatter Plot-Gapminder-faceted-years',
-      chartType: 'Scatter Plot',
-      title: 'Gapminder — linked countries across 1952 and 2007',
-      groupBy: 'Country',
-      expectation: 'Brush countries in either year to highlight the same countries in both panels (Gapminder).',
-      input: {
-        semantic_types: {
-          Country: 'Country',
-          Continent: 'Category',
-          Year: 'Year',
-          Population: 'Quantity',
-          'GDP per capita': 'Quantity',
-          'Life expectancy': 'Quantity',
-        },
-        chart_spec: {
-          chartType: 'Scatter Plot',
-          encodings: {
-            x: { field: 'GDP per capita' },
-            y: { field: 'Life expectancy' },
-            color: { field: 'Continent' },
-            detail: { field: 'Country' },
-            column: { field: 'Year' },
-          },
-          chartProperties: { facetColumns: 2, logScale_x: true },
-          baseSize: SIZE,
-        },
-        data: { values: gapminderRows.filter(({ Year }) => Year === 1952 || Year === 2007) },
-      },
+      ...linkedYears,
+      id: `${linkedYears.id}-continent`,
+      title: 'Gapminder — continents across 1952 and 2007',
+      groupBy: 'Continent',
+      expectation: 'Pick a country to highlight its whole continent in both years.',
     },
     {
       ...interactionCase({
@@ -543,28 +615,49 @@ function realFacetedCases(): InteractionCase[] {
     {
       id: 'Scatter Plot-Gapminder-faceted-four-years',
       chartType: 'Scatter Plot',
-      title: 'Gapminder — continents across four years',
-      groupBy: 'Continent',
+      title: 'Gapminder — the same countries across four years',
+      groupBy: 'Country',
       wide: true,
       spacious: true,
       stageHeight: 540,
       stageScale: 1.25,
-      expectation: 'Brush a point to link every country in its continent across all four year panels.',
+      expectation: 'Brush countries in any year to highlight the same countries in all four panels.',
       input: {
         semantic_types: {
           Country: 'Country', Continent: 'Category', Year: 'Year',
-          Population: 'Quantity', 'GDP per capita': 'Quantity',
+          'GDP per capita': 'Quantity', 'Life expectancy': 'Quantity',
         },
         chart_spec: {
           chartType: 'Scatter Plot',
           encodings: {
-            x: { field: 'GDP per capita' }, y: { field: 'Population' },
+            x: { field: 'GDP per capita' }, y: { field: 'Life expectancy' },
             color: { field: 'Continent' }, detail: { field: 'Country' }, column: { field: 'Year' },
           },
-          chartProperties: { facetColumns: 4, logScale_x: true, logScale_y: true },
+          chartProperties: { facetColumns: 4, logScale_x: true },
           baseSize: SIZE,
         },
         data: { values: gapminderRows.filter(({ Year }) => [1952, 1972, 1992, 2007].includes(Year)) },
+      },
+    },
+    {
+      id: 'Scatter Plot-Auto MPG-faceted-origin',
+      chartType: 'Scatter Plot',
+      title: 'Auto MPG — the same model years in every region',
+      groupBy: 'Model year',
+      wide: true,
+      expectation: 'Brush cars in one region to highlight cars of the same model years in all three (392 cars, UCI Auto MPG).',
+      input: {
+        semantic_types: { Horsepower: 'Quantity', MPG: 'Quantity', Origin: 'Category', 'Model year': 'Year' },
+        chart_spec: {
+          chartType: 'Scatter Plot',
+          encodings: {
+            x: { field: 'Horsepower' }, y: { field: 'MPG' },
+            color: { field: 'Model year' }, column: { field: 'Origin' },
+          },
+          chartProperties: { facetColumns: 3 },
+          baseSize: SIZE,
+        },
+        data: { values: tableRows(classicDatasets.autoMpg) },
       },
     },
     {
@@ -638,6 +731,89 @@ const navigationCases: InteractionCase[] = navigationDemoCases.map((item) => ({
 }));
 
 const polarBrushCases = new Set(['Pie Chart', 'Donut Chart', 'Rose Chart', 'Radar Chart']);
+
+const AREA = 'Area Chart-Share of the world online, 1995–2023 (%)';
+const BAR = 'Bar Chart-Most populous countries, 2023 (millions)';
+const BOXPLOT = 'Boxplot-Penguin body mass by species';
+const CANDLESTICK = 'Candlestick Chart-Daily stock OHLC over two weeks';
+const CONNECTED_SCATTER = 'Connected Scatter Plot-Driving Shifts Into Reverse — miles vs gas price (US, 1956–2010)';
+const FACETED_BARS = 'Bar Chart-Electricity generation mix — faceted by source-faceted';
+const FACETED_SCATTER = 'Scatter Plot-Gapminder-faceted-years';
+const GROUPED_BAR = 'Grouped Bar Chart-Titanic survival rate by class and sex';
+const HEATMAP = 'Heatmap-Average monthly temperature by city';
+const HISTOGRAM = 'Histogram-Old Faithful — distribution of eruption durations';
+const LINE = 'Line Chart-Keeling Curve — atmospheric CO₂ at Mauna Loa';
+const LOLLIPOP = 'Lollipop Chart-CO₂ emissions per capita, 2022 (tonnes)';
+const MULTI_LINE = 'inspect-index-line-multi';
+const PIE = 'Pie Chart-Desktop browser market share, 2024';
+const DONUT = 'Donut Chart-Mobile OS market share, 2024';
+const ROSE = 'Rose Chart-Seattle monthly rainfall';
+const RADAR = 'Radar Chart-Nutrition profile per 100 g — almonds vs oats vs yogurt';
+const RANGED_DOT = 'Ranged Dot Plot-Life expectancy gap, male vs female (2021)';
+const RANGE_AREA = 'Range Area Chart-Seattle average monthly temperature range';
+const REGRESSION = 'Regression-Auto MPG — horsepower vs fuel economy';
+const SCATTER = 'Scatter Plot-Palmer Penguins — flipper length vs body mass';
+const STACKED_BAR = 'Stacked Bar Chart-Electricity generation mix by country, 2023';
+const STREAMGRAPH = 'Streamgraph-World population by region, 1950–2020';
+const STRIP = 'Strip Plot-Iris petal length by species';
+const VIOLIN = 'Violin Plot-Exam scores by class (basic)';
+
+/**
+ * The public preset gallery shows a few charts that suit each preset; the
+ * dev lab keeps every case. Modes without an entry are already narrowed by
+ * capability (index inspection, pan & zoom).
+ */
+const GALLERY_CASES: Partial<Record<InteractionMode, readonly string[]>> = {
+  'click-highlight': [BAR, SCATTER, STACKED_BAR, PIE, HEATMAP],
+  'click-group-focus': ['scatter-color-shape', MULTI_LINE, FACETED_SCATTER, `${FACETED_SCATTER}-continent`, FACETED_BARS],
+  'hover-group-focus': ['scatter-color-shape', MULTI_LINE, FACETED_SCATTER, `${FACETED_SCATTER}-continent`, FACETED_BARS],
+  'linked-brush': ['Scatter Plot-Gapminder-faceted-four-years', 'Scatter Plot-Auto MPG-faceted-origin', FACETED_BARS, 'Bar Chart-Titanic survival — row facets by sex-faceted'],
+  annotate: [LINE, SCATTER, BAR, LOLLIPOP],
+  select: [SCATTER, REGRESSION, STRIP, HEATMAP, CONNECTED_SCATTER, 'scatter-color-size', STACKED_BAR, FACETED_SCATTER],
+  lasso: [SCATTER, REGRESSION, CONNECTED_SCATTER, 'scatter-color-size'],
+  'context-menu': [SCATTER, STRIP, BAR, REGRESSION],
+  'brush-x': [LINE, CANDLESTICK, HISTOGRAM, STREAMGRAPH, AREA, MULTI_LINE, CONNECTED_SCATTER, RANGE_AREA],
+  'brush-y': [BAR, RANGED_DOT, SCATTER, STRIP, LOLLIPOP, BOXPLOT, REGRESSION, VIOLIN],
+  'brush-angle': [PIE, DONUT, ROSE, RADAR],
+  inspect: [SCATTER, STRIP, BOXPLOT, REGRESSION],
+  'long-press': [BAR, SCATTER, PIE],
+  'double-activate': [BAR, SCATTER, HEATMAP],
+  'drag-reorder': [BAR, STACKED_BAR, HEATMAP, BOXPLOT],
+  'keyboard-focus': [BAR, SCATTER, PIE],
+  'legend-toggle': [SCATTER, STACKED_BAR, STREAMGRAPH, MULTI_LINE, PIE],
+  'accessible-navigation': [BAR, LINE, SCATTER, GROUPED_BAR, PIE],
+};
+
+/** Pointing at one mark suits large marks: slices, bars, and cells. */
+const MENU_MARK_CASES = [BAR, STACKED_BAR, HEATMAP, GROUPED_BAR, PIE, DONUT];
+
+/** Gallery pages whose cards switch between variants of one preset option, shown as a row of choices. */
+const GALLERY_VARIANTS: Partial<Record<InteractionMode, {
+  label: string;
+  option: string;
+  choices: readonly { mode: InteractionMode; label: string; value: string; hint: string; cases?: readonly string[] }[];
+}>> = {
+  ...Object.fromEntries((['select', 'brush-x', 'brush-y', 'brush-angle'] as const).map((base) => [base, {
+    label: 'Selection mode',
+    option: 'mode',
+    choices: [
+      { mode: base, label: 'Ephemeral', value: 'ephemeral', hint: 'The region lasts only while you drag.' },
+      { mode: `${base}-stateful` as InteractionMode, label: 'Stateful', value: 'stateful',
+        hint: 'The region stays after the drag: move or resize it, or click outside to clear it.' },
+    ],
+  }])),
+  'context-menu': {
+    label: 'Gesture',
+    option: 'gesture',
+    choices: [
+      { mode: 'context-menu', label: 'Rectangle', value: 'rectangle', hint: 'Drag a rectangle; the menu opens beside it, and the rectangle stays to move or resize.' },
+      { mode: 'context-menu-lasso', label: 'Lasso', value: 'lasso', hint: 'Draw around the marks; the menu opens where the lasso ends.' },
+      { mode: 'context-menu-click', label: 'Click', value: 'click', hint: 'Click a mark to highlight it and open the menu beside it.', cases: MENU_MARK_CASES },
+      { mode: 'context-menu-right-click', label: 'Right-click', value: 'right-click', hint: 'Right-click a mark to open the menu on it, without highlighting.', cases: MENU_MARK_CASES },
+      { mode: 'context-menu-long-press', label: 'Long press', value: 'long-press', hint: 'Press and hold a mark to highlight it and open the menu.', cases: MENU_MARK_CASES },
+    ],
+  },
+};
 
 const navigationAxesByCase = new Map([...interactionCases, ...navigationCases].flatMap((item) => {
   const spec = assembleVegaLite(item.input) as any;
@@ -820,12 +996,6 @@ function InteractiveChart({
   const containerRef = useRef<HTMLDivElement>(null);
   const statusRef = useRef(onStatus);
   const semanticEventRef = useRef(onSemanticEvent);
-  const chartRef = useRef<FlintChartHandle>(null);
-  const pointerRef = useRef({ x: 0, y: 0 });
-  const selectionRef = useRef<FlintInteractionEventDetail['event']['target']>(null);
-  const [contextMenu, setContextMenu] = useState<
-    { x: number; y: number; detail: FlintInteractionEventDetail } | null
-  >(null);
   const [comment, setComment] = useState<string | null>(null);
   statusRef.current = onStatus;
   semanticEventRef.current = onSemanticEvent;
@@ -845,23 +1015,18 @@ function InteractiveChart({
 
   useEffect(() => {
     statusRef.current('loading');
-    selectionRef.current = null;
-    setContextMenu(null);
     setComment(null);
   }, [chartSpec, interactions, resetVersion]);
 
   const handleInteraction = (detail: FlintInteractionEventDetail) => {
     semanticEventRef.current(detail);
-    const { action, phase, target } = detail.event;
-    if ((action === 'select-region' || action === 'select-lasso') && phase === 'commit') {
-      selectionRef.current = target;
+    const { action, item, target } = detail.event;
+    // The host performs a menu action; this lab only reports what it was handed.
+    if (action === 'menu-select') {
+      const label = CONTEXT_MENU_ITEMS.find((entry) => entry.id === item)?.label ?? item;
+      const count = target?.elements.length ?? 0;
+      setComment(`${label}: ${count} selected ${count === 1 ? 'mark' : 'marks'}`);
     }
-    if (action !== 'context-element') return;
-    if (!target?.elements.length) {
-      setContextMenu(null);
-      return;
-    }
-    setContextMenu({ x: pointerRef.current.x, y: pointerRef.current.y, detail });
   };
   // A spec entry the chart cannot honour is dropped and reported, not thrown.
   const handleWarnings = (warnings: readonly ChartWarning[]) => {
@@ -873,58 +1038,11 @@ function InteractiveChart({
     statusRef.current(error.message.includes('requires') || error.message.includes('support') ? 'unsupported' : 'error', error.message);
   };
 
-  const menuTarget = contextMenu?.detail.event.target ?? null;
-  const menuElement = menuTarget?.elements[0];
-
-  useEffect(() => {
-    if (!contextMenu) return;
-    const dismiss = (event: Event) => {
-      if ((event.target as Element | null)?.closest?.('.cf-context-menu')) return;
-      setContextMenu(null);
-    };
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setContextMenu(null);
-    };
-    document.addEventListener('pointerdown', dismiss, true);
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('pointerdown', dismiss, true);
-      document.removeEventListener('keydown', onKey);
-    };
-  }, [contextMenu]);
-
-  const addComment = () => {
-    const chart = chartRef.current;
-    if (!chart || !menuTarget || !menuElement) return;
-    const text = summarizeElement(menuElement) ?? 'Comment';
-    setComment(text);
-    void chart.applyUpdate({
-      id: 'select-context',
-      ops: [{
-        op: 'set-annotation',
-        target: { visual: menuTarget.visual, elements: [menuElement] },
-        value: { text },
-      }],
-    });
-    setContextMenu(null);
-  };
-  const clearComment = () => {
-    setComment(null);
-    void chartRef.current?.clearUpdate('select-context');
-    setContextMenu(null);
-  };
-
   return (
     <>
-      <div
-        className="cf-mount"
-        ref={containerRef}
-        // Capture runs before the chart's own handler, so the menu opens at the pointer.
-        onContextMenuCapture={(event) => { pointerRef.current = { x: event.clientX, y: event.clientY }; }}
-      >
+      <div className="cf-mount" ref={containerRef}>
         <FlintChart
           key={resetVersion}
-          ref={chartRef}
           spec={chartSpec}
           interactions={interactions}
           renderer="svg"
@@ -935,33 +1053,6 @@ function InteractiveChart({
           onError={handleError}
         />
       </div>
-      {contextMenu && createPortal(
-        <div
-          className="cf-context-menu"
-          style={{ left: `${contextMenu.x}px`, top: `${contextMenu.y}px` }}
-          role="menu"
-        >
-          <button type="button" role="menuitem" onClick={addComment} disabled={!menuElement}>
-            Add comment
-          </button>
-          <button
-            type="button"
-            role="menuitem"
-            onClick={() => {
-              const selected = selectionRef.current?.elements.length ?? 0;
-              setComment(selected > 0
-                ? `Sent ${selected} selected item(s) to chat`
-                : `Sent ${summarizeElement(menuElement!) ?? 'item'} to chat`);
-              setContextMenu(null);
-            }}
-            disabled={!menuElement}
-          >
-            Send to chat
-          </button>
-          <button type="button" role="menuitem" onClick={clearComment}>Clear</button>
-        </div>,
-        document.body,
-      )}
       {comment && <p className="cf-context-note">{comment}</p>}
     </>
   );
@@ -986,16 +1077,21 @@ function InteractionChartModal({ item, mode, themeId, navigationGuard, resetVers
   const [copyError, setCopyError] = useState(false);
   const spec = useMemo(() => modeSpec(mode, item.navigationAxes, navigationGuard, item.groupBy, item.indexInspection), [mode, item, navigationGuard]);
   const input = themeId ? { ...item.input, theme_spec: themeId } : item.input;
-  const code = codeSource === 'spec'
-    ? JSON.stringify({ ...input, interaction_spec: spec }, null, 2)
+  const codeFor = (chartInput: ChartAssemblyInput) => codeSource === 'spec'
+    ? stringify({ ...chartInput, interaction_spec: spec }, { maxLength: 60 })
     : flintChartCode({
       presets: spec.interactions.map((entry) => ({
         factory: presetFactoryName(entry.type),
         options: entry.options ? JSON.stringify(entry.options, null, 2) : '',
       })),
       keyboardTargeting: spec.keyboardTargeting,
-      preamble: [`const chartInput = ${JSON.stringify(input, null, 2)};`],
+      preamble: [`const chartInput = ${stringify(chartInput, { maxLength: 60 })};`],
     });
+  // Highlighting hundreds of rows stalls the dialog; the view shows a few and Copy keeps them all.
+  const values = 'values' in input.data ? input.data.values : undefined;
+  const code = codeFor(values && values.length > 4
+    ? { ...input, data: { values: [...values.slice(0, 3), `… ${values.length - 3} more rows`] } } as ChartAssemblyInput
+    : input);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -1025,7 +1121,7 @@ function InteractionChartModal({ item, mode, themeId, navigationGuard, resetVers
             <ScaleToFit fill height={650} padding={20} maxScale={1.9}>
               <InteractiveChart input={item.input} mode={mode} themeId={themeId} navigationGuard={navigationGuard}
                 navigationAxes={item.navigationAxes} groupBy={item.groupBy} indexInspection={item.indexInspection}
-                spec={codeSource === 'spec' ? spec : undefined} resetVersion={resetVersion}
+                spec={source === 'spec' ? spec : undefined} resetVersion={resetVersion}
                 onStatus={(status, message) => setMessage(status === 'error' || status === 'unsupported' ? message ?? status : '')}
                 onSemanticEvent={detail => setMessage(detail.event.action)} />
             </ScaleToFit>
@@ -1039,7 +1135,7 @@ function InteractionChartModal({ item, mode, themeId, navigationGuard, resetVers
               <button type="button" aria-pressed={codeSource === 'code'} onClick={() => { setCodeSource('code'); setCopied(false); setCopyError(false); }}>Functional</button>
             </div>
             <button type="button" className="cf-modal-icon" aria-label={copied ? 'Code copied' : 'Copy code'} title={copied ? 'Code copied' : 'Copy code'} onClick={async () => {
-              try { await navigator.clipboard.writeText(code); setCopied(true); setCopyError(false); }
+              try { await navigator.clipboard.writeText(codeFor(input)); setCopied(true); setCopyError(false); }
               catch { setCopyError(true); }
             }}>{copied ? <Check size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />}</button>
           </div>
@@ -1287,7 +1383,7 @@ export function ClickFocusLab({ source: initialSource = 'code', mode: selectedMo
   }, []);
   // Pan & zoom lists every curated navigation case, including charts the
   // preset cannot drive yet (maps), so their unsupported status stays visible.
-  const visibleCases = mode === 'navigate'
+  const modeCases = mode === 'navigate'
       ? navigationCases
     : mode === 'brush-zoom'
       ? navigationCases.filter((item) => navigationAxesByCase.has(item.id))
@@ -1302,12 +1398,20 @@ export function ClickFocusLab({ source: initialSource = 'code', mode: selectedMo
         : mode === 'legend-toggle'
           ? interactionCases.filter((item) => discreteLegendCases.has(item.id))
       : interactionCases;
+  const variants = embedded ? GALLERY_VARIANTS[mode] : undefined;
+  const [variantIndex, setVariantIndex] = useState(0);
+  const variant = variants?.choices[variantIndex];
+  const cardMode = variant?.mode ?? mode;
+  const picks = embedded ? variant?.cases ?? GALLERY_CASES[mode] : undefined;
+  const visibleCases = picks
+    ? picks.flatMap((id) => modeCases.filter((item) => item.id === id))
+    : modeCases;
   const tally = visibleCases.reduce((counts, item) => {
     const status = probes[item.id] ?? 'loading';
     counts[status] += 1;
     return counts;
   }, { ready: 0, unsupported: 0, error: 0, loading: 0 } as Record<ProbeStatus, number>);
-  const specPattern = modeSpec(mode, undefined, navigationGuard, '<group-field>', { seriesBy: '<series-field>', displayValue: true });
+  const specPattern = modeSpec(cardMode, undefined, navigationGuard, '<group-field>', { seriesBy: '<series-field>', displayValue: true });
   const formatProperties = (value: object, indentation: number) => Object.entries(value).map(([key, property]) => {
     const padding = ' '.repeat(indentation);
     const prefix = `${padding}${JSON.stringify(key)}: `;
@@ -1339,6 +1443,11 @@ export function ClickFocusLab({ source: initialSource = 'code', mode: selectedMo
     keyboardTargeting: specPattern.keyboardTargeting,
     logInteractions: true,
   });
+  // The code names the chosen variant and lists the others, so the switch reads as one option.
+  const noteVariant = (code: string) => variants && variant
+    ? code.replace(new RegExp(`^(.*"${variants.option}": "${variant.value}".*)$`, 'm'), (line) =>
+      `${line}  // or ${variants.choices.filter((choice) => choice !== variant).map((choice) => `"${choice.value}"`).join(', ')}`)
+    : code;
 
   return (
     <div className="dev-page cf-page">
@@ -1432,6 +1541,23 @@ export function ClickFocusLab({ source: initialSource = 'code', mode: selectedMo
         {showThemePicker && <div className="cf-theme-picker">
           <ThemePicker themeId={themeId} onTheme={setThemeId} />
         </div>}
+        </div>
+        {embedded && <section className="cf-preset-code" aria-label="Preset code">
+          <div className="cf-preset-code-toolbar">
+            <div className="cf-source-toggle" role="group" aria-label="Interaction source">
+              {(['spec', 'code'] as const).map(value => <button key={value} type="button"
+                aria-pressed={source === value} onClick={() => setSource(value)}>
+                {value === 'spec' ? 'Spec (JSON)' : 'Functional'}
+              </button>)}
+            </div>
+          </div>
+          <div className="cf-gallery-spec" aria-label={source === 'spec' ? 'Interaction spec pattern' : 'Functional interaction code'}>
+            <CodeBlock variant="light" language={source === 'spec' ? 'json' : 'typescript'}
+              customStyle={{ margin: 0, padding: 8, fontSize: 10.5, lineHeight: 1.35, maxHeight: 200, overflow: 'auto' }}>
+              {noteVariant(source === 'spec' ? specCode : functionalCode)}
+            </CodeBlock>
+          </div>
+        </section>}
         {mode === 'navigate' && (
           <div className="cf-navigation-controls" aria-label="Navigation guards">
             <label>
@@ -1463,30 +1589,25 @@ export function ClickFocusLab({ source: initialSource = 'code', mode: selectedMo
             </button>
           </div>
         )}
-        </div>
-        {embedded && <section className="cf-preset-code" aria-label="Preset code">
-          <div className="cf-preset-code-toolbar">
-            <div className="cf-source-toggle" role="group" aria-label="Interaction source">
-              {(['spec', 'code'] as const).map(value => <button key={value} type="button"
-                aria-pressed={source === value} onClick={() => setSource(value)}>
-                {value === 'spec' ? 'Spec (JSON)' : 'Functional'}
+        {variants && variant && (
+          <div className="cf-mode-controls">
+            <span className="cf-mode-controls-label">{variants.label}</span>
+            <div className="cf-source-toggle" role="group" aria-label={variants.label}>
+              {variants.choices.map((choice, index) => <button key={choice.value} type="button"
+                aria-pressed={choice === variant} onClick={() => setVariantIndex(index)}>
+                {choice.label}
               </button>)}
             </div>
+            <p>{variant.hint}</p>
           </div>
-          <div className="cf-gallery-spec" aria-label={source === 'spec' ? 'Interaction spec pattern' : 'Functional interaction code'}>
-            <CodeBlock variant="light" language={source === 'spec' ? 'json' : 'typescript'}
-              customStyle={{ margin: 0, padding: 8, fontSize: 10.5, lineHeight: 1.35, maxHeight: 200, overflow: 'auto' }}>
-              {source === 'spec' ? specCode : functionalCode}
-            </CodeBlock>
-          </div>
-        </section>}
+        )}
       </header>
       <div className={mode === 'navigate' ? 'cf-grid cf-grid-wide' : 'cf-grid'}>
         {visibleCases.map((item) => (
           <CaseCard
-            key={`${source}-${mode}-${item.id}`}
+            key={`${source}-${cardMode}-${item.id}`}
             item={item}
-            mode={mode}
+            mode={cardMode}
             themeId={themeId}
             navigationGuard={navigationGuard}
             resetVersion={resetVersion}

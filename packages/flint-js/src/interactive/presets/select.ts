@@ -7,7 +7,7 @@ export function createSelectInteraction(options: SelectOptions = {}): CanvasInte
     const dimOpacity = normalizedOpacity(options.dimOpacity);
     return {
         id,
-        eventSource: rectangleTrigger(options.match ?? 'intersect', options.guide),
+        eventSource: { ...rectangleTrigger(options.match ?? 'intersect', options.guide), mode: options.mode ?? 'ephemeral' },
         affordances: { plot: { cursor: 'region' } },
         handle(event, context) {
             if (event.action !== 'select-region' || event.phase === 'start' || event.phase === 'cancel') return null;

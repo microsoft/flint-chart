@@ -194,27 +194,28 @@ export function promptUpdate(
   const topValue = any.maxValue - ((any.maxValue - any.minValue) * 0.06);
   const label = subject
     ? `Draw the ${subject.toLowerCase()} line to ${any.endYear}`
-    : 'Pick a subject on the right, then draw its line';
+    : 'Start on a line\u2019s end and draw it to the right';
   return {
     id: PROMPT_UPDATE_ID,
     ops: [
-      {
-        op: 'set-overlay',
-        name: 'draw-start-points',
+      // Each start point in its own subject's ink; while one is drawn, the others step back.
+      ...SUBJECTS.map((name) => ({
+        op: 'set-overlay' as const,
+        name: `draw-start-${name}`,
         value: {
-          mark: 'point',
+          mark: 'point' as const,
           role: 'draw-start',
-          data: {
-            values: SUBJECTS.map((name) => ({
-              Year: yearToDate(bounds[name].startYear),
-              Score: bounds[name].startValue,
-              Ink: ink[name],
-            })),
-          },
+          data: { values: [{ Year: yearToDate(bounds[name].startYear), Score: bounds[name].startValue }] },
           encodings: { x: { field: 'Year' }, y: { field: 'Score' } },
-          style: { fill: subject ? ink[subject] : '#54585a', stroke: '#ffffff', strokeWidth: 1.5, pointRadius: 4 },
+          style: {
+            fill: ink[name],
+            fillOpacity: subject && subject !== name ? 0.35 : 1,
+            stroke: '#ffffff',
+            strokeWidth: 1.5,
+            pointRadius: subject === name ? 5 : 4,
+          },
         },
-      },
+      })),
       {
         op: 'set-overlay',
         name: 'draw-prompt',
@@ -257,27 +258,10 @@ export function drawnLinesUpdate(
         encodings: { x: { field: 'Year' }, y: { field: 'Score' }, order: { field: 'Year' } },
         style: {
           stroke: ink[subject],
-          strokeWidth: isActive ? 2.5 : 2,
+          // Once the real lines are out, the guesses step back behind them.
+          strokeWidth: finished ? 1.5 : isActive ? 2.5 : 2,
           strokeDash: [6, 4],
-          opacity: active && !isActive && !finished ? 0.5 : 1,
-        },
-      },
-    });
-    const drawnRows = path.samples.filter((sample) => sample.year > bounds[subject].startYear);
-    ops.push({
-      op: 'set-overlay',
-      name: `drawn-points-${subject}`,
-      value: drawnRows.length === 0 ? null : {
-        mark: 'point',
-        role: 'drawn-point',
-        data: { values: drawnRows.map((sample) => overlayRow({ Year: sample.year, Score: sample.value })) },
-        encodings: { x: { field: 'Year' }, y: { field: 'Score' } },
-        style: {
-          fill: ink[subject],
-          stroke: '#ffffff',
-          strokeWidth: 1,
-          pointRadius: isActive ? 3 : 2.5,
-          opacity: active && !isActive && !finished ? 0.5 : 1,
+          opacity: finished ? 0.4 : active && !isActive ? 0.5 : 1,
         },
       },
     });

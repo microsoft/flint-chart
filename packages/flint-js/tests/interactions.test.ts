@@ -1126,7 +1126,7 @@ describe('interaction definitions', () => {
         expect(clickMark().eventSource).toEqual({ ...clickTrigger, defaultAssistDistance: 8 });
         expect(clickGroupFocus().eventSource).toEqual({ ...clickTrigger, defaultAssistDistance: 8 });
         expect(clickAnnotate().eventSource).toEqual({ ...clickTrigger, defaultAssistDistance: 8 });
-        expect(select().eventSource).toEqual(rectangleTrigger('intersect'));
+        expect(select().eventSource).toEqual({ ...rectangleTrigger('intersect'), mode: 'ephemeral' });
         expect(brushX().eventSource).toEqual(xBrushTrigger('intersect', 'ephemeral'));
         expect(brushY().eventSource).toEqual(yBrushTrigger('intersect', 'ephemeral'));
         expect(brushAngle().eventSource).toEqual(angularBrushTrigger('intersect'));
@@ -1314,6 +1314,7 @@ describe('interaction definitions', () => {
             id: 'select',
             eventSource: rectangleTrigger('intersect'),
         });
+        expect(select({ mode: 'stateful' }).eventSource).toEqual({ ...rectangleTrigger('intersect'), mode: 'stateful' });
         expect(brushX()).toMatchObject({ id: 'brush-x', axis: 'x', eventSource: xBrushTrigger() });
         expect(brushY()).toMatchObject({ id: 'brush-y', axis: 'y', eventSource: yBrushTrigger() });
         expect(brushX({ mode: 'stateful' }).eventSource).toEqual(xBrushTrigger('intersect', 'stateful'));

@@ -2,6 +2,21 @@
   position: relative;
 }
 
+.ydi-stage .ic-toolbar {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 3;
+  min-width: 0;
+}
+
+/* Once the answer is revealed, Reset is the next thing to do. */
+.ydi-stage .ydi-reset[data-ready='true'] {
+  border-color: #0078d4;
+  background: #0078d4;
+  color: #fff;
+}
+
 .ydi-stage .ic-flint-dimpvis-mount {
   position: relative;
   touch-action: none;

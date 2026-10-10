@@ -5,9 +5,8 @@
     "themes": "主题",
     "gallery": "图表示例",
     "chartGallery": "图表示例",
-    "interactionGallery": "交互示例",
-    "bespokeInteractions": "自定义交互",
-    "interactionApplications": "交互应用",
+    "interactionGallery": "交互预设",
+    "advancedInteractions": "高级交互",
     "interactions": "交互",
     "documentation": "文档",
     "playgrounds": "实验室",
@@ -40,7 +39,7 @@
     "demoAria": "示例主题",
     "inspiration": "需要灵感？",
     "demos": {
-        "google-material": "Google Material",
+      "google-material": "Google Material",
       "microsoft-fluent": "Microsoft Fluent",
       "peoples-daily": "人民日报"
     },
@@ -374,13 +373,8 @@
   },
   "landing": {
     "heroTitle": "Flint：为 AI 而生的可视化语言",
-    "attribution": "Microsoft Research 项目",
-    "installNpm": "通过 <npmLink>npm</npmLink> 安装 Flint（TypeScript / JavaScript）。",
-    "installMcp": "智能体请使用 <mcpLink>MCP 服务器</mcpLink>；独立指南见 <skillLink>Agent Skill</skillLink>。",
-    "installGallery": "前往<galleryLink>图表示例</galleryLink>，探索 {{chartTypes}} 种图表类型和 {{examples}} 个示例，或比较<themesLink>视觉主题</themesLink>。",
-    "themeLead": "Flint 的正式主题规范让设计师只需定义一次视觉识别，就能在整个图表库中统一应用。",
-    "installThemeLab": "在<themeLabLink>主题实验室</themeLabLink>中创建自定义视觉系统。",
     "ctaThemes": "视觉主题",
+    "ctaInteractions": "交互",
     "ctaGallery": "浏览图表示例",
     "ctaMcp": "使用 MCP 服务器",
     "ctaGithub": "访问 GitHub",
@@ -419,14 +413,17 @@
       }
     },
     "howItWorks": "Flint 如何工作？",
-    "howItWorksBody": "Flint 只需一份精简规范，其中包含数据、语义类型和图表规范。编译器会补全必要的底层细节，生成完整的后端原生规范（此处以 Vega-Lite 为例），再渲染成清晰美观的图表。",
+    "howItWorksBody": "Flint 只需一份精简规范，其中包含数据、语义类型和图表规范。编译器会补全必要的底层细节，生成完整的后端原生规范（此处以 Vega-Lite 为例），再渲染成清晰美观的图表。加上交互规范，图表即可交互：悬停在某个单元格上即可高亮所在行。",
     "overviewAlt": "Flint 工作流：智能体从原始表格推断 dataSpec，编写简短的 chartSpec，Flint 将其编译为按地区展示的折线图；随后在编辑规范时依次得到分组柱状图、瀑布图、热力图与旭日图。",
     "leadBefore": "Flint 是一种可视化中间语言，帮助",
-    "leadHighlight1": "AI 智能体从简洁、可人工编辑的图表规范出发，稳定生成表现力强、观感出色的图表",
-    "leadMiddle": "。你不必手动编写比例尺、坐标轴、间距、布局等繁琐的底层参数；Flint 编译器会结合数据、语义类型、图表类型和编码，自动推导出更合适的图表配置。",
-    "leadHighlight2": "Flint 目前通过统一接口，在 {{backends}} 种渲染后端上支持 {{chartTypes}} 种图表类型",
+    "leadHighlight1": "AI 智能体从简洁、可人工编辑的图表规范出发，稳定生成表现力强、观感出色且可交互的图表",
+    "leadStop": "。",
+    "leadAvailability": "你可以通过 <mcp>MCP 服务器</mcp>在日常工作中配合智能体使用它，也可以用 <npm>npm 库</npm>构建交互式应用。",
+    "leadHighlight2": "Flint 通过统一接口，在 {{backends}} 种渲染后端上支持 {{chartTypes}} 种图表类型，并提供 {{themes}} 套主题和 {{presets}} 种交互预设",
+    "leadAfter": "如需定制可视化，可以在<themeLab>主题实验室</themeLab>中设计自定义主题，并用 Flint API 构建<advanced>高级交互</advanced>。",
     "backendRosterLabel": "渲染后端",
     "themeRosterLabel": "主题",
+    "interactionRosterLabel": "交互",
     "themeRosterMore": "另有 {{count}} 种",
     "flintSpec": "Flint 规范",
     "compiledChart": "编译结果",
@@ -438,32 +435,32 @@
     "closingTitle": "开始使用 Flint",
     "closingBody": "Flint 已开源，可直接使用。前往 GitHub 获取源码，或先浏览图表示例。",
     "viewGithub": "在 GitHub 上查看",
-    "closingCollab": "Flint 由 <msr>Microsoft Research</msr> 与中国人民大学 <ideas>IDEAS Lab</ideas> 合作构建。",
+    "contributors": "贡献者",
     "features": {
       "semantic": {
         "title": "用语义类型表达数据含义",
-        "body": "Flint 用语义类型描述数据字段的含义（如 Rank、YearMonth、Delta、Temperature），再据此推导数据解析、比例尺、坐标轴、格式和配色方案等底层配置。",
-        "example": "这张热力图按游戏和月份展示用户净增量。Flint 根据字段的语义类型，自动选择时间解析方式、坐标轴格式，以及发散色板和色彩中点。"
+        "body": "Flint 用语义类型描述数据字段的含义（如 Rank、YearMonth、Delta、Temperature），再据此推导数据解析、比例尺、坐标轴、格式和配色方案等底层配置。"
       },
       "layout": {
         "title": "自动布局优化",
-        "body": "Flint 结合弹性布局模型与倾斜优化原则（banking）调整图表布局。编译器会动态协调尺寸、间距和排布，让图表恰当地填入画布。",
-        "example": "随着分组柱状图中的类别增多，Flint 会适度拉伸画布、缩小柱带宽度，让信息密集的图表依然清晰舒展。整个过程就像弹簧在可伸缩的容器中重新达到平衡。"
+        "body": "Flint 结合弹性布局模型与倾斜优化原则（banking）调整图表布局。编译器会动态协调尺寸、间距和排布，即使数据变得更密集，也能让图表恰当地填入画布。"
       },
       "adapt": {
         "title": "易于生成，方便修改",
-        "body": "Flint 规范不依赖脆弱的底层参数，因此更容易生成和修改。要改变图表设计，通常只需切换图表类型、重新绑定视觉编码，编译器便会自动调整相关的底层配置。",
-        "example": "只需切换图表类型，就能把按性别分别展示 2000 年美国人口年龄分布的柱状图改为人口金字塔，其余细节交给编译器处理。"
+        "body": "Flint 规范不依赖脆弱的底层参数，因此更容易生成和修改。要改变图表设计，通常只需切换图表类型、重新绑定视觉编码，编译器便会自动调整相关的底层配置。"
       },
       "backends": {
         "title": "一份规范，多种渲染后端",
-        "body": "Flint 支持通过 Vega-Lite、ECharts、Chart.js 和 Plotly 渲染 {{chartTypes}} 种图表，图表示例中收录了 {{examples}} 个后端专属示例，还可通过 Office.js 生成原生 Excel 图表。不同后端的 API 和编程模型各不相同，Flint 则以统一接口抹平差异。",
-        "example": "按需切换后端以发挥其原生优势：ECharts 适合层级旭日图，Plotly 擅长统计和分析图表，Excel 则可生成工作簿中可继续编辑的原生图表。"
+        "body": "Flint 支持通过 Vega-Lite、ECharts、Chart.js 和 Plotly 渲染 {{chartTypes}} 种图表，图表示例中收录了 {{examples}} 个后端专属示例，还可通过 Office.js 生成原生 Excel 图表。不同后端的 API 和编程模型各不相同，Flint 则以统一接口抹平差异，切换后端无需修改规范。"
       },
       "themes": {
         "title": "用不同主题呈现",
-        "body": "Flint 主题是一套正式规范，用于引导布局算法、根据语义角色应用表现规则，并将几何、字体和颜色组织成统一的视觉系统。",
-        "example": "将视觉主题从 Economist 切换为 Swiss 时，数据与编码保持不变，而间距、结构、标签、图形、字体和颜色会随之调整，以体现各自的视觉语言。"
+        "body": "Flint 主题是一套正式规范，用于引导布局算法、根据语义角色应用表现规则，并将几何、字体和颜色组织成统一的视觉系统。切换主题无需修改数据或编码。"
+      },
+      "interactions": {
+        "title": "添加交互",
+        "body": "Flint 将用户手势映射为关于数据的语义事件，因此交互规范只需列出悬停读数、刷选或图例切换等预设，编译器会自动把它们接入图表，无需编写事件处理代码。",
+        "demoLabel": "实时 · 试一试"
       }
     },
     "examples": {

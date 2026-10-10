@@ -35,6 +35,7 @@ export const INTERACTION_PRESET_TYPES = [
     'drag-reorder',
     'accessible-navigation',
     'filter-controls',
+    'context-menu',
 ] as const;
 
 export type InteractionPresetType = (typeof INTERACTION_PRESET_TYPES)[number];
@@ -123,6 +124,8 @@ export const INTERACTION_PRESET_REQUIREMENTS: Readonly<Record<InteractionPresetT
     'accessible-navigation': ['elements'],
     // Controls around the chart narrow its rows, which any chart has.
     'filter-controls': [],
+    // A rectangle by default; a click or right-click picks marks on any chart with elements.
+    'context-menu': ['elements', 'cartesian-region'],
 };
 
 /** The capabilities a chart type declares, before the assembler confirms the data-dependent ones. */

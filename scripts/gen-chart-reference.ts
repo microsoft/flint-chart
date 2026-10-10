@@ -586,7 +586,7 @@ function collectPresetOptions(): Record<string, { name: string; type: string; re
         const path = resolve(interactiveDir, file);
         return ts.createSourceFile(path, readFileSync(path, 'utf8'), ts.ScriptTarget.Latest, true);
     };
-    const optionsSources = [parse('interactions.ts'), parse('filter-controls.ts')];
+    const optionsSources = [parse('interactions.ts'), parse('filter-controls.ts'), parse('context-menu.ts')];
     const specSource = parse('spec/types.ts');
 
     const declarations = new Map<string, ts.InterfaceDeclaration | ts.TypeAliasDeclaration>();
@@ -614,6 +614,7 @@ function collectPresetOptions(): Record<string, { name: string; type: string; re
         '(string | FilterFieldOptions)[]': "(string | { field, widget?: 'auto' | 'checkboxes' | 'select' | 'range' | 'toggle', label?, all? })[]",
         'FilterPlacement': "'auto' | 'top' | 'bottom'",
         'Readonly<Record<string, FilterValue>>': 'Record<field, FilterValue>',
+        'ContextMenuItem[]': '{ id, label }[]',
     };
     const typeText = (node: ts.TypeNode): string => {
         const text = node.getText().replace(/\breadonly /g, '').replace(/\s+/g, ' ');
@@ -627,6 +628,8 @@ function collectPresetOptions(): Record<string, { name: string; type: string; re
     };
 
     interface OptionRow { name: string; type: string; required: boolean; note: string }
+    const omittedKeys = (keys: ts.TypeNode): string[] => (ts.isUnionTypeNode(keys) ? keys.types : [keys])
+        .flatMap((literal) => ts.isLiteralTypeNode(literal) && ts.isStringLiteral(literal.literal) ? [literal.literal.text] : []);
     const membersOf = (node: ts.Node, omit: ReadonlySet<string>): OptionRow[] => {
         if (ts.isInterfaceDeclaration(node)) {
             const inherited = (node.heritageClauses ?? []).flatMap((clause) =>
@@ -657,6 +660,8 @@ function collectPresetOptions(): Record<string, { name: string; type: string; re
         }
         if (ts.isTypeReferenceNode(node) || ts.isExpressionWithTypeArguments(node)) {
             const name = ts.isTypeReferenceNode(node) ? node.typeName.getText() : node.expression.getText();
+            const [base, keys] = node.typeArguments ?? [];
+            if (name === 'Omit' && base && keys) return membersOf(base, new Set([...omit, ...omittedKeys(keys)]));
             const declaration = declarations.get(name);
             if (!declaration) throw new Error(`gen:reference: unknown option type ${name}`);
             return membersOf(declaration, omit);
@@ -675,8 +680,7 @@ function collectPresetOptions(): Record<string, { name: string; type: string; re
         const omit = new Set<string>();
         if (ts.isTypeReferenceNode(typeNode) && typeNode.typeName.getText(specSource) === 'Omit' && typeNode.typeArguments) {
             const [base, keys] = typeNode.typeArguments;
-            const literals = ts.isUnionTypeNode(keys) ? keys.types : [keys];
-            for (const literal of literals) if (ts.isLiteralTypeNode(literal) && ts.isStringLiteral(literal.literal)) omit.add(literal.literal.text);
+            for (const key of omittedKeys(keys)) omit.add(key);
             typeNode = base;
         }
         const name = ts.isTypeReferenceNode(typeNode) ? typeNode.typeName.getText(specSource) : null;

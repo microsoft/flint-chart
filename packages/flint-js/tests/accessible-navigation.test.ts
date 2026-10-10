@@ -413,7 +413,9 @@ describe('AccessibleNavigator', () => {
         expect(accessibleCommandForKey({ key: 'Backspace' })).toBe('exit');
         expect(accessibleCommandForKey({ key: 'X' })).toBe('jump-x');
         expect(accessibleCommandForKey({ key: '?' })).toBe('help');
-        expect(accessibleCommandForKey({ key: 'Tab' })).toBeUndefined();
+        // Tab steps through a level; the controller lets it move on wherever `next` and `previous` cannot.
+        expect(accessibleCommandForKey({ key: 'Tab' })).toBe('next');
+        expect(accessibleCommandForKey({ key: 'Tab', shiftKey: true })).toBe('previous');
         expect(accessibleCommandForKey({ key: 'ArrowRight', ctrlKey: true })).toBeUndefined();
     });
 

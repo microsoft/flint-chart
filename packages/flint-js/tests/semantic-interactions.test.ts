@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { changeset, parse, View } from 'vega';
 import { expressionInterpreter } from 'vega-interpreter';
 import { compile } from 'vega-lite';
-import '../src/vegalite/interactive';
+import { scaleAwareCanvasPicking } from '../src/vegalite/interactive';
 import { assembleVegaLite, indexAxisOf } from '../src/vegalite/assemble';
 import { axisHighlight, brushAngle, brushX, brushZoom, clickAnnotate, clickHighlight, dragReorder, externalInteraction, inspect, legendToggle, navigate, select } from '../src/interactive/interactions';
 import type { CanvasInteractionDef, ClickHighlightOptions, RenderHit, SemanticElement, SemanticTarget } from '../src/interactive/interactions';
@@ -1239,6 +1239,35 @@ describe('Vega-Lite semantic interactions', () => {
             .toEqual({ x: 12, y: 8, width: 400, height: 300 });
         expect(markClipRect({ ...geometry, mark: { clip: false, group } })).toBeUndefined();
         expect(markClipRect({ mark: { clip: true, group } })).toBeUndefined();
+        // A zoomed series line: the clip moved to the faceted group around it.
+        expect(markClipRect({ ...geometry, mark: { group: { ...group, mark: { clip: true } } } }))
+            .toEqual({ x: 12, y: 8, width: 400, height: 300 });
+    });
+
+    it('clips a zoomed series line, whose clip sits on its faceted group', async () => {
+        const vl = compile({
+            data: { values: [0, 1, 2, 3].flatMap((x) => ['a', 'b'].map((s) => ({ x, y: x * 2, s }))) },
+            mark: { type: 'line', clip: true },
+            width: 200,
+            height: 100,
+            encoding: {
+                x: { field: 'x', type: 'quantitative' },
+                y: { field: 'y', type: 'quantitative' },
+                color: { field: 's', type: 'nominal' },
+            },
+        } as any).spec as Record<string, any>;
+        injectVegaNavigationSignals(vl, ['x']);
+        const view = new View(parse(vl as any), { renderer: 'none' });
+        await view.runAsync();
+        const lineItem = (node: any): any => node?.mark?.marktype === 'line'
+            ? node
+            : (node?.items ?? []).map(lineItem).find(Boolean);
+        const line = lineItem(view.scenegraph().root);
+
+        expect(line.mark.clip).not.toBe(true);
+        expect(markClipRect({ ...line, interactionGeometry: { offset: { x: 0, y: 0 } } }))
+            .toMatchObject({ width: 200, height: 100 });
+        view.finalize();
     });
 
     it('keeps themed line vertices filled when expanding them for interaction', () => {
@@ -2344,6 +2373,31 @@ describe('Vega-Lite semantic interactions', () => {
             { left: 20, top: 20, width: 320, height: 160 },
             { width: 400, height: 200 },
         )).toEqual({ left: 50, top: 25, width: 250, height: 125 });
+    });
+
+    it('picks canvas items in renderer pixels when the canvas is CSS-scaled', () => {
+        const picks: number[][] = [];
+        const canvas = {
+            getBoundingClientRect: () => ({ left: 100, top: 50, width: 200, height: 100 }),
+            offsetWidth: 400,
+            offsetHeight: 200,
+            clientLeft: 0,
+            clientTop: 0,
+        };
+        const handler: any = {
+            _origin: [10, 5],
+            _scene: {},
+            canvas: () => canvas,
+            context: () => ({}),
+            pick: (_scene: unknown, x: number, y: number, gx: number, gy: number) => picks.push([x, y, gx, gy]),
+        };
+        scaleAwareCanvasPicking(handler);
+        handler.pickEvent({ clientX: 200, clientY: 100 });
+        expect(picks).toEqual([[200, 100, 190, 95]]);
+
+        const svgHandler: any = { svg: () => ({}), pickEvent: () => 'unchanged' };
+        scaleAwareCanvasPicking(svgHandler);
+        expect(svgHandler.pickEvent()).toBe('unchanged');
     });
 
     it('translates concat marks by ancestor group offsets', () => {

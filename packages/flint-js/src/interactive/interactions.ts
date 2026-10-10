@@ -202,7 +202,7 @@ export interface ClickAnnotateOptions {
     reset?: readonly InteractionResetGesture[];
 }
 
-export interface LinkedBrushOptions extends SelectOptions {
+export interface LinkedBrushOptions extends Omit<SelectOptions, 'mode'> {
     groupBy: GroupBy;
     /** Defaults to 'rectangle'. */
     brush?: 'rectangle' | 'lasso';
@@ -223,21 +223,18 @@ export interface SelectOptions {
     dimOpacity?: number;
     /** Transient region shown during the gesture; false disables visual feedback. */
     guide?: RegionGuideOptions | false;
+    /** 'stateful' keeps the region on screen and editable after the drag. Defaults to 'ephemeral'. */
+    mode?: 'ephemeral' | 'stateful';
     /** Gestures that return this interaction to its neutral state. */
     reset?: readonly InteractionResetGesture[];
 }
 
-export interface BrushOptions extends SelectOptions {
-    /** 'stateful' keeps the interval on screen and editable after the drag. Defaults to 'ephemeral'. */
-    mode?: 'ephemeral' | 'stateful';
-}
+export type BrushOptions = SelectOptions;
 
-export type AngularBrushOptions = SelectOptions & {
-    /** 'stateful' keeps the sector on screen and editable after the drag. Defaults to 'ephemeral'. */
-    mode?: 'ephemeral' | 'stateful';
-};
+export type AngularBrushOptions = SelectOptions;
 
-export type LassoSelectOptions = SelectOptions;
+/** A lasso has no stateful mode: its freehand region ends at the commit. */
+export type LassoSelectOptions = Omit<SelectOptions, 'mode'>;
 
 export interface LegendToggleOptions {
     id?: string;

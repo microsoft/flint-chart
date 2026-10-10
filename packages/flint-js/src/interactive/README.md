@@ -634,10 +634,11 @@ Brushes support two lifecycle modes:
 ```ts
 brushX({ mode: 'ephemeral' }) // default: overlay exists only during the drag
 brushY({ mode: 'stateful' })  // committed overlay remains editable
+select({ mode: 'stateful' })  // committed rectangle remains editable
 brushAngle()                   // ephemeral polar sector
 ```
 
-Select and Cartesian brushes share the rectangular region gesture engine. `select()` configures a free two-dimensional ephemeral rectangle. A stateful axis brush retains its committed interval, allows dragging the body to move it, allows dragging either edge to resize it, and clears on an outside click or Escape. Angular brushing is currently ephemeral; editable wrapped-angle handles require a separate circular interaction model. Region events identify transitions with `create`, `move`, `resize-leading`, `resize-trailing`, and `clear` operations. This state and its interaction chrome are owned per chart surface by the trigger runtime; preset handlers remain stateless.
+Select and Cartesian brushes share the rectangular region gesture engine. `select()` configures a free two-dimensional rectangle; a stateful one moves by its body and resizes by any edge or corner. A stateful axis brush retains its committed interval, allows dragging the body to move it, allows dragging either edge to resize it, and clears on an outside click or Escape. Angular brushing is currently ephemeral; editable wrapped-angle handles require a separate circular interaction model. Region events identify transitions with `create`, `move`, `resize-leading`, `resize-trailing`, and `clear` operations. This state and its interaction chrome are owned per chart surface by the trigger runtime; preset handlers remain stateless.
 
 The folder is organized as:
 

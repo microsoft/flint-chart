@@ -54,6 +54,8 @@ export interface VegaRegionGestureOptions {
     sync(): Promise<void>;
     setSuppressClick(suppress: boolean): void;
     setDragging(dragging: boolean): void;
+    /** The live scale of an axis the viewport can pan or zoom; a retained region follows it. */
+    navigableScale?(axis: 'x' | 'y'): { (value: unknown): number; invert?(value: number): unknown } | undefined;
 }
 
 export interface VegaRegionGestureController {
@@ -114,6 +116,7 @@ export function mountVegaRegionGesture(options: VegaRegionGestureOptions): VegaR
         sync,
         setSuppressClick,
         setDragging,
+        navigableScale,
     } = options;
     const regionAxis: CartesianRegionAxis = interaction.eventSource.axis ?? 'xy';
     const angularBrush = interaction.eventSource.regionGeometry === 'angular';
@@ -141,6 +144,25 @@ export function mountVegaRegionGesture(options: VegaRegionGestureOptions): VegaR
     let lassoPoints: PlotPoint[] = [];
     let activePlotFrame: PlotFrame | undefined;
     let dragPlotFrame: PlotFrame | undefined;
+    // A retained region on a navigable axis, held as data values so it moves with a pan or zoom.
+    let pinned: Partial<Record<'x' | 'y', [unknown, unknown]>> = {};
+    const pin = (start: PlotPoint, end: PlotPoint): void => {
+        pinned = {};
+        if (activePlotFrame && (activePlotFrame.x !== 0 || activePlotFrame.y !== 0)) return;
+        for (const axis of ['x', 'y'] as const) {
+            if (regionAxis !== 'xy' && regionAxis !== axis) continue;
+            const scale = navigableScale?.(axis);
+            if (scale?.invert) pinned[axis] = [scale.invert(start[axis]), scale.invert(end[axis])];
+        }
+    };
+    /** The retained region's plot span on `axis`, from its pinned values under the current scale. */
+    const pinnedSpan = (axis: 'x' | 'y'): Interval | undefined => {
+        const values = pinned[axis];
+        const scale = values && navigableScale?.(axis);
+        if (!values || !scale) return undefined;
+        const [a, b] = values.map((value) => scale(value));
+        return { leading: Math.min(a, b), trailing: Math.max(a, b) };
+    };
 
     const overlay = document.createElement('div');
     Object.assign(overlay.style, {
@@ -599,11 +621,14 @@ export function mountVegaRegionGesture(options: VegaRegionGestureOptions): VegaR
                 if (statefulBrush && interval) {
                     activeInterval = interval;
                     activePlotFrame = dragPlotFrame;
+                    const span = intervalPoints(interval, intervalAxis());
+                    pin(span.start, span.end);
                     showInterval(interval);
                 }
                 if (statefulRectangle) {
                     activeRectangle = points;
                     activePlotFrame = dragPlotFrame;
+                    pin(points.start, points.end);
                     showRegion(points.start, points.end);
                 }
             }
@@ -626,6 +651,7 @@ export function mountVegaRegionGesture(options: VegaRegionGestureOptions): VegaR
                     activeInterval = undefined;
                     activeRectangle = undefined;
                     activePlotFrame = undefined;
+                    pinned = {};
                     committed.clear();
                     dispatchRegion('commit', dragStart, point, event, 'clear', null);
                 }
@@ -677,6 +703,7 @@ export function mountVegaRegionGesture(options: VegaRegionGestureOptions): VegaR
         activeInterval = undefined;
         activeRectangle = undefined;
         activePlotFrame = undefined;
+        pinned = {};
         activeSector = undefined;
         clearAnnotation();
         overlay.style.display = 'none';
@@ -711,6 +738,18 @@ export function mountVegaRegionGesture(options: VegaRegionGestureOptions): VegaR
         reset,
         cursorAt,
         sync(): void {
+            // A drag in progress owns the overlay.
+            if (dragStart) return;
+            // A pinned region takes its span from the scale the viewport just moved.
+            if (statefulBrush && activeInterval) activeInterval = pinnedSpan(intervalAxis()) ?? activeInterval;
+            if (statefulRectangle && activeRectangle) {
+                const x = pinnedSpan('x');
+                const y = pinnedSpan('y');
+                activeRectangle = {
+                    start: { x: x?.leading ?? activeRectangle.start.x, y: y?.leading ?? activeRectangle.start.y },
+                    end: { x: x?.trailing ?? activeRectangle.end.x, y: y?.trailing ?? activeRectangle.end.y },
+                };
+            }
             if (statefulBrush && activeInterval) showInterval(activeInterval);
             if (statefulRectangle && activeRectangle) showRegion(activeRectangle.start, activeRectangle.end);
             if (statefulAngular && activeSector) showAngularSector(activeSector);

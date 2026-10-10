@@ -90,6 +90,7 @@ Use `preview` for transient feedback and `commit` for retained app state when th
 | Navigation | `pan-viewport`, `zoom-viewport`, `reset-viewport` |
 | Dragging | `drag` |
 | Accessible navigation | `focus-element`, `activate-element` |
+| Context menu | `menu-select`, with the picked item's id in `item` and the selection as the target |
 
 The available actions depend on the mounted interaction and the chart's capabilities. The exported `CanvasInteractionAction` type defines the complete action union.
 
@@ -130,7 +131,7 @@ The selector field must exist in the chart's semantic data. Host-owned updates a
 | `set-annotation` | Add or clear a note on one mark. |
 | `set-viewport` | Change visible continuous domains or a geographic viewport. |
 | `set-order` | Reorder categories. |
-| `set-overlay` | Draw new rows through the chart's scales: `line`, `point`, `text` rows carry `x` and `y`; `rule` and `rect` rows carry `x`, `y`, `x2`, `y2`. |
+| `set-overlay` | Draw new rows through the chart's scales: `line`, `point`, `text` rows carry `x` and `y`; `rule` and `rect` rows carry `x`, `y`, `x2`, `y2`. Overlay text is haloed in the chart's background so it reads over the data; `style.stroke: 'none'` turns the halo off. |
 | `set-freeform-overlay` | Draw SVG or a clone of marks over the plot. |
 | `set-data` | Replace the rows the chart draws. |
 

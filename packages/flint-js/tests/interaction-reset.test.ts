@@ -9,6 +9,7 @@ import type { InteractionEntry } from '../src/core/interaction-spec';
 const REQUIRED: Partial<Record<string, Record<string, unknown>>> = {
     'hover-group-focus': { groupBy: 'Country' },
     'linked-brush': { groupBy: 'Country' },
+    'context-menu': { items: [{ id: 'chat', label: 'Send to chat' }] },
 };
 
 describe('reset gestures', () => {

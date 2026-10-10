@@ -443,7 +443,15 @@ export function SetWindowDemo() {
 
   useEffect(() => stop, [stop]);
   useEffect(() => {
-    reachedEvent.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    const item = reachedEvent.current;
+    const list = item?.parentElement;
+    if (!item || !list) return;
+    // Scroll the timeline alone: scrollIntoView would also scroll the page to it.
+    const itemBox = item.getBoundingClientRect();
+    const listBox = list.getBoundingClientRect();
+    const offset = itemBox.top < listBox.top ? itemBox.top - listBox.top
+      : itemBox.bottom > listBox.bottom ? itemBox.bottom - listBox.bottom : 0;
+    if (offset) list.scrollBy({ top: offset, behavior: 'smooth' });
   }, [year]);
 
   const pick = (next: number) => {

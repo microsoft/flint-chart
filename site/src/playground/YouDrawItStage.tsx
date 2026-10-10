@@ -39,7 +39,8 @@ import {
 import './interaction-candidates.css';
 import './you-draw-it-stage.css';
 
-const VIEW_SIZE = { width: 900, height: 520 };
+// Drawn smaller than the panel and scaled up, so the theme's small type reads at a comfortable size.
+const VIEW_SIZE = { width: 640, height: 380 };
 const REVEAL_DURATION_MS = 1400;
 const BOUNDS = drawBounds(COAL_SHARE_ROWS, DRAW_START_YEAR, SHARE_DOMAIN);
 const CHART_ROWS = splitRows(COAL_SHARE_ROWS, DRAW_START_YEAR);
@@ -221,8 +222,12 @@ export function YouDrawItStage() {
   return (
     <div className="ic-flint-dimpvis-shell ydi-stage">
       <div className="ic-flint-dimpvis-panel">
-        <ScaleToFit height={540} adaptiveHeight padding={8}>
+        <ScaleToFit height={540} adaptiveHeight padding={8} maxScale={1.4}>
           <div className="ic-flint-dimpvis-mount">
+            <div className="ic-toolbar">
+              <button type="button" className="ic-pill ydi-reset" data-ready={phase === 'revealed'}
+                disabled={phase === 'idle' || phase === 'revealing'} onClick={reset}>Reset</button>
+            </div>
             <FlintChart
               ref={chartRef}
               spec={spec}

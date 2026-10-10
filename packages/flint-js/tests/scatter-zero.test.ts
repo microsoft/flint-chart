@@ -57,3 +57,17 @@ describe('Scatter Plot zero baseline — EC Basic Q×Q', () => {
     expect(ec.yAxis.max).toBeGreaterThan(hMax);
   });
 });
+
+describe('Line Chart zero baseline — quantitative index axis', () => {
+  const input = {
+    data: { values: [15, 30, 45, 60, 80].map((Age, i) => ({ Age, Hours: 4 + i })) },
+    semantic_types: { Age: 'Quantity', Hours: 'Quantity' },
+    chart_spec: { chartType: 'Line Chart', encodings: { x: 'Age', y: 'Hours' }, baseSize: { width: 560, height: 360 } },
+  };
+
+  it('fits the x index to the data but keeps the measure anchored at zero', () => {
+    const vl = assembleVegaLite(input) as any;
+    expect(vl.encoding.x.scale.zero).toBe(false);
+    expect(vl.encoding.y.scale.zero).not.toBe(false);
+  });
+});

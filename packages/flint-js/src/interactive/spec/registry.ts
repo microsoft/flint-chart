@@ -24,6 +24,7 @@ import {
     type InteractionDef,
 } from '../interactions';
 import { filterControls } from '../filter-controls';
+import { contextMenu } from '../context-menu';
 import type { InteractionPresetOptions } from './types';
 import { INTERACTION_PRESET_OPTIONS, type InteractionPresetOption } from './preset-options';
 import { INTERACTION_RESET_GESTURES, NAVIGATION_RESET, NO_RESET, SELECTION_RESET, type InteractionResetGesture } from '../reset';
@@ -266,6 +267,16 @@ export const INTERACTION_PRESETS: { readonly [T in InteractionPresetType]: Inter
         supportedReset: NEVER,
         defaultReset: NEVER,
         create: filterControls,
+    },
+    'context-menu': {
+        type: 'context-menu',
+        label: 'Context menu',
+        description: 'Pick marks with a rectangle, lasso, brush, click, right-click, or long press; a menu of host actions opens beside them, and picking one emits the action with the marks.',
+        gesture: 'widget',
+        requiredOptions: ['items'],
+        supportedReset: ANY_RESET,
+        defaultReset: SELECTION_RESET,
+        create: contextMenu,
     },
 };
 

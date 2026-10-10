@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent, type ReactNode } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type DragEvent, type ReactNode } from 'react';
 import { ArrowUp, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, GripVertical, Pause, Pencil, Play, Plus, Scan, Sparkles, Trash2, X } from 'lucide-react';
 import { FlintChart } from 'flint-chart/react';
 import { expressionInterpreter } from 'vega-interpreter';
@@ -288,27 +288,37 @@ function quarterLabel(ms: number): string {
   return `${date.getUTCFullYear()} Q${Math.floor(date.getUTCMonth() / 3) + 1}`;
 }
 
-/** The brushed range in quarters, from the points the brush keeps; null when the brush is empty. */
-function brushedRange(elements: readonly { value: unknown }[]): string | null {
-  const months = elements
+/** The brushed quarters in order, each with its spending; empty when the brush is. */
+function brushedQuarters(
+  elements: readonly { value: unknown }[],
+  spending: ReadonlyMap<string, number>,
+): { label: string; value: number | undefined }[] {
+  const months = [...new Set(elements
     .map((element) => (element.value as { Month?: unknown } | undefined)?.Month)
-    .filter((month): month is number => typeof month === 'number');
-  if (months.length === 0) return null;
-  const from = quarterLabel(Math.min(...months));
-  const to = quarterLabel(Math.max(...months));
-  return from === to ? from : `${from} – ${to}`;
+    .filter((month): month is number => typeof month === 'number'))].sort((a, b) => a - b);
+  return months.map((ms) => {
+    const label = quarterLabel(ms);
+    return { label, value: spending.get(label) };
+  });
 }
 
 /** A conversation: the reader asks for the chart, the agent answers with it, and the brushed range waits above the composer as context. */
 export function SelectionChatDemo({ spec, editable }: { spec: typeof SELECTION_CHAT; editable?: boolean }) {
   const { presets } = useEditableSpec(spec);
-  const [range, setRange] = useState<string | null>(null);
+  const [quarters, setQuarters] = useState<{ label: string; value: number | undefined }[]>([]);
+  const spending = useMemo(() => new Map((spec.fixture.input.data.values ?? []).map((row) => [
+    quarterLabel(Date.parse(`${String(row.Month)}-01T00:00:00Z`)), Number(row.Spending),
+  ])), [spec.fixture.input]);
   // A brush commit names the interaction; a reset (Escape, a click on the background) names none, and the state holds what remains.
   const onChange = useCallback((change: ChartChange) => {
     if (change.interactionId !== undefined && change.interactionId !== 'brush') return;
-    if (change.phase === 'cancel') setRange(null);
-    else if (change.phase === 'commit') setRange(brushedRange(change.state.entries?.get('brush')?.elements ?? change.target?.elements ?? []));
-  }, []);
+    if (change.phase !== 'cancel' && change.phase !== 'commit') return;
+    setQuarters(change.phase === 'cancel' ? [] : brushedQuarters(
+      change.state.entries?.get('brush')?.elements ?? change.target?.elements ?? [], spending,
+    ));
+  }, [spending]);
+  const first = quarters[0]?.label;
+  const last = quarters[quarters.length - 1]?.label;
   return (
     <article className="it-example idr-section" id={`section-${spec.id}`}>
       <SectionHeader spec={spec} presets={presets} editable={editable} />
@@ -337,14 +347,24 @@ export function SelectionChatDemo({ spec, editable }: { spec: typeof SELECTION_C
           </div>
         </div>
         <div className="idr-chat-window-foot">
-          <div className="idr-chat-context-chips">
-            {range && (
-              <span className="idr-chat-context-chip">
+          {quarters.length > 0 && (
+            <div className="idr-chat-context-block">
+              <p>
                 <Scan size={12} strokeWidth={2} aria-hidden="true" />
-                <span>Selection: {range}</span>
-              </span>
-            )}
-          </div>
+                <strong>Agent context:</strong> the user selected {quarters.length === 1
+                  ? first
+                  : `${quarters.length} quarters, ${first} – ${last}`}
+              </p>
+              <p className="idr-chat-context-points">
+                {quarters.map((quarter, index) => (
+                  <Fragment key={quarter.label}>
+                    {index > 0 && <span className="idr-chat-context-sep" aria-hidden="true">|</span>}
+                    {`${quarter.label} ${quarter.value !== undefined ? `$${quarter.value.toFixed(2)}B` : ''}`.trim()}
+                  </Fragment>
+                ))}
+              </p>
+            </div>
+          )}
           <div className="idr-chat-window-composer" aria-hidden="true">
             <span>Interact with the chart and ask questions …</span>
             <span className="idr-chat-window-send"><ArrowUp size={13} strokeWidth={2.2} /></span>

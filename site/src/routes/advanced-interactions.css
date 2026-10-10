@@ -16,6 +16,35 @@
 
 .ia-page .bespoke-case-header .ia-source a { color: #176a92; }
 
+.ia-page .bespoke-case-header h3 {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.35;
+  font-weight: 700;
+}
+
+/* Case names are longer than the gallery's preset names: they wrap, and the icon keeps its size. */
+.ia-page .ig-action-rail button {
+  height: auto;
+  min-height: 26px;
+  padding-block: 5px;
+  line-height: 1.3;
+  text-align: left;
+  white-space: normal;
+}
+.ia-page .ig-action-rail button svg { flex: none; }
+
+/* The wrapped rail keeps to the reading column. */
+@media (max-width: 1319px), (max-height: 764px) {
+  .ia-page .ig-action-rail { width: min(100%, 832px); }
+}
+
+/* The wrapped rail keeps its names on a phone, where the gallery's icon-only rail would not fit them. */
+@media (max-width: 520px) {
+  .ia-page .ig-action-rail button { justify-content: flex-start; padding: 0 8px; }
+  .ia-page .ig-action-rail button span { display: inline; }
+}
+
 /* The case header names the demo; the embedded section's own header would repeat it. */
 .ia-page .bespoke-case .it-example-header { display: none; }
 

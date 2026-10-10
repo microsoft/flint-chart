@@ -112,12 +112,13 @@ export interface MarkClipRect {
 /**
  * The plot-space rect Vega clips a `clip: true` mark to: its enclosing group.
  * Vega keeps the out-of-domain items of a clipped mark in the scenegraph, so a
- * restyle drawn from scene items has to apply the same clip itself.
+ * restyle drawn from scene items has to apply the same clip itself. A series'
+ * line sits in a faceted group that holds the clip instead, to the same rect.
  */
 export function markClipRect(item: any): MarkClipRect | undefined {
     const group = item?.mark?.group;
     const offset = item?.interactionGeometry?.offset as PlotPoint | undefined;
-    if (item?.mark?.clip !== true || !offset) return undefined;
+    if ((item?.mark?.clip !== true && group?.mark?.clip !== true) || !offset) return undefined;
     if (typeof group?.width !== 'number' || typeof group?.height !== 'number') return undefined;
     return { x: offset.x, y: offset.y, width: group.width, height: group.height };
 }

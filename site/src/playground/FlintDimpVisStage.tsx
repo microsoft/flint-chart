@@ -99,7 +99,7 @@ function trajectoryOverlayUpdate(series: CountrySeries, year: number): ChartUpda
             y: { field: 'Life' },
             text: { field: 'YearLabel' },
           },
-          style: { fill: '#69737d', fontSize: 144, fontWeight: 'bold', opacity: 0.11 },
+          style: { fill: '#69737d', fontSize: 144, fontWeight: 'bold', opacity: 0.11, stroke: 'none' },
         },
       },
       {

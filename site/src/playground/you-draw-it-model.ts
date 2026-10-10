@@ -225,7 +225,7 @@ export function scoreGuess(
   };
 }
 
-export function describeScore(score: GuessScore): { headline: string; detail: string } {
+export function describeScore(score: GuessScore): { headline: string; direction: string; worst: string } {
   const headline = `Your line was off by ${score.meanAbsError.toFixed(1)} points on average.`;
   const direction = score.meanSignedError > 1
     ? 'You drew coal higher than it went.'
@@ -233,7 +233,7 @@ export function describeScore(score: GuessScore): { headline: string; detail: st
       ? 'You drew coal lower than it went.'
       : 'You stayed close on both sides.';
   const worst = `Largest miss in ${score.worstYear}: ${Math.abs(score.worstError).toFixed(1)} points.`;
-  return { headline, detail: `${direction} ${worst}` };
+  return { headline, direction, worst };
 }
 
 /** The hidden truth up to a fraction of the way from the start year to the end year. */
@@ -338,17 +338,6 @@ export function drawnLineUpdate(path: DrawnPath, finished: boolean, bounds?: Dra
     },
     {
       op: 'set-overlay',
-      name: 'drawn-points',
-      value: rows.length < 2 ? null : {
-        mark: 'point',
-        role: 'drawn-point',
-        data: { values: rows.slice(1).map(overlayRow) },
-        encodings: { x: { field: 'Year' }, y: { field: 'Share' } },
-        style: { fill: DRAWN_STROKE, stroke: '#ffffff', strokeWidth: 1, pointRadius: 3 },
-      },
-    },
-    {
-      op: 'set-overlay',
       name: 'drawn-front',
       value: finished ? null : {
         mark: 'point',
@@ -419,7 +408,8 @@ export function scoreUpdate(
   const roomInGap = Math.abs(drawnEnd - finalTruth.Share) >= 3;
   const drawnDy = drawnAbove ? (roomInGap ? 14 : -8) : (roomInGap ? -8 : 14);
   const actualDy = drawnAbove ? 14 : -8;
-  const labelYear = bounds.startYear + ((bounds.endYear - bounds.startYear) * 0.08);
+  // Above the line where it has already fallen, so the three short lines clear it and the plot edge.
+  const labelYear = bounds.startYear - 2;
   const labelValue = bounds.maxValue - ((bounds.maxValue - bounds.minValue) * 0.04);
   return {
     id: SCORE_UPDATE_ID,
@@ -441,9 +431,20 @@ export function scoreUpdate(
         value: {
           mark: 'text',
           role: 'score',
-          data: { values: [{ Year: yearToDate(labelYear), Share: labelValue, Label: text.detail }] },
+          data: { values: [{ Year: yearToDate(labelYear), Share: labelValue, Label: text.direction }] },
           encodings: { x: { field: 'Year' }, y: { field: 'Share' }, text: { field: 'Label' } },
           style: { fill: '#666666', fontSize: 11, textAlign: 'start', dy: 16 },
+        },
+      },
+      {
+        op: 'set-overlay',
+        name: 'score-worst',
+        value: {
+          mark: 'text',
+          role: 'score',
+          data: { values: [{ Year: yearToDate(labelYear), Share: labelValue, Label: text.worst }] },
+          encodings: { x: { field: 'Year' }, y: { field: 'Share' }, text: { field: 'Label' } },
+          style: { fill: '#666666', fontSize: 11, textAlign: 'start', dy: 30 },
         },
       },
       {

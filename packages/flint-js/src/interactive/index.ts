@@ -169,6 +169,8 @@ export type {
     FilterValue,
     FilterWidget,
 } from './filter-controls';
+export { contextMenu, isContextMenu } from './context-menu';
+export type { ContextMenuDef, ContextMenuGesture, ContextMenuItem, ContextMenuOptions } from './context-menu';
 export { INTERACTION_PRESET_TYPES } from '../core/interaction-spec';
 export type {
     InteractionEntry,

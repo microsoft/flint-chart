@@ -9,7 +9,7 @@ import {
 import { FlintChart, type FlintChartHandle } from 'flint-chart/react';
 import { ScaleToFit } from '../components/ScaleToFit';
 import pisa from '../data/pisa-oecd23-trends.json';
-import { dateToYear, extendPath, type DrawnPath } from './you-draw-it-model';
+import { dateToYear, extendPath, frontSample, type DrawnPath } from './you-draw-it-model';
 import {
   DRAW_INTERACTION_ID,
   HIDE_UPDATE_ID,
@@ -50,6 +50,24 @@ const TRUTH_ROWS: TrendRow[] = pisa.average.map((row) => ({
 const CHART_ROWS = splitRows(TRUTH_ROWS, DRAW_START_YEAR);
 const BOUNDS = boundsBySubject(TRUTH_ROWS, DRAW_START_YEAR, SCORE_DOMAIN);
 const HIDE_FUTURE = hideFutureUpdate();
+const FIRST_YEAR = Math.min(...TRUTH_ROWS.map((row) => row.Year));
+/** How close, as a share of the plot, a stroke must start to a line's end to draw that line. */
+const GRAB_DISTANCE = 0.05;
+
+/** The subject whose line ends nearest the stroke's first point: its last drawn point or its anchor. */
+function subjectAtStrokeStart(paths: PathsBySubject, start: { year: number; value: number }): Subject | null {
+  let best: { subject: Subject; distance: number } | null = null;
+  for (const subject of SUBJECTS) {
+    const bounds = BOUNDS[subject];
+    for (const end of [frontSample(paths[subject]), paths[subject].samples[0]]) {
+      const dx = (start.year - end.year) / (bounds.endYear - FIRST_YEAR);
+      const dy = (start.value - end.value) / (bounds.maxValue - bounds.minValue);
+      const distance = Math.hypot(dx, dy);
+      if (distance <= GRAB_DISTANCE && (!best || distance < best.distance)) best = { subject, distance };
+    }
+  }
+  return best?.subject ?? null;
+}
 
 type ThemeChoice = 'economist' | 'default';
 type RevealPayload = { progress: number };
@@ -72,6 +90,8 @@ function chartInput(theme: ThemeChoice, ink: Readonly<Record<Subject, string>>):
     theme_spec: {
       ...(theme === 'economist' ? { extends: 'economist' } : {}),
       ink: { series: { categorical: [ink.Science, ink.Reading, ink.Mathematics] } },
+      // The real lines carry the weight of the reader's dashed ones beside them.
+      marks: { strokeWeight: 2.5 },
     },
     options: { addTooltips: false },
     chart_spec: {
@@ -100,6 +120,7 @@ export function PisaDrawStage({ theme, ink }: PisaDrawStageProps) {
   const chartRef = useRef<FlintChartHandle>(null);
   const committedRef = useRef<PathsBySubject>(anchorPaths(BOUNDS));
   const activeRef = useRef<Subject | null>(null);
+  const strokeSubjectRef = useRef<Subject | null | undefined>(undefined);
   const phaseRef = useRef<DrawPhase>('pick');
   const [phase, setPhase] = useState<DrawPhase>('pick');
   const [active, setActive] = useState<Subject | null>(null);
@@ -126,8 +147,20 @@ export function PisaDrawStage({ theme, ink }: PisaDrawStageProps) {
       handle(event): ChartUpdate | null {
         if (event.action !== 'select-lasso') return null;
         if (event.phase === 'start') return null;
-        const subject = activeRef.current;
         const locked = phaseRef.current === 'revealing' || phaseRef.current === 'revealed';
+        const candidates = candidatesFromDomainPoints(event.geometry.domain?.points);
+        // The stroke's first point decides its line: a line's end grabs it, anywhere else draws the picked subject.
+        if (strokeSubjectRef.current === undefined && candidates.length > 0 && !locked) {
+          const grabbed = subjectAtStrokeStart(committedRef.current, candidates[0]);
+          if (grabbed && grabbed !== activeRef.current) {
+            updateActive(grabbed);
+            updatePhase('drawing');
+          }
+          strokeSubjectRef.current = grabbed ?? activeRef.current;
+        }
+        const subject = strokeSubjectRef.current ?? activeRef.current;
+        // A lasso sends no start event, so the stroke's line is forgotten as it ends.
+        if (event.phase === 'commit' || event.phase === 'cancel') strokeSubjectRef.current = undefined;
         if (locked || !subject) {
           // Restate every retained line so the gesture's own preview cannot replace them.
           return event.phase === 'cancel' ? null : drawnLinesUpdate(committedRef.current, null, BOUNDS, ink, locked);
@@ -136,7 +169,6 @@ export function PisaDrawStage({ theme, ink }: PisaDrawStageProps) {
           setPaths(committedRef.current);
           return null;
         }
-        const candidates = candidatesFromDomainPoints(event.geometry.domain?.points);
         if (candidates.length === 0) {
           return drawnLinesUpdate(committedRef.current, subject, BOUNDS, ink, false);
         }
@@ -160,7 +192,7 @@ export function PisaDrawStage({ theme, ink }: PisaDrawStageProps) {
       },
     });
     return [draw, reveal];
-  }, [ink]);
+  }, [ink, updateActive, updatePhase]);
 
   // The host's layers: hidden future rows, then focus and prompt while drawing.
   const updates = useMemo(() => {

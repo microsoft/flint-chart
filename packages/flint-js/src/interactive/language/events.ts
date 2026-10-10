@@ -125,7 +125,8 @@ export type CanvasInteractionAction =
     | 'inspect-xy'
     | 'select-lasso'
     | 'focus-element'
-    | 'activate-element';
+    | 'activate-element'
+    | 'menu-select';
 
 export type PlotGeometry =
     | { kind: 'point'; point: PlotPoint }
@@ -157,4 +158,6 @@ export interface CanvasInteractionEvent {
     modifiers?: InteractionModifiers;
     /** Set on `focus-element` from accessible navigation: what the focused element is and represents. */
     description?: AccessibleElementDescription;
+    /** Set on `menu-select` from a context menu: the id of the item the reader picked. */
+    item?: string;
 }

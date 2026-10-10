@@ -8,7 +8,7 @@ import markup from 'react-syntax-highlighter/dist/esm/languages/prism/markup';
 import typescript from 'react-syntax-highlighter/dist/esm/languages/prism/typescript';
 import tsx from 'react-syntax-highlighter/dist/esm/languages/prism/tsx';
 import oneDark from 'react-syntax-highlighter/dist/esm/styles/prism/one-dark';
-import oneLight from 'react-syntax-highlighter/dist/esm/styles/prism/one-light';
+import coldarkCold from 'react-syntax-highlighter/dist/esm/styles/prism/coldark-cold';
 import { siteTheme } from '../shared/theme';
 
 SyntaxHighlighter.registerLanguage('typescript', typescript);
@@ -40,6 +40,11 @@ const defaultBlockStyle: CSSProperties = {
   borderRadius: siteTheme.radius,
   fontSize: 13,
   lineHeight: 1.5,
+};
+
+// Coldark's own block colour is a blue-grey; light blocks keep the site's neutral code surface.
+const lightBlockStyle: CSSProperties = {
+  background: '#f6f8fa',
 };
 
 const plainPreStyle: CSSProperties = {
@@ -79,22 +84,25 @@ export function CodeBlock({
   customStyle,
   highlightLines,
   variant = 'dark',
+  wrapLongLines = false,
 }: {
   language?: string;
   children: string;
   customStyle?: CSSProperties;
   highlightLines?: readonly number[];
   variant?: 'dark' | 'light';
+  wrapLongLines?: boolean;
 }) {
   const Highlighter = SyntaxHighlighter as unknown as React.ElementType;
   const highlighted = new Set(highlightLines);
   return (
     <Highlighter
-      style={variant === 'light' ? oneLight : oneDark}
+      style={variant === 'light' ? coldarkCold : oneDark}
       language={language}
       PreTag="div"
-      customStyle={{ ...defaultBlockStyle, ...customStyle }}
+      customStyle={{ ...defaultBlockStyle, ...(variant === 'light' ? lightBlockStyle : {}), ...customStyle }}
       wrapLines={highlighted.size > 0}
+      wrapLongLines={wrapLongLines}
       lineProps={(lineNumber: number) =>
         highlighted.has(lineNumber)
           ? {
@@ -111,7 +119,7 @@ export function CodeBlock({
           : {}
       }
       codeTagProps={{
-        style: { fontFamily: siteTheme.fontMono },
+        style: { fontFamily: siteTheme.fontMono, lineHeight: 'inherit' },
       }}
     >
       {children}

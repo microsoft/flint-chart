@@ -156,9 +156,10 @@
   margin: 0 auto;
 }
 
+/* Gallery type scale, shared with the Interaction Presets page (click-focus-lab.css). */
 .bespoke-public-page .bespoke-heading h1 {
-  margin: 0 0 24px;
-  font-size: 36px;
+  margin: 0 0 20px;
+  font-size: 32px;
   line-height: 1.2;
   font-weight: 700;
   letter-spacing: 0;
@@ -168,8 +169,8 @@
   max-width: none;
   margin: 0 0 32px;
   color: #1f2328;
-  font-size: 16px;
-  line-height: 1.75;
+  font-size: 15px;
+  line-height: 1.7;
 }
 
 .bespoke-public-page .bespoke-grid { gap: 0; }
@@ -193,8 +194,8 @@
 }
 
 .bespoke-public-page .bespoke-case-header h2 {
-  font-size: 22px;
-  line-height: 1.4;
+  font-size: 20px;
+  line-height: 1.35;
   font-weight: 700;
 }
 
@@ -202,7 +203,7 @@
   max-width: none;
   margin: 8px 0 0;
   color: #40474e;
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.65;
 }
 

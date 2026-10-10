@@ -459,6 +459,8 @@ export function computeZeroDecision(
 ): ZeroDecision {
     const isBarLike = ['bar', 'area', 'rect'].includes(markType);
     const isScatterMark = markType === 'circle' || markType === 'point';
+    // A line runs along x, so x is its index, not a measured length.
+    const isLineIndex = (markType === 'line' || markType === 'trail') && channel === 'x';
     const isPositional = ['x', 'y'].includes(channel);
     const entry = getRegistryEntry(semanticType);
     const zeroClass = getZeroClass(semanticType);
@@ -470,10 +472,11 @@ export function computeZeroDecision(
         if (isBarLike) {
             return { zero: true, domainPadFraction: 0, zeroClass, forced: true, uncertain: false };
         }
-        // Scatter (circle/point position): the read is correlation / cloud shape,
-        // not distance from zero — data-fit is the conventional default. Offer
-        // Zero X/Y as an opt-in toggle when the user wants a zero reference.
-        if (isPositional && isScatterMark) {
+        // Scatter (circle/point position) and a line's index axis: the read is
+        // shape along the data, not distance from zero — data-fit is the
+        // conventional default. Offer Zero X/Y as an opt-in toggle when the
+        // user wants a zero reference.
+        if (isPositional && (isScatterMark || isLineIndex)) {
             if (values && values.length > 0 && Math.min(...values) <= 0) {
                 return { zero: true, domainPadFraction: 0, zeroClass, forced: true, uncertain: false };
             }

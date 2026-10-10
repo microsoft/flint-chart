@@ -1256,6 +1256,7 @@ export const ACCESSIBLE_NAVIGATION_HELP = [
     'Up and down: previous and next sibling in vertical order.',
     'Both arrow pairs visit every sibling, including overlapping items, and stop at the ends.',
     'Enter: go into the focused element. Escape or Backspace: go back out.',
+    'Tab and Shift+Tab: next and previous element at this level; past either end, Tab moves on from the chart.',
     'Home and End: first and last element. Page Up and Page Down: jump ten elements.',
     'Space: activate the focused mark, legend item, or axis label.',
     'T: title. X and Y: axes. L: legend. F: facet headers. D: data. I: repeat. H: this help.',
@@ -1267,10 +1268,11 @@ export type AccessibleCommand =
     | 'jump-title' | 'jump-x' | 'jump-y' | 'jump-legend' | 'jump-headers' | 'jump-data';
 
 export function accessibleCommandForKey(event: {
-    key: string; altKey?: boolean; ctrlKey?: boolean; metaKey?: boolean;
+    key: string; altKey?: boolean; ctrlKey?: boolean; metaKey?: boolean; shiftKey?: boolean;
 }): AccessibleCommand | undefined {
     if (event.altKey || event.ctrlKey || event.metaKey) return undefined;
     switch (event.key) {
+        case 'Tab': return event.shiftKey ? 'previous' : 'next';
         case 'ArrowRight': return 'right';
         case 'ArrowLeft': return 'left';
         case 'ArrowDown': return 'down';

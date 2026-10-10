@@ -9,6 +9,7 @@ import type {
 } from './types';
 import { isExternalInteraction, type FlintInteractionEventDetail } from './interactions';
 import { describeFilterFields, isFilterControls, type FilterControlsDef, type FilterControlsPayload } from './filter-controls';
+import { isContextMenu, mountContextMenu } from './context-menu';
 import { mountFilterEmptyNotice, mountFilterStrip, resolveFilterPlacement } from './filter-controls-dom';
 import type { ChartUpdate, ChartUpdateResult } from './language/updates';
 
@@ -252,6 +253,9 @@ export function mountInteractiveChartSurface(
     applyStyles(chart, { gridColumn: '1', gridRow: '1', minWidth: '0' });
     body.append(chart);
     container.replaceChildren(root);
+    for (const definition of interactions.filter(isContextMenu)) {
+        if (definition.contextMenu.options.render !== false) strips.push(mountContextMenu(root, definition));
+    }
 
     const scheduleRender = (): void => {
         if (!renderer || updateTimer !== undefined || destroyed) return;

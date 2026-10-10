@@ -778,6 +778,14 @@ export const heatmapDef: ChartTemplateDef = {
     },
     instantiate: (spec, ctx) => {
         defaultBuildEncodings(spec, ctx.resolvedEncodings);
+        // Cells tile the plot, so a continuous axis's grid would run through the middle
+        // of each banded cell; discrete axes draw no grid already.
+        for (const channel of ['x', 'y'] as const) {
+            const encoding = spec.encoding?.[channel];
+            if (encoding && encoding.axis !== null && (encoding.type === 'temporal' || encoding.type === 'quantitative')) {
+                encoding.axis = { ...encoding.axis, grid: false };
+            }
+        }
         // Apply color scheme from chart properties
         const config = ctx.chartProperties;
         const showTextLabels = !!config?.showTextLabels;
