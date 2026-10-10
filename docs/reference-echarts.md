@@ -131,7 +131,7 @@ _No template-specific parameters._
 
 ### ![](chart-icon-line.svg) Line Chart
 
-**Encoding channels:** `x`, `y`, `color`, `opacity`, `column`, `row`
+**Encoding channels:** `x`, `y`, `color`, `strokeDash`, `opacity`, `column`, `row`
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
