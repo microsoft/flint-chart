@@ -20,6 +20,7 @@ const pages: NavEntry[] = [
     children: [
       { to: 'labs', label: 'Overview' },
       { to: 'overflow-viewport', label: 'Overflow viewport' },
+      { to: 'zoom-clipping', label: 'Zoom clipping' },
       { to: 'band-stretching', label: 'Band stretching' },
       { to: 'axis-label', label: 'Axis labels' },
       { to: 'calendar-axis', label: 'Calendar axes' },

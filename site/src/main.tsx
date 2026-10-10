@@ -29,6 +29,7 @@ import { CalendarAxisLab } from './playground/CalendarAxisLab';
 import { ReleaseExamples100 } from './playground/release-examples/1.0.0';
 import { TestExamples } from './playground/release-examples/test-examples';
 import { OverflowViewportLab } from './playground/OverflowViewportLab';
+import { ZoomClippingLab } from './playground/ZoomClippingLab';
 import { FlintInteractive, InteractionGallery } from './routes/InteractionGallery';
 import { AdvancedInteractions } from './routes/AdvancedInteractions';
 import { ClickFocusLab } from './playground/ClickFocusLab';
@@ -110,6 +111,7 @@ function AppRoutes({ locale }: { locale: Locale }) {
           </Route>
           <Route path="wrapping-examples" element={<Navigate to="../release-examples/1.0.0" replace />} />
           <Route path="overflow-viewport" element={<OverflowViewportLab />} />
+          <Route path="zoom-clipping" element={<ZoomClippingLab />} />
           <Route path="click-focus" element={<ClickFocusLab />} />
           <Route path="annotation-lab" element={<AnnotationLab />} />
           <Route path="interaction-coverage" element={<InteractionCoverageLab />} />

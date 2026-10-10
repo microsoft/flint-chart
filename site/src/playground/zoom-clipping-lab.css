@@ -1,0 +1,37 @@
+.zc-demo .ov-backends button:hover {
+  color: #1f2328;
+  background: #fff;
+}
+
+.zc-demo .ov-stage {
+  min-height: 0;
+}
+
+.zc-demo .ov-interactive-mount {
+  display: flex;
+  justify-content: center;
+}
+
+.zc-notes {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 6px 12px;
+  margin: 14px 0 0;
+  color: #4f5961;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.zc-notes dt {
+  color: #737d86;
+  font-weight: 600;
+}
+
+.zc-notes dd {
+  margin: 0;
+}
+
+.zc-readout {
+  color: #1f2328;
+  font-variant-numeric: tabular-nums;
+}
