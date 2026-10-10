@@ -3,7 +3,7 @@ import { useTranslation, Trans } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { LocaleLink } from '../i18n/LocaleLink';
 import { TEST_GENERATORS, makeField, makeEncodingItem, buildMetadata, type TestCase } from 'flint-chart/test-data';
-import { INTERACTION_PRESET_TYPES, THEME_PRESETS, type ChartAssemblyInput } from 'flint-chart';
+import { INTERACTION_PRESET_TYPES, THEME_PRESETS, type ChartAssemblyInput, type InteractionSpec } from 'flint-chart';
 import { FlintChart } from 'flint-chart/react';
 import { SiteNavBar, MicrosoftDisclosures, GitHubIcon } from '../components/SiteShell';
 import { WallChart } from '../components/WallChart';
@@ -16,6 +16,9 @@ import { testCaseToFlintSummary, testCaseToAssemblyInput, withHouse } from '../s
 import { buildPanelModel, withoutEchoedOverrides } from '../shared/chart-options';
 import { CHART_CATEGORIES } from '../shared/chart-categories';
 import { MOVIE_RATINGS } from './movie-ratings-data';
+import gapminderCsv from '../assets/gapminder-five-year.csv?raw';
+import classicDatasets from '../data/classic-datasets.json';
+import { csvParseRows } from 'd3-dsv';
 import {
   ALL_BACKENDS,
   BACKEND_LABELS,
@@ -336,7 +339,10 @@ type ShowcaseExampleKey =
   | 'sunburst'
   | 'donut'
   | 'regression'
-  | 'sortedBar';
+  | 'sortedBar'
+  | 'gapminder'
+  | 'penguins'
+  | 'unemployment';
 
 interface ShowcaseExample {
   id: string;
@@ -351,6 +357,8 @@ interface ShowcaseExample {
   canvasSize?: { width: number; height: number };
   /** Showcase-only defaults applied without changing the underlying gallery case. */
   defaultChartProperties?: Record<string, unknown>;
+  /** Presets the chart mounts with; only the Vega-Lite backend runs them. */
+  interactions?: InteractionSpec['interactions'];
 }
 
 /* ---- Chart-property examples (real data-formulator "movies" dataset) ---- */
@@ -435,6 +443,48 @@ function moviesSortedBar(): TestCase {
   };
 }
 
+/** Every country in Gapminder's 2007 snapshot, as a Rosling bubble chart. */
+function gapminder2007(): TestCase {
+  const data = csvParseRows(gapminderCsv).slice(1)
+    .filter(([, year]) => year === '2007')
+    .map(([Country, , pop, Continent, life, gdp]) => ({
+      Country,
+      Continent,
+      'GDP per capita': Math.round(Number(gdp)),
+      'Life expectancy': Number(life),
+      'Population (M)': Math.round(Number(pop) / 1e5) / 10,
+    }));
+  const metadata = buildMetadata(data);
+  metadata.Country.semanticType = 'Country';
+  return {
+    title: 'Gapminder 2007',
+    description: '',
+    tags: [],
+    chartType: 'Scatter Plot',
+    data,
+    fields: ['Country', 'Continent', 'GDP per capita', 'Life expectancy', 'Population (M)'].map((name) => makeField(name)),
+    metadata,
+    encodingMap: {
+      x: makeEncodingItem('GDP per capita'),
+      y: makeEncodingItem('Life expectancy'),
+      size: makeEncodingItem('Population (M)'),
+      color: makeEncodingItem('Continent'),
+    },
+    chartProperties: { logScale_x: true },
+  };
+}
+
+/** All 342 measured Palmer penguins, in place of the gallery case's small sample. */
+function palmerPenguins(): TestCase {
+  const sample = TEST_GENERATORS['Scatter Plot']()
+    .find((testCase) => testCase.title === 'Palmer Penguins — flipper length vs body mass')!;
+  const { columns, rows } = classicDatasets.penguins;
+  const data = rows.map((row) => Object.fromEntries(columns.map((column, index) => [column, row[index]])))
+    .map(({ Species, 'Flipper length (mm)': flipper, 'Body mass (g)': mass }) =>
+      ({ Species, 'Flipper length (mm)': flipper, 'Body mass (g)': mass }));
+  return { ...sample, data };
+}
+
 /**
  * The canvas every showcase example is drawn on.
  *
@@ -460,6 +510,7 @@ const SHOWCASE_EXAMPLES: ShowcaseExample[] = [
     exampleKey: 'waterfall',
     generator: 'Omni: Waterfall',
     index: 0,
+    interactions: [{ type: 'click-highlight' }],
   },
   {
     id: 'line',
@@ -470,12 +521,27 @@ const SHOWCASE_EXAMPLES: ShowcaseExample[] = [
     // single row: it compiles to a 2.62 aspect against a pane of 1.21 and fills
     // only 46% of the pane's height, where 2x2 fills 95%.
     defaultChartProperties: { facetColumns: 2 },
+    // Six series in four panels: following one platform across panels reads better than a readout.
+    interactions: [{ type: 'hover-group-focus', options: { groupBy: 'gameType' } }, { type: 'legend-toggle' }],
+  },
+  {
+    id: 'gapminder',
+    exampleKey: 'gapminder',
+    testCase: gapminder2007(),
+    interactions: [{ type: 'click-highlight' }, { type: 'brush-zoom' }],
   },
   {
     id: 'heatmap',
     exampleKey: 'heatmap',
     generator: 'Heatmap',
     testTitle: 'Average monthly temperature by city',
+    interactions: [{ type: 'hover-group-focus', options: { groupBy: 'City' } }],
+  },
+  {
+    id: 'penguins',
+    exampleKey: 'penguins',
+    testCase: palmerPenguins(),
+    interactions: [{ type: 'lasso-select' }, { type: 'legend-toggle' }],
   },
   {
     id: 'sunburst',
@@ -484,19 +550,29 @@ const SHOWCASE_EXAMPLES: ShowcaseExample[] = [
     index: 0,
   },
   {
+    id: 'unemployment',
+    exampleKey: 'unemployment',
+    generator: 'Line Chart',
+    testTitle: 'US unemployment rate, 2000–2023 (%)',
+    interactions: [{ type: 'brush-x' }, { type: 'inspect-index' }],
+  },
+  {
     id: 'donut',
     exampleKey: 'donut',
     testCase: moviesDonut(),
+    interactions: [{ type: 'click-highlight', options: { targets: ['mark', 'legend'] } }],
   },
   {
     id: 'regression',
     exampleKey: 'regression',
     testCase: moviesRegression(),
+    interactions: [{ type: 'select' }],
   },
   {
     id: 'sorted-bar',
     exampleKey: 'sortedBar',
     testCase: moviesSortedBar(),
+    interactions: [{ type: 'click-highlight', options: { targets: ['mark', 'discreteAxis'] } }],
   },
 ];
 
@@ -573,14 +649,20 @@ function HeroShowcase() {
   );
   const canvasSize = example.canvasSize ?? SHOWCASE_CANVAS;
   const galleryTestCase = useTestCase(example.generator ?? '', example.index ?? 0, example.testTitle);
-  const testCase = example.testCase ?? galleryTestCase;
+  const baseTestCase = example.testCase ?? galleryTestCase;
   const supported = useMemo(
-    () => (testCase ? getSupportedBackends(testCase.chartType) : []),
-    [testCase],
+    () => (baseTestCase ? getSupportedBackends(baseTestCase.chartType) : []),
+    [baseTestCase],
   );
   // Keep the chosen backend when the new example supports it; otherwise fall
   // back to that example's first available backend.
   const backend = supported.includes(selectedBackend) ? selectedBackend : supported[0] ?? 'vegalite';
+  const testCase = useMemo(
+    () => (baseTestCase && example.interactions && backend === 'vegalite'
+      ? { ...baseTestCase, interactionSpec: { interactions: example.interactions } }
+      : baseTestCase),
+    [baseTestCase, example.interactions, backend],
+  );
   const effectiveOptions = useMemo(
     () => ({ ...example.defaultChartProperties, ...tempOptions }),
     [example.defaultChartProperties, tempOptions],
@@ -837,7 +919,11 @@ function FlintSpecCode({
     for (const key of expanded) {
       if (chartSpecOut[key] && typeof chartSpecOut[key] === 'object') chartSpecOut[key] = `__${key}__`;
     }
-    let text = stringify({ ...withCanvas, chart_spec: chartSpecOut }, { maxLength: 52 });
+    let text = stringify({
+      ...withCanvas,
+      chart_spec: chartSpecOut,
+      ...(testCase.interactionSpec ? { interaction_spec: testCase.interactionSpec } : {}),
+    }, { maxLength: 52 });
     for (const key of expanded) {
       const value = (withCanvas.chart_spec as Record<string, unknown>)[key];
       if (value && typeof value === 'object') {

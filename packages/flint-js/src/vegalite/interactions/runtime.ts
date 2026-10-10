@@ -65,9 +65,11 @@ import {
     indexInspectAcquisition,
     legendSemanticTarget,
     renderHit,
+    rendererElement,
     rendererPlotOrigin,
     sceneItems,
     shapeReadingBounds,
+    vegaRendererOrigin,
     type RendererCoordinateSpace,
     type LegendHitIdentity,
     type SpatialDirection,
@@ -689,9 +691,9 @@ export function mountVegaInteractions(
     };
 
     const coordinateSpace = (): RendererCoordinateSpace => {
-        const renderer = container.querySelector('canvas, svg') as HTMLElement | null;
+        const renderer = rendererElement(container);
         const rect = (renderer ?? container).getBoundingClientRect();
-        const [viewOriginX, viewOriginY] = view.origin();
+        const viewOrigin = vegaRendererOrigin(view);
         const svgConstructor = container.ownerDocument.defaultView?.SVGSVGElement;
         const svg = svgConstructor && renderer instanceof svgConstructor ? renderer : undefined;
         // SVG autosize/padding can make View#origin differ from the renderer's
@@ -701,7 +703,7 @@ export function mountVegaInteractions(
         // A canvas's layout size is its renderer size; its client rect also carries any ancestor CSS scale.
         const logicalWidth = svg?.viewBox.baseVal.width || renderer?.offsetWidth || rect.width;
         const logicalHeight = svg?.viewBox.baseVal.height || renderer?.offsetHeight || rect.height;
-        const origin = rendererPlotOrigin(rootMatrix, { x: viewOriginX, y: viewOriginY });
+        const origin = rendererPlotOrigin(rootMatrix, viewOrigin);
         const originX = origin.x;
         const originY = origin.y;
         const viewWidth = view.width();
@@ -1331,7 +1333,8 @@ export function mountVegaInteractions(
         await view.runAsync();
         if (layoutChanged) onLayoutChange?.();
         restoreAxisStyles();
-        const rendererSvg = container.querySelector('svg') as SVGSVGElement | null;
+        const renderer = rendererElement(container);
+        const rendererSvg = renderer?.tagName.toLowerCase() === 'svg' ? renderer : null;
         if (rendererSvg) {
             for (const item of axisItems(view, plan.axisTargets)) {
                 const identity = axisTargetIdentity(item, plan.axisTargets);
@@ -3054,7 +3057,7 @@ export function mountVegaInteractions(
     // itself being sized independently of it.
     resizeObserver?.observe(container);
     const observeRenderer = (): void => {
-        const renderer = container.querySelector('canvas, svg');
+        const renderer = rendererElement(container);
         if (!renderer || renderer === observedRenderer) return;
         if (observedRenderer) resizeObserver?.unobserve(observedRenderer);
         resizeObserver?.observe(renderer);

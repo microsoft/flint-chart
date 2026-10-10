@@ -505,6 +505,24 @@
         "caption": "Film genres ordered by count, from the most common to the least.",
         "title": "Films by genre",
         "subtitle": "Number of releases, most common to least"
+      },
+      "gapminder": {
+        "label": "Bubble scatter",
+        "caption": "Income against life expectancy; click a country to highlight it, drag to zoom.",
+        "title": "Richer countries tend to live longer",
+        "subtitle": "Life expectancy against GDP per capita, 142 countries in 2007; bubble size is population"
+      },
+      "penguins": {
+        "label": "Clustered scatter",
+        "caption": "Three penguin species; lasso a cluster or toggle a species in the legend.",
+        "title": "Three species, three clusters",
+        "subtitle": "Body mass against flipper length, 342 Palmer Station penguins"
+      },
+      "unemployment": {
+        "label": "Line with brush",
+        "caption": "Unemployment over two decades; brush a span of years or hover to read a year.",
+        "title": "Two shocks in two decades",
+        "subtitle": "U.S. unemployment rate, 2000–2023, percent"
       }
     }
   },

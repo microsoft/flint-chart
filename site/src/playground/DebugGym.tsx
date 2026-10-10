@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { assembleECharts, assembleVegaLite, type ChartAssemblyInput } from 'flint-chart';
 import { mountChart, type ChartUpdate } from 'flint-chart/interactive';
-import { genEChartsSlopeTests } from 'flint-chart/test-data';
+import { genEChartsSlopeTests, TEST_GENERATORS } from 'flint-chart/test-data';
 import { compile } from 'vega-lite';
 import { parse, View } from 'vega';
 import { expressionInterpreter } from 'vega-interpreter';
 import { EChartsView } from '../components/EChartsView';
 import { ScaleToFit } from '../components/ScaleToFit';
 import { FlintView } from '../components/FlintView';
-import { testCaseToAssemblyInput } from '../shared/test-case-utils';
+import { testCaseToAssemblyInput, withHouse } from '../shared/test-case-utils';
 import { siteTheme } from '../shared/theme';
 
 const rows = [
@@ -384,6 +384,202 @@ function TemporalValueGym() {
   );
 }
 
+const PICKING_CASES = [
+  { id: 'scatter', generator: 'Scatter Plot', title: 'Palmer Penguins — flipper length vs body mass', mark: 'symbol',
+    interactions: [{ type: 'click-highlight' }, { type: 'legend-toggle' }] },
+  { id: 'faceted-line', generator: 'Omni: Line', title: undefined, mark: 'line',
+    interactions: [{ type: 'hover-group-focus', options: { groupBy: 'gameType' } }] },
+] as const;
+const PICKING_THEMES = [undefined, 'economist'] as const;
+
+function pickingInput(caseId: string, themeId: string | undefined): ChartAssemblyInput {
+  const pick = PICKING_CASES.find((item) => item.id === caseId)!;
+  const cases = TEST_GENERATORS[pick.generator]();
+  const testCase = (pick.title ? cases.find((item) => item.title === pick.title) : cases[0])!;
+  const base = withHouse(testCaseToAssemblyInput(testCase, { width: 460, height: 320 }), themeId);
+  return { ...base, interaction_spec: { interactions: pick.interactions } } as unknown as ChartAssemblyInput;
+}
+
+/** What the reader's pointer lands on over a data mark: the mark itself, or something drawn above it. */
+function PickingCase({ caseId, themeId }: { caseId: string; themeId: string | undefined }) {
+  const host = useRef<HTMLDivElement>(null);
+  const [result, setResult] = useState<{ passed: boolean; text: string } | null>(null);
+  const mark = PICKING_CASES.find((item) => item.id === caseId)!.mark;
+
+  useEffect(() => {
+    if (!host.current) return;
+    const container = host.current;
+    let cancelled = false;
+    let surface: ReturnType<typeof mountChart> | undefined;
+    const run = async () => {
+      surface = mountChart(container, pickingInput(caseId, themeId), {
+        backend: 'vegalite', renderer: 'svg', expressionInterpreter,
+      });
+      await surface.ready;
+      if (cancelled) return;
+      const target = container.querySelector<SVGPathElement>(`.mark-${mark}.role-mark path`);
+      if (!target) {
+        setResult({ passed: false, text: `Fail: no .mark-${mark} element rendered` });
+        return;
+      }
+      // elementFromPoint only sees the viewport.
+      target.scrollIntoView({ block: 'center' });
+      const at = target.getPointAtLength(mark === 'line' ? target.getTotalLength() / 2 : 0);
+      const box = target.getBoundingClientRect();
+      const matrix = target.getScreenCTM()!;
+      const point = mark === 'line'
+        ? { x: matrix.a * at.x + matrix.c * at.y + matrix.e, y: matrix.b * at.x + matrix.d * at.y + matrix.f }
+        : { x: box.left + box.width / 2, y: box.top + box.height / 2 };
+      const top = document.elementFromPoint(point.x, point.y);
+      const owner = top?.closest('g[class*="mark-"]');
+      const label = owner?.getAttribute('class') ?? top?.tagName ?? 'nothing';
+      const passed = top === target || !!owner?.contains(target);
+      setResult({ passed, text: passed
+        ? `Pass: the pointer reaches the ${mark} mark`
+        : `Fail: the pointer lands on "${label}" above the ${mark}` });
+    };
+    void run().catch(error => {
+      if (!cancelled) setResult({ passed: false, text: `Fail: ${String(error)}` });
+    });
+    return () => {
+      cancelled = true;
+      surface?.destroy();
+      container.replaceChildren();
+    };
+  }, [caseId, themeId, mark]);
+
+  return (
+    <article style={{ ...cardStyle, padding: 10 }} data-case={`picking-${caseId}-${themeId ?? 'plain'}`}>
+      <h3 style={{ margin: '0 0 4px', fontSize: 13 }}>{caseId} · {themeId ?? 'no theme'}</h3>
+      <ScaleToFit height={300} minHeight={200} adaptiveHeight>
+        <div ref={host} />
+      </ScaleToFit>
+      <div role="status" style={{ marginTop: 6, fontSize: 12, color: result ? (result.passed ? '#16794b' : '#b42318') : siteTheme.textMuted }}>
+        {result?.text ?? 'Probing pointer target...'}
+      </div>
+    </article>
+  );
+}
+
+// The same drag, as fractions of the chart box, on every renderer.
+const SELECT_DRAG = { from: { x: 0.3, y: 0.35 }, to: { x: 0.55, y: 0.65 } };
+
+function selectInput(themeId: string | undefined): ChartAssemblyInput {
+  const testCase = TEST_GENERATORS['Scatter Plot']()
+    .find((item) => item.title === 'Palmer Penguins — flipper length vs body mass')!;
+  const base = withHouse(testCaseToAssemblyInput(testCase, { width: 360, height: 280 }), themeId);
+  return { ...base, interaction_spec: { interactions: [{ type: 'select' }] } } as ChartAssemblyInput;
+}
+
+async function dragSelect(container: HTMLElement, themeId: string | undefined, renderer: 'svg' | 'canvas') {
+  const surface = mountChart(container, selectInput(themeId), { backend: 'vegalite', renderer, expressionInterpreter });
+  await surface.ready;
+  // The renderer's own element; overlays add other SVGs to the mount.
+  const target = container.querySelector(renderer === 'svg' ? 'svg.marks' : 'canvas.marks') as Element;
+  const box = target.getBoundingClientRect();
+  const at = (point: { x: number; y: number }) => ({
+    clientX: box.left + box.width * point.x, clientY: box.top + box.height * point.y,
+    bubbles: true, pointerId: 1, pointerType: 'mouse', button: 0, buttons: 1,
+  });
+  target.dispatchEvent(new PointerEvent('pointerdown', at(SELECT_DRAG.from)));
+  for (let step = 1; step <= 4; step += 1) {
+    const t = step / 4;
+    target.dispatchEvent(new PointerEvent('pointermove', at({
+      x: SELECT_DRAG.from.x + (SELECT_DRAG.to.x - SELECT_DRAG.from.x) * t,
+      y: SELECT_DRAG.from.y + (SELECT_DRAG.to.y - SELECT_DRAG.from.y) * t,
+    })));
+  }
+  target.dispatchEvent(new PointerEvent('pointerup', { ...at(SELECT_DRAG.to), buttons: 0 }));
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  const keys = (surface.getState()?.selected ?? [])
+    .map((element) => `${element.value['Flipper length (mm)']}|${element.value['Body mass (g)']}`);
+  return { surface, keys: new Set(keys) };
+}
+
+/** A drag selects by where the reader drew it; canvas must select what SVG (measured from its CTM) selects. */
+function SelectAlignmentCase({ themeId }: { themeId: string | undefined }) {
+  const svgHost = useRef<HTMLDivElement>(null);
+  const canvasHost = useRef<HTMLDivElement>(null);
+  const [result, setResult] = useState<{ passed: boolean; text: string } | null>(null);
+
+  useEffect(() => {
+    if (!svgHost.current || !canvasHost.current) return;
+    const hosts = [svgHost.current, canvasHost.current];
+    let cancelled = false;
+    const surfaces: { destroy(): void }[] = [];
+    const run = async () => {
+      const svg = await dragSelect(hosts[0], themeId, 'svg');
+      surfaces.push(svg.surface);
+      const canvas = await dragSelect(hosts[1], themeId, 'canvas');
+      surfaces.push(canvas.surface);
+      if (cancelled) return;
+      const shared = [...svg.keys].filter((key) => canvas.keys.has(key)).length;
+      const passed = svg.keys.size > 0 && shared === svg.keys.size && shared === canvas.keys.size;
+      setResult({ passed, text: passed
+        ? `Pass: both renderers select the same ${shared} points`
+        : `Fail: SVG selects ${svg.keys.size}, canvas ${canvas.keys.size}, ${shared} in common` });
+    };
+    void run().catch(error => {
+      if (!cancelled) setResult({ passed: false, text: `Fail: ${String(error)}` });
+    });
+    return () => {
+      cancelled = true;
+      for (const surface of surfaces) surface.destroy();
+      for (const host of hosts) host.replaceChildren();
+    };
+  }, [themeId]);
+
+  return (
+    <article style={{ ...cardStyle, padding: 10 }} data-case={`select-alignment-${themeId ?? 'plain'}`}>
+      <h3 style={{ margin: '0 0 4px', fontSize: 13 }}>select · {themeId ?? 'no theme'} · SVG | canvas</h3>
+      <div style={{ display: 'flex', gap: 8, overflowX: 'auto' }}>
+        <div ref={svgHost} />
+        <div ref={canvasHost} />
+      </div>
+      <div role="status" style={{ marginTop: 6, fontSize: 12, color: result ? (result.passed ? '#16794b' : '#b42318') : siteTheme.textMuted }}>
+        {result?.text ?? 'Dragging...'}
+      </div>
+    </article>
+  );
+}
+
+function SelectAlignmentGym() {
+  return (
+    <section style={{ width: 'min(100%, 1080px)' }} data-gym="select-alignment">
+      <header style={{ marginBottom: 8 }}>
+        <h2 style={{ margin: 0, fontSize: 16 }}>Region select alignment</h2>
+        <p style={{ margin: '2px 0 0', fontSize: 11, color: siteTheme.textMuted }}>
+          Under the Economist theme the landing showcase selects points offset from the drawn rectangle on the
+          canvas renderer. Each card drags the same box across an SVG and a canvas mount at full size and compares
+          the points each selects.
+        </p>
+      </header>
+      <div style={{ display: 'grid', gap: 10 }}>
+        {PICKING_THEMES.map((themeId) => <SelectAlignmentCase key={themeId ?? 'plain'} themeId={themeId} />)}
+      </div>
+    </section>
+  );
+}
+
+function ThemePickingGym() {
+  return (
+    <section style={{ width: 'min(100%, 1080px)' }} data-gym="theme-picking">
+      <header style={{ marginBottom: 8 }}>
+        <h2 style={{ margin: 0, fontSize: 16 }}>Theme pointer picking</h2>
+        <p style={{ margin: '2px 0 0', fontSize: 11, color: siteTheme.textMuted }}>
+          Hover and click presets on the landing showcase stop responding under the Economist theme. Each card mounts
+          the same interactive chart with and without the theme and reports which element sits under a data mark.
+        </p>
+      </header>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: 10 }}>
+        {PICKING_CASES.flatMap((item) => PICKING_THEMES.map((themeId) => (
+          <PickingCase key={`${item.id}-${themeId ?? 'plain'}`} caseId={item.id} themeId={themeId} />
+        )))}
+      </div>
+    </section>
+  );
+}
+
 export function DebugGym() {
   return (
     <div className="dev-page" style={{ gap: 12 }}>
@@ -401,6 +597,8 @@ export function DebugGym() {
       <SlopeGym />
       <TemporalAxisGym />
       <TemporalValueGym />
+      <ThemePickingGym />
+      <SelectAlignmentGym />
     </div>
   );
 }

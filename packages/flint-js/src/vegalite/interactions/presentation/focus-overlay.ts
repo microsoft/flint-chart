@@ -185,10 +185,8 @@ export function createFocusOverlay({
         if (!focusLayer.isConnected) container.append(focusLayer);
         if (getComputedStyle(container).position === 'static') container.style.position = 'relative';
         const space = coordinateSpace();
-        const renderer = container.querySelector('svg') as SVGSVGElement | null;
         const containerRect = container.getBoundingClientRect();
-        const rendererRect = renderer?.getBoundingClientRect() ?? space.rect;
-        const rendererLayout = clientRectToLayoutRect(rendererRect, containerRect, containerLayoutSize());
+        const rendererLayout = clientRectToLayoutRect(space.rect, containerRect, containerLayoutSize());
         Object.assign(focusLayer.style, {
             inset: 'auto',
             left: `${rendererLayout.left}px`,

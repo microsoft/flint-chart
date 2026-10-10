@@ -31,6 +31,7 @@ import {
     type LiveLayoutPlanner,
 } from './interactions/live-layout';
 import { mountVegaInteractions } from './interactions/runtime';
+import { vegaRendererOrigin } from './interactions/hit-adapter';
 
 /**
  * The runtime mounts what admission kept, in the author's order. Admission may replace a
@@ -500,7 +501,7 @@ export function createVegaInteractiveRenderer(
                     interactionController?.refresh();
                 },
                 getViewportGeometry(channel) {
-                    const [left, top] = view.origin();
+                    const { x: left, y: top } = vegaRendererOrigin(view);
                     return channel === 'x'
                         ? { offset: left, extent: view.width() }
                         : { offset: top, extent: view.height() };

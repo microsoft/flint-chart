@@ -28,9 +28,17 @@ export {
     clientToRendererPoint,
     interactionModifiers,
     plotToClientPoint,
+    rendererElement,
     rendererPlotOrigin,
     type RendererCoordinateSpace,
 } from '../../interactive/geometry/coordinate-space';
+
+/** Where the renderer draws the plot: View#origin leaves out the padding it is translated by. */
+export function vegaRendererOrigin(view: any): PlotPoint {
+    const [x, y] = view.origin();
+    const padding = view.padding?.() ?? {};
+    return { x: x + (padding.left ?? 0), y: y + (padding.top ?? 0) };
+}
 
 export const INTERACTION_KEY = '__flint_interaction_key';
 export const INTERACTION_ROLE = '__flint_interaction_role';

@@ -29,6 +29,12 @@ export function rendererPlotOrigin(
     return { x: matrix.e / scaleX, y: matrix.f / scaleY };
 }
 
+/** The chart's own renderer; overlay layers append further SVGs to the same container. */
+export function rendererElement(container: ParentNode): HTMLElement | null {
+    return container.querySelector<HTMLElement>('canvas.marks, svg.marks')
+        ?? container.querySelector<HTMLElement>('canvas, svg');
+}
+
 export function interactionModifiers(event: MouseEvent | PointerEvent): InteractionModifiers {
     return { shift: event.shiftKey, ctrl: event.ctrlKey, meta: event.metaKey };
 }

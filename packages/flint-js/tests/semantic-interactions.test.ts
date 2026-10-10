@@ -3,6 +3,7 @@ import { changeset, parse, View } from 'vega';
 import { expressionInterpreter } from 'vega-interpreter';
 import { compile } from 'vega-lite';
 import { scaleAwareCanvasPicking } from '../src/vegalite/interactive';
+import { rendererElement, vegaRendererOrigin } from '../src/vegalite/interactions/hit-adapter';
 import { assembleVegaLite, indexAxisOf } from '../src/vegalite/assemble';
 import { axisHighlight, brushAngle, brushX, brushZoom, clickAnnotate, clickHighlight, dragReorder, externalInteraction, inspect, legendToggle, navigate, select } from '../src/interactive/interactions';
 import type { CanvasInteractionDef, ClickHighlightOptions, RenderHit, SemanticElement, SemanticTarget } from '../src/interactive/interactions';
@@ -2400,6 +2401,19 @@ describe('Vega-Lite semantic interactions', () => {
         expect(svgHandler.pickEvent()).toBe('unchanged');
     });
 
+    it('places the plot where the renderer draws it, padding included', () => {
+        const view = { origin: () => [49, 48], padding: () => ({ top: 14, left: 14, right: 14, bottom: 14 }) };
+        expect(vegaRendererOrigin(view)).toEqual({ x: 63, y: 62 });
+    });
+
+    it('measures the chart renderer, not an overlay layer appended before it', () => {
+        const canvas = {};
+        const container: any = {
+            querySelector: (selector: string) => selector === 'canvas.marks, svg.marks' ? canvas : { overlay: true },
+        };
+        expect(rendererElement(container)).toBe(canvas);
+    });
+
     it('translates concat marks by ancestor group offsets', () => {
         const view = {
             scenegraph: () => ({
@@ -4513,6 +4527,35 @@ describe('set-style visibility', () => {
         expect(spec.layer).toBeUndefined();
         expect(plan?.semanticStores).toBe(false);
         expect(plan?.navigationChannels).toEqual(['x', 'y']);
+    });
+
+    it('keeps a faceted line with points faceted when its points split into a layer', () => {
+        const spec: Record<string, any> = {
+            _interactionSemantics: {
+                capabilities: ALL_CAPABILITIES,
+                fields: ['Month', 'Users', 'Platform'],
+                seriesField: 'Platform',
+                legendFields: { color: 'Platform' },
+                selectableMarks: ['line', 'point'],
+            },
+            data: { values: ['N', 'E', 'S', 'W'].flatMap((Region) => [1, 2].map((Month) => ({ Region, Month, Users: Month, Platform: 'PC' }))) },
+            mark: { type: 'line', point: { filled: true } },
+            encoding: {
+                x: { field: 'Month', type: 'quantitative' },
+                y: { field: 'Users', type: 'quantitative' },
+                color: { field: 'Platform', type: 'nominal' },
+                facet: { field: 'Region', type: 'nominal', columns: 2 },
+            },
+        };
+
+        addVegaLiteInteractions(spec, [clickHighlight()]);
+
+        expect(spec.facet).toEqual({ field: 'Region', type: 'nominal' });
+        expect(spec.columns).toBe(2);
+        expect(spec.spec.layer.map((layer: any) => layer.mark.type)).toEqual(['line', 'point']);
+        expect(spec.spec.encoding.facet).toBeUndefined();
+        const panels = (compile(spec as any).spec.marks ?? []).find((mark: any) => mark.from?.facet);
+        expect(panels?.from.facet.groupby).toEqual(['Region']);
     });
 
     it('leaves the legend domain alone when nothing can hide a series', () => {

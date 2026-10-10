@@ -131,9 +131,8 @@ export function createDataOverlay({
             return;
         }
         const space = coordinateSpace();
-        const renderer = container.querySelector('canvas, svg') as HTMLElement | null;
         const containerRect = container.getBoundingClientRect();
-        const rendererRect = renderer?.getBoundingClientRect() ?? space.rect;
+        const rendererRect = space.rect;
         const size = containerLayoutSize();
         const scaleX = containerRect.width > 0 ? size.width / containerRect.width : 1;
         const scaleY = containerRect.height > 0 ? size.height / containerRect.height : 1;

@@ -30,10 +30,8 @@ export function createLegendRangeOverlay(options: {
         if (!layer.isConnected) container.append(layer);
         if (getComputedStyle(container).position === 'static') container.style.position = 'relative';
         const space = coordinateSpace();
-        const renderer = container.querySelector('svg') as SVGSVGElement | null;
         const containerRect = container.getBoundingClientRect();
-        const rendererRect = renderer?.getBoundingClientRect() ?? space.rect;
-        const layout = clientRectToLayoutRect(rendererRect, containerRect, containerLayoutSize());
+        const layout = clientRectToLayoutRect(space.rect, containerRect, containerLayoutSize());
         Object.assign(layer.style, {
             left: `${layout.left}px`, top: `${layout.top}px`,
             width: `${layout.width}px`, height: `${layout.height}px`,

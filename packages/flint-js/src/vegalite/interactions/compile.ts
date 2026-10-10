@@ -109,7 +109,28 @@ function expandInteractiveLinePoints(spec: Record<string, any>): void {
             { mark: typeof point === 'object' ? { type: 'point', ...point } : { type: 'point', filled: true } },
         ];
         delete spec.mark;
+        const { facet, row, column, ...encoding } = spec.encoding ?? {};
+        if (facet || row || column) {
+            // A layer drops facet channels, so the facet becomes the operator around it.
+            if (facet) {
+                const { columns, ...field } = facet;
+                spec.facet = field;
+                if (columns !== undefined) spec.columns = columns;
+            } else {
+                spec.facet = { ...(row ? { row } : {}), ...(column ? { column } : {}) };
+            }
+            const inner: Record<string, any> = { layer: spec.layer, encoding };
+            for (const key of ['width', 'height', 'params', 'projection', 'view'] as const) {
+                if (spec[key] === undefined) continue;
+                inner[key] = spec[key];
+                delete spec[key];
+            }
+            delete spec.layer;
+            delete spec.encoding;
+            spec.spec = inner;
+        }
     }
+    if (spec.spec && typeof spec.spec === 'object') expandInteractiveLinePoints(spec.spec);
     for (const property of ['layer', 'hconcat', 'vconcat', 'concat'] as const) {
         if (!Array.isArray(spec[property])) continue;
         for (const child of spec[property]) expandInteractiveLinePoints(child);

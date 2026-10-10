@@ -76,10 +76,8 @@ export function createFreeformOverlay({
         if (!layer.isConnected) container.append(layer);
         if (getComputedStyle(container).position === 'static') container.style.position = 'relative';
         const space = coordinateSpace();
-        const renderer = container.querySelector('canvas, svg') as HTMLElement | null;
         const containerRect = container.getBoundingClientRect();
-        const rendererRect = renderer?.getBoundingClientRect() ?? space.rect;
-        const rendererLayout = clientRectToLayoutRect(rendererRect, containerRect, containerLayoutSize());
+        const rendererLayout = clientRectToLayoutRect(space.rect, containerRect, containerLayoutSize());
         Object.assign(layer.style, {
             left: `${rendererLayout.left}px`, top: `${rendererLayout.top}px`,
             width: `${rendererLayout.width}px`, height: `${rendererLayout.height}px`,

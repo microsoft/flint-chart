@@ -327,10 +327,8 @@ export function mountVegaRegionGesture(options: VegaRegionGestureOptions): VegaR
     const showAngularSector = (sector: PlotAngularSector): void => {
         if (!guide.visible) return;
         const space = coordinateSpace();
-        const renderer = container.querySelector('svg') as SVGSVGElement | null;
         const containerRect = container.getBoundingClientRect();
-        const rendererRect = renderer?.getBoundingClientRect() ?? space.rect;
-        const rendererLayout = clientRectToLayoutRect(rendererRect, containerRect, containerLayoutSize());
+        const rendererLayout = clientRectToLayoutRect(space.rect, containerRect, containerLayoutSize());
         Object.assign(angularOverlay.style, {
             display: 'block',
             left: `${rendererLayout.left}px`,
@@ -386,10 +384,8 @@ export function mountVegaRegionGesture(options: VegaRegionGestureOptions): VegaR
     const showLasso = (points: readonly PlotPoint[]): void => {
         if (!guide.visible) return;
         const space = coordinateSpace();
-        const renderer = container.querySelector('svg') as SVGSVGElement | null;
         const containerRect = container.getBoundingClientRect();
-        const rendererRect = renderer?.getBoundingClientRect() ?? space.rect;
-        const rendererLayout = clientRectToLayoutRect(rendererRect, containerRect, containerLayoutSize());
+        const rendererLayout = clientRectToLayoutRect(space.rect, containerRect, containerLayoutSize());
         Object.assign(lassoOverlay.style, {
             display: 'block',
             left: `${rendererLayout.left}px`,

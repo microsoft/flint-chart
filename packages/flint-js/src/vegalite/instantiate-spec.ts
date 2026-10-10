@@ -365,8 +365,10 @@ export function vlWrapLegendText(spec: any, context: InstantiateContext): void {
                 const height = direction === 'horizontal' ? Math.max(...entries.map(entry => entry.height))
                     : entries.reduce((sum, entry) => sum + entry.height, 0) + gap * (entries.length - 1);
                 const overflow = Math.max(0, width / widthBudget - 1) + Math.max(0, height / heightBudget - 1);
+                // Keys stacked in rows above or below the plot crowd it; one of them reads as well down the side.
+                const stacked = horizontal && direction === 'vertical' ? (entries.length - 1) * 0.5 : 0;
                 return { orient, direction, width, height, widthBudget, heightBudget, overflow,
-                    cost: Math.max(0, height / heightBudget - 1) * 20
+                    cost: stacked + Math.max(0, height / heightBudget - 1) * 20
                         + Math.max(0, width / widthBudget - 1) * (horizontal ? 20 : 4)
                         + 0.15 * (horizontal ? height / heightBudget : width / widthBudget) };
             });

@@ -1,7 +1,7 @@
 import type { AccessibleElementDescription } from '../../../interactive/language/events';
 import { createFloatingPanel } from '../../../interactive/floating-panel';
 import type { AccessibleNavigationSettings } from '../../../interactive/triggers';
-import { clientRectToLayoutRect, type RendererCoordinateSpace } from '../hit-adapter';
+import { clientRectToLayoutRect, rendererElement, type RendererCoordinateSpace } from '../hit-adapter';
 import {
     AccessibleNavigator,
     accessibleCommandForKey,
@@ -93,7 +93,7 @@ export function mountAccessibleNavigation(options: AccessibleNavigationControlle
         const bounds = node.bounds;
         if (!bounds) return undefined;
         const space = options.coordinateSpace();
-        const renderer = container.querySelector('svg, canvas') as HTMLElement | null;
+        const renderer = rendererElement(container);
         if (!renderer || space.logicalWidth <= 0 || space.logicalHeight <= 0) return undefined;
         const containerRect = container.getBoundingClientRect();
         const rendererLayout = clientRectToLayoutRect(renderer.getBoundingClientRect(), containerRect, options.containerLayoutSize());

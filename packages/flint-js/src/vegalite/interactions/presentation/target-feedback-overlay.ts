@@ -97,10 +97,8 @@ export function createTargetFeedbackOverlay(options: {
         if (!layer.isConnected) container.append(layer);
         if (getComputedStyle(container).position === 'static') container.style.position = 'relative';
         const space = coordinateSpace();
-        const renderer = container.querySelector('svg, canvas') as HTMLElement | null;
         const containerRect = container.getBoundingClientRect();
-        const rendererRect = renderer?.getBoundingClientRect() ?? space.rect;
-        const rendererLayout = clientRectToLayoutRect(rendererRect, containerRect, containerLayoutSize());
+        const rendererLayout = clientRectToLayoutRect(space.rect, containerRect, containerLayoutSize());
         const scaleX = rendererLayout.width / space.logicalWidth;
         const scaleY = rendererLayout.height / space.logicalHeight;
         const centerX = rendererLayout.left + (point.x + space.originX) * scaleX;
