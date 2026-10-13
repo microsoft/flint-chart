@@ -70,6 +70,8 @@
     "chart.js": "^4.4.0",
     "echarts": "^6.0.0",
     "flint-chart": "^0.5.1",
+    "highcharts": "^13.1.1",
+    "puppeteer-core": "^25.4.0",
     "vega": "^6.0.0",
     "vega-interpreter": "^2.2.1",
     "vega-lite": "^6.0.0",

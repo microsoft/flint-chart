@@ -6,8 +6,10 @@ import { JsonCodeMirror } from '../components/JsonCodeMirror';
 import { ResizeSplit } from '../components/ResizeSplit';
 import { VegaLiteView } from '../components/VegaLiteView';
 import { InteractiveVegaLiteView, hasInteractionEntries } from '../components/InteractiveVegaLiteView';
+import { InteractiveHighchartsView } from '../components/InteractiveHighchartsView';
 import { EChartsView } from '../components/EChartsView';
 import { ChartjsView } from '../components/ChartjsView';
+import { HighchartsView } from '../components/HighchartsView';
 import { EXAMPLES } from './editor-examples';
 import { loadEditorPayload, readEditorCaseParam, readGalleryCaseParams } from '../shared/editor-payload';
 import { testCaseToAssemblyInput } from '../shared/test-case-utils';
@@ -306,6 +308,9 @@ function PreviewPane({
               : <VegaLiteView spec={compiled.value} />)}
             {backend === 'echarts' && <EChartsView option={compiled.value} height={320} />}
             {backend === 'chartjs' && <ChartjsView config={compiled.value} height={320} />}
+            {backend === 'highcharts' && (hasInteractionEntries(parsed.value)
+              ? <InteractiveHighchartsView input={parsed.value as ChartAssemblyInput} chartId="editor-chart" />
+              : <HighchartsView option={compiled.value} height={320} />)}
           </>
         ) : (
           <pre style={{ color: siteTheme.error, fontSize: 13, whiteSpace: 'pre-wrap', margin: 0 }}>
@@ -321,6 +326,7 @@ const OUTPUT_LANG: Record<Backend, string> = {
   vegalite: 'Vega-Lite JSON',
   echarts: 'ECharts option',
   chartjs: 'Chart.js config',
+  highcharts: 'Highcharts option',
   plotly: 'Plotly figure',
 };
 

@@ -35,15 +35,18 @@ import { assembleChartjs } from '../chartjs/assemble';
 import { cjsGetTemplateDef } from '../chartjs/templates';
 import { assemblePlotly } from '../plotly/assemble';
 import { plGetTemplateDef } from '../plotly/templates';
+import { assembleHighcharts } from '../highcharts/assemble';
+import { hcGetTemplateDef } from '../highcharts/templates';
 
 /** Backends whose inputs can be validated and assembled. */
-export type ValidationBackend = 'vegalite' | 'echarts' | 'chartjs' | 'plotly';
+export type ValidationBackend = 'vegalite' | 'echarts' | 'chartjs' | 'plotly' | 'highcharts';
 
 export const VALIDATION_BACKENDS: readonly ValidationBackend[] = [
     'vegalite',
     'echarts',
     'chartjs',
     'plotly',
+    'highcharts',
 ];
 
 /** Default cap on inline data rows. */
@@ -88,6 +91,7 @@ const ASSEMBLERS: Record<ValidationBackend, (input: ChartAssemblyInput) => any> 
     echarts: assembleECharts,
     chartjs: assembleChartjs,
     plotly: assemblePlotly,
+    highcharts: assembleHighcharts,
 };
 
 const TEMPLATE_LOOKUP: Record<
@@ -98,6 +102,7 @@ const TEMPLATE_LOOKUP: Record<
     echarts: ecGetTemplateDef,
     chartjs: cjsGetTemplateDef,
     plotly: plGetTemplateDef,
+    highcharts: hcGetTemplateDef,
 };
 
 /**
@@ -314,21 +319,33 @@ export function validateInteractionSpec(
     assembled: unknown,
 ): ChartWarning[] {
     if (!input.interaction_spec) return [];
-    if (backend !== 'vegalite') {
-        return [{
-            severity: 'info',
-            code: 'interactions_ignored',
-            message: `interaction_spec is ignored: backend "${backend}" does not run interactions.`,
-        }];
+    if (backend === 'vegalite') {
+        try {
+            const resolved = resolveInteractionSpec(input.interaction_spec);
+            const { _interactionSemantics: plan } = assembled as { _interactionSemantics: Parameters<typeof admitInteractions>[0] };
+            return [...admitInteractions(plan, resolved.interactions).warnings];
+        } catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
+            return [{ severity: 'error', code: 'invalid_interaction_spec', message }];
+        }
     }
-    try {
-        const resolved = resolveInteractionSpec(input.interaction_spec);
-        const { _interactionSemantics: plan } = assembled as { _interactionSemantics: Parameters<typeof admitInteractions>[0] };
-        return [...admitInteractions(plan, resolved.interactions).warnings];
-    } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        return [{ severity: 'error', code: 'invalid_interaction_spec', message }];
+    if (backend === 'highcharts') {
+        try {
+            const resolved = resolveInteractionSpec(input.interaction_spec);
+            if (!resolved.interactions.length) {
+                return [{ severity: 'info', code: 'interactions_ignored', message: 'interaction_spec declares no interactions.' }];
+            }
+            return [];
+        } catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
+            return [{ severity: 'error', code: 'invalid_interaction_spec', message }];
+        }
     }
+    return [{
+        severity: 'info',
+        code: 'interactions_ignored',
+        message: `interaction_spec is ignored: backend "${backend}" does not run interactions.`,
+    }];
 }
 
 /**

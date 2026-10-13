@@ -28,7 +28,7 @@ Pick only the channels the mark actually uses. Copy a similar template as a star
 | Line / area | `vegalite/templates/line.ts` |
 | Radial | `vegalite/templates/pie.ts` |
 
-ECharts and Chart.js use the same `ChartTemplateDef` interface under their own `templates/` folders.
+ECharts, Chart.js, and Highcharts use the same `ChartTemplateDef` interface under their own `templates/` folders.
 
 ---
 
@@ -125,7 +125,7 @@ Review formatting, layout stretch, legends, and facet behavior across 3–6 repr
 
 # §5 Cross-backend parity
 
-The user-facing contract is that the same `chartType` string should work across `assembleVegaLite`, `assembleECharts`, and `assembleChartjs` **when templates exist**. In practice:
+The user-facing contract is that the same `chartType` string should work across `assembleVegaLite`, `assembleECharts`, `assembleChartjs`, and `assembleHighcharts` **when templates exist**. In practice:
 
 - Port to backends you need immediately; file follow-ups for the rest.
 - `site/src/shared/supported-backends.ts` filters chart types per backend registry. A Vega-Lite-only template will not appear in ECharts until it is registered there too.

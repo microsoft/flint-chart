@@ -9,6 +9,7 @@ import {
 import { renderVegaLite } from './vegalite.js';
 import { renderECharts } from './echarts.js';
 import { renderChartjs } from './chartjs.js';
+import { renderHighcharts } from './highcharts.js';
 import type {
   RenderBackend,
   RenderFormat,
@@ -42,6 +43,7 @@ export const RENDERABLE_BACKENDS: readonly RenderBackend[] = [
   'vegalite',
   'echarts',
   'chartjs',
+  'highcharts',
 ];
 
 /**
@@ -103,6 +105,15 @@ export async function renderChart(
       break;
     case 'chartjs':
       artifact = await renderChartjs(spec, {
+        scale,
+        background,
+        width: w ?? 400,
+        height: h ?? 320,
+      });
+      break;
+    case 'highcharts':
+      artifact = await renderHighcharts(spec, {
+        format,
         scale,
         background,
         width: w ?? 400,

@@ -725,7 +725,7 @@ Abstract channel for two distinct visual mappings:
 ### `ChannelSemantics`
 
 Phase 0 output for a single channel. Combines user input with resolved
-decisions. This is the central IR — all four backends read the same
+decisions. This is the central IR — all five backends read the same
 `ChannelSemantics` record.
 
 ```typescript
@@ -1050,7 +1050,7 @@ value sort when the largest or smallest categories should be retained.
 
 | File | Lines | Role |
 |------|-------|------|
-| `index.ts` | 60 | Public API re-exports (all 4 backends) |
+| `index.ts` | 60 | Public API re-exports (all 5 backends) |
 
 **Total: ~21,000 lines** across 87 `.ts` files (excluding test-data).
 

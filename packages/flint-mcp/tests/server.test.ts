@@ -198,7 +198,7 @@ describe('MCP server', () => {
     const read = await client.readResource({ uri: 'flint://chart-types' });
     const payload = JSON.parse(resourceText(read.contents[0]));
     expect(Array.isArray(payload)).toBe(true);
-    expect(payload.length).toBe(3);
+    expect(payload.length).toBe(4);
   });
 
   it('exposes the bundled agent skill as a resource', async () => {

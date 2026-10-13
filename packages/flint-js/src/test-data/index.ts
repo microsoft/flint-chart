@@ -41,6 +41,7 @@ export { genGasPressureTests } from './gas-pressure-tests';
 export { genLineAreaStretchTests } from './line-area-stretch-tests';
 export { genEChartsScatterTests, genEChartsLineTests, genEChartsBarTests, genEChartsStackedBarTests, genEChartsGroupedBarTests, genEChartsStressTests, genEChartsAreaTests, genEChartsPieTests, genEChartsHeatmapTests, genEChartsHistogramTests, genEChartsBoxplotTests, genEChartsRadarTests, genEChartsCandlestickTests, genEChartsStreamgraphTests, genEChartsFacetSmallTests, genEChartsFacetWrapTests, genEChartsFacetClipTests, genEChartsRoseTests, genEChartsGaugeTests, genEChartsFunnelTests, genEChartsTreemapTests, genEChartsSunburstTests, genEChartsSankeyTests, genEChartsUniqueStressTests, genEChartsCalendarTests, genEChartsParallelTests, genEChartsGraphTests, genEChartsTreeTests } from './echarts-tests';
 export { genChartJsScatterTests, genChartJsLineTests, genChartJsBarTests, genChartJsStackedBarTests, genChartJsGroupedBarTests, genChartJsAreaTests, genChartJsPieTests, genChartJsHistogramTests, genChartJsRadarTests, genChartJsStressTests, genChartJsRoseTests, genChartJsBubbleTests, genChartJsDoughnutTests, genChartJsComboTests } from './chartjs-tests';
+export { genHighchartsBarTests, genHighchartsStackedBarTests, genHighchartsGroupedBarTests, genHighchartsLineTests, genHighchartsAreaTests, genHighchartsScatterTests, genHighchartsPieTests, genHighchartsHistogramTests, genHighchartsRadarTests, genHighchartsHeatmapTests, genHighchartsWaterfallTests, genHighchartsSunburstTests, genHighchartsFacetTests } from './highcharts-tests';
 export { genPlotlyCoreTests, genPlotlyFacetTests } from './plotly-tests';
 export { genImageChartsTests } from './image-charts-tests';
 export { genDiscreteAxisTests } from './discrete-axis-tests';
@@ -118,6 +119,7 @@ import { genDateYearTests, genDateMonthTests, genDateYearMonthTests, genDateDeca
 import { genSemanticContextTests, genSnapToBoundTests } from './semantic-tests';
 import { genEChartsScatterTests, genEChartsLineTests, genEChartsBarTests, genEChartsStackedBarTests, genEChartsGroupedBarTests, genEChartsStressTests, genEChartsAreaTests, genEChartsPieTests, genEChartsHeatmapTests, genEChartsHistogramTests, genEChartsBoxplotTests, genEChartsRadarTests, genEChartsCandlestickTests, genEChartsStreamgraphTests, genEChartsFacetSmallTests, genEChartsFacetWrapTests, genEChartsFacetClipTests, genEChartsRoseTests, genEChartsGaugeTests, genEChartsFunnelTests, genEChartsTreemapTests, genEChartsSunburstTests, genEChartsSankeyTests, genEChartsUniqueStressTests, genEChartsCalendarTests, genEChartsParallelTests, genEChartsGraphTests, genEChartsTreeTests } from './echarts-tests';
 import { genChartJsScatterTests, genChartJsLineTests, genChartJsBarTests, genChartJsStackedBarTests, genChartJsGroupedBarTests, genChartJsAreaTests, genChartJsPieTests, genChartJsHistogramTests, genChartJsRadarTests, genChartJsStressTests, genChartJsRoseTests, genChartJsBubbleTests, genChartJsDoughnutTests, genChartJsComboTests } from './chartjs-tests';
+import { genHighchartsBarTests, genHighchartsStackedBarTests, genHighchartsGroupedBarTests, genHighchartsLineTests, genHighchartsAreaTests, genHighchartsScatterTests, genHighchartsPieTests, genHighchartsHistogramTests, genHighchartsRadarTests, genHighchartsHeatmapTests, genHighchartsWaterfallTests, genHighchartsSunburstTests, genHighchartsFacetTests } from './highcharts-tests';
 import { genPlotlyCoreTests, genPlotlyFacetTests } from './plotly-tests';
 import { genImageChartsTests } from './image-charts-tests';
 import {
@@ -261,6 +263,19 @@ export const TEST_GENERATORS: Record<string, () => TestCase[]> = {
     'Chart.js: Stress Tests': genChartJsStressTests,
     'Plotly: Core Templates': genPlotlyCoreTests,
     'Plotly: Facets': genPlotlyFacetTests,
+    'Highcharts: Bar': genHighchartsBarTests,
+    'Highcharts: Stacked Bar': genHighchartsStackedBarTests,
+    'Highcharts: Grouped Bar': genHighchartsGroupedBarTests,
+    'Highcharts: Line': genHighchartsLineTests,
+    'Highcharts: Area': genHighchartsAreaTests,
+    'Highcharts: Scatter': genHighchartsScatterTests,
+    'Highcharts: Pie': genHighchartsPieTests,
+    'Highcharts: Histogram': genHighchartsHistogramTests,
+    'Highcharts: Radar': genHighchartsRadarTests,
+    'Highcharts: Heatmap': genHighchartsHeatmapTests,
+    'Highcharts: Waterfall': genHighchartsWaterfallTests,
+    'Highcharts: Sunburst': genHighchartsSunburstTests,
+    'Highcharts: Facets': genHighchartsFacetTests,
     'Image-Charts: Core Templates': genImageChartsTests,
     'Gallery: Scatter': genGalleryRegionalSurveyScatterTests,
     'Gallery: Line': genGalleryRegionalSurveyLineTests,

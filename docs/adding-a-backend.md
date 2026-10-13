@@ -113,7 +113,7 @@ Register in `templates/index.ts`: import defs, add them to the category map, and
 - **Gallery dev server:** `npm run site` from the repo root, then open `/gallery`
 - **Full visual matrix:** open `/playground/full-test-cases`; it renders every generator registered in `packages/flint-js/src/test-data/index.ts`
 - **Supported backends:** update `site/src/shared/supported-backends.ts` if the new backend should appear in the UI
-- **Renderers:** only add a new React view (`site/src/components/`) when the spec format cannot reuse `VegaLiteView`, `EChartsView`, or `ChartjsView`. `TripleChart` currently covers VL + ECharts + Chart.js.
+- **Renderers:** only add a new React view (`site/src/components/`) when the spec format cannot reuse `VegaLiteView`, `EChartsView`, `ChartjsView`, or `HighchartsView`. `TripleChart` currently covers VL + ECharts + Chart.js.
 
 Use the [Chart engine test plan](/documentation/test-plan) to choose normal,
 semantic, density, and edge-case coverage for backend bring-up.

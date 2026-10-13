@@ -16,15 +16,16 @@ Rather than requiring agents to hardcode verbose parameters for scales, axes,
 spacing, labels, and layout, Flint derives those decisions from a high-level
 semantic specification, the data, and an optional visual theme (e.g., New York
 Times, Economist, Swiss, and McKinsey). A compact spec compiles to native
-[Vega-Lite](https://vega.github.io/vega-lite/),
-[ECharts](https://echarts.apache.org/),
-[Chart.js](https://www.chartjs.org/),
-[Plotly](https://plotly.com/javascript/) specs, or editable Excel charts.
+  [Vega-Lite](https://vega.github.io/vega-lite/),
+  [ECharts](https://echarts.apache.org/),
+  [Chart.js](https://www.chartjs.org/),
+  [Highcharts](https://www.highcharts.com/),
+  [Plotly](https://plotly.com/javascript/) specs, or editable Excel charts.
 
 This repo contains two main components:
 
 - **`flint-chart`**: a JavaScript/TypeScript library that compiles the same
-  Flint input into Vega-Lite, ECharts, Chart.js, Plotly, or Excel-native output.
+  Flint input into Vega-Lite, ECharts, Chart.js, Highcharts, Plotly, or Excel-native output.
 - **`flint-chart-mcp`**: an MCP server that lets agents create, validate, and
   render charts directly from a chat or coding environment.
 
@@ -67,6 +68,7 @@ For a local MCP server (recommended for large datasets), check the
   [Vega-Lite](https://vega.github.io/vega-lite/),
   [ECharts](https://echarts.apache.org/),
   [Chart.js](https://www.chartjs.org/),
+  [Highcharts](https://www.highcharts.com/),
   [Plotly](https://plotly.com/javascript/), and native Excel charts.
 - **Agent-ready chart authoring.** The MCP server gives agents Flint tools and
   chart guidance so they can choose a template, validate it, and open an
@@ -132,10 +134,11 @@ const spec = assembleVegaLite({
 Swap the backend without changing the input shape:
 
 ```ts
-import { assembleECharts, assembleChartjs, assemblePlotly, assembleExcel } from 'flint-chart';
+import { assembleECharts, assembleChartjs, assembleHighcharts, assemblePlotly, assembleExcel } from 'flint-chart';
 
 const echartsOption = assembleECharts(input);
 const chartjsConfig = assembleChartjs(input);
+const highchartsOption = assembleHighcharts(input);
 const plotlyFigure = assemblePlotly(input);
 const excelArtifact = assembleExcel(input);
 ```
@@ -203,7 +206,8 @@ reference.
 
 See the [API reference](docs/api-reference.md), backend references for
 [Vega-Lite](docs/reference-vegalite.md), [ECharts](docs/reference-echarts.md),
-[Chart.js](docs/reference-chartjs.md), [Plotly](docs/reference-plotly.md), and
+[Chart.js](docs/reference-chartjs.md), [Highcharts](docs/reference-highcharts.md),
+[Plotly](docs/reference-plotly.md), and
 [Excel](docs/reference-excel.md), plus the
 [live editor](https://microsoft.github.io/flint-chart/#/editor) for more library examples.
 
@@ -238,6 +242,7 @@ flint-chart/
 │   │       ├── vegalite/    Vega-Lite backend
 │   │       ├── echarts/     ECharts backend
 │   │       ├── chartjs/     Chart.js backend
+│   │       ├── highcharts/  Highcharts backend
 │   │       ├── plotly/      Plotly backend
 │   │       ├── excel/       native Excel backend
 │   │       ├── gallery/     gallery assembly and generated references

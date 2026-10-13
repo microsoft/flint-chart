@@ -58,6 +58,7 @@ import {
   assembleVegaLite,
   assembleECharts,
   assembleChartjs,
+  assembleHighcharts,
   assemblePlotly,
   assembleExcel,
 } from 'flint-chart';
@@ -65,6 +66,7 @@ import {
 const vlSpec  = assembleVegaLite(input);
 const ecSpec  = assembleECharts(input);
 const cjsSpec = assembleChartjs(input);
+const hcSpec  = assembleHighcharts(input);
 const plFig   = assemblePlotly(input);
 const xlSpec  = assembleExcel(input);
 ```
@@ -74,10 +76,11 @@ const xlSpec  = assembleExcel(input);
 | `assembleVegaLite` | Vega-Lite JSON spec |
 | `assembleECharts` | ECharts `option` object |
 | `assembleChartjs` | Chart.js configuration |
+| `assembleHighcharts` | Highcharts `option` object |
 | `assemblePlotly` | Plotly.js `{ data, layout }` figure |
 | `assembleExcel` | Native Excel chart artifact for Office.js |
 
-If a backend does not support a `chartType`, the assembler throws before render. Check support with `vlGetTemplateDef`, `ecGetTemplateDef`, `cjsGetTemplateDef`, `plGetTemplateDef`, or `excelGetTemplateDef`.
+If a backend does not support a `chartType`, the assembler throws before render. Check support with `vlGetTemplateDef`, `ecGetTemplateDef`, `cjsGetTemplateDef`, `hcGetTemplateDef`, `plGetTemplateDef`, or `excelGetTemplateDef`.
 
 ## Excel runtime and code generation
 
@@ -337,7 +340,7 @@ if (!result.valid) {
 | `validateSemanticTypes(semantic_types)` | `unknown_semantic_type` warnings for labels not in the type registry (also included by `validateChart`) |
 | `assembleForBackend(backend, input, options?)` | Assemble and split out `_warnings` / `_width` / `_height` |
 | `stripPrivateKeys(spec)` | Remove Flint's `_`-prefixed metadata from a spec |
-| `VALIDATION_BACKENDS` | Runtime list of accepted backends (`vegalite`, `echarts`, `chartjs`, `plotly`) |
+| `VALIDATION_BACKENDS` | Runtime list of accepted backends (`vegalite`, `echarts`, `chartjs`, `highcharts`, `plotly`) |
 
 `options.maxDataRows` (default 100,000) and `options.maxCanvasDim` (default
 4000) cap input size. Inline `data.values` are required — resolve `data.url`
@@ -376,6 +379,7 @@ Inspect `_warnings` or `ChartWarning` arrays in integration code to surface trun
 | `flint-chart/vegalite` | VL templates and `assembleVegaLite` |
 | `flint-chart/echarts` | ECharts templates and `assembleECharts` |
 | `flint-chart/chartjs` | Chart.js templates and `assembleChartjs` |
+| `flint-chart/highcharts` | Highcharts templates and `assembleHighcharts` |
 | `flint-chart/validate` | `validateChart` and input validation helpers |
 | `flint-chart/test-data` | Gallery generators (`TEST_GENERATORS`) |
 

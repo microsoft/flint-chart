@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ChartAssemblyInput } from 'flint-chart';
-import { buildInteractiveChart } from 'flint-chart/interactive';
+import { buildInteractiveChart, type InteractiveBackend } from 'flint-chart/interactive';
 import { expressionInterpreter } from 'vega-interpreter';
 import { BACKENDS, getSupportedBackends, type PreviewBackend } from '../shared/supported-backends';
 import './overflow-viewport-lab.css';
@@ -55,7 +55,7 @@ const heatmapInput: ChartAssemblyInput = {
 
 function InteractiveBackendSurface({ input, backend, renderer = 'canvas' }: {
   input: ChartAssemblyInput;
-  backend: PreviewBackend;
+  backend: InteractiveBackend;
   renderer?: 'canvas' | 'svg';
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -87,9 +87,9 @@ function BackendPicker({
   availableBackends,
   onChange,
 }: {
-  value: PreviewBackend;
-  availableBackends: PreviewBackend[];
-  onChange: (value: PreviewBackend) => void;
+  value: InteractiveBackend;
+  availableBackends: InteractiveBackend[];
+  onChange: (value: InteractiveBackend) => void;
 }) {
   return (
     <div className="ov-backends" role="group" aria-label="Chart backend">
@@ -117,8 +117,11 @@ function GeneralViewportDemo({
   initialBackend: PreviewBackend;
   description: string;
 }) {
-  const [backend, setBackend] = useState<PreviewBackend>(initialBackend);
-  const availableBackends = getSupportedBackends(input.chart_spec.chartType);
+  const [backend, setBackend] = useState<InteractiveBackend>(initialBackend as InteractiveBackend);
+  // The interactive viewport surface is Vega-Lite-only; other backends have no
+  // interactive renderer, so the picker is narrowed to the interactive ones.
+  const availableBackends: InteractiveBackend[] = (['vegalite', 'echarts', 'chartjs', 'plotly'] as const)
+    .filter((b) => getSupportedBackends(input.chart_spec.chartType).includes(b));
 
   useEffect(() => {
     if (!availableBackends.includes(backend)) {

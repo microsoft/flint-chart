@@ -137,6 +137,12 @@ export const DOCUMENTATION_GROUPS: DocGroup[] = [
         file: '../../../docs/reference-chartjs.md',
       },
       {
+        slug: 'reference-highcharts',
+        title: 'Highcharts charts',
+        description: 'Every Highcharts chart type, its channels, and configurable parameters.',
+        file: '../../../docs/reference-highcharts.md',
+      },
+      {
         slug: 'reference-plotly',
         title: 'Plotly charts',
         description: 'Every Plotly chart type, its channels, and configurable parameters.',

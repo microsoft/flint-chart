@@ -4,8 +4,8 @@
 import { z } from 'zod';
 import { INTERACTION_PRESET_TYPES, type ChartAssemblyInput, type InteractionPresetType } from 'flint-chart';
 
-/** The three backends this server can compile, validate, and render. */
-export const SUPPORTED_BACKENDS = ['vegalite', 'echarts', 'chartjs'] as const;
+/** The backends this server can compile, validate, and render. */
+export const SUPPORTED_BACKENDS = ['vegalite', 'echarts', 'chartjs', 'highcharts'] as const;
 export type SupportedBackend = (typeof SUPPORTED_BACKENDS)[number];
 
 /**

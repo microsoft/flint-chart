@@ -62,7 +62,7 @@ export interface InteractiveChartSurfaceOptions {
     warnings?: readonly ChartWarning[];
 }
 
-export type InteractiveBackend = 'vegalite' | 'echarts' | 'chartjs' | 'plotly';
+export type InteractiveBackend = 'vegalite' | 'echarts' | 'chartjs' | 'plotly' | 'highcharts';
 
 export interface BuildInteractiveChartOptions extends InteractiveChartSurfaceOptions {
     backend: InteractiveBackend;

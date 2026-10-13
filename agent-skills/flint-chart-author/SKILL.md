@@ -10,7 +10,7 @@ description: "Use when: the user asks to make or render charts with flint-chart,
 Your output is the **spec**: the `chart_spec` and `semantic_types` of a
 `ChartAssemblyInput`. You reference data columns **by name**. The host
 passes the resulting input to `assembleVegaLite`, `assembleECharts`,
-or `assembleChartjs` to get a backend spec.
+`assembleChartjs`, or `assembleHighcharts` to get a backend spec.
 
 **You write the input spec, not the output spec.** And critically:
 
@@ -67,16 +67,18 @@ npm install flint-chart
 npm install vega vega-lite vega-embed  # browser Vega-Lite rendering
 npm install echarts                    # ECharts rendering
 npm install chart.js                   # Chart.js rendering
+npm install highcharts                 # Highcharts rendering
 ```
 
 Then compile with the requested backend:
 
 ```ts
-import { assembleChartjs, assembleECharts, assembleVegaLite } from 'flint-chart';
+import { assembleChartjs, assembleECharts, assembleHighcharts, assembleVegaLite } from 'flint-chart';
 
 const vegaLiteSpec = assembleVegaLite(input);
 const echartsOption = assembleECharts(input);
 const chartjsConfig = assembleChartjs(input);
+const highchartsOption = assembleHighcharts(input);
 ```
 
 Python support is planned for a later release. Until the PyPI package is
@@ -123,7 +125,7 @@ Use the binding mode that matches the runtime. Do not mix them.
 3. **Generated application or notebook code: bind runtime variables.** If the
   user asks you to add Flint to code, write normal data-loading code first and
   pass a real runtime value, e.g. `data: { values: rows }`, to
-  `assembleVegaLite`, `assembleECharts`, or `assembleChartjs`. This variable
+  `assembleVegaLite`, `assembleECharts`, `assembleChartjs`, or `assembleHighcharts`. This variable
   pattern is for generated code, not for MCP tool calls.
 
 For spec-only answers, return the `semantic_types` and `chart_spec` pieces and
@@ -376,6 +378,8 @@ support a subset (verify if targeting a non-VL backend):
 - **Chart.js** supports: Scatter, Bubble, Bar, Grouped Bar, Stacked Bar,
   Lollipop, Bump, Combo, Line, Area, Range Area, Pie, Doughnut, Histogram,
   Radar, Rose, Slope, Connected Scatter.
+- **Highcharts** supports: Scatter Plot, Bar, Grouped Bar, Stacked Bar,
+  Line, Area, Pie, Doughnut, Histogram, Radar, Heatmap, Waterfall, Sunburst.
 
 You do not need to call the library or inspect its source to author the
 input — pick from this table.

@@ -6,6 +6,7 @@ import {
   assembleVegaLite,
   assembleECharts,
   assembleChartjs,
+  assembleHighcharts,
   assemblePlotly,
   assembleExcel,
   assembleImageCharts,
@@ -48,6 +49,34 @@ describe('public API smoke', () => {
     const config = assembleChartjs(INPUT) as any;
     expect(config).toBeDefined();
     expect(config.type ?? config.data ?? config.options).toBeDefined();
+  });
+
+  it('assembleHighcharts returns an options object', () => {
+    const option = assembleHighcharts(INPUT) as any;
+    expect(option).toBeDefined();
+    expect(option.chart?.type ?? option.series ?? option.xAxis).toBeDefined();
+  });
+
+  it('assembleHighcharts uses field display names for native axis and series titles', () => {
+    const input = {
+      data: { values: [
+        { country: 'France', percentageOfCountries: 42 },
+        { country: 'Japan', percentageOfCountries: 47 },
+      ] },
+      semantic_types: { country: 'Country', percentageOfCountries: 'Percent' },
+      field_display_names: {
+        country: 'Country',
+        percentageOfCountries: 'Percentage of countries',
+      },
+      chart_spec: {
+        chartType: 'Line Chart',
+        encodings: { x: 'country', y: 'percentageOfCountries' },
+      },
+    };
+
+    const highcharts = assembleHighcharts(input) as any;
+    expect(highcharts.xAxis.title.text).toBe('Country');
+    expect(highcharts.yAxis.title.text).toBe('Percentage of countries');
   });
 
   it('uses field display names across native backend axis and series titles', () => {

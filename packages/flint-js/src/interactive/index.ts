@@ -254,5 +254,17 @@ export function buildInteractiveChart(
                 },
                 { className, ariaLabel, chartId, updates, interactions, warnings },
             );
+        case 'highcharts':
+            return mountInteractiveChartSurface(
+                container,
+                input,
+                {
+                    async mount(chartContainer, chartInput) {
+                        const { createHighchartsInteractiveRenderer } = await import('../highcharts/interactive');
+                        return createHighchartsInteractiveRenderer().mount(chartContainer, chartInput);
+                    },
+                },
+                { className, ariaLabel, chartId, updates, interactions, warnings },
+            );
     }
 }
