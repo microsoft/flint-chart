@@ -130,7 +130,7 @@ _无模板专属参数。_
 
 ### ![](chart-icon-line.svg) Line Chart
 
-**编码通道：** `x`, `y`, `color`, `opacity`, `column`, `row`
+**编码通道：** `x`, `y`, `color`, `strokeDash`, `opacity`, `column`, `row`
 
 | 参数 | 控件 | 取值范围 | 默认值 | 可用性 | 描述 |
 |---|---|---|---|---|---|
