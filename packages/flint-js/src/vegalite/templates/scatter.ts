@@ -719,13 +719,15 @@ export const boxplotDef: ChartTemplateDef = {
             // so the user can pick none / local / global; the compiler default is
             // reported as `recommendedValue`.
             check: (ctx) => {
-                const colorField = ctx.channelSemantics?.color?.field;
-                const xType = ctx.channelSemantics?.x?.type;
-                const axisField = isDiscreteType(xType)
-                    ? ctx.channelSemantics?.x?.field
-                    : ctx.channelSemantics?.y?.field;
+                const cs = ctx.channelSemantics;
+                const colorField = cs?.color?.field;
                 const rows = ctx.data;
-                if (!colorField || !axisField || !isDiscreteType(ctx.channelSemantics?.color?.type) || !rows) {
+                // The same band axis `declareLayoutMode` picks.
+                const banded = cs?.x?.field && cs.y?.field && rows
+                    ? detectBandedAxisForceDiscrete(cs, rows, { preferAxis: 'x' })
+                    : null;
+                const axisField = banded ? cs?.[banded.axis]?.field : undefined;
+                if (!colorField || !axisField || !isDiscreteType(cs?.color?.type) || !rows) {
                     return { applicable: false };
                 }
                 const plan = planBandDodge(rows, axisField, colorField, {

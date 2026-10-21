@@ -495,8 +495,9 @@ export const groupedBarChartDef: ChartTemplateDef = {
         // rather than the full global grid. Native x labels stay centered.
         const offsetCh = spec.encoding?.xOffset ? 'xOffset' : spec.encoding?.yOffset ? 'yOffset' : undefined;
         const groupField = ctx.channelSemantics?.group?.field;
-        const xDisc = ctx.channelSemantics?.x?.type === 'nominal' || ctx.channelSemantics?.x?.type === 'ordinal';
-        const axisField = xDisc ? ctx.channelSemantics?.x?.field : ctx.channelSemantics?.y?.field;
+        // The offset sits on the banded axis, which may be a temporal axis the
+        // layout forced discrete, so its semantic type can't pick the axis.
+        const axisField = offsetCh === 'xOffset' ? ctx.channelSemantics?.x?.field : ctx.channelSemantics?.y?.field;
         if (offsetCh && groupField && axisField) {
             const plan = planBandDodge(ctx.fullTable ?? ctx.table, axisField, groupField);
             const { mode } = resolveDodge(plan, ctx.chartProperties?.dodge);
@@ -538,13 +539,14 @@ export const groupedBarChartDef: ChartTemplateDef = {
             defaultValue: 'auto',
             // The `group` field is what subdivides each category band.
             check: (ctx) => {
-                const isDisc = (t: string | undefined) => t === 'nominal' || t === 'ordinal';
-                const groupField = ctx.channelSemantics?.group?.field ?? ctx.encodings?.group?.field;
-                const axisField = isDisc(ctx.channelSemantics?.x?.type)
-                    ? ctx.channelSemantics?.x?.field
-                    : ctx.channelSemantics?.y?.field;
+                const cs = ctx.channelSemantics;
+                const groupField = cs?.group?.field ?? ctx.encodings?.group?.field;
                 const rows = ctx.data;
-                if (!groupField || !axisField || !rows) return { applicable: false };
+                if (!cs || !rows) return { applicable: false };
+                // The same band axis `declareLayoutMode` picks.
+                const axis = detectBandedAxisForceDiscrete(cs, rows, { preferAxis: 'x' })?.axis || 'x';
+                const axisField = cs[axis]?.field;
+                if (!groupField || !axisField) return { applicable: false };
                 const plan = planBandDodge(rows, axisField, groupField);
                 return { applicable: plan.ambiguous, recommendedValue: plan.mode === 'none' ? 'auto' : plan.mode };
             },
