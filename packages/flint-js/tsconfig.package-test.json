@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.test.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "paths": {},
+    "skipLibCheck": false,
+    "exactOptionalPropertyTypes": true,
+    "types": ["node"]
+  },
+  "include": ["tests/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}
