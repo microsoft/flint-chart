@@ -67,8 +67,8 @@ export const tableDef: ChartTemplateDef = {
     ),
     structure: () => ({ marks: ['rule', 'text'], stacking: 'none' }),
     semanticInteractions: ({ encodings, channelSemantics }) => {
-        const fields = Object.values(encodings).flatMap((encoding) => (encoding?.field ? [encoding.field] : []));
-        const temporal = Object.values(channelSemantics).flatMap((cs) => (cs.type === 'temporal' ? [cs.field] : []));
+        const fields = Object.values(encodings ?? {}).flatMap((encoding) => (encoding?.field ? [encoding.field] : []));
+        const temporal = Object.values(channelSemantics ?? {}).flatMap((cs) => (cs.type === 'temporal' ? [cs.field] : []));
         return {
             fields,
             provenanceFields: fields,

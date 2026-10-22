@@ -9,8 +9,8 @@ import { SUPPORTED_BACKENDS, type SupportedBackend } from './tools/schemas.js';
 
 const HELP = `flint-chart-mcp ${VERSION}
 
-MCP server that compiles and renders Flint chart specs to Vega-Lite, ECharts,
-or Chart.js artifacts (PNG/SVG), entirely in-process.
+MCP server that compiles and renders Flint chart specs to Vega-Lite,
+ECharts, Chart.js, or Highcharts artifacts (PNG/SVG), entirely in-process.
 
 Usage:
   flint-chart-mcp [options]   Start the MCP server (stdio by default)

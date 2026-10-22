@@ -60,6 +60,11 @@
       "import": "./dist/chartjs/index.js",
       "require": "./dist/chartjs/index.cjs"
     },
+    "./highcharts": {
+      "types": "./dist/highcharts/index.d.ts",
+      "import": "./dist/highcharts/index.js",
+      "require": "./dist/highcharts/index.cjs"
+    },
     "./excel": {
       "types": "./dist/excel/index.d.ts",
       "import": "./dist/excel/index.js",
@@ -105,6 +110,11 @@
       "import": "./dist/chartjs/interactive.js",
       "require": "./dist/chartjs/interactive.cjs"
     },
+    "./highcharts/interactive": {
+      "types": "./dist/highcharts/interactive.d.ts",
+      "import": "./dist/highcharts/interactive.js",
+      "require": "./dist/highcharts/interactive.cjs"
+    },
     "./plotly/interactive": {
       "types": "./dist/plotly/interactive.d.ts",
       "import": "./dist/plotly/interactive.js",
@@ -143,6 +153,7 @@
   "peerDependencies": {
     "chart.js": "^4.0.0",
     "echarts": "^5.0.0 || ^6.0.0",
+    "highcharts": "^11.0.0 || ^12.0.0 || ^13.0.0",
     "plotly.js": "^2.0.0 || ^3.0.0",
     "plotly.js-dist-min": "^2.0.0 || ^3.0.0",
     "react": ">=18",
@@ -164,6 +175,9 @@
       "optional": true
     },
     "chart.js": {
+      "optional": true
+    },
+    "highcharts": {
       "optional": true
     },
     "plotly.js": {

@@ -106,7 +106,10 @@ function GeneralViewportDemo({
   description: string;
 }) {
   const [backend, setBackend] = useState<PreviewBackend>(initialBackend);
-  const availableBackends = getSupportedBackends(input.chart_spec.chartType);
+  // The interactive viewport surface is Vega-Lite-only; other backends have no
+  // interactive renderer, so the picker is narrowed to the interactive ones.
+  const availableBackends: PreviewBackend[] = (['vegalite', 'echarts', 'chartjs', 'plotly', 'highcharts'] as const)
+    .filter((b) => getSupportedBackends(input.chart_spec.chartType).includes(b));
 
   useEffect(() => {
     if (!availableBackends.includes(backend)) {

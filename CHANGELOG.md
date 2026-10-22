@@ -114,6 +114,14 @@ Released together for `flint-chart`, `flint-chart-mcp`, and the Copilot Canvas p
   `semantic_types` labels surface as `unknown_semantic_type` warnings, and
   `isRegistered` / `getRegisteredTypes` are exported from `flint-chart/core`
   ([#104](https://github.com/microsoft/flint-chart/issues/104)).
+- Highcharts backend. The same Flint input compiles to a Highcharts
+  `option` via `assembleHighcharts(input)` (also from the new
+  `flint-chart/highcharts` subpath): bar, stacked bar, grouped bar,
+  line, area, pie, doughnut, scatter, histogram, and radar templates
+  with native series types, datetime axes, and per-panel faceting
+  (`_facet`). `validateChart` accepts `highcharts`, and the MCP
+  server and site editor render it. Guide:
+  `docs/reference-highcharts.md`.
 - `<FlintChart>` from the new `flint-chart/react` subpath (React is an
   optional peer dependency). `spec` takes the `ChartAssemblyInput` with its
   `interaction_spec`; `interactions` takes preset factories, as an array added

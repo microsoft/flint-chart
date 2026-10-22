@@ -9,7 +9,7 @@ Routes (`HashRouter`):
 | Path        | What it is                                                  |
 | ----------- | ----------------------------------------------------------- |
 | `#/`        | Landing page (overview + links to GitHub and the two demos) |
-| `#/gallery` | Every chart template across Vega-Lite / ECharts / Chart.js  |
+| `#/gallery` | Every chart template across Vega-Lite / ECharts / Chart.js / Highcharts  |
 | `#/editor`  | JSON ChartAssemblyInput playground, live-render per backend |
 
 ## Local development

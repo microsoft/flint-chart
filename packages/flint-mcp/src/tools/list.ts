@@ -5,6 +5,7 @@ import {
   vlAllTemplateDefs,
   ecAllTemplateDefs,
   cjsAllTemplateDefs,
+  hcAllTemplateDefs,
   listThemePresets,
   listInteractionPresets as listPresetSummaries,
   supportedInteractionPresets,
@@ -19,6 +20,7 @@ const REGISTRY: Record<RenderBackend, ChartTemplateDef[]> = {
   vegalite: vlAllTemplateDefs,
   echarts: ecAllTemplateDefs,
   chartjs: cjsAllTemplateDefs,
+  highcharts: hcAllTemplateDefs,
 };
 
 export interface ChartTypeInfo {

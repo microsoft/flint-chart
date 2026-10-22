@@ -23,6 +23,7 @@ import type { ExcelTemplateDef } from '../packages/flint-js/src/excel/templates/
 import { vlTemplateDefs } from '../packages/flint-js/src/vegalite/templates/index';
 import { ecTemplateDefs } from '../packages/flint-js/src/echarts/templates/index';
 import { cjsTemplateDefs } from '../packages/flint-js/src/chartjs/templates/index';
+import { hcTemplateDefs } from '../packages/flint-js/src/highcharts/templates/index';
 import { plTemplateDefs } from '../packages/flint-js/src/plotly/templates/index';
 import { excelAllTemplateDefs } from '../packages/flint-js/src/excel/templates/index';
 
@@ -68,6 +69,16 @@ const BACKENDS: BackendSpec[] = [
         blurb:
             'The Chart.js backend is the lightweight embedding target for common chart families. It keeps the ' +
             'parameter surface intentionally small.',
+    },
+    {
+        name: 'Highcharts',
+        file: 'reference-highcharts.md',
+        defs: hcTemplateDefs,
+        blurb:
+            'The Highcharts backend compiles to a Highcharts options object ' +
+            '(`{ chart, xAxis, yAxis, series, tooltip, legend, colors }`) for SVG-rendered, ' +
+            'interactive charts. It covers the common chart families with native ' +
+            'Highcharts series types and datetime axes.',
     },
     {
         name: 'Plotly',

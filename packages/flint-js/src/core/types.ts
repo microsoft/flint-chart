@@ -1036,8 +1036,8 @@ export interface ChartTemplateDef {
     semanticInteractions?: (context: {
         resolvedEncodings: Readonly<Record<string, any>>;
         /** The encodings as Flint resolved them, before any backend spelling, and their semantics. */
-        encodings: Readonly<Record<string, ChartEncoding>>;
-        channelSemantics: Readonly<Record<string, ChannelSemantics>>;
+        encodings?: Readonly<Record<string, ChartEncoding>>;
+        channelSemantics?: Readonly<Record<string, ChannelSemantics>>;
     }) => {
         fields: string[];
         provenanceFields?: readonly string[];

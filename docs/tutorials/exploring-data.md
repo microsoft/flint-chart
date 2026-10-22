@@ -322,8 +322,8 @@ Workflow:
 
 1. Browse [gallery](/gallery) by chart family.
 2. Open an example in the editor.
-3. Change one field name or semantic type and watch the compiler rebuild all
-   three backends.
+3. Change one field name or semantic type and watch the compiler rebuild
+   the previews for every supported backend.
 
 ---
 

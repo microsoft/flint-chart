@@ -35,7 +35,7 @@ Pick only the channels the mark actually uses. Copy a similar template as a star
 
 A new chart that is a variant of an existing one should look like it. Reuse the sibling's mark definition and properties (export them from the sibling's file), or call the sibling's `instantiate` on a unit of your own spec, so a theme and a reader see one family. The Ridgeline Plot draws its bands as the Range Area Chart does; the Marginal Plot builds its plot with the Scatter Plot's, Strip Plot's or Heatmap's `instantiate`, by the axis types, and its margins with the Density Plot's, Histogram's, Boxplot's or Bar Chart's.
 
-ECharts, Chart.js and Plotly use the same `ChartTemplateDef` interface under their own `templates/` folders.
+ECharts, Chart.js, Plotly, and Highcharts use the same `ChartTemplateDef` interface under their own `templates/` folders.
 
 ---
 
@@ -178,6 +178,7 @@ Review formatting, layout stretch, legends and facet behaviour across 3–6 repr
 
 # §7 Wire the site, docs and agent skill
 
+The user-facing contract is that the same `chartType` string should work across `assembleVegaLite`, `assembleECharts`, `assembleChartjs`, `assemblePlotly`, and `assembleHighcharts` **when templates exist**.
 Nothing below is read from the registry, so each needs a line:
 
 | Where | What |

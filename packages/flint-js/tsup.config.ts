@@ -7,6 +7,7 @@ export default defineConfig({
     'vegalite/index': 'src/vegalite/index.ts',
     'echarts/index': 'src/echarts/index.ts',
     'chartjs/index': 'src/chartjs/index.ts',
+    'highcharts/index': 'src/highcharts/index.ts',
     'plotly/index': 'src/plotly/index.ts',
     'excel/index': 'src/excel/index.ts',
     'image-charts/index': 'src/image-charts/index.ts',
@@ -18,6 +19,7 @@ export default defineConfig({
     'vegalite/interactive': 'src/vegalite/interactive.ts',
     'echarts/interactive': 'src/echarts/interactive.ts',
     'chartjs/interactive': 'src/chartjs/interactive.ts',
+    'highcharts/interactive': 'src/highcharts/interactive.ts',
     'plotly/interactive': 'src/plotly/interactive.ts',
     'test-data/index': 'src/test-data/index.ts',
     'gallery/index': 'src/gallery/index.ts',
@@ -30,8 +32,8 @@ export default defineConfig({
   treeshake: true,
   target: 'es2020',
   external: [
-    'vega', 'vega-lite', 'vega-tooltip', 'echarts', 'chart.js', 'plotly.js', 'plotly.js-dist-min', 'react',
-    '../vegalite/interactive', '../echarts/interactive', '../chartjs/interactive', '../plotly/interactive',
+    'vega', 'vega-lite', 'vega-tooltip', 'echarts', 'chart.js', 'highcharts', 'plotly.js', 'plotly.js-dist-min', 'react',
+    '../vegalite/interactive', '../echarts/interactive', '../chartjs/interactive', '../highcharts/interactive', '../plotly/interactive',
     '../validate/links',
   ],
 });

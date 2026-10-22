@@ -39,10 +39,10 @@ Most design logic lives in Stages 1–2 and is identical across backends.
 |-------|------------|----------------|-------------|
 | **1. Compiler frontend** | Resolve semantic context | Phase 0 — `resolveChannelSemantics()` | `ChannelSemantics` per channel |
 | **2. Optimizer** | Fit layout to canvas | Phase 1 — `computeLayout()`, `filterOverflow()` | `LayoutResult`, truncated data |
-| **3. Code generator** | Emit backend-native output | Phase 2 — `build*Encodings()`, `template.instantiate()` | VL / EC / CJS / Plotly spec or Excel artifact |
+| **3. Code generator** | Emit backend-native output | Phase 2 — `build*Encodings()`, `template.instantiate()` | VL / EC / CJS / Highcharts / Plotly spec or Excel artifact |
 
 ```text
-assembleVegaLite(input)   // or assembleECharts, assembleChartjs, assemblePlotly, assembleExcel
+assembleVegaLite(input)   // or assembleECharts, assembleChartjs, assembleHighcharts, assemblePlotly, assembleExcel
        │
        ▼
 ══ STAGE 1 — COMPILER FRONTEND (core/) ═════════════════════════
@@ -199,6 +199,7 @@ packages/flint-js/src/
 ├── vegalite/       Stage 3 — Vega-Lite templates + assembleVegaLite
 ├── echarts/        Stage 3 — ECharts templates + assembleECharts
 ├── chartjs/        Stage 3 — Chart.js templates + assembleChartjs
+├── highcharts/     Stage 3 — Highcharts templates + assembleHighcharts
 ├── excel/          Stage 3 — native Excel chart planning + Office.js generation
 └── test-data/      gallery fixtures (TEST_GENERATORS)
 
