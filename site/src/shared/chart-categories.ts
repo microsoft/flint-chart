@@ -342,6 +342,49 @@ const figure = assemblePlotly(input);`,
       createChart('plotly', 'plotly-gauge', 'Gauge Chart *', 'ECharts: Gauge', gaugeIcon),
     ],
   },
+  {
+    id: 'highcharts',
+    label: BACKEND_LABELS.highcharts,
+    description:
+      'Compiles a Flint spec into a Highcharts options object — ideal for ' +
+      'editorial presentations, responsive publications, and print-ready visualizations ' +
+      'with native export and accessibility support.',
+    fn: 'assembleHighcharts',
+    snippet: `import { assembleHighcharts } from 'flint-chart';
+
+const input = {
+  data: {
+    values: [
+      { quarter: 'Q1', revenue: 120 },
+      { quarter: 'Q2', revenue: 156 },
+      { quarter: 'Q3', revenue: 143 },
+      { quarter: 'Q4', revenue: 189 },
+    ],
+  },
+  semantic_types: { quarter: 'Quarter', revenue: 'Amount' },
+  chart_spec: {
+    chartType: 'Bar Chart',
+    encodings: { x: 'quarter', y: 'revenue' },
+  },
+};
+
+const options = assembleHighcharts(input);`,
+    charts: [
+      createChart('highcharts', 'highcharts-bar', 'Bar Chart', 'Bar Chart', barIcon),
+      createChart('highcharts', 'highcharts-grouped-bar', 'Grouped Bar Chart', 'Grouped Bar Chart', groupedBarIcon),
+      createChart('highcharts', 'highcharts-stacked-bar', 'Stacked Bar Chart', 'Stacked Bar Chart', stackedBarIcon),
+      createChart('highcharts', 'highcharts-line', 'Line Chart', 'Line Chart', lineIcon),
+      createChart('highcharts', 'highcharts-area', 'Area Chart', 'Area Chart', areaIcon),
+      createChart('highcharts', 'highcharts-scatter', 'Scatter Plot', 'Scatter Plot', scatterIcon),
+      createChart('highcharts', 'highcharts-pie', 'Pie Chart', 'Pie Chart', pieIcon),
+      createChart('highcharts', 'highcharts-doughnut', 'Doughnut Chart', 'Doughnut Chart', doughnutIcon),
+      createChart('highcharts', 'highcharts-histogram', 'Histogram', 'Histogram', histogramIcon),
+      createChart('highcharts', 'highcharts-radar', 'Radar Chart', 'Radar Chart', radarIcon),
+      createChart('highcharts', 'highcharts-heatmap', 'Heatmap', 'Heatmap', heatmapIcon),
+      createChart('highcharts', 'highcharts-waterfall', 'Waterfall Chart', 'Waterfall Chart', waterfallIcon),
+      createChart('highcharts', 'highcharts-sunburst', 'Sunburst Chart', 'Sunburst Chart', sunburstIcon),
+    ],
+  },
 ];
 
 export const DEFAULT_CHART_ID = CHART_CATEGORIES[0]?.charts[0]?.id ?? 'scatter-plot';

@@ -25,7 +25,7 @@ for building interactive applications.
 
 Flint supports **52 chart types across 5 rendering backends** —
 [Vega-Lite](https://vega.github.io/vega-lite/), [ECharts](https://echarts.apache.org/),
-[Chart.js](https://www.chartjs.org/), [Plotly](https://plotly.com/javascript/), and
+[Chart.js](https://www.chartjs.org/), [Highcharts](https://www.highcharts.com/), [Plotly](https://plotly.com/javascript/), and
 native Excel charts — through one unified interface, with **14 themes and 23
 interaction presets**. To create bespoke visualizations, design custom themes in
 the [Theme Lab](https://microsoft.github.io/flint-chart/#/theme-lab) and build
@@ -236,8 +236,8 @@ and read the [interaction spec](docs/interaction-spec.md) and
 - [Project site](https://microsoft.github.io/flint-chart/) — gallery, live editor, themes, and interactions
 - [API reference](docs/api-reference.md) and backend references for
   [Vega-Lite](docs/reference-vegalite.md), [ECharts](docs/reference-echarts.md),
-  [Chart.js](docs/reference-chartjs.md), [Plotly](docs/reference-plotly.md), and
-  [Excel](docs/reference-excel.md)
+  [Chart.js](docs/reference-chartjs.md), [Highcharts](docs/reference-highcharts.md),
+  [Plotly](docs/reference-plotly.md), and [Excel](docs/reference-excel.md)
 - [Theme guide](docs/theme-spec.md), [interaction spec](docs/interaction-spec.md),
   and [interaction programming API](docs/interaction-api.md)
 - [MCP server guide](https://microsoft.github.io/flint-chart/#/mcp) and
@@ -283,6 +283,7 @@ flint-chart/
 │   │       ├── vegalite/     Vega-Lite backend
 │   │       ├── echarts/      ECharts backend
 │   │       ├── chartjs/      Chart.js backend
+│   │       ├── highcharts/   Highcharts backend
 │   │       ├── plotly/       Plotly backend
 │   │       ├── excel/        native Excel backend
 │   │       └── test-data/    fixtures and stress-test generators

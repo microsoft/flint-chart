@@ -49,12 +49,16 @@ export function Landing() {
     let pending: string | null = null;
     try {
       pending = sessionStorage.getItem(LANDING_SCROLL_TO_KEY);
-      if (pending) sessionStorage.removeItem(LANDING_SCROLL_TO_KEY);
     } catch {
       // Privacy modes may block storage.
     }
     if (pending !== WECHAT_SECTION_ID) return;
     const timer = window.setTimeout(() => {
+      try {
+        sessionStorage.removeItem(LANDING_SCROLL_TO_KEY);
+      } catch {
+        // Privacy modes may block storage.
+      }
       scrollToHeading(WECHAT_SECTION_ID);
     }, 50);
     return () => window.clearTimeout(timer);

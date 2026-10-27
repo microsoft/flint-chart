@@ -1,6 +1,6 @@
 # Overview
 
-**Flint** is a semantics-driven intermediate language (IL) for data visualization. You declare what each field *means* and the chart you want; the compiler derives scales, axes, aggregation, formatting, layout, and color, then emits Vega-Lite, ECharts, Chart.js, Plotly, or a native Excel chart artifact.
+**Flint** is a semantics-driven intermediate language (IL) for data visualization. You declare what each field *means* and the chart you want; the compiler derives scales, axes, aggregation, formatting, layout, and color, then emits Vega-Lite, ECharts, Chart.js, Highcharts, Plotly, or a native Excel chart artifact.
 
 If you're new to Flint, start with [Getting started](/documentation/getting-started), then come back here for the architecture and API map.
 
@@ -105,6 +105,7 @@ Semantic types use a three-level hierarchy. Details: [Semantic Type](/documentat
 | `assembleVegaLite(input)` | Vega-Lite v6 spec |
 | `assembleECharts(input)` | ECharts `option` |
 | `assembleChartjs(input)` | Chart.js config |
+| `assembleHighcharts(input)` | Highcharts `option` |
 
 The same input compiles to every supported backend. Stages 1–2 (semantics + layout) live in shared `core/`; only Stage 3 (template instantiation) is library-specific.
 
@@ -135,7 +136,7 @@ Pipeline detail: [Architecture](/documentation/architecture).
 | Section | Pages |
 |---------|-------|
 | **Language design** | [Architecture](/documentation/architecture), [Semantic Type](/documentation/semantic-types), [Auto Layout Algorithm](/documentation/layout-model), [API reference](/documentation/api-reference) |
-| **Chart reference** | [Vega-Lite charts](/documentation/reference-vegalite), [ECharts charts](/documentation/reference-echarts), [Chart.js charts](/documentation/reference-chartjs), [Plotly charts](/documentation/reference-plotly), [Excel charts](/documentation/reference-excel) |
+| **Chart reference** | [Vega-Lite charts](/documentation/reference-vegalite), [ECharts charts](/documentation/reference-echarts), [Chart.js charts](/documentation/reference-chartjs), [Highcharts charts](/documentation/reference-highcharts), [Plotly charts](/documentation/reference-plotly), [Excel charts](/documentation/reference-excel) |
 | **Development** | [Development guide](/documentation/development), [Extending semantic types](/documentation/adding-a-semantic-type), [Extending backends](/documentation/adding-a-backend), [Extending chart templates](/documentation/adding-a-chart-template) |
 
 ---
