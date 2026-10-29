@@ -12,6 +12,7 @@ function niceBinStep(minimum: number, maximum: number, maxBins: number): number 
 }
 
 export const excelHistogramDef: ExcelTemplateDef = {
+    additionalPropertyKeys: ['binCount'],
     chart: 'Histogram',
     channels: ['x', 'color'],
     typeMapping: { vertical: 'ColumnClustered' },

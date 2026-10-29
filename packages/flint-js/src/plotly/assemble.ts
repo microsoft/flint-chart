@@ -50,6 +50,7 @@ import { bandedSpan, plApplyBandLabels, plApplyCartesianAxisSpacing, plApplyLayo
 import { plCombineFacetPanels, niceBounds, type PlotlyFacetPanel } from './facet';
 import { normalizeStaticSeries } from '../core/static-series';
 import { normalizeChartProperties } from '../core/normalize-properties';
+import { validateUnknownInputKeys } from '../core/validate-input-keys';
 import { analysisReadsProperty } from '../core/analyze';
 import { groundTheme, resolveChartDefaults, resolveCompileDefaults, resolveThemeFontSize } from '../core/theme/ground';
 import { resolveThemeSpec } from '../core/theme/presets';
@@ -174,6 +175,11 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
         const swapped = plGetTemplateDef(transformed.chartType) as ChartTemplateDef | undefined;
         if (swapped) chartTemplate = swapped;
     }
+    warnings.push(...validateUnknownInputKeys(
+        [authoredTemplate, chartTemplate],
+        input.chart_spec.chartProperties,
+        input.options,
+    ));
     const overridden = applyEncodingOverrides(chartTemplate, transformed.encodings, chartProperties);
     // Several rows on one mark's key: aggregate the measure (and say so) rather than overplot.
     const implicit = resolveImplicitAggregation(chartTemplate.chart, overridden, data, semanticTypes);

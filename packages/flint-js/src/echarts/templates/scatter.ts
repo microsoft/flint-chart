@@ -816,6 +816,7 @@ function regressionCurvePoints(
  * Regression — scatter + trend line (mirror vegalite/templates/scatter.ts regressionDef).
  */
 export const ecRegressionDef: ChartTemplateDef = {
+    additionalPropertyKeys: ['opacity'],
     chart: 'Regression',
     template: { mark: 'circle', encoding: {} },
     channels: ['x', 'y', 'size', 'color', 'column', 'row'],

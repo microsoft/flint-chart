@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type { ChartAssemblyInput, SemanticResult } from '../../core/types';
+import type { ChartAssemblyInput, ChartTemplateDef, SemanticResult } from '../../core/types';
 import type { ExcelTypeMapping } from '../chart-types';
 import type { ExcelNativeChartSpec } from '../types';
 
@@ -13,7 +13,7 @@ export interface ExcelTemplateContext {
     typeOf: (channel: string) => string | undefined;
 }
 
-export interface ExcelTemplateDef {
+export interface ExcelTemplateDef extends Pick<ChartTemplateDef, 'additionalPropertyKeys'> {
     chart: string;
     channels: string[];
     typeMapping: ExcelTypeMapping;

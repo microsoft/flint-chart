@@ -23,6 +23,7 @@ import { extractCategories, DEFAULT_COLORS } from './utils';
 import { getPaletteForScheme } from '../colormap';
 
 export const ecTreeDef: ChartTemplateDef = {
+    additionalPropertyKeys: ['rootLabel'],
     chart: 'Tree',
     template: { mark: 'point', encoding: {} },
     channels: ['color', 'detail', 'size'],

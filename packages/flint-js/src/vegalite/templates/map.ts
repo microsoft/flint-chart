@@ -398,6 +398,7 @@ function drawAtPlannedSize(spec: any, ctx: InstantiateContext): void {
 }
 
 export const mapDef: ChartTemplateDef = {
+    additionalPropertyKeys: ['baseMapUrl', 'levelField', 'levels'],
     chart: "Map",
     template: {
         layer: [
@@ -621,6 +622,7 @@ function addCustomBaseMap(spec: any, url: unknown): void {
 }
 
 export const choroplethDef: ChartTemplateDef = {
+    additionalPropertyKeys: ['baseMapUrl', 'featureKey', 'levels'],
     chart: "Choropleth",
     template: {
         mark: { type: "geoshape", stroke: "white", strokeWidth: 0.5 },

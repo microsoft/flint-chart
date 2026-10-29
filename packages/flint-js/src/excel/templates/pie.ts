@@ -10,6 +10,7 @@ export const excelPieChartDef: ExcelTemplateDef = {
 };
 
 export const excelDonutChartDef: ExcelTemplateDef = {
+    additionalPropertyKeys: ['innerRadius'],
     chart: 'Donut Chart',
     channels: ['color', 'size', 'theta'],
     typeMapping: { vertical: 'Doughnut', noAxes: true },
