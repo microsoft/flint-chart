@@ -20,6 +20,39 @@
 }
 .talk.is-all { position: static; overflow: visible; padding: 24px 0; }
 
+/* The stage holds the slide, beside the slide panel when it is open. */
+.talk { display: flex; }
+.talk-stage { flex: 1 1 auto; min-width: 0; position: relative; }
+.talk.is-all { display: block; }
+.talk.is-all .talk-stage { position: static; }
+.talk-position { position: absolute; right: 20px; bottom: 14px; font-size: 13px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+
+/* The slide panel: a list of slide cards grouped by section, or a tab on the left edge when hidden. */
+.talk-panel { flex: none; height: 100%; display: flex; flex-direction: column; background: var(--panel); border-right: 1px solid rgba(0, 0, 0, 0.10); font-size: 14px; line-height: 1.3; }
+.talk-panel-head { flex: none; display: flex; align-items: center; justify-content: space-between; padding: 14px 10px 10px 20px; }
+.talk-panel-title { font-weight: 600; }
+.talk-panel-count { margin-left: 6px; font-size: 12px; font-weight: 400; color: var(--ink-3); }
+.talk-panel-btn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 8px; background: transparent; color: var(--ink-3); cursor: pointer; padding: 0; }
+.talk-panel-btn:hover { color: var(--ink); background: rgba(0, 0, 0, 0.05); }
+.talk-panel-list { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0 8px 16px; }
+.talk-panel-group { font-size: 12px; font-weight: 600; color: var(--ink-3); padding: 14px 12px 6px; }
+.talk-panel-foot { flex: none; border-top: 1px solid rgba(0, 0, 0, 0.08); padding: 10px 20px; font-size: 12px; color: var(--ink-3); }
+.talk-thumb { width: 100%; display: flex; align-items: flex-start; gap: 6px; padding: 5px 6px; margin: 0; border: 0; border-radius: 8px; background: transparent; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+.talk-thumb:hover { background: rgba(0, 0, 0, 0.04); }
+.talk-thumb.is-current { background: rgba(47, 109, 181, 0.08); }
+.talk-thumb-n { flex: none; width: 20px; padding-top: 3px; text-align: right; font-size: 11px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.talk-thumb.is-current .talk-thumb-n { color: var(--meaning); font-weight: 600; }
+.talk-thumb-card { flex: none; width: 200px; height: 112px; box-sizing: border-box; display: flex; flex-direction: column; padding: 9px 10px; background: #fff; border-radius: 4px; overflow: hidden; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.10); }
+.talk-thumb.is-current .talk-thumb-card { box-shadow: 0 0 0 2px var(--meaning); }
+.talk-thumb-card.is-heading { justify-content: center; }
+.talk-thumb-title { display: block; font-size: 8.5px; font-weight: 600; line-height: 1.2; letter-spacing: -0.01em; color: var(--ink); }
+.talk-thumb-card.is-heading .talk-thumb-title { font-size: 11px; font-weight: 700; }
+.talk-thumb-body { display: flex; gap: 4px; margin-top: auto; height: 44%; }
+.talk-thumb-body > span { flex: 1; background: #eef0f2; border-radius: 2px; }
+.talk-thumb:focus-visible, .talk-panel-btn:focus-visible, .talk-panel-tab:focus-visible { outline: 2px solid var(--meaning); outline-offset: 2px; }
+.talk-panel-tab { position: absolute; left: 0; top: 50%; z-index: 1; width: 22px; height: 64px; margin-top: -32px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(0, 0, 0, 0.12); border-left: 0; border-radius: 0 10px 10px 0; background: rgba(255, 255, 255, 0.85); color: var(--ink-2); cursor: pointer; padding: 0; opacity: 0.45; transition: opacity 0.15s, width 0.15s; }
+.talk-panel-tab:hover { opacity: 1; width: 30px; }
+
 .talk-slide {
   position: absolute; left: 50%; top: 50%;
   width: 1600px; height: 900px;
@@ -79,15 +112,14 @@
 .talk-code.fit { flex: none; }
 .talk-code { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.45; }
 .talk-code > span { display: block; }
+.talk-code > span:empty::before { content: '\00a0'; }
 .talk-code .tk-key { color: #0550ae; }
 .talk-code .tk-str { color: #116329; }
 .talk-code .tk-num { color: #953800; }
 .talk-code .tk-lit { color: #8250df; }
 .talk-code .tk-p { color: var(--ink-3); }
-/* Changed lines stay one red, over a light tint, so the diff reads before the syntax. */
-.talk-code .hl { color: #b42318; font-weight: 700; background: rgba(180, 35, 24, 0.07); }
-.talk-code .hl span { color: inherit; }
-.talk-code.flint .hl { color: #0b5cad; background: rgba(0, 103, 184, 0.08); }
+/* Changed or discussed lines: a light highlighter under the usual syntax colours, in every language. */
+.talk-code .hl { font-weight: 700; background: #fff5c2; }
 .talk-code .gap { color: var(--ink-3); }
 
 /* A step: the code and chart before, an arrow, the code and chart after. */

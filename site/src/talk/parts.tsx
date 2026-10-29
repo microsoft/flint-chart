@@ -247,8 +247,12 @@ export function specText(value: unknown, width = 60, indent = 0, lead = 0): stri
   return `{\n${entries.map(([k, v]) => `${inner}${JSON.stringify(k)}: ${specText(v, width, indent + 2, k.length + 4)}`).join(',\n')}\n${pad}}`;
 }
 
+/** A line without its trailing comma, so adding a sibling after it does not count as changing it. */
+const sansComma = (line: string) => line.replace(/,$/, '');
+
 /** For each line of `b`, whether it is new or changed relative to `a` (longest common subsequence). */
 function addedLines(a: string[], b: string[]): boolean[] {
+  a = a.map(sansComma); b = b.map(sansComma);
   const n = a.length, m = b.length;
   const dp = Array.from({ length: n + 1 }, () => new Array<number>(m + 1).fill(0));
   for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) {
@@ -409,20 +413,26 @@ export function Code({ rows: source, max = 22, min = 14, tone = 'flint' }: {
   );
 }
 
-const TOKEN = /("(?:[^"\\]|\\.)*")(\s*:)?|(?<![\w.])(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)|\b(true|false|null)\b|([{}[\],])/g;
+const TOKEN = /(\/\/.*$)|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')(\s*:)?|(<\/?[A-Z][\w.]*|\/>)|\b([A-Za-z_$][\w$]*)(\s*:)|(?<![\w.])(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)|\b(true|false|null|const|let|return|if|function|new|import|export|from|async|await)\b|(=>)|([{}[\],])/g;
 
-/** One line of JSON, its keys, strings, numbers, literals, and punctuation each in their own color. */
+/** One line of JSON or JavaScript: keys and JSX tags, strings, numbers, literals and keywords, comments, and punctuation each in their own color. */
 function tokens(text: string): ReactNode[] {
   const out: ReactNode[] = [];
   let last = 0;
   for (const m of text.matchAll(TOKEN)) {
     const at = m.index ?? 0;
     if (at > last) out.push(text.slice(last, at));
-    const [whole, str, colon, num, lit] = m;
+    const [whole, comment, str, colon, tag, name, nameColon, num, lit, arrow] = m;
     if (str) {
       out.push(<span key={at} className={colon ? 'tk-key' : 'tk-str'}>{str}</span>);
       if (colon) out.push(<span key={`${at}:`} className="tk-p">{colon}</span>);
-    } else out.push(<span key={at} className={num ? 'tk-num' : lit ? 'tk-lit' : 'tk-p'}>{whole}</span>);
+    } else if (name) {
+      out.push(<span key={at} className="tk-key">{name}</span>);
+      out.push(<span key={`${at}:`} className="tk-p">{nameColon}</span>);
+    } else {
+      const cls = comment ? 'gap' : tag ? 'tk-key' : num ? 'tk-num' : lit || arrow ? 'tk-lit' : 'tk-p';
+      out.push(<span key={at} className={cls}>{whole}</span>);
+    }
     last = at + whole.length;
   }
   if (last < text.length) out.push(text.slice(last));

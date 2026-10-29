@@ -49,14 +49,14 @@ export function McpExperience() {
 }
 
 /** One of the introduction's two chat turns, without its heading: the talk deck shows them one to a slide. */
-export function McpChatTurn({ kind }: { kind: 'chart' | 'board' }) {
+export function McpChatTurn({ kind, height }: { kind: 'chart' | 'board'; height?: number }) {
   const { t } = useTranslation();
   useMcpStyles(SCOPE);
   useHostPage();
   return (
     <>
       <style>{experienceStyles}</style>
-      <SimpleStory>
+      <SimpleStory height={height}>
         {kind === 'chart' ? (
           <ChatTurn ask={t('mcp.exp.simple.chartAsk')} reply={t('mcp.exp.simple.chartReply')} placeholder={430}
             card={(onContext) => <ChartCard card={SIMPLE_CHART} onContext={onContext} />}
@@ -84,13 +84,13 @@ export function McpExperienceStories() {
   );
 }
 
-/** One ask and what the agent produces, in a chat window that grows to hold it. */
-function SimpleStory({ heading, children }: { heading?: string; children: ReactNode }) {
+/** One ask and what the agent produces, in a chat window that grows to hold it, or scrolls at a fixed `height`. */
+function SimpleStory({ heading, height, children }: { heading?: string; height?: number; children: ReactNode }) {
   const { t } = useTranslation();
   return (
     <section className="mcp-exp mcp-exp-simple" aria-label={heading ?? t('mcp.exp.chatTitle')}>
       {heading && <h3 className="mcp-exp-heading">{heading}</h3>}
-      <div className="mcp-exp-chat mcp-exp-chat-auto">
+      <div className={height ? 'mcp-exp-chat mcp-exp-chat-fixed' : 'mcp-exp-chat mcp-exp-chat-auto'} style={height ? { height } : undefined}>
         <div className="mcp-exp-chat-bar">
           <span className="mcp-exp-dot" style={{ background: '#ec6a5e' }} />
           <span className="mcp-exp-dot" style={{ background: '#f4bf4f' }} />

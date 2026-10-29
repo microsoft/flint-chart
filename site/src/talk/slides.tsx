@@ -22,7 +22,7 @@ import {
 } from './parts';
 import glue from './specs/vl-final-glue.txt?raw';
 
-export interface SlideDef { id: string; kind?: 'title' | 'section' | 'statement'; render: () => ReactNode }
+export interface SlideDef { id: string; kind?: 'title' | 'section' | 'statement'; section?: string; render: () => ReactNode }
 
 const UPDATE_PROMPTS: Record<string, string> = {
   dense: 'Show all 24 games.',
@@ -49,7 +49,7 @@ const Step = ({ before, beforeSpec, after, afterSpec, note, flaws }: { before: C
   {note && <p className="talk-note">{note}</p>}
 </>);
 
-// Each step's code: the new spec with what changed in red. The next slide starts from it, in black.
+// Each step's code: the new spec with what changed highlighted. The next slide starts from it, in black.
 const ROWS = {
   raw: stepLayout(STEPS.raw),
   parse: stepLayout(STEPS.parse, STEPS.raw),
@@ -274,7 +274,7 @@ const UPDATE_SLIDES: SlideDef[] = UPDATES.reduce<{ state: FlintState; slides: Sl
         </div>
         <div className="talk-col" style={{ flex: '1.2 1 0' }}>
           <Chart spec={flintInput(next)} />
-          <p className="talk-caption">{plus === 1 ? 'One line changed' : `${plus} lines changed`}, in red. Nothing else in the spec moved.</p>
+          <p className="talk-caption">{plus === 1 ? 'One line changed' : `${plus} lines changed`}, highlighted. Nothing else in the spec moved.</p>
         </div>
       </div>
     </>),
@@ -285,7 +285,7 @@ const UPDATE_SLIDES: SlideDef[] = UPDATES.reduce<{ state: FlintState; slides: Sl
 export const SLIDES: SlideDef[] = [
   // ======================================================== Act 0
   {
-    id: 'title', kind: 'title', render: () => (<>
+    id: 'title', section: 'Opening', kind: 'title', render: () => (<>
       <h1>Flint: a visualization language for the AI era</h1>
       <p className="talk-lead"><a href="https://microsoft.github.io/flint-chart">microsoft.github.io/flint-chart</a></p>
       <div className="talk-grid" style={{ gridTemplateColumns: 'minmax(0, 1.45fr) minmax(0, 1fr) minmax(0, 0.7fr)', marginTop: 20 }}>
@@ -320,7 +320,7 @@ export const SLIDES: SlideDef[] = [
 
   // ======================================================== Act 1
   {
-    id: 'ideal', render: () => (<>
+    id: 'ideal', section: 'Authoring with Vega-Lite', render: () => (<>
       <h2 className="is-act">Authoring with Vega-Lite</h2>
       <p className="talk-callout">Ideally, a chart is a few lines that are easy to change.</p>
       <div className="talk-body">
@@ -458,7 +458,7 @@ export const SLIDES: SlideDef[] = [
 
   // ======================================================== Act 3
   {
-    id: 'lifting', render: () => (<>
+    id: 'lifting', section: 'Flint', render: () => (<>
       <h2 className="is-act">Flint is a language for AI agents that disentangles visual and interaction logic</h2>
       <div className="talk-body column">
         <div className="talk-fit"><Sketch name="lifting" /></div>
@@ -481,7 +481,7 @@ export const SLIDES: SlideDef[] = [
 
   // Section A
   {
-    id: 'sec-a', render: () => (<>
+    id: 'sec-a', section: 'The chart spec', render: () => (<>
       <h2>1. The chart spec</h2>
       <Trio sketch="spec" items={SPECS} focus={0} />
     </>),
@@ -569,7 +569,7 @@ export const SLIDES: SlideDef[] = [
 
   // Section B
   {
-    id: 'sec-b', render: () => (<>
+    id: 'sec-b', section: 'The theme spec', render: () => (<>
       <h2>2. The theme spec</h2>
       <Trio sketch="spec" items={SPECS} focus={1} />
     </>),
@@ -594,7 +594,7 @@ export const SLIDES: SlideDef[] = [
   },
   // Section C
   {
-    id: 'sec-c', render: () => (<>
+    id: 'sec-c', section: 'The interaction spec', render: () => (<>
       <h2>3. The interaction spec</h2>
       <Trio sketch="spec" items={SPECS} focus={2} />
     </>),
@@ -637,7 +637,7 @@ export const SLIDES: SlideDef[] = [
   // Summary
   // ======================================================== Act 4
   {
-    id: 'act4', render: () => (<>
+    id: 'act4', section: 'Applications', render: () => (<>
       <h2 className="is-act">Applications: what can you build with Flint?</h2>
       <UseCases />
     </>),
@@ -657,7 +657,7 @@ export const SLIDES: SlideDef[] = [
   {
     id: 'chat-board', render: () => (<>
       <h2>Ask for a dashboard, and its charts work together</h2>
-      <div className="talk-body column"><Stable width={900} height={820}><McpChatTurn kind="board" /></Stable></div>
+      <div className="talk-body column"><Stable width={900} height={820}><McpChatTurn kind="board" height={820} /></Stable></div>
     </>),
   },
   {
@@ -740,7 +740,7 @@ export const SLIDES: SlideDef[] = [
 
   // ======================================================== Act 5
   {
-    id: 'recap', render: () => (<>
+    id: 'recap', section: 'Close', render: () => (<>
       <h2 className="is-act">Flint: a visualization language for AI agents</h2>
       <div className="talk-body column" style={{ gap: 20 }}>
         <div className="talk-fit"><Sketch name="lifting" /></div>
