@@ -1468,6 +1468,11 @@ export interface CanvasTreatment {
     /** Long key names kept to this many px a column, wrapped onto lines before they are cut. */
     names?: { keyWidth: number };
     /**
+     * The keys' text set at this share of the library's size, never below the legible floor: a key
+     * of long names takes less room beside or above the plot. Read by the non-Vega-Lite backends.
+     */
+    keyScale?: number;
+    /**
      * The plot laid out at this share of its base size, both ways, so it keeps its shape: what the
      * box cannot hold comes out of the plot rather than out of every glyph, as a host shrinking the
      * whole drawing would take it.

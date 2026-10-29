@@ -244,6 +244,7 @@ export function describeTreatment(treatment: CanvasTreatment | undefined): strin
     if (treatment.titleScale) parts.push(`title at ${Math.round(treatment.titleScale * 100)}%`);
     if (treatment.labelScale) parts.push(`axis labels at ${Math.round(treatment.labelScale * 100)}%`);
     if (treatment.names) parts.push('narrower key names');
+    if (treatment.keyScale) parts.push(`key text at ${Math.round(treatment.keyScale * 100)}%`);
     if (treatment.plotScale) parts.push(`plot at ${Math.round(treatment.plotScale * 100)}%`);
     return parts.join(', ') || 'as planned';
 }

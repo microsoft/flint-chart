@@ -6,7 +6,7 @@ import puppeteer from 'puppeteer-core';
 import { writeFileSync } from 'node:fs';
 
 const FAMILIES = [
-    'Helvetica Neue', 'Helvetica', 'Arial', 'Arial Black', 'Segoe UI', 'Georgia', 'Comic Sans MS', 'Comic Neue',
+    'Helvetica Neue', 'Helvetica', 'Arial', 'Verdana', 'Arial Black', 'Segoe UI', 'Georgia', 'Comic Sans MS', 'Comic Neue',
     'Chalkboard SE', 'Marker Felt', 'SF Pro Display', 'SF Pro Text', '-apple-system', 'BlinkMacSystemFont',
     'system-ui', 'sans-serif', 'serif', 'cursive',
 ];

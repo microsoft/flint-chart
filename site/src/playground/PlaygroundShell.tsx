@@ -35,6 +35,15 @@ const pages: NavEntry[] = [
     ],
   },
   {
+    group: 'Backend layout',
+    children: [
+      { to: 'backend-layout/echarts', label: 'ECharts' },
+      { to: 'backend-layout/chartjs', label: 'Chart.js' },
+      { to: 'backend-layout/plotly', label: 'Plotly' },
+      { to: 'backend-layout-echarts-fixes', label: 'ECharts fixes: before / after' },
+    ],
+  },
+  {
     group: 'Interactions',
     children: [
       { to: 'interaction-test-cases', label: 'Test cases' },

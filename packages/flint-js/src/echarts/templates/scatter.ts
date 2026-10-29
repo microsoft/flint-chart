@@ -14,6 +14,7 @@ import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
 import { formatTimestamp } from '../instantiate-spec';
 import { DEFAULT_COLORS, groupBy, getCategoryOrder, extractCategories } from './utils';
 import { getPaletteForScheme } from '../colormap';
+import { EC_SIZE_KEY_ID, rampId, rampTitleId } from '../graphic-ids';
 import { makeCartesianPivot } from '../../core/pivot';
 
 /** Compute a reasonable scatter symbolSize based on canvas area and point count. */
@@ -26,6 +27,43 @@ function computeSymbolSize(width: number, height: number, pointCount: number): n
     const areaPerPoint = canvasArea / Math.max(1, pointCount);
     const idealDiameter = Math.sqrt(areaPerPoint * 0.05);
     return Math.max(3, Math.min(12, Math.round(idealDiameter)));
+}
+
+
+/** The size key's inset from the canvas's right edge, in px. */
+const SIZE_KEY_RIGHT = 28;
+
+/** The fill the size key's circles take: neutral grey beside a colour key, else the dots' own colour. */
+function sizeKeyFill(ctx: any, hasColorEncoding: boolean): string {
+    if (hasColorEncoding) return '#cccccc';
+    const fallback = (getPaletteForScheme('cat10') ?? DEFAULT_COLORS)[0];
+    return (ctx.resolvedEncodings as any)?.color?.colorPalette?.[0] ?? fallback;
+}
+
+/**
+ * A size key as Vega-Lite draws one: its title, then a circle for each value, as large as the dots
+ * drawn for it, its label to the right. One graphic group, pinned from the right and the top; the
+ * frame stands it at the plot's top. Returns the group and its width.
+ */
+function sizeKeyGraphic(entries: Array<{ label: string; diameter: number }>, title: string, fill: string): { graphic: any; width: number } {
+    const gap = 8;
+    const rowGap = 6;
+    const fontSize = 10;
+    const titleHeight = 20;
+    const maxR = Math.max(...entries.map((e) => e.diameter / 2));
+    const labelWidth = Math.max(...entries.map((e) => e.label.length * fontSize * 0.6), 20);
+    const titleWidth = title.length * 11 * 0.62;
+    const width = Math.ceil(Math.max(2 * maxR + gap + labelWidth, titleWidth));
+    const children: any[] = [{ type: 'text', left: 0, top: 0, style: { text: title, fontSize: 11, fontWeight: 'bold', fill: '#333', textAlign: 'left' } }];
+    let rowTop = titleHeight;
+    for (const entry of entries) {
+        const r = entry.diameter / 2;
+        const rowH = Math.max(entry.diameter, 16) + rowGap;
+        children.push({ type: 'circle', left: maxR - r, top: rowTop + (rowH - entry.diameter) / 2, shape: { cx: r, cy: r, r }, style: { fill } });
+        children.push({ type: 'text', left: 2 * maxR + gap, top: rowTop + (rowH - fontSize) / 2, style: { text: entry.label, fontSize, fill: '#333', textAlign: 'left' } });
+        rowTop += rowH;
+    }
+    return { graphic: { id: EC_SIZE_KEY_ID, type: 'group', right: SIZE_KEY_RIGHT, top: titleHeight, width, z: 100, children }, width };
 }
 
 export const ecScatterPlotDef: ChartTemplateDef = {
@@ -133,6 +171,10 @@ export const ecScatterPlotDef: ChartTemplateDef = {
         const yType = channelSemantics.y?.type;
         const xIsCategorical = xType === 'nominal' || xType === 'ordinal';
         const yIsCategorical = yType === 'nominal' || yType === 'ordinal';
+        // Dates on either axis run on ECharts' time axis, as epoch ms: a value axis cannot place a date string.
+        const xIsTemporal = xType === 'temporal';
+        const yIsTemporal = yType === 'temporal';
+        const toTime = (v: unknown) => (typeof v === 'number' ? v : new Date(String(v)).getTime());
         const xCategories = xIsCategorical ? extractCategories(table, xField, getCategoryOrder(ctx, 'x')) : [];
         const yCategories = yIsCategorical ? extractCategories(table, yField, getCategoryOrder(ctx, 'y')) : [];
         const xCategoryToIndex = new Map<string, number>(xCategories.map((c, i) => [String(c), i]));
@@ -152,7 +194,7 @@ export const ecScatterPlotDef: ChartTemplateDef = {
                     axisTick: { show: true, alignWithLabel: true },
                     axisLine: { show: true },
                 }
-                : { type: 'value', name: xField, nameLocation: 'middle', nameGap: 30 },
+                : { type: xIsTemporal ? 'time' : 'value', name: xField, nameLocation: 'middle', nameGap: 30 },
             yAxis: yIsCategorical
                 ? {
                     type: 'category',
@@ -164,7 +206,7 @@ export const ecScatterPlotDef: ChartTemplateDef = {
                     axisTick: { show: true, alignWithLabel: true },
                     axisLine: { show: true },
                 }
-                : { type: 'value', name: yField, nameLocation: 'middle', nameGap: 40 },
+                : { type: yIsTemporal ? 'time' : 'value', name: yField, nameLocation: 'middle', nameGap: 40 },
             series: [],
         };
 
@@ -188,93 +230,20 @@ export const ecScatterPlotDef: ChartTemplateDef = {
                     title: sizeField,
                 },
             ];
-            option._visualMapWidth = 88;
-            // One group for the whole legend; all coordinates use left/top so text aligns left
-            const ordLegendRight = 28;
-            const ordGap = 8;
-            const ordRowGap = 6;
-            const ordFontSize = 10;
-            const ordTitleHeight = 20;
-            const ordLabelWidth = 44;
-            const canvasH = ctx.canvasSize?.height ?? 300;
-            const maxCircleR = Math.max(...sizeOrderForLegend!.map((name) => scaleSize(name) / 2));
-            const legendWidth = ordLabelWidth + ordGap + 2 * maxCircleR;
-            // 当存在颜色编码（分类 color 图例）时：
-            // - Size 图例表示“通用大小规则”，不应看起来像属于某个具体类别
-            // - 按业界惯例使用中性灰色
-            // 否则（无 color 编码，全图单色）则跟随主色：
-            //   散点默认颜色来自 cat10[0]（在 ecApplyLayoutToSpec 中的统一逻辑），
-            //   因此这里也用 cat10[0]，保证 size 图例与图元颜色一致。
             const hasColorEncoding = !!channelSemantics.color?.field;
-            const fallbackPalette = getPaletteForScheme('cat10') ?? DEFAULT_COLORS;
-            const fallbackColor = fallbackPalette[0];
-            const scatterColor = hasColorEncoding
-                ? '#cccccc'
-                : ((ctx.resolvedEncodings as any)?.color?.colorPalette?.[0] ?? fallbackColor);
-            const rowHeights = sizeOrderForLegend!.map((name) => Math.max(scaleSize(name), 16) + ordRowGap);
-            const totalLegendHeight = ordTitleHeight + rowHeights.reduce((a, b) => a + b, 0);
-            const ordLegendTop = Math.max(10, (canvasH - totalLegendHeight) / 2);
-            const legendChildren: any[] = [
-                {
-                    type: 'text' as const,
-                    left: 0,
-                    top: 0,
-                    style: {
-                        text: sizeField,
-                        fontSize: 11,
-                        fontWeight: 'bold',
-                        fill: '#333',
-                        textAlign: 'left',
-                    },
-                },
-            ];
-            let rowTop = ordTitleHeight;
-            for (let i = 0; i < sizeOrderForLegend!.length; i++) {
-                const name = sizeOrderForLegend![i];
-                const r = scaleSize(name) / 2;
-                const rowH = rowHeights[i];
-                const circleTop = rowTop + (rowH - scaleSize(name)) / 2;
-                const textTop = rowTop + (rowH - ordFontSize) / 2;
-                legendChildren.push({
-                    type: 'circle' as const,
-                    left: maxCircleR - r,
-                    top: circleTop - r,
-                    shape: { cx: r, cy: r, r },
-                    style: { fill: scatterColor },
-                });
-                legendChildren.push({
-                    type: 'text' as const,
-                    left: 2 * maxCircleR + ordGap,
-                    top: textTop,
-                    style: {
-                        text: name,
-                        fontSize: ordFontSize,
-                        fill: '#333',
-                        textAlign: 'left',
-                    },
-                });
-                rowTop += rowH;
-            }
-            const ordLegendGraphic = {
-                type: 'group' as const,
-                right: ordLegendRight,
-                top: ordLegendTop,
-                width: legendWidth,
-                z: 100,
-                children: legendChildren,
-            };
-            const existingGraphic = option.graphic;
-            option.graphic = Array.isArray(existingGraphic)
-                ? [...existingGraphic, ordLegendGraphic]
-                : existingGraphic
-                    ? [existingGraphic, ordLegendGraphic]
-                    : [ordLegendGraphic];
+            const key = sizeKeyGraphic(
+                sizeOrderForLegend!.map((name) => ({ label: name, diameter: scaleSize(name) })),
+                sizeField!,
+                sizeKeyFill(ctx, hasColorEncoding),
+            );
+            option._visualMapWidth = key.width + SIZE_KEY_RIGHT - 10;
+            option.graphic = [...(Array.isArray(option.graphic) ? option.graphic : option.graphic ? [option.graphic] : []), key.graphic];
         } else if (useContinuousSizeVisualMap) {
             // Quantity size: continuous visualMap (scatter-aqi-color style), inRange.symbolSize maps dimension to size.
             // Enforce a minimum spread so circles are visibly different (ECharts maps data linearly to [min, max]).
             const SIZE_SPREAD_MIN = 20;
             const sizeMaxForMap = Math.max(rangeMaxClamped, rangeMin + SIZE_SPREAD_MIN);
-            const fmtSize = (v: number) => (Number.isInteger(v) ? String(v) : v.toFixed(1));
+            const fmtSize = (v: number) => v.toLocaleString('en-US', { maximumFractionDigits: 1 });
             const sizeVisualMap: any = {
                 type: 'continuous' as const,
                 show: true,
@@ -292,6 +261,7 @@ export const ecScatterPlotDef: ChartTemplateDef = {
                 textStyle: { fontSize: 10 },
                 seriesIndex: 0,
                 name: sizeField,
+                id: rampId('size'),
             };
             // controller 只影响图例 UI，不改变散点本身的颜色。
             // - 有 color 编码时：size 图例表示“通用大小”，使用中性灰色。
@@ -326,6 +296,7 @@ export const ecScatterPlotDef: ChartTemplateDef = {
             option.graphic = [
                 ...existingGraphic,
                 {
+                    id: rampTitleId('size'),
                     type: 'text' as const,
                     right: 50,
                     top: 10,
@@ -355,8 +326,8 @@ export const ecScatterPlotDef: ChartTemplateDef = {
         // Opacity from chart properties
         const opacity = chartProperties?.opacity ?? 1;
 
-        const xVal = (row: any) => xIsCategorical ? (xCategoryToIndex.get(String(row[xField] ?? '')) ?? 0) : row[xField];
-        const yVal = (row: any) => yIsCategorical ? (yCategoryToIndex.get(String(row[yField] ?? '')) ?? 0) : row[yField];
+        const xVal = (row: any) => xIsCategorical ? (xCategoryToIndex.get(String(row[xField] ?? '')) ?? 0) : xIsTemporal ? toTime(row[xField]) : row[xField];
+        const yVal = (row: any) => yIsCategorical ? (yCategoryToIndex.get(String(row[yField] ?? '')) ?? 0) : yIsTemporal ? toTime(row[yField]) : row[yField];
         const pointData = (row: any) =>
             sizeField != null
                 ? [xVal(row), yVal(row), row[sizeField]]
@@ -441,6 +412,7 @@ export const ecScatterPlotDef: ChartTemplateDef = {
                 show: true,
                 seriesIndex: 0,
                 name: colorField,
+                id: rampId('color'),
             };
             if (option.visualMap) {
                 (option.visualMap as any[]).push(colorVisualMap);
@@ -451,6 +423,7 @@ export const ecScatterPlotDef: ChartTemplateDef = {
             // Only the title is custom graphic; max/min come from visualMap.text above.
             const vmGraphics: any[] = [
                 {
+                    id: rampTitleId('color'),
                     type: 'text' as const,
                     right: colorBarRight,
                     top: VM_TITLE_TOP,

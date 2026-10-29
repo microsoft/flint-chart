@@ -143,6 +143,18 @@ const PIE_PROPERTIES: ChartPropertyDef[] = [
         ],
         defaultValue: 'categoryPercent',
     },
+    {
+        // Where the names stand: on the slices (inside, or as callouts past the ring), in a key, or
+        // chosen by fit — a key where many long names would crowd the pie, or where a callout past
+        // the ring would move furniture hung over the chart (a house's tab, a source line).
+        key: 'sliceNames', label: 'Slice names', type: 'discrete',
+        options: [
+            { value: 'auto', label: 'Auto' },
+            { value: 'onSlices', label: 'On slices' },
+            { value: 'key', label: 'In a key' },
+        ],
+        defaultValue: 'auto',
+    },
 ];
 
 export const plPieChartDef: ChartTemplateDef = {

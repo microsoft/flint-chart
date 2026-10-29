@@ -103,11 +103,11 @@ function measureFor(role: Role): TitleMeasure {
   };
 }
 
-interface TextCase { id: string; label: string; role: Role; text: string; note: string; block: number }
+export interface TextCase { id: string; label: string; role: Role; text: string; note: string; block: number }
 
 const SNAPSHOT_DECK = 'GDP per capita (log scale) vs life expectancy, 2007; bubble size = population; X: GDP per capita ($, log scale); Y: Life expectancy (years)';
 
-const TEXT_CASES: TextCase[] = [
+export const TEXT_CASES: TextCase[] = [
   {
     id: 'snapshot-deck', label: 'Deck from the bubble chart', role: 'deck', text: SNAPSHOT_DECK, block: 440,
     note: 'The reported case. Fill leaves a widow; the old rule evened the last two lines into one full line over two half lines. Now the room the last line needs is shared by the two lines above it.',
@@ -198,7 +198,7 @@ function TextComparison({ testCase }: { testCase: TextCase }) {
 
 const bubbleRows = gapminderRows.filter((row) => row.Year === 2007);
 
-function bubbleInput(width: number, subtitle: string): ChartAssemblyInput {
+export function bubbleInput(width: number, subtitle: string): ChartAssemblyInput {
   return {
     data: { values: bubbleRows },
     semantic_types: { Country: 'Country', Continent: 'Category', Population: 'Quantity', 'Life expectancy': 'Quantity', 'GDP per capita': 'Quantity' },
@@ -214,8 +214,8 @@ function bubbleInput(width: number, subtitle: string): ChartAssemblyInput {
   };
 }
 
-const CHART_WIDTHS = [300, 380, 460];
-const CHART_DECKS = [
+export const CHART_WIDTHS = [300, 380, 460];
+export const CHART_DECKS = [
   { id: 'snapshot', label: 'Deck as reported', text: SNAPSHOT_DECK },
   { id: 'long', label: 'Longer deck', text: 'GDP per capita in 2007 dollars (log scale) against life expectancy at birth, 142 countries, 2007; bubble size is population, colour is continent' },
 ];

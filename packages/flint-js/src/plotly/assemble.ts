@@ -47,15 +47,19 @@ import { filterOverflow } from '../core/filter-overflow';
 import { computeLayout, computeChannelBudgets, deriveStretchCaps, planBandLabels, resolveBaseSize, resolveFacetColumnsOption } from '../core/compute-layout';
 import { decideColorMaps } from '../core/color-decisions';
 import { bandedSpan, plApplyBandLabels, plApplyCartesianAxisSpacing, plApplyLayoutToSpec, plApplyTooltips, plApplyAxisProperties } from './instantiate-spec';
-import { plCombineFacetPanels, niceBounds, type PlotlyFacetPanel } from './facet';
+import { plCombineFacetPanels, plFacetTimeTicks, plLayoutFacetGrid, niceBounds, type PlotlyFacetPanel } from './facet';
 import { normalizeStaticSeries } from '../core/static-series';
 import { normalizeChartProperties } from '../core/normalize-properties';
 import { analysisReadsProperty } from '../core/analyze';
-import { groundTheme, resolveChartDefaults, resolveCompileDefaults, resolveThemeFontSize } from '../core/theme/ground';
+import { groundTheme, resolveChartDefaults, resolveCompileDefaults } from '../core/theme/ground';
+import { themedBandLabelOptions, xLabelOverflow } from '../core/plan';
+import { tableTextMeasurer } from '../core/text-width';
+import { BACKEND_MIN_LABEL_SIZE, BACKEND_TITLE_FLOOR, canvasFitSummary, fitBox, judgeBackendCanvas, refitCanvas, scaledTypeSize, treatedKeyFontSize, withTreatment } from '../core/backend-frame';
+import { PLOTLY_FONT, plDrawLargestFirst, plDropEmptyTitles, plFitPie, plFlowRowKey, plNiceAxes, plSizeKey, plFacetFurniture, plMeasure, plWriteHeader, plWriteSource, PLOTLY_FACET_GAP } from './frame';
 import { resolveThemeSpec } from '../core/theme/presets';
 import { withChrome } from '../core/theme/chrome';
 import {
-    realizeThemePlotly, realizeValueLabelsPlotly, plCollectMarkTypes, plCollectPositional, fitPlotlyTitle,
+    plFloatingFloor, realizeThemePlotly, realizeValueLabelsPlotly, plCollectMarkTypes, plCollectPositional, fitPlotlyTitle,
 } from './theme';
 
 // ---------------------------------------------------------------------------
@@ -225,9 +229,10 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
         // matching Plotly's official low-cardinality bar style, but cap it so one
         // or two bars don't span the whole canvas.
         maxBandSize: 100,
-        // Plotly native font defaults (ticks/legend 12, axis titles 14).
-        baseLabelFontSize: 12,
-        baseTitleFontSize: 14,
+        // Plotly native font defaults (ticks/legend 12, axis titles 14), a size down where the
+        // canvas fit sets the type smaller.
+        baseLabelFontSize: scaledTypeSize(12, input.options?.canvasTreatment?.labelScale, BACKEND_MIN_LABEL_SIZE),
+        baseTitleFontSize: scaledTypeSize(14, input.options?.canvasTreatment?.labelScale, BACKEND_MIN_LABEL_SIZE + 1),
         ...options,
         ...(declaration.paramOverrides || {}),
     };
@@ -244,6 +249,12 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
     effectiveOptions.bandStepFitCapacityX = sizeCeiling?.width ?? baseSize.width;
     effectiveOptions.bandStepFitCapacityY = sizeCeiling?.height ?? baseSize.height;
     effectiveOptions.facetColumns = resolveFacetColumnsOption(input.chart_spec.chartProperties);
+    // The furniture a facet grid keeps around its panels, as Plotly draws it, so the grid is planned
+    // into the room its panels have: y labels, their run and title on the left; x labels and title below.
+    if (channelSemantics.column?.field || channelSemantics.row?.field) {
+        effectiveOptions.facetFixedPadding ??= plFacetFurniture(effectiveOptions.baseLabelFontSize ?? 12, effectiveOptions.baseTitleFontSize ?? 14);
+        effectiveOptions.facetGap ??= PLOTLY_FACET_GAP;
+    }
 
     const {
         addTooltips: addTooltipsOpt = false,
@@ -322,11 +333,22 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
         }),
     };
     if (chartType !== 'Bar Table') {
-        planBandLabels(instantiateContext, {
-            fontSize: themeSpec
-                ? resolveThemeFontSize(themeSpec, themeSpec.type?.axisLabel?.size, 10, layoutResult.subplotWidth || canvasSize.width)
-                : undefined,
-        });
+        // A house's names are planned as Vega-Lite plans them; Plotly's own, in the face Plotly draws.
+        const bandOptions = themeSpec
+            ? themedBandLabelOptions(themeSpec, chartProperties, channelSemantics, layoutResult.subplotWidth || canvasSize.width)
+            : {
+                measure: (fontSize: number) => tableTextMeasurer(fontSize, PLOTLY_FONT, 'normal', 'normal'),
+                minFontSize: BACKEND_MIN_LABEL_SIZE,
+                ...xLabelOverflow(undefined, chartProperties, channelSemantics),
+            };
+        // A house draws every axis's names at its own size; names the plan leaves alone are measured there too.
+        if ('fontSize' in bandOptions && bandOptions.fontSize) {
+            for (const sizing of [layoutResult.xLabel, layoutResult.yLabel]) if (sizing) sizing.fontSize = bandOptions.fontSize;
+        }
+        planBandLabels(instantiateContext, bandOptions);
+        // The names are cut in the face they were planned in.
+        const measure = bandOptions.measure;
+        if (measure) instantiateContext.measureText = (text, fontSize) => measure(fontSize)(text);
     }
 
     const colField = channelSemantics.column?.field;
@@ -452,16 +474,23 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
             ),
         });
 
+        applyFieldDisplayNames(figure, input.field_display_names);
         // Apply the shared label rotation / wrapping / font decisions to every panel axis.
+        const measureText = instantiateContext.measureText;
         plApplyBandLabels(figure, layoutResult, {
             temporal: (channel) => channelSemantics[channel]?.type === 'temporal',
+            ...(measureText ? { measure: (fontSize: number) => (text: string) => measureText(text, fontSize) } : {}),
         });
         plApplyCartesianAxisSpacing(figure);
         plApplyAxisProperties(figure, instantiateContext);
+        // The grid laid out around its labels and headers as Plotly draws them.
+        plLayoutFacetGrid(figure, measureText ? (fontSize) => (text) => measureText(text, fontSize) : plMeasure);
         if (addTooltipsOpt) plApplyTooltips(figure);
     } else {
         figure = structuredClone(chartTemplate.template);
         chartTemplate.instantiate(figure, instantiateContext);
+        // Names are printed as the reader sees them before the layout measures them.
+        applyFieldDisplayNames(figure, input.field_display_names);
         plApplyLayoutToSpec(figure, instantiateContext, warnings);
         plApplyAxisProperties(figure, instantiateContext);
         if (addTooltipsOpt) plApplyTooltips(figure);
@@ -521,6 +550,15 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
         labelOverflow: chartProperties?.labelOverflow,
     });
 
+    // A pie whose names would crowd it out, or whose callouts would move the furniture hung from it,
+    // names its slices in a key: in the house's row where it fits there, else beside the pie.
+    const houseRow = Boolean(themeSpec) && ['top', 'bottom'].includes(String((design.legend as any)?.orient ?? design.legend?.placement));
+    const pieKeyed = hasFacet ? false : plFitPie(figure, fitBox(baseSize, sizeCeiling, input.options?.maxStretch), {
+        anchored: Boolean(themeSpec) || Boolean(sourceOfSpec(input.chart_spec)),
+        row: houseRow && design.legend?.show !== false,
+        sliceNames: (chartProperties as Record<string, unknown> | undefined)?.sliceNames as string | undefined,
+    });
+
     if (themeSpec) {
         // These are semantic inputs to realization, not persistent Plotly
         // properties. Sparklines never carry dots; theme-default line points
@@ -530,6 +568,57 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
         figure._themeDefaultLinePoints = chartTemplate.chart === 'Line Chart'
             && input.chart_spec.chartProperties?.showPoints == null
             && chartProperties?.showPoints === true;
+        // A canvas fit that sets the type smaller does so in the house's axes and title too.
+        const typeScale = input.options?.canvasTreatment;
+        if (typeScale?.labelScale) {
+            for (const channel of ['x', 'y'] as const) {
+                const axis = design.axes[channel];
+                if (!axis) continue;
+                design.axes[channel] = {
+                    ...axis,
+                    label: { ...axis.label, fontSize: scaledTypeSize(axis.label.fontSize ?? 11, typeScale.labelScale, BACKEND_MIN_LABEL_SIZE) },
+                    title: { ...axis.title, fontSize: scaledTypeSize(axis.title.fontSize ?? 11, typeScale.labelScale, BACKEND_MIN_LABEL_SIZE) },
+                };
+            }
+        }
+        if (typeScale?.titleScale) {
+            const { headline, deck } = design.title;
+            design.title = {
+                ...design.title,
+                headline: { ...headline, fontSize: scaledTypeSize(headline.fontSize ?? 16, typeScale.titleScale, BACKEND_TITLE_FLOOR.headline) },
+                deck: { ...deck, fontSize: scaledTypeSize(deck.fontSize ?? 12, typeScale.titleScale, BACKEND_TITLE_FLOOR.deck) },
+            };
+        }
+        // A canvas fit that sets the keys' text smaller does so in the house's key too.
+        if (input.options?.canvasTreatment?.keyScale && design.legend) {
+            const label = design.legend.label;
+            const title = design.legend.titleText;
+            design.legend = {
+                ...design.legend,
+                label: { ...label, fontSize: treatedKeyFontSize(label.fontSize ?? 11, input.options) },
+                titleText: { ...title, fontSize: treatedKeyFontSize(title.fontSize ?? 11, input.options) },
+            } as typeof design.legend;
+        }
+        // A canvas fit that stands the keys beside the plot overrides the house's row above or below it;
+        // so does a pie, which is square: a key in rows above it makes the drawing tall.
+        if ((input.options?.canvasTreatment?.keys === 'side' || pieKeyed === 'side') && design.legend?.show) {
+            design.legend = { ...design.legend, placement: 'right', orient: 'right', direction: 'vertical' } as typeof design.legend;
+        }
+        // A house that sets the key above or below the plot leaves the room kept for it beside the plot
+        // unused: it is given back before the theme lays the axes out in the width that remains.
+        const room = figure._legendRoom?.right ?? 0;
+        const placement = (design.legend as { placement?: string; orient?: string } | undefined);
+        const keyAboveOrBelow = ['top', 'bottom'].includes(String(placement?.orient ?? placement?.placement));
+        if (room > 0 && keyAboveOrBelow && Number(figure.layout?.width) > room) {
+            figure.layout.width -= room;
+            figure._legendRoom = { ...figure._legendRoom, right: 0 };
+        }
+        // A house that titles its key names the field the key is for; Plotly's templates leave it untitled.
+        const keyed = channelSemantics.color?.field ?? channelSemantics.group?.field;
+        if (design.legend?.title && keyed && figure.layout?.legend && !figure.layout.legend.title?.text) {
+            figure.layout.legend.title = { ...(figure.layout.legend.title ?? {}), text: input.field_display_names?.[keyed] ?? keyed };
+        }
+        figure._titleRoom = fitBox(baseSize, sizeCeiling, input.options?.maxStretch).width;
         const realizeReport = realizeThemePlotly(figure, design, values);
         delete figure._suppressLinePoints;
         delete figure._themeDefaultLinePoints;
@@ -540,8 +629,34 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
         };
     } else {
         realizeValueLabelsPlotly(figure, design, values);
+        figure._titleRoom = fitBox(baseSize, sizeCeiling, input.options?.maxStretch).width;
+        // Plotly's own 17 px headline, a step down where the canvas fit sets the type smaller.
+        const titleScale = input.options?.canvasTreatment?.titleScale;
+        if (titleScale && figure.layout?.title && typeof figure.layout.title === 'object') {
+            const size = Number(figure.layout.title.font?.size) || 17;
+            figure.layout.title.font = { ...(figure.layout.title.font ?? {}), size: scaledTypeSize(size, titleScale, BACKEND_TITLE_FLOOR.headline) };
+        }
         fitPlotlyTitle(figure);
     }
+    plDropEmptyTitles(figure.layout);
+    // A key in rows flows, each entry its own width.
+    plFlowRowKey(figure);
+    // Bubbles drawn largest first, so the small ones stay in sight: after theming, which inks the
+    // series in their order.
+    plDrawLargestFirst(figure);
+    // Plotly draws no key to a size channel: one is drawn beside the chart's other key.
+    const sizeField = channelSemantics.size?.field;
+    if (sizeField && !hasFacet) plSizeKey(figure, input.field_display_names?.[sizeField] ?? sizeField);
+    for (const trace of figure.data ?? []) { delete trace?._sizeValues; delete trace?._sizeField; }
+    // Each continuous axis starts and ends on a labelled tick, as Vega-Lite's nice domains do.
+    plNiceAxes(figure);
+    // With the ranges final: a line along a floor that is not zero claims no base.
+    if (themeSpec) plFloatingFloor(figure, design);
+    // A facet panel's years, ticked across the width the panel is drawn at.
+    plFacetTimeTicks(figure);
+    // The house's header over the title, and its source line at the foot.
+    if (themeSpec) plWriteHeader(figure, design, (input.chart_spec as any).label);
+    plWriteSource(figure, design, (input.chart_spec as any).source);
 
     // ═══════════════════════════════════════════════════════════════════════
     // RESULT
@@ -560,6 +675,41 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
         figure.layout.height = Math.ceil(figure.layout.height);
         figure._height = figure.layout.height;
     }
+
+    // The canvas fit: the figure judged against its box from the margins it keeps; where the host
+    // would shrink it past legibility, the plot is laid out smaller once, if that reads better.
+    if (figure._plot && Number(figure.layout?.width) > 0 && Number(figure.layout?.height) > 0) {
+        const m = figure.layout.margin ?? {};
+        const room = figure._legendRoom ?? { right: 0, bottom: 0 };
+        const topKey = Number(figure._topKey) || 0;
+        const right = (m.r ?? 0) + room.right;
+        const plot = {
+            width: Math.max(1, figure.layout.width - (m.l ?? 0) - right),
+            height: Math.max(1, figure.layout.height - (m.t ?? 0) - (m.b ?? 0)),
+        };
+        const box = fitBox(baseSize, sizeCeiling, input.options?.maxStretch);
+        const judged = judgeBackendCanvas({
+            plot, designed: figure._plot, padding: 0, box, base: baseSize,
+            parts: {
+                yLabels: m.l ?? 0, xLabels: (m.b ?? 0) - room.bottom, title: (m.t ?? 0) - topKey, sideKeys: right,
+                ...(room.bottom + topKey ? { stackedKeys: room.bottom + topKey } : {}),
+            },
+        });
+        const refit = refitCanvas(judged, input.options, (treatment) => assemblePlotly(withTreatment(input, treatment, box)));
+        if (refit) return refit;
+        figure._canvasFit = canvasFitSummary(judged.estimate, box, input.options?.canvasTreatment);
+    }
+    // The plot the frame planned, for tools that compare it with what Plotly draws.
+    if (figure._plot) figure._planned = { plot: { width: Math.round(figure._plot.width), height: Math.round(figure._plot.height) } };
+    delete figure._plot;
+    delete figure._legendRoom;
+    delete figure._topKey;
+    delete figure._titleRoom;
+    delete figure._facetTicked;
+    for (const [key, axis] of Object.entries<any>(figure.layout ?? {})) {
+        if (/^[xy]axis\d*$/.test(key) && axis) { delete axis._framedTicks; delete axis._yearTicks; }
+    }
+    delete figure._keyNames;
 
     // The author's colour controls win over every default.
     const authoredColor = authoredColorScale(input.chart_spec.encodings as Record<string, unknown>);
@@ -582,8 +732,6 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
     if (legacyPivot.surface) {
         figure._pivot = legacyPivot.surface;
     }
-
-    applyFieldDisplayNames(figure, input.field_display_names);
 
     return figure;
 }
@@ -612,4 +760,10 @@ function resolvePlValueLabelChoice(
     const choice = chartProperties?.showValueLabels;
     if (typeof choice === 'boolean') return choice ? 'on' : 'off';
     return chartProperties?.showTextLabels === true ? 'on' : undefined;
+}
+
+/** The source line the spec gives, if any. */
+function sourceOfSpec(spec: any): unknown {
+    const source = spec?.source;
+    return typeof source === 'string' ? source.trim() : source?.text;
 }

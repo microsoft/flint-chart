@@ -75,8 +75,18 @@ describe('aggregated titles', () => {
 });
 
 describe('calendar dates read as UTC', () => {
-  it('describes each cell on its own month, west of UTC too', () => {
+  it('draws a whole run of months as equal cells named by the calendar', () => {
     const vl = assembleVegaLite(heatmap()) as any;
+    expect(vl.encoding.x.type).toBe('ordinal');
+    expect(vl.encoding.x.sort).toEqual([...new Set(ROWS.map((r) => r.period))].sort());
+    expect(vl.config.axisX.labelExpr).toContain('"Jan"');
+    expect(vl._options.find((o: any) => o.key === 'xAxisType')).toMatchObject({ applicable: true, value: 'nominal' });
+  });
+
+  it('describes each cell on its own month, west of UTC too', () => {
+    const input = heatmap();
+    input.chart_spec.chartProperties = { xAxisType: 'temporal' };
+    const vl = assembleVegaLite(input) as any;
     expect(vl.encoding.x.scale.type).toBe('utc');
     const marks = JSON.stringify((compile(vl).spec as any).marks);
     const description = marks.slice(marks.indexOf('"description"'), marks.indexOf('"description"') + 300);

@@ -558,8 +558,8 @@ else:
 
 Vega-Lite categorical axes also propose a horizontal label layout with at most
 two lines. The proposal uses the same elastic solver as mark packing; it does
-not immediately expand to the stretch ceiling. Other backends currently retain
-their existing label policies.
+not immediately expand to the stretch ceiling. ECharts, Chart.js and Plotly
+plan their band labels with the same rule; see [Other backends](#other-backends).
 
 1. **Propose demand.** Find each label's balanced two-line width. On X this
   contributes to band width; on Y the number of lines contributes to band
@@ -599,8 +599,7 @@ Dense rows retain single-line ellipsis. Full label text remains available in
 tooltip and accessibility encodings; the site enables native axis-guide hover.
 
 The current implementation uses approximate character widths and heuristic,
-dimensionless comparison costs for generic axes. Font-aware measurement there and other backend
-adapters remain follow-up work. Axis pressure does not yet apply to
+dimensionless comparison costs for generic axes. Axis pressure does not yet apply to
 temporal/numeric tick formatting.
 
 Binned numeric axes use the bin declaration for geometry, but do not treat raw
@@ -678,6 +677,78 @@ without canvas use approximate character widths, so their selected layouts may
 differ. Numeric and custom guide footprints are estimates rather than native
 renderer measurements. The search uses heuristic costs and a bounded set of
 joint candidates; it does not guarantee an optimal packing or pixel-exact bounds.
+
+### Other backends
+
+ECharts, Chart.js and Plotly do not run the Vega-Lite plan. Each keeps its own
+renderer's look and takes from the layout only the decisions that do not depend
+on how Vega draws, measured in its own default face (ECharts `sans-serif`,
+Chart.js Helvetica Neue, Plotly Verdana) with the same width table:
+
+| Decision | Shared rule | ECharts | Chart.js | Plotly |
+|---|---|---|---|---|
+| Title and deck | `planTitleBlock`: a size down where that fits one line, else fullest lines with no widow; broken lines come out of a continuous plot | `title` centred, 18 px bold over a 12 px `subtext` | `title` and `subtitle` plugins, line arrays | `layout.title` with `<br>` |
+| Band labels | `planBandLabels` with the plan's overflow rules (`xLabelOverflow`) | `axisLabel.formatter` lines, `rotate`, `interval` | tick `callback` arrays, pinned rotation | `ticktext` with `<br>` |
+| Axis gutters and titles | measured labels; `fitAxisTitle` past the axis length | `grid` margins, `nameGap` clear of the labels | canvas sized to the plot plus Chart.js' boxes | margins; `automargin` settles the rest |
+| Keys | `planKeyLayout`: beside the plot, long names on lines, else a row at the foot | vertical legend `formatter`, else ECharts' foot legend | right column with line arrays, else a foot row with cut names | right legend `<br>` names, else horizontal at the foot |
+| Line density | `denseLineWidth` (15% ink, 0.75 px floor) | from 2 px | from 3 px | from 2 px |
+| Canvas fit | `judgeBackendCanvas` and `refitCanvas` over the plan's treatments: key names held to 120 px, keys at the foot, keys in rows above or below stood beside the plot, a smaller plot | | | |
+
+The canvas fit assembles each treatment once and keeps the one that reads best,
+only where it reads better than the chart as planned; the verdict rides on the
+spec as `_canvasFit`. The dev site's *Backend layout* pages draw the Vega-Lite
+layout labs' cases in each backend and list the cases to check by eye.
+
+**Backend profiles.** What a library does on its own with the furniture the
+layout plans is stated once per backend, read off the library's defaults and
+source, as a `BackendProfile` (`core/backend-profile.ts`; `plotly/profile.ts`,
+`echarts/profile.ts`, `chartjs/profile.ts`). The estimators take a profile and
+know no library, so the room the layout keeps is the room the library takes:
+
+| Profile field | Plotly 2.35 | ECharts 6 | Chart.js 4 |
+|---|---|---|---|
+| Key entry: lead to text, gap | 40 px (30 px symbol room, 5 px either side), 5 px | icon + 5 px (30 px), `itemGap` 10 | box + ½ em, `padding` 10 |
+| Entry height | `max(1.3 em × lines, 16) + 3` | `max(itemHeight, 1.2 em × lines)` | a line, or 1.2 em × lines |
+| Row wrap | each entry its own width: Plotly's own row is a grid at the widest entry (`legend/draw.js`), so the frame groups each entry alone (`traceorder: 'grouped'`, `tracegroupgap: 0`), which Plotly flows | each entry its own width | each entry its own width |
+| Key title in a row | at the start, 10 px before the entries | above | above |
+| Side key | one column, scrolling | one column, scrolling | more columns past its height |
+| Axis labels | `ticklabelstandoff` 7, a drawn tick + 2.4 px, then 11 px automargin keeps past the labels; a label's box 1.2 em | `axisLabel.margin` 8 | tick 8 + padding 3 |
+| Axis title | standoff 16 + 0.7 em; an empty-text title still takes a line, so a title taken away is deleted | `nameGap` | padding 8 |
+
+`keyBlock(profile.key, entries)` gives the box a library draws for a key and
+the inset of its first line; `keyPlanStyle` gives the planner the same entry.
+Plotly's margins are set to what its automargin would grow them to, measured
+from the profile, rather than left as floors for automargin to settle: a margin
+automargin grows shrinks the plot under everything hung from it in paper units
+(a key above the plot, a header). A Plotly facet grid is planned with the
+profile's furniture (`facetFixedPadding`, `facetGap`) and laid out around its
+measured labels: one shared title per axis, x labels under each column's last
+panel, rows apart by the labels they show, times thinned to flat round ticks.
+
+ECharts and Chart.js read their profiles through the same estimators with the
+constants their frames used before, so their output is unchanged.
+
+**Backend canvas fit.** A backend keeps the planned plot and grows its canvas
+around the library's own furniture, so it is held to a closer fit than the
+plan: each treatment is scored by its flags plus how far its host would shrink
+it below 90% (`HOST_SCALE_TARGET`). The key gives way first — names held to
+120 px (the names' own width: each library adds its symbol room from its profile,
+`treatedKeySide`, so Plotly's 40 px lead does not leave the names 70 px), then 90 px
+with smaller text where the host would still shrink the drawing, the key moved (rows above or below stood beside the plot, a side key
+to the foot), its text a size smaller (`keyScale`, never below 10 px). The plot
+is laid out smaller only past legibility: a smaller plot beside an unchanged
+key leaves the key taller than the plot (Plotly scrolls it) and the marks small,
+which reads worse than a drawing shrunk a little by its host. A title is broken to the
+width its box allows (`fitBox`), not the chart's own width, and the drawing
+widens to hold it — the plot takes the width (a banded axis fills it) — so a
+narrow chart under a long headline grows wider rather than stacking the
+headline into a tall, thin drawing. A temporal field
+on a bar axis, which the layout keeps continuous but banded, stands on the
+library's time axis (Plotly `type: 'date'`), whose own calendar ticks are thinned
+and flat. Vega-Lite runs
+the full plan (`planLayout`) with its own `BackendLayoutProfile`; the other
+backends still assemble through `computeLayout` and take the plan's decisions
+piecemeal.
 
 ---
 

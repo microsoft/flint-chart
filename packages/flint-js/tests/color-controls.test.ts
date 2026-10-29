@@ -116,7 +116,9 @@ describe('colour controls on the other backends', () => {
     const ec = assembleECharts(heatmap({ scheme: ['#c0392b', '#f2f2f2', '#2e75b6'], bins: 4, domain: [-2000, 2000], reverse: true })) as any;
     const vm = Array.isArray(ec.visualMap) ? ec.visualMap[0] : ec.visualMap;
     expect(vm.type).toBe('piecewise');
-    expect(vm.splitNumber).toBe(4);
+    // Four bins edged at round values, the outer two open.
+    expect(vm.pieces.map((p: any) => p.label)).toEqual(['< \u22121,000', '\u22121,000 \u2013 0', '0 \u2013 1,000', '\u2265 1,000']);
+    expect(vm.pieces[0].color).toBe('#2e75b6');
     expect(vm.inRange.color).toHaveLength(4);
     expect(vm.inRange.color[0]).toBe('#2e75b6');
     expect([vm.min, vm.max]).toEqual([-2000, 2000]);

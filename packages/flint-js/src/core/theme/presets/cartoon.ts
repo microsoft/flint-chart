@@ -173,6 +173,9 @@ export const cartoon: ThemePreset = {
             point: {
                 presence: 'full',
                 fill: 'solid',
+                // Stickers stack: a dot laid over another hides it, its dark edge keeping the one
+                // beneath readable, rather than fading so piles darken.
+                opacity: 1,
                 size: 170,
                 // The dark sticker edge is the identity here; a pale halo would
                 // replace it because Vega-Lite gives a point only one stroke.

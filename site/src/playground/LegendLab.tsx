@@ -13,9 +13,9 @@ import './legend-lab.css';
  */
 
 type Row = Record<string, unknown>;
-type Size = { key: string; label: string; width: number; height: number };
+export type Size = { key: string; label: string; width: number; height: number };
 
-const SIZES: Size[] = [
+export const SIZES: Size[] = [
   { key: 's', label: 'Small 360×260', width: 360, height: 260 },
   { key: 'm', label: 'Medium 560×380', width: 560, height: 380 },
   { key: 'l', label: 'Wide 800×420', width: 800, height: 420 },
@@ -63,7 +63,7 @@ const GAP_TYPES = {
 };
 const PENGUIN_TYPES = { Species: 'Category', Sex: 'Category', 'Flipper length (mm)': 'Quantity', 'Body mass (g)': 'Quantity' };
 
-interface LegendCase {
+export interface LegendCase {
   key: string;
   label: string;
   why: string;
@@ -81,7 +81,7 @@ const scatter = (
 const GAP_XY = { x: 'GDP per capita', y: 'Life expectancy' };
 const PENGUIN_XY = { x: 'Flipper length (mm)', y: 'Body mass (g)' };
 
-const SINGLE: LegendCase[] = [
+export const SINGLE: LegendCase[] = [
   { key: 'colour-3', label: 'Colour, 3 short names', why: 'the simplest key',
     input: scatter('Penguins', PENGUINS, PENGUIN_TYPES, { ...PENGUIN_XY, color: 'Species' }) },
   { key: 'colour-5', label: 'Colour, 5 names', why: 'a row that may wrap on a small canvas',
@@ -98,7 +98,7 @@ const SINGLE: LegendCase[] = [
     input: scatter('Income and life expectancy, 2007', G2007, GAP_TYPES, { ...GAP_XY, size: 'Population (M)', detail: 'Country' }, true) },
 ];
 
-const MULTI: LegendCase[] = [
+export const MULTI: LegendCase[] = [
   { key: 'colour-size', label: 'Colour + size', why: 'an untitled colour key beside a titled size key',
     input: scatter('Income and life expectancy, 2007', G2007, GAP_TYPES, { ...GAP_XY, color: 'Continent', size: 'Population (M)', detail: 'Country' }, true) },
   { key: 'colour-shape', label: 'Colour + shape', why: 'two short category keys',

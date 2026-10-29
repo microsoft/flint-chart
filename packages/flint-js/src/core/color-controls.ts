@@ -94,3 +94,29 @@ export function resampleStops(stops: string[], count: number): string[] {
 export function schemeName(scheme: unknown): string | undefined {
     return typeof scheme === 'string' ? scheme : undefined;
 }
+
+/** The round steps a bin edge takes, of a power of ten. */
+const ROUND_STEPS = [1, 2, 2.5, 5];
+
+/**
+ * The inner edges that quantize `[min, max]` into `count` bins at round values: `count − 1` edges a
+ * round step apart (1, 2, 2.5 or 5 of a power of ten), placed over the data's middle, the outer two
+ * bins open-ended. Of the steps that keep every edge inside the data, the one whose outer bins come
+ * nearest a step wide. Undefined where none does (too few distinct values, or fewer than two bins).
+ */
+export function roundBinEdges(min: number, max: number, count: number): number[] | undefined {
+    if (!(count >= 2) || !Number.isFinite(min) || !Number.isFinite(max) || !(max > min)) return undefined;
+    const raw = (max - min) / count;
+    let best: { edges: number[]; cost: number } | undefined;
+    for (let exp = Math.floor(Math.log10(raw)) - 1; exp <= Math.floor(Math.log10(raw)) + 1; exp++) {
+        for (const unit of ROUND_STEPS) {
+            const step = unit * 10 ** exp;
+            const first = Math.round(((min + max) / 2 - (step * (count - 2)) / 2) / step) * step;
+            const edges = Array.from({ length: count - 1 }, (_, i) => Number((first + i * step).toPrecision(12)));
+            if (edges[0] <= min || edges[edges.length - 1] >= max) continue;
+            const cost = Math.abs(edges[0] - min - step) / step + Math.abs(max - edges[edges.length - 1] - step) / step;
+            if (!best || cost < best.cost) best = { edges, cost };
+        }
+    }
+    return best?.edges;
+}

@@ -258,8 +258,8 @@ function measure(svg: SVGSVGElement, view: View, box: { width: number; height: n
  * How the host sizes the chart: every chart gets the same base size and an allowance to grow under
  * pressure, so its box is the base times the allowance.
  */
-interface Setup { id: string; base: { width: number; height: number }; stretch: number }
-const SETUPS: Setup[] = [
+export interface Setup { id: string; base: { width: number; height: number }; stretch: number }
+export const SETUPS: Setup[] = [
   { id: '300x300x1.5', base: { width: 300, height: 300 }, stretch: 1.5 },
   { id: '200x200x1.2', base: { width: 200, height: 200 }, stretch: 1.2 },
   { id: '300x300x1', base: { width: 300, height: 300 }, stretch: 1 },
@@ -267,10 +267,10 @@ const SETUPS: Setup[] = [
   // The Theme Lab's chart wall: a wide base in a narrow card.
   { id: '300x200x1.5', base: { width: 300, height: 200 }, stretch: 1.5 },
 ];
-const setupLabel = (setup: Setup) => `${setup.base.width} × ${setup.base.height}, ×${setup.stretch}`;
+export const setupLabel = (setup: Setup) => `${setup.base.width} × ${setup.base.height}, ×${setup.stretch}`;
 
 /** The box the chart has to fit, which it is measured against. */
-const boxOf = (setup: Setup) => ({ width: Math.round(setup.base.width * setup.stretch), height: Math.round(setup.base.height * setup.stretch) });
+export const boxOf = (setup: Setup) => ({ width: Math.round(setup.base.width * setup.stretch), height: Math.round(setup.base.height * setup.stretch) });
 
 /** The chart as planned, or as the canvas fit lays it out (`options.canvasFit`). */
 type Layout = 'off' | 'auto';

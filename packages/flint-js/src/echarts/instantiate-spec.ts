@@ -28,6 +28,7 @@ import type {
 } from '../core/types';
 import { computePaddedDomain } from '../core/semantic-types';
 import { toTypeString } from '../core/field-semantics';
+import { EC_LEGEND_TITLE_ID } from './graphic-ids';
 import { isDateField } from '../core/decisions';
 import { crowdedCalendarLabels } from '../core/calendar-labels';
 import { ColorDecisionResult } from '../core/color-decisions';
@@ -472,6 +473,7 @@ export function ecApplyLayoutToSpec(
                 };
                 if (legendTitle != null) {
                     const titleGraphic = {
+                        id: EC_LEGEND_TITLE_ID,
                         type: 'text' as const,
                         bottom: 22,
                         left: 'center',
@@ -517,6 +519,7 @@ export function ecApplyLayoutToSpec(
                 };
                 if (legendTitle != null) {
                     const titleGraphic = {
+                        id: EC_LEGEND_TITLE_ID,
                         type: 'text' as const,
                         right: CANVAS_BUFFER,
                         top: 4,
@@ -729,12 +732,14 @@ export function ecApplyLayoutToSpec(
 
         if (layout.xLabel.labelLimit && layout.xLabel.labelLimit < 100) {
             const maxLen = layout.xLabel.labelLimit;
-            option.xAxis.axisLabel.formatter = (value: string) => {
+            const formatter = (value: string) => {
                 if (typeof value === 'string' && value.length > maxLen) {
                     return value.substring(0, maxLen) + '…';
                 }
                 return value;
             };
+            (formatter as any)._flintCalendar = true;
+            option.xAxis.axisLabel.formatter = formatter;
         }
     }
 
@@ -752,12 +757,11 @@ export function ecApplyLayoutToSpec(
             if (named) {
                 const byValue = new Map(values.map((value, index) => [value, named[index].join('\n')]));
                 const existing = xAxis.axisLabel?.formatter;
-                xAxis.axisLabel = {
-                    ...xAxis.axisLabel,
-                    formatter: (value: string) => byValue.get(String(value))
-                        ?? (typeof existing === 'function' ? existing(value) : value),
-                    rotate: 0,
-                };
+                const formatter = (value: string) => byValue.get(String(value))
+                    ?? (typeof existing === 'function' ? existing(value) : value);
+                // Marked so a planned band-label decision can set it aside (see `ecFitFrame`).
+                (formatter as any)._flintCalendar = true;
+                xAxis.axisLabel = { ...xAxis.axisLabel, formatter, rotate: 0 };
             }
         }
     }

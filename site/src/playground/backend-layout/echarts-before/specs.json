@@ -1,0 +1,1396 @@
+{
+ "calendar-vertical": {
+  "_width": 498,
+  "_height": 543,
+  "grid": {
+   "left": 49,
+   "right": 38,
+   "top": 95,
+   "bottom": 64
+  },
+  "title": {
+   "left": "center",
+   "top": 15,
+   "itemGap": 10,
+   "text": "Vertical date axis",
+   "textStyle": {
+    "fontSize": 18,
+    "lineHeight": 23
+   },
+   "subtext": "2020-01-01 to 2024-12-30",
+   "subtextStyle": {
+    "fontSize": 12,
+    "lineHeight": 17
+   }
+  },
+  "xAxis": {
+   "type": "value",
+   "name": "Reading",
+   "nameLocation": "middle",
+   "nameGap": 33,
+   "scale": true,
+   "min": 87.0375,
+   "max": 134.6125,
+   "nameTextStyle": {
+    "fontSize": 12
+   },
+   "axisLabel": {
+    "fontSize": 12,
+    "showMinLabel": false,
+    "showMaxLabel": false
+   }
+  },
+  "yAxis": {
+   "type": "value",
+   "name": "Date",
+   "nameLocation": "middle",
+   "nameGap": 18,
+   "scale": true,
+   "nameTextStyle": {
+    "fontSize": 12
+   },
+   "axisLabel": {
+    "fontSize": 12,
+    "formatter": "[function]"
+   }
+  },
+  "_canvasFit": {
+   "box": {
+    "width": 480,
+    "height": 420
+   },
+   "drawing": {
+    "width": 498,
+    "height": 543
+   },
+   "scale": 0.77,
+   "flags": [
+    "what is around the chart stretches the drawing 1.5\u00d7 wider than its box"
+   ],
+   "excess": 0.351
+  }
+ },
+ "labels-density-16-2-color": {
+  "_width": 694,
+  "_height": 451,
+  "grid": {
+   "left": 63,
+   "right": 193,
+   "top": 36,
+   "bottom": 64
+  },
+  "legend": {
+   "data": [
+    "United States Olympic delegation at Paris 2024",
+    "China",
+    "Japan",
+    "Australia",
+    "France",
+    "Netherlands",
+    "Great Britain",
+    "South Korea",
+    "Italy Olympic delegation at Paris 2024",
+    "Germany",
+    "New Zealand",
+    "Canada",
+    "\u2026 4 more"
+   ],
+   "show": true,
+   "itemWidth": 12,
+   "itemHeight": 12,
+   "itemGap": 8,
+   "textStyle": {
+    "fontSize": 8,
+    "lineHeight": 10
+   },
+   "top": 24,
+   "right": 16,
+   "orient": "vertical",
+   "align": "left",
+   "type": "scroll",
+   "formatter": "[function]"
+  },
+  "xAxis": {
+   "type": "value",
+   "name": "Gold medals",
+   "nameLocation": "middle",
+   "nameGap": 33,
+   "scale": true,
+   "min": 2.2,
+   "max": 41.8,
+   "nameTextStyle": {
+    "fontSize": 12
+   },
+   "axisLabel": {
+    "fontSize": 12,
+    "showMinLabel": false,
+    "showMaxLabel": false
+   }
+  },
+  "yAxis": {
+   "type": "value",
+   "name": "Silver medals",
+   "nameLocation": "middle",
+   "nameGap": 32,
+   "scale": true,
+   "min": -0.1,
+   "max": 46.1,
+   "nameTextStyle": {
+    "fontSize": 12
+   },
+   "axisLabel": {
+    "fontSize": 12,
+    "showMinLabel": false,
+    "showMaxLabel": false
+   }
+  },
+  "graphic": [
+   {
+    "id": "flint-legend-title",
+    "type": "text",
+    "right": 16,
+    "top": 4,
+    "z": 100,
+    "style": {
+     "text": "Team",
+     "fontSize": 11,
+     "fontWeight": "bold",
+     "fill": "#333",
+     "textAlign": "left",
+     "width": 165
+    }
+   }
+  ],
+  "_canvasFit": {
+   "box": {
+    "width": 720,
+    "height": 480
+   },
+   "drawing": {
+    "width": 694,
+    "height": 451
+   },
+   "scale": 1,
+   "flags": [],
+   "excess": 0
+  }
+ },
+ "labels-five-long-color": {
+  "_width": 704,
+  "_height": 448,
+  "grid": {
+   "left": 63,
+   "right": 200,
+   "top": 36,
+   "bottom": 64
+  },
+  "legend": {
+   "data": [
+    "United States of America",
+    "People's Republic of China",
+    "Islamic Republic of Iran",
+    "Democratic People's Republic of Korea",
+    "Refugee Olympic Team"
+   ],
+   "show": true,
+   "top": 24,
+   "right": 16,
+   "orient": "vertical",
+   "align": "left",
+   "textStyle": {
+    "fontSize": 11,
+    "lineHeight": 14
+   },
+   "formatter": "[function]"
+  },
+  "xAxis": {
+   "type": "value",
+   "name": "Gold medals",
+   "nameLocation": "middle",
+   "nameGap": 33,
+   "scale": false,
+   "nameTextStyle": {
+    "fontSize": 12
+   },
+   "axisLabel": {
+    "fontSize": 12
+   }
+  },
+  "yAxis": {
+   "type": "value",
+   "name": "Silver medals",
+   "nameLocation": "middle",
+   "nameGap": 32,
+   "scale": false,
+   "nameTextStyle": {
+    "fontSize": 12
+   },
+   "axisLabel": {
+    "fontSize": 12
+   }
+  },
+  "graphic": [
+   {
+    "id": "flint-legend-title",
+    "type": "text",
+    "right": 16,
+    "top": 4,
+    "z": 100,
+    "style": {
+     "text": "Team",
+     "fontSize": 11,
+     "fontWeight": "bold",
+     "fill": "#333",
+     "textAlign": "left",
+     "width": 172
+    }
+   }
+  ],
+  "_canvasFit": {
+   "box": {
+    "width": 720,
+    "height": 480
+   },
+   "drawing": {
+    "width": 704,
+    "height": 448
+   },
+   "scale": 1,
+   "flags": [],
+   "excess": 0
+  }
+ },
+ "legend-colour-10-long": {
+  "_width": 629,
+  "_height": 470,
+  "grid": {
+   "left": 63,
+   "right": 188,
+   "top": 68,
+   "bottom": 64
+  },
+  "title": {
+   "left": "center",
+   "top": 15,
+   "itemGap": 10,
+   "text": "Life expectancy",
+   "textStyle": {
+    "fontSize": 18,
+    "lineHeight": 23
+   }
+  },
+  "legend": {
+   "data": [
+    "Bosnia and Herzegovina",
+    "Central African Republic",
+    "Congo, Dem. Rep.",
+    "Dominican Republic",
+    "Equatorial Guinea",
+    "Korea, Dem. Rep.",
+    "Sao Tome and Principe",
+    "Trinidad and Tobago",
+    "United Kingdom",
+    "West Bank and Gaza"
+   ],
+   "top": 76,
+   "right": 16,
+   "orient": "vertical",
+   "align": "left",
+   "textStyle": {
+    "fontSize": 11
+   },
+   "formatter": "[function]"
+  },
+  "xAxis": {
+   "type": "time",
+   "name": "Year",
+   "nameLocation": "middle",
+   "nameGap": 33,
+   "axisTick": {
+    "show": true,
+    "alignWithLabel": true
+   },
+   "axisLabel": {
+    "rotate": 0,
+    "fontSize": 12,
+    "formatter": "{yyyy}",
+    "hideOverlap": true
+   },
+   "nameTextStyle": {
+    "fontSize": 12
+   }
+  },
+  "yAxis": {
+   "type": "value",
+   "name": "Life expectancy",
+   "nameLocation": "middle",
+   "nameGap": 32,
+   "axisTick": {
+    "show": true
+   },
+   "axisLabel": {
+    "rotate": 0,
+    "fontSize": 12
+   },
+   "scale": false,
+   "nameTextStyle": {
+    "fontSize": 12
+   }
+  },
+  "graphic": [
+   {
+    "id": "flint-legend-title",
+    "type": "text",
+    "right": 16,
+    "top": 56,
+    "z": 100,
+    "style": {
+     "text": "Country",
+     "fontSize": 11,
+     "fontWeight": "bold",
+     "fill": "#333",
+     "textAlign": "left",
+     "width": 160
+    }
+   }
+  ],
+  "_canvasFit": {
+   "box": {
+    "key": "m",
+    "label": "Medium 560\u00d7380",
+    "width": 560,
+    "height": 380
+   },
+   "drawing": {
+    "width": 629,
+    "height": 470
+   },
+   "scale": 0.81,
+   "flags": [],
+   "excess": 0
+  }
+ },
+ "legend-colour-size": {
+  "_width": 459,
+  "_height": 441,
+  "grid": {
+   "left": 63,
+   "right": 114,
+   "top": 68,
+   "bottom": 108
+  },
+  "title": {
+   "left": "center",
+   "top": 15,
+   "itemGap": 10,
+   "text": "Income and life expectancy, 2007",
+   "textStyle": {
+    "fontSize": 18,
+    "lineHeight": 23
+   }
+  },
+  "legend": {
+   "data": [
+    "Asia",
+    "Americas",
+    "Africa",
+    "Europe",
+    "Oceania"
+   ],
+   "show": true,
+   "bottom": 0,
+   "left": "center",
+   "orient": "horizontal",
+   "textStyle": {
+    "fontSize": 11
+   }
+  },
+  "visualMap": [
+   {
+    "type": "continuous",
+    "show": true,
+    "min": 0.2,
+    "max": 1318.7,
+    "dimension": 2,
+    "inRange": {
+     "symbolSize": [
+      4,
+      30
+     ]
+    },
+    "orient": "vertical",
+    "right": 50,
+    "top": 71.2,
+    "bottom": 39.2,
+    "padding": 0,
+    "itemGap": 0,
+    "text": [
+     "1318.7",
+     "0.2"
+    ],
+    "textStyle": {
+     "fontSize": 10
+    },
+    "seriesIndex": [
+     0,
+     1,
+     2,
+     3,
+     4
+    ],
+    "name": "Population (M)",
+    "controller": {
+     "inRange": {
+      "color": [
+       "#888"
+      ]
+     }
+    }
+   }
+  ],
+  "xAxis": {
+   "type": "value",
+   "name": "GDP per capita",
+   "nameLocation": "middle",
+   "nameGap": 33,
+   "scale": true,
+   "min": -2176.430056865,
+   "max": 51811.172085565,
+   "nameTextStyle": {
+    "fontSize": 12
+   },
+   "axisLabel": {
+    "fontSize": 12,
+    "showMinLabel": false,
+    "showMaxLabel": false
+   }
+  },
+  "yAxis": {
+   "type": "value",
+   "name": "Life expectancy",
+   "nameLocation": "middle",
+   "nameGap": 32,
+   "scale": true,
+   "min": 37.4635,
+   "max": 84.7525,
+   "nameTextStyle": {
+    "fontSize": 12
+   },
+   "axisLabel": {
+    "fontSize": 12,
+    "showMinLabel": false,
+    "showMaxLabel": false
+   }
+  },
+  "graphic": [
+   {
+    "type": "text",
+    "right": 50,
+    "top": 42,
+    "z": 100,
+    "style": {
+     "text": "Population (M)",
+     "fontSize": 11,
+     "fontWeight": "bold",
+     "fill": "#333",
+     "textAlign": "right"
+    }
+   },
+   {
+    "id": "flint-legend-title",
+    "type": "text",
+    "bottom": 26,
+    "left": "center",
+    "z": 100,
+    "style": {
+     "text": "Continent",
+     "fontSize": 11,
+     "fontWeight": "bold",
+     "fill": "#333",
+     "textAlign": "center"
+    }
+   }
+  ],
+  "_canvasFit": {
+   "box": {
+    "key": "m",
+    "label": "Medium 560\u00d7380",
+    "width": 560,
+    "height": 380
+   },
+   "drawing": {
+    "width": 459,
+    "height": 441
+   },
+   "scale": 0.86,
+   "flags": [],
+   "excess": 0,
+   "plotScale": 0.61,
+   "treatment": {
+    "plotScale": 0.61
+   }
+  }
+ },
+ "squeeze-budget-heatmap": {
+  "_width": 436,
+  "_height": 486,
+  "grid": {
+   "left": 154,
+   "right": 46,
+   "top": 68,
+   "bottom": 64
+  },
+  "title": {
+   "left": "center",
+   "top": 15,
+   "itemGap": 10,
+   "text": "Spend against plan by department",
+   "textStyle": {
+    "fontSize": 18,
+    "lineHeight": 23
+   }
+  },
+  "visualMap": {
+   "min": -12,
+   "max": 12,
+   "calculable": true,
+   "orient": "horizontal",
+   "left": "center",
+   "bottom": 5,
+   "inRange": {
+    "color": [
+     "#b2182b",
+     "#d6604d",
+     "#f4a582",
+     "#fddbc7",
+     "#f7f7f7",
+     "#d1e5f0",
+     "#92c5de",
+     "#4393c3",
+     "#2166ac"
+    ]
+   }
+  },
+  "xAxis": {
+   "type": "category",
+   "data": [
+    "Q1 2025",
+    "Q2 2025",
+    "Q3 2025",
+    "Q4 2025"
+   ],
+   "name": "Quarter",
+   "splitArea": {
+    "show": true
+   },
+   "axisTick": {
+    "show": true,
+    "alignWithLabel": true
+   },
+   "axisLabel": {
+    "rotate": 0,
+    "fontSize": 12,
+    "interval": 0
+   },
+   "nameLocation": "middle",
+   "nameGap": 33,
+   "nameTextStyle": {
+    "fontSize": 12
+   }
+  },
+  "yAxis": {
+   "type": "category",
+   "data": [
+    "Research and development",
+    "Sales and business development",
+    "Customer success and support",
+    "General and administrative",
+    "Marketing and communications",
+    "Information technology"
+   ],
+   "name": "Department",
+   "splitArea": {
+    "show": true
+   },
+   "axisTick": {
+    "show": true,
+    "alignWithLabel": true
+   },
+   "axisLabel": {
+    "rotate": 0,
+    "fontSize": 12,
+    "formatter": "[function]",
+    "lineHeight": 15,
+    "interval": 0
+   },
+   "nameLocation": "middle",
+   "nameGap": 123,
+   "nameTextStyle": {
+    "fontSize": 12
+   }
+  },
+  "_canvasFit": {
+   "box": {
+    "width": 450,
+    "height": 450
+   },
+   "drawing": {
+    "width": 436,
+    "height": 486
+   },
+   "scale": 0.93,
+   "flags": [
+    "y labels take 39% of the plot's width"
+   ],
+   "excess": 0.039
+  }
+ },
+ "squeeze-dd-heat-few": {
+  "_width": 318,
+  "_height": 264,
+  "grid": {
+   "left": 96,
+   "right": 46,
+   "top": 68,
+   "bottom": 64
+  },
+  "title": {
+   "left": "center",
+   "top": 15,
+   "itemGap": 10,
+   "text": "Load by region and segment",
+   "textStyle": {
+    "fontSize": 18,
+    "lineHeight": 23
+   }
+  },
+  "visualMap": {
+   "min": 40,
+   "max": 96,
+   "calculable": true,
+   "orient": "horizontal",
+   "left": "center",
+   "bottom": 5,
+   "inRange": {
+    "color": [
+     "#f7fbff",
+     "#6baed6",
+     "#08519c"
+    ]
+   }
+  },
+  "xAxis": {
+   "type": "category",
+   "data": [
+    "North",
+    "East",
+    "South",
+    "West"
+   ],
+   "name": "Region",
+   "splitArea": {
+    "show": true
+   },
+   "axisTick": {
+    "show": true,
+    "alignWithLabel": true
+   },
+   "axisLabel": {
+    "rotate": 0,
+    "fontSize": 12,
+    "interval": 0
+   },
+   "nameLocation": "middle",
+   "nameGap": 33,
+   "nameTextStyle": {
+    "fontSize": 12
+   }
+  },
+  "yAxis": {
+   "type": "category",
+   "data": [
+    "Goods",
+    "Services",
+    "Energy"
+   ],
+   "name": "Segment",
+   "splitArea": {
+    "show": true
+   },
+   "axisTick": {
+    "show": true,
+    "alignWithLabel": true
+   },
+   "axisLabel": {
+    "rotate": 0,
+    "fontSize": 12
+   },
+   "nameLocation": "middle",
+   "nameGap": 65,
+   "nameTextStyle": {
+    "fontSize": 12
+   }
+  },
+  "_canvasFit": {
+   "box": {
+    "width": 450,
+    "height": 450
+   },
+   "drawing": {
+    "width": 318,
+    "height": 264
+   },
+   "scale": 1,
+   "flags": [],
+   "excess": 0
+  }
+ },
+ "squeeze-dd-heat-many": {
+  "_width": 483,
+  "_height": 459,
+  "grid": {
+   "left": 77,
+   "right": 46,
+   "top": 68,
+   "bottom": 103
+  },
+  "title": {
+   "left": "center",
+   "top": 15,
+   "itemGap": 10,
+   "text": "Load by country and hour",
+   "textStyle": {
+    "fontSize": 18,
+    "lineHeight": 23
+   }
+  },
+  "visualMap": {
+   "min": 40,
+   "max": 97,
+   "calculable": true,
+   "orient": "horizontal",
+   "left": "center",
+   "bottom": 5,
+   "inRange": {
+    "color": [
+     "#f7fbff",
+     "#6baed6",
+     "#08519c"
+    ]
+   }
+  },
+  "xAxis": {
+   "type": "category",
+   "data": [
+    "Argentina",
+    "Australia",
+    "Austria",
+    "Belgium",
+    "Brazil",
+    "Canada",
+    "Chile",
+    "China",
+    "Colombia",
+    "Denmark",
+    "Egypt",
+    "Finland",
+    "\u2026 18 more"
+   ],
+   "name": "Country",
+   "splitArea": {
+    "show": true
+   },
+   "axisTick": {
+    "show": true,
+    "alignWithLabel": true
+   },
+   "axisLabel": {
+    "rotate": 90,
+    "fontSize": 10,
+    "interval": 0
+   },
+   "nameLocation": "middle",
+   "nameGap": 72,
+   "nameTextStyle": {
+    "fontSize": 12
+   }
+  },
+  "yAxis": {
+   "type": "category",
+   "data": [
+    "00:00",
+    "01:00",
+    "02:00",
+    "03:00",
+    "04:00",
+    "05:00",
+    "06:00",
+    "07:00",
+    "08:00",
+    "09:00",
+    "10:00",
+    "11:00",
+    "\u2026 12 more"
+   ],
+   "name": "Hour",
+   "splitArea": {
+    "show": true
+   },
+   "axisTick": {
+    "show": true,
+    "alignWithLabel": true
+   },
+   "axisLabel": {
+    "rotate": 0,
+    "fontSize": 11
+   },
+   "nameLocation": "middle",
+   "nameGap": 46,
+   "nameTextStyle": {
+    "fontSize": 12
+   }
+  },
+  "_canvasFit": {
+   "box": {
+    "width": 450,
+    "height": 450
+   },
+   "drawing": {
+    "width": 483,
+    "height": 459
+   },
+   "scale": 0.93,
+   "flags": [],
+   "excess": 0
+  }
+ },
+ "temporal-heatmap-six-months": {
+  "_width": 334,
+  "_height": 234,
+  "grid": {
+   "left": 92,
+   "right": 46,
+   "top": 68,
+   "bottom": 79
+  },
+  "title": {
+   "left": "center",
+   "top": 15,
+   "itemGap": 10,
+   "text": "Units by product and month",
+   "textStyle": {
+    "fontSize": 18,
+    "lineHeight": 23
+   }
+  },
+  "visualMap": {
+   "min": 126,
+   "max": 165,
+   "calculable": true,
+   "orient": "horizontal",
+   "left": "center",
+   "bottom": 5,
+   "inRange": {
+    "color": [
+     "#f7fbff",
+     "#6baed6",
+     "#08519c"
+    ]
+   }
+  },
+  "xAxis": {
+   "type": "category",
+   "data": [
+    "2025-01",
+    "2025-02",
+    "2025-03",
+    "2025-04",
+    "2025-05",
+    "2025-06"
+   ],
+   "name": "Month",
+   "splitArea": {
+    "show": true
+   },
+   "axisTick": {
+    "show": true,
+    "alignWithLabel": true
+   },
+   "axisLabel": {
+    "rotate": 0,
+    "fontSize": 12,
+    "formatter": "[function]",
+    "lineHeight": 15,
+    "interval": 0
+   },
+   "nameLocation": "middle",
+   "nameGap": 48,
+   "nameTextStyle": {
+    "fontSize": 12
+   }
+  },
+  "yAxis": {
+   "type": "category",
+   "data": [
+    "Alpha",
+    "Beta",
+    "Gamma"
+   ],
+   "name": "Product",
+   "splitArea": {
+    "show": true
+   },
+   "axisTick": {
+    "show": true,
+    "alignWithLabel": true
+   },
+   "axisLabel": {
+    "rotate": 0,
+    "fontSize": 12
+   },
+   "nameLocation": "middle",
+   "nameGap": 61,
+   "nameTextStyle": {
+    "fontSize": 12
+   }
+  },
+  "_canvasFit": {
+   "box": {
+    "width": 440,
+    "height": 320
+   },
+   "drawing": {
+    "width": 334,
+    "height": 234
+   },
+   "scale": 1,
+   "flags": [
+    "x labels take 48% of the plot's height"
+   ],
+   "excess": 0.382
+  }
+ },
+ "color-2": {
+  "_width": 573,
+  "_height": 386,
+  "grid": {
+   "left": 143,
+   "right": 46,
+   "top": 36,
+   "bottom": 94
+  },
+  "visualMap": {
+   "min": -53901,
+   "max": 43635,
+   "calculable": true,
+   "orient": "horizontal",
+   "left": "center",
+   "bottom": 5,
+   "inRange": {
+    "color": [
+     "#440154",
+     "#46327e",
+     "#365c8d",
+     "#277f8e",
+     "#1fa187",
+     "#4ac16d",
+     "#a0da39",
+     "#fde725"
+    ]
+   }
+  },
+  "xAxis": {
+   "type": "category",
+   "data": [
+    "2025-01",
+    "2025-02",
+    "2025-03",
+    "2025-04",
+    "2025-05",
+    "2025-06",
+    "2025-07",
+    "2025-08",
+    "2025-09",
+    "2025-10",
+    "2025-11",
+    "2025-12"
+   ],
+   "name": "period",
+   "splitArea": {
+    "show": true
+   },
+   "axisTick": {
+    "show": true,
+    "alignWithLabel": true
+   },
+   "axisLabel": {
+    "rotate": 90,
+    "fontSize": 12
+   },
+   "nameLocation": "middle",
+   "nameGap": 63,
+   "nameTextStyle": {
+    "fontSize": 12
+   }
+  },
+  "yAxis": {
+   "type": "category",
+   "data": [
+    "Starforge Tactics",
+    "Neon Drift 2049",
+    "Pocket Kingdoms",
+    "Azure Legends",
+    "Dustwind Arena",
+    "Circuit Breakers",
+    "Moonlit Odyssey",
+    "Granite & Glyphs"
+   ],
+   "name": "game",
+   "splitArea": {
+    "show": true
+   },
+   "axisTick": {
+    "show": true,
+    "alignWithLabel": true
+   },
+   "axisLabel": {
+    "rotate": 0,
+    "fontSize": 12
+   },
+   "nameLocation": "middle",
+   "nameGap": 112,
+   "nameTextStyle": {
+    "fontSize": 12
+   }
+  },
+  "_canvasFit": {
+   "box": {
+    "width": 600,
+    "height": 480
+   },
+   "drawing": {
+    "width": 573,
+    "height": 386
+   },
+   "scale": 1,
+   "flags": [],
+   "excess": 0
+  }
+ },
+ "color-4": {
+  "_width": 573,
+  "_height": 386,
+  "grid": {
+   "left": 143,
+   "right": 46,
+   "top": 36,
+   "bottom": 94
+  },
+  "visualMap": {
+   "min": -53901,
+   "max": 53901,
+   "orient": "horizontal",
+   "left": "center",
+   "bottom": 5,
+   "inRange": {
+    "color": [
+     "#c0392b",
+     "#e5b8b3",
+     "#b4cce1",
+     "#2e75b6"
+    ]
+   },
+   "type": "piecewise",
+   "splitNumber": 4
+  },
+  "xAxis": {
+   "type": "category",
+   "data": [
+    "2025-01",
+    "2025-02",
+    "2025-03",
+    "2025-04",
+    "2025-05",
+    "2025-06",
+    "2025-07",
+    "2025-08",
+    "2025-09",
+    "2025-10",
+    "2025-11",
+    "2025-12"
+   ],
+   "name": "period",
+   "splitArea": {
+    "show": true
+   },
+   "axisTick": {
+    "show": true,
+    "alignWithLabel": true
+   },
+   "axisLabel": {
+    "rotate": 90,
+    "fontSize": 12
+   },
+   "nameLocation": "middle",
+   "nameGap": 63,
+   "nameTextStyle": {
+    "fontSize": 12
+   }
+  },
+  "yAxis": {
+   "type": "category",
+   "data": [
+    "Starforge Tactics",
+    "Neon Drift 2049",
+    "Pocket Kingdoms",
+    "Azure Legends",
+    "Dustwind Arena",
+    "Circuit Breakers",
+    "Moonlit Odyssey",
+    "Granite & Glyphs"
+   ],
+   "name": "game",
+   "splitArea": {
+    "show": true
+   },
+   "axisTick": {
+    "show": true,
+    "alignWithLabel": true
+   },
+   "axisLabel": {
+    "rotate": 0,
+    "fontSize": 12
+   },
+   "nameLocation": "middle",
+   "nameGap": 112,
+   "nameTextStyle": {
+    "fontSize": 12
+   }
+  },
+  "_canvasFit": {
+   "box": {
+    "width": 600,
+    "height": 480
+   },
+   "drawing": {
+    "width": 573,
+    "height": 386
+   },
+   "scale": 1,
+   "flags": [],
+   "excess": 0
+  }
+ },
+ "squeeze-pie-ok": {
+  "_width": 360,
+  "_height": 416,
+  "title": {
+   "left": "center",
+   "top": 15,
+   "itemGap": 10,
+   "text": "Desktop browser market share, 2024",
+   "textStyle": {
+    "fontSize": 18,
+    "lineHeight": 23
+   }
+  },
+  "_canvasFit": {
+   "box": {
+    "width": 450,
+    "height": 450
+   },
+   "drawing": {
+    "width": 360,
+    "height": 416
+   },
+   "scale": 1,
+   "flags": [],
+   "excess": 0
+  }
+ },
+ "calendar-inspection-cadence": {
+  "_width": 519,
+  "_height": 492,
+  "grid": {
+   "left": 70,
+   "right": 38,
+   "top": 95,
+   "bottom": 64
+  },
+  "title": {
+   "left": "center",
+   "top": 15,
+   "itemGap": 10,
+   "text": "1. Daily detail / three months",
+   "textStyle": {
+    "fontSize": 18,
+    "lineHeight": 23
+   },
+   "subtext": "2024-01-05 to 2024-04-05",
+   "subtextStyle": {
+    "fontSize": 12,
+    "lineHeight": 17
+   }
+  },
+  "xAxis": {
+   "type": "time",
+   "name": "Date",
+   "nameLocation": "middle",
+   "nameGap": 33,
+   "axisTick": {
+    "show": true,
+    "alignWithLabel": true
+   },
+   "axisLabel": {
+    "rotate": 0,
+    "fontSize": 12,
+    "formatter": "{MMM} {dd}",
+    "hideOverlap": true
+   },
+   "nameTextStyle": {
+    "fontSize": 12
+   }
+  },
+  "yAxis": {
+   "type": "value",
+   "name": "Reading",
+   "nameLocation": "middle",
+   "nameGap": 39,
+   "axisTick": {
+    "show": true
+   },
+   "axisLabel": {
+    "rotate": 0,
+    "fontSize": 12
+   },
+   "scale": false,
+   "nameTextStyle": {
+    "fontSize": 12
+   }
+  },
+  "_canvasFit": {
+   "box": {
+    "width": 480,
+    "height": 420
+   },
+   "drawing": {
+    "width": 519,
+    "height": 492
+   },
+   "scale": 0.85,
+   "flags": [
+    "what is around the chart stretches the drawing 1.5\u00d7 wider than its box"
+   ],
+   "excess": 0.351
+  }
+ },
+ "title-snapshot-deck": {
+  "_width": 552,
+  "_height": 456,
+  "grid": {
+   "left": 63,
+   "right": 103,
+   "top": 112,
+   "bottom": 64
+  },
+  "title": {
+   "left": "center",
+   "top": 15,
+   "itemGap": 10,
+   "text": "Life expectancy, five countries",
+   "textStyle": {
+    "fontSize": 18,
+    "lineHeight": 23
+   },
+   "subtext": "GDP per capita (log scale) vs life expectancy, 2007; bubble size = population; X: GDP per\ncapita ($, log scale); Y: Life expectancy (years)",
+   "subtextStyle": {
+    "fontSize": 12,
+    "lineHeight": 17
+   }
+  },
+  "legend": {
+   "data": [
+    "Brazil",
+    "China",
+    "India",
+    "Nigeria",
+    "United States"
+   ],
+   "top": 120,
+   "right": 16,
+   "orient": "vertical",
+   "align": "left",
+   "textStyle": {
+    "fontSize": 11,
+    "lineHeight": 14
+   },
+   "formatter": "[function]"
+  },
+  "xAxis": {
+   "type": "time",
+   "name": "Year",
+   "nameLocation": "middle",
+   "nameGap": 33,
+   "axisTick": {
+    "show": true,
+    "alignWithLabel": true
+   },
+   "axisLabel": {
+    "rotate": 0,
+    "fontSize": 12,
+    "formatter": "{yyyy}",
+    "hideOverlap": true
+   },
+   "nameTextStyle": {
+    "fontSize": 12
+   }
+  },
+  "yAxis": {
+   "type": "value",
+   "name": "Life expectancy",
+   "nameLocation": "middle",
+   "nameGap": 32,
+   "axisTick": {
+    "show": true
+   },
+   "axisLabel": {
+    "rotate": 0,
+    "fontSize": 12
+   },
+   "scale": false,
+   "nameTextStyle": {
+    "fontSize": 12
+   }
+  },
+  "graphic": [
+   {
+    "id": "flint-legend-title",
+    "type": "text",
+    "right": 16,
+    "top": 100,
+    "z": 100,
+    "style": {
+     "text": "Country",
+     "fontSize": 11,
+     "fontWeight": "bold",
+     "fill": "#333",
+     "textAlign": "left",
+     "width": 75
+    }
+   }
+  ],
+  "_canvasFit": {
+   "box": {
+    "width": 660,
+    "height": 390
+   },
+   "drawing": {
+    "width": 552,
+    "height": 456
+   },
+   "scale": 0.86,
+   "flags": [],
+   "excess": 0
+  }
+ }
+}

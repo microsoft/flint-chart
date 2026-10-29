@@ -11,8 +11,94 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- ECharts, Chart.js and Plotly lay out their frame with the layout's own rules, in each library's
+  look: a headline and deck broken to full lines with no widow (set a size down where that fits one
+  line), band labels wrapped, turned, thinned or cut by the shared band-label plan, axis gutters and
+  names measured (a title longer than its axis on two lines), keys with long names on lines beside
+  the plot or moved to the foot, many lines thinned, and a canvas fit that holds key names short,
+  moves keys to the foot or lays the plot out smaller where the host would otherwise shrink the
+  drawing past legibility. ECharts and Chart.js now draw `chart_spec.title` and `subtitle`. The
+  verdict rides on the spec as `_canvasFit`. The dev site's *Backend layout* pages draw the
+  Vega-Lite layout labs' cases in each backend.
+- Themed Plotly charts draw the house's header (`planHeader`: tabs, rules) and source line
+  (`planSource`), start the headline, key and source at the chart's left edge, stand the value
+  axis on the right where the house does, title the key where the house titles keys, and give
+  back foot room kept for names the house laid flat or an axis title it moved into the deck.
+- Each backend states how its library draws the layout's furniture in a profile (`BackendProfile`:
+  key entry geometry, row wrapping, axis label and title spacing), read off the library's defaults
+  and source, and the shared estimators (`keyBlock`) measure with it. Plotly's keys, margins and
+  facet grids are now measured as Plotly draws them: no fixed 64 px gutter, keys estimated as
+  Plotly wraps them (a grid at the widest entry), axis titles taken away removed rather than left
+  empty, a tall key of long names stood beside the plot where that fits the box, and facets with
+  one shared title per axis, x labels only under each column's last panel and flat thinned times.
+- Plotly bars over a run of dates (a temporal field on the band axis) stand on Plotly's date
+  axis with its calendar ticks, flat and thinned, rather than one turned label a month. The
+  backends' canvas fit scores a treatment by how far its host would shrink the drawing as well as
+  by its flags, and may set the key's text a size smaller (`canvasTreatment.keyScale`, 10 px floor).
+  Key names held short by the canvas fit are held to the same width in every backend, past each
+  library's own symbol room (Plotly's key had left its names 70 px, so the treatment did nothing).
+- A narrow chart's title (two bars under a long headline) is broken to the width its box allows,
+  not the chart's own, and the drawing widens to hold it: the backends no longer stack a headline
+  into many lines over a thin plot. Plotly measures a house's headline in the case it draws it
+  (an upper-cased headline had run past the figure's edge).
+- A Plotly key that a house sets in a row above or below the plot sets its names for the row (whole,
+  or broken where that lets more share a row) rather than keeping names broken for a column beside
+  the plot.
+- Plotly scatter and line axes start and end on labelled ticks, as Vega-Lite's nice domains do (a
+  range rounded out to its tick step, a step further where an edge bubble would be clipped), and a
+  log axis over a few decades is labelled at 1·2·5 of each decade where those labels fit.
+- A Plotly pie whose slice names run long beside its radius names its slices in a key beside it
+  (long names on lines) and prints the shares inside, rather than standing the names outside and
+  shrinking the pie to a small disc among them; a house's key on top stands beside a pie.
+  A themed pie whose callouts would stand outside it is keyed too (in the house's row where it
+  fits), so Plotly's automargin no longer moves the plot, and the header hung from it, after the
+  frame placed them.
+  Plotly pies and donuts take a `sliceNames` chart property (`auto`, `onSlices`, `key`), which a
+  house may also set in `chartDefaults`, to keep the names on the slices or always set them in a key.
+- A Plotly key in rows above or below the plot flows, each entry its own width, rather than standing
+  as Plotly's grid at its widest entry, where one long name left one entry a row.
+- Plotly facet panels are ticked from their own height (y) and width (x), the range rounded to the
+  step; a house's tick count is no longer shared out over the grid, which had left a panel's y axis
+  two labels (0, 20).
+- Plotly facet panels tick their years by the width each panel is drawn at, with Vega-Lite's
+  temporal rule: the finest calendar step (1, 2, 5, 10 … years) whose labels stand apart by half
+  of each one's width and 0.6 em. Plotly's own `nticks` had left a wide panel two labels.
+- Plotly keys in rows are measured as Plotly wraps its grouped rows (an entry steps on by its gap,
+  its text box a little wider than its advance), so a key on top no longer runs its last row into
+  the plot; a key at the foot stands under the x labels in room of its own rather than letting
+  automargin take its height from the plot; a few px separate a title from a key hung under it; and
+  a time axis's labels are measured as Plotly prints them (a second line for the year under days).
+- Plotly draws a key to a size channel, which Plotly has none of: a few round values
+  (`roundSample`, as many as the edge holds) as circles at the size the chart draws them, with the
+  field's name, in a row under a key in rows or beside the plot under the colour key.
+- Cartoon's dots are solid (`marks.point.opacity: 1`): stickers stack, the dark edge of one keeping
+  the one beneath readable, in Vega-Lite as in Plotly, whose dots now take a house's outline.
+- The backends' canvas fit may set the library's type a size down (`canvasTreatment.labelScale`,
+  `titleScale`: Plotly 12 → 10 px ticks, 14 → 12 px axis titles, 17 → 14.5 px headline, never below
+  10 / 13 px), alongside key names and key text; type is taken smaller only where the host then
+  shrinks the drawing less by enough that the text reads at least as large on screen. A Plotly key
+  is set at its ticks' size (12 px), not the axis titles' (14 px).
+- Plotly sizes a bubble chart's points on one scale over every series, from zero, as Vega-Lite does
+  (a house's size range had been applied to each series apart, so each series' largest bubble drew
+  at the largest size), and draws them largest first, so small bubbles stay in sight.
+- Plotly leaves off the line along the index axis where the value scale's floor is not zero and the
+  house grids its values (`floating: 'omit'`), as Vega-Lite does: zero carries the base (no second
+  baseline under a scatter that crosses zero). A banded axis of dates names its bands as a calendar
+  does (`Jan` over `2025`, `Mar`, …), flat, every few bands where one will not hold a name, as
+  ECharts and Chart.js already did, rather than one turned `2025-01` a band.
+- ECharts binned colour scales break at round values (`roundBinEdges`), labelled as ranges; a
+  continuous size or colour ramp beside the plot stands from the plot's top with its title
+  centred over the bar.
+
 ### Changed
 
+- A heatmap side over a whole run of months or quarters (every period from the first to the last,
+  up to 50) is drawn as equal cells named by the calendar (`Jan` over `2025`, `Feb`, …) in
+  Vega-Lite too, as ECharts and Plotly draw it. On a time scale its cells, one width each, stood
+  at their months' starts, 28 to 31 days apart, with uneven gaps. The time scale stays one
+  `xAxisType` / `yAxisType` choice away; a run with a gap, or of days, weeks or years, keeps it.
 - **Breaking (MCP):** the server keeps nothing between calls, so it runs
   stateless. `show` takes the spec itself, as `chart` or `board`, and draws it;
   `validate_chart` and the new `validate_board` check a spec and return the

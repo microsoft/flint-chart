@@ -155,7 +155,8 @@ describe('ECharts Slope chart', () => {
       (g: { type?: string; style?: { fontWeight?: string } }) =>
         g.type === 'text' && g.style?.fontWeight === 'bold',
     );
-    expect(title?.right).toBe(16);
+    // Pinned from the right too, where its text starts over the entries.
+    expect(title?.right).toBeGreaterThanOrEqual(16);
     expect(title?.left).toBeUndefined();
   });
 

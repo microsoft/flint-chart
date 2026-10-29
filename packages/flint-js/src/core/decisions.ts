@@ -119,28 +119,58 @@ export function chronologicalOrder(values: readonly unknown[]): string[] | undef
 }
 
 /**
+ * How fully dates on the calendar grid fill the periods between the first and the last at their
+ * finest regular step (months where every date is a first of the month, days otherwise): the
+ * dates counted and the periods spanned. Undefined for dates off the grid (times of day) or fewer
+ * than two.
+ */
+function calendarCoverage(times: readonly number[]): { count: number; periods: number; monthly: boolean; step: number } | undefined {
+    if (times.length < 2) return undefined;
+    const dates = times.map((time) => new Date(time));
+    const midnight = dates.every((d) => d.getUTCHours() === 0 && d.getUTCMinutes() === 0 && d.getUTCSeconds() === 0 && d.getUTCMilliseconds() === 0);
+    if (!midnight) return undefined;
+    const monthly = dates.every((d) => d.getUTCDate() === 1);
+    const index = monthly
+        ? dates.map((d) => d.getUTCFullYear() * 12 + d.getUTCMonth())
+        : times.map((time) => Math.round(time / DAY_MS));
+    const step = index.slice(1).reduce((g, value, i) => gcd(g, value - index[i]), 0);
+    if (!(step > 0)) return undefined;
+    return { count: index.length, periods: (index[index.length - 1] - index[0]) / step + 1, monthly, step };
+}
+
+const distinctTimes = (values: readonly unknown[]): number[] =>
+    [...new Set(values.map(snapshotTime).filter((time): time is number => time !== undefined))].sort((a, b) => a - b);
+
+/**
  * Whether dates on a banded axis read as a few snapshots rather than a run of time: few of them
  * ({@link SNAPSHOT_MAX_DATES}), or calendar dates that fill under half the periods between the
  * first and the last at their finest regular step (July and December fill two of six months;
  * weekly dates fill every week). Dates off the calendar grid (times of day) count by number only.
  */
 export function readsAsSnapshots(values: readonly unknown[]): boolean {
-    const times = [...new Set(values.map(snapshotTime).filter((time): time is number => time !== undefined))]
-        .sort((a, b) => a - b);
+    const times = distinctTimes(values);
     if (times.length < 2) return false;
     if (times.length <= SNAPSHOT_MAX_DATES) return true;
     if (times.length > SNAPSHOT_MAX_BANDS) return false;
-    const dates = times.map((time) => new Date(time));
-    const midnight = dates.every((d) => d.getUTCHours() === 0 && d.getUTCMinutes() === 0 && d.getUTCSeconds() === 0 && d.getUTCMilliseconds() === 0);
-    if (!midnight) return false;
-    const monthly = dates.every((d) => d.getUTCDate() === 1);
-    const index = monthly
-        ? dates.map((d) => d.getUTCFullYear() * 12 + d.getUTCMonth())
-        : times.map((time) => Math.round(time / DAY_MS));
-    const step = index.slice(1).reduce((g, value, i) => gcd(g, value - index[i]), 0);
-    if (!(step > 0)) return false;
-    const periods = (index[index.length - 1] - index[0]) / step + 1;
-    return index.length / periods < SNAPSHOT_MAX_COVERAGE;
+    const coverage = calendarCoverage(times);
+    return !!coverage && coverage.count / coverage.periods < SNAPSHOT_MAX_COVERAGE;
+}
+
+/** Charts whose cells tile a grid: a date run along a side is a row of equal cells. */
+export const GRID_CHART_TYPES: ReadonlySet<string> = new Set(['Heatmap']);
+
+/**
+ * Whether dates read as a whole calendar run of months or quarters: every period between the
+ * first and the last at their regular step present (each month of 2025), and few enough to draw
+ * one band each ({@link SNAPSHOT_MAX_BANDS}). On a time scale such cells would take the lengths of
+ * their months — 28 to 31 days — and stand unevenly; as bands they tile. Runs of days or weeks,
+ * and of years (a day in 365), are even on a time scale already and stay there.
+ */
+export function readsAsCalendarRun(values: readonly unknown[]): boolean {
+    const times = distinctTimes(values);
+    if (times.length < 2 || times.length > SNAPSHOT_MAX_BANDS) return false;
+    const coverage = calendarCoverage(times);
+    return !!coverage && coverage.monthly && coverage.step < 12 && coverage.count === coverage.periods;
 }
 
 // ---------------------------------------------------------------------------
@@ -252,6 +282,11 @@ function resolveTemporalEncoding(
     if ((channel === 'x' || channel === 'y') && context.chartType && BANDED_CHART_TYPES.has(context.chartType)
         && readsAsSnapshots(fieldValues)) {
         return { vlType: 'ordinal', visCategory, channelOverride: true, cardinalityGuard: true, snapshots: true };
+    }
+    // A whole calendar run along a grid's side is a row of equal cells, named by the calendar.
+    if ((channel === 'x' || channel === 'y') && context.chartType && GRID_CHART_TYPES.has(context.chartType)
+        && readsAsCalendarRun(fieldValues)) {
+        return { vlType: 'ordinal', visCategory, channelOverride: true, cardinalityGuard: true };
     }
     return { vlType: 'temporal', visCategory, channelOverride: false, cardinalityGuard: false };
 }

@@ -28,9 +28,9 @@ const CELL = { width: 360, height: 270 };
 /* Lines: weight follows the number of series                                                      */
 /* ---------------------------------------------------------------------------------------------- */
 
-const SERIES_COUNTS = [7, 30, SERIES.length];
+export const SERIES_COUNTS = [7, 30, SERIES.length];
 
-function lineInput(count: number, theme: Theme): ChartAssemblyInput {
+export function lineInput(count: number, theme: Theme): ChartAssemblyInput {
   const rows = SERIES.slice(0, count).flatMap((s) => s.values.map(([year, completion]) => ({ country: s.country, region: s.region, year, completion })));
   return {
     data: { values: rows },
@@ -84,13 +84,13 @@ function LineDensity() {
 /* Dots: size follows fullness; the theme picks one overlap treatment                              */
 /* ---------------------------------------------------------------------------------------------- */
 
-interface DotData { key: string; label: string; rows: Row[]; x: string; y: string; color: string; type: string }
-const DOT_DATA: DotData[] = [
+export interface DotData { key: string; label: string; rows: Row[]; x: string; y: string; color: string; type: string }
+export const DOT_DATA: DotData[] = [
   { key: 'cars', label: 'Cars: 392 dots filling the plot', rows: CARS, x: 'Horsepower', y: 'MPG', color: 'Origin', type: 'Quantity' },
   { key: 'uis', label: 'UIS: 164 dots on a diagonal', rows: LATEST, x: 'girls', y: 'boys', color: 'region', type: 'Percentage' },
 ];
 
-function dotInput(data: DotData, theme: Theme, opacity?: number): ChartAssemblyInput {
+export function dotInput(data: DotData, theme: Theme, opacity?: number): ChartAssemblyInput {
   return {
     data: { values: data.rows },
     semantic_types: { [data.x]: data.type, [data.y]: data.type, [data.color]: 'Category' },

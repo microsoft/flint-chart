@@ -79,6 +79,8 @@ export function cjsApplyLayoutToSpec(
         const legendGutter = cjsLegendLikelyVisible(config) ? 96 : 0;
         config._width = plotWidth + PADDING + legendGutter;
         config._height = plotHeight + PADDING;
+        // The plot the layout planned, for the frame to measure around (see `cjsFitFrame`).
+        config._plot = { width: plotWidth, height: plotHeight };
     }
 
     // ── Bar sizing ───────────────────────────────────────────────────────
@@ -135,6 +137,8 @@ export function cjsApplyLayoutToSpec(
                     const lines = byValue.get(label);
                     return lines ? (lines.length > 1 ? lines : lines[0]) : label;
                 };
+                // Marked so a planned band-label decision can set it aside (see `cjsFitFrame`).
+                ticks.callback._flintCalendar = true;
                 ticks.minRotation = 0;
                 ticks.maxRotation = 0;
             }

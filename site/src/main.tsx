@@ -60,6 +60,8 @@ import { AgentComparison } from './playground/AgentComparison';
 import { DenseMarks } from './playground/DenseMarks';
 import { DensityLab } from './playground/DensityLab';
 import { LegendLab } from './playground/LegendLab';
+import { BackendLayoutLab } from './playground/backend-layout/BackendLayoutLab';
+import { EChartsFixesLab } from './playground/backend-layout/EChartsFixesLab';
 import { LocaleProvider, useLocale } from './i18n/LocaleContext';
 import type { Locale } from './i18n/locales';
 import { localePath } from './i18n/paths';
@@ -157,6 +159,9 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="dense-marks" element={<DenseMarks />} />
           <Route path="density" element={<DensityLab />} />
           <Route path="legend" element={<LegendLab />} />
+          <Route path="backend-layout" element={<Navigate to="echarts" replace />} />
+          <Route path="backend-layout-echarts-fixes" element={<EChartsFixesLab />} />
+          <Route path="backend-layout/:backend" element={<BackendLayoutLab />} />
           <Route path="year-legend" element={<Navigate to="../debug-gym" replace />} />
           {/* The Swiss and cartoon labs were the same page twice; keep the
               links they were reached by working. */}

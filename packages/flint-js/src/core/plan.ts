@@ -35,6 +35,7 @@ import { LAYOUT_COSTS } from './layout-costs';
 import { CANVAS_FIT_LIMITS, LEGIBILITY_MARGIN, describeTreatment, plotFitScale, judgeCanvas, readingCost, treatmentCost, type CanvasFitEstimate, type CanvasFitResult, type CanvasParts } from './canvas-fit';
 import { measureReserve, NO_RESERVE, type FurnitureReserve, type FurnitureSpacing } from './furniture-reserve';
 import { facetViews, gapOf, shortenViews, viewsExtent, type ViewNode } from './views';
+import { denseLineWidth, linesPerPanel, panelCount } from './line-density';
 
 /** The layout options a backend lays out with when neither the caller, the theme, nor the template sets them. */
 export interface BackendLayoutProfile {
@@ -232,14 +233,6 @@ const OVERLAP_SAMPLE = 2000;
 /** Vega-Lite's own dot area, which a chart without a house's size draws. */
 const VEGA_DOT_SIZE = 30;
 
-/** The panels a faceted chart draws, and so the panels its rows are shared among. */
-function panelCount(rows: any[], channelSemantics: Record<string, ChannelSemantics>): number {
-    let panels = 1;
-    for (const field of [channelSemantics.column?.field, channelSemantics.row?.field]) {
-        if (field) panels *= Math.max(1, new Set(rows.map((row) => row?.[field]).filter((value) => value != null)).size);
-    }
-    return panels;
-}
 
 /** A field's values as numbers along a continuous axis: dates as epoch ms, a log axis by its logarithm. */
 function axisPositions(rows: any[], field: string, temporal: boolean, log: boolean): (number | undefined)[] {
@@ -352,10 +345,6 @@ function planCrowding(
     return { share: Math.round(touch.share * 100) / 100, points: touch.points, size };
 }
 
-/** The stroke below which a line stops reading as a line on screen, in px. */
-const MIN_DENSE_STROKE = 0.75;
-/** The share of a panel's height a chart's lines may ink between them. */
-const LINE_INK_SHARE = 0.15;
 /** Vega-Lite's own line width, which an unthemed chart draws. */
 const DEFAULT_STROKE = 2;
 
@@ -371,15 +360,9 @@ function planLineWidth(
 ): number | undefined {
     if (!structure.marks.includes('line') || rows.length === 0 || plot.height <= 0) return undefined;
     const base = design?.marks.strokeWidth ?? DEFAULT_STROKE;
-    const seriesFields = (['color', 'detail', 'strokeDash'] as const)
-        .map((channel) => channelSemantics[channel]?.field)
-        .filter((field): field is string => !!field);
-    if (seriesFields.length === 0) return undefined;
-    const facetFields = [channelSemantics.column?.field, channelSemantics.row?.field].filter((field): field is string => !!field);
-    const keys = new Set(rows.map((row) => [...facetFields, ...seriesFields].map((field) => String(row?.[field])).join('\u0000')));
-    const perPanel = keys.size / panelCount(rows, channelSemantics);
-    const width = Math.max(MIN_DENSE_STROKE, Math.min(base, Math.round(((plot.height * LINE_INK_SHARE) / perPanel) * 100) / 100));
-    if (width >= base) return undefined;
+    const perPanel = linesPerPanel(rows, channelSemantics);
+    const width = denseLineWidth(base, perPanel, plot.height);
+    if (width === undefined) return undefined;
     report.push({
         stage: 'ground',
         path: 'marks.strokeWeight',
@@ -652,8 +635,8 @@ function pinAxisLabels(planned: AxisLabelPlan, pin: { fontSize?: number; angle?:
 /** Semantic types whose values are codes: read whole or not at all. */
 const IDENTIFIER_TYPES = new Set(['ID', 'ZipCode']);
 
-/** The ways x names may take, whether they run as a sequence, and the theme's thresholds. */
-function xLabelOverflow(theme: ThemeSpec | undefined, chartProperties: Record<string, any> | undefined, channelSemantics: Record<string, any>) {
+/** The ways x names may take, whether they run as a sequence, and the theme's thresholds; every backend's band labels are planned with these. */
+export function xLabelOverflow(theme: ThemeSpec | undefined, chartProperties: Record<string, any> | undefined, channelSemantics: Record<string, any>) {
     const semanticType = channelSemantics.x?.semanticAnnotation?.semanticType;
     const sequence = sequenceKindOf(semanticType);
     // An identifier cut short names nothing: codes are never truncated, whatever the theme allows.
@@ -2107,6 +2090,24 @@ function planAroundPlot(prepared: PreparedPlan, reserve: FurnitureReserve): Layo
  * as its value labels are. A face the width table does not know is measured as the fallback it
  * knows, with room for running up to a tenth wider.
  */
+/**
+ * The options a themed chart's band labels are planned with (`planBandLabels`): the house's size at
+ * this plot width, its floor, its case, its face, and the overflow path. Shared by every backend
+ * that draws a house, so a chart's names are wrapped, shrunk or turned the same way in each.
+ */
+export function themedBandLabelOptions(
+    theme: ThemeSpec, chartProperties: Record<string, any> | undefined, channelSemantics: Record<string, any>, plotWidth: number,
+) {
+    const fontSize = resolveThemeFontSize(theme, theme.type?.axisLabel?.size, 10, plotWidth);
+    return {
+        fontSize,
+        textCase: theme.type?.axisLabel?.case,
+        minFontSize: axisLabelFloor(fontSize, theme.type?.minSize),
+        measure: bandLabelMeasure(theme),
+        ...xLabelOverflow(theme, chartProperties, channelSemantics),
+    };
+}
+
 function bandLabelMeasure(theme: ThemeSpec): (fontSize: number) => (text: string) => number {
     const family = themeBodyFamily(theme) ?? 'sans-serif';
     const weight = theme.type?.axisLabel?.weight !== undefined ? fontWeightOf(theme.type.axisLabel.weight) ?? 'normal' : 'normal';
