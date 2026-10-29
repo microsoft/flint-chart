@@ -58,6 +58,9 @@ export interface SemanticAnnotation {
      */
     intrinsicDomain?: [number, number];
 
+    /** How percentage values are stored: fractions (0.45) or percent points (45). */
+    percentScale?: 'fraction' | 'percent';
+
     /** Unit or currency code. E.g., "USD", "°C", "kg" */
     unit?: string;
 
@@ -422,7 +425,11 @@ export function resolveFormat(
             if (!annotation.intrinsicDomain) {
                 return { tooltipFormat: { pattern: precisionFormat(nums) } };
             }
-            const rep = detectPercentageRepresentation(nums);
+            const rep = annotation.percentScale === 'fraction'
+                ? '0-1'
+                : annotation.percentScale === 'percent'
+                    ? '0-100'
+                    : detectPercentageRepresentation(nums);
             if (rep === '0-1') {
                 // 0–1 fractional → axis must transform (0.45 → "45%")
                 const p = detectPrecision(nums);
