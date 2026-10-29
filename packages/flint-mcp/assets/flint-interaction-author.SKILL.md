@@ -231,7 +231,7 @@ beside presets: a trigger, what it affords, and a handler that returns the
 layer for its id.
 
 ```ts
-import { rectangleTrigger, type CanvasInteractionDef } from 'flint-chart/interactive';
+import { rectangleTrigger, type CanvasInteractionDef } from 'flint-chart/interactive/vegalite';
 
 const timebox: CanvasInteractionDef = {
   id: 'timebox',
@@ -689,14 +689,38 @@ the same turn.
 
 ## Use Flint in an application
 
+### Install and import
+
+| Draw with | Install | React | Without React |
+| --- | --- | --- | --- |
+| Vega-Lite (default) | `flint-chart` | `flint-chart/react/vegalite` | `flint-chart/interactive/vegalite` |
+| ECharts | `flint-chart echarts` | `flint-chart/react/echarts` | `flint-chart/interactive/echarts` |
+| Chart.js | `flint-chart chart.js` | `flint-chart/react/chartjs` | `flint-chart/interactive/chartjs` |
+| Plotly | `flint-chart plotly.js-dist-min` | `flint-chart/react/plotly` | `flint-chart/interactive/plotly` |
+| Any, chosen at runtime | `flint-chart echarts chart.js plotly.js-dist-min` | `flint-chart/react` | `flint-chart/interactive` |
+
+- `npm install flint-chart` brings Vega-Lite (`vega`, `vega-lite`,
+  `vega-tooltip`). ECharts, Chart.js and Plotly are optional peers: install the
+  library only for a backend the app draws with. React is an optional peer for
+  the React entries.
+- Import every interactive name (presets, `mountChart`, update helpers, types)
+  from the entry of the backend you draw with; each entry exports the same
+  names. Import the plain `flint-chart/react` or `flint-chart/interactive` only
+  when all three optional libraries are installed: a bundler resolves every
+  backend an entry can reach, so a missing one fails the build.
+- Compiling alone (`assembleVegaLite`, `assembleECharts`, `assembleChartjs`,
+  `assemblePlotly` from `flint-chart`) needs no chart library.
+- `flint-chart/render` (static SVG) also needs `echarts` installed.
+- To draw a second backend from a one-backend entry, install its library and
+  pass its factory: `renderers: { echarts: createEChartsInteractiveRenderer }`,
+  imported from `flint-chart/echarts/interactive`.
+
+Interactions run on Vega-Lite; the examples below import its entries.
+
 ### Mount
 
-```bash
-npm install flint-chart vega vega-lite vega-tooltip
-```
-
 ```ts
-import { mountChart, navigate, legendToggle } from 'flint-chart/interactive';
+import { mountChart, navigate, legendToggle } from 'flint-chart/interactive/vegalite';
 
 const surface = mountChart(container, input, {
   backend: 'vegalite',
@@ -756,8 +780,8 @@ surface.destroy();
 ### In React
 
 ```tsx
-import { FlintChart, type FlintChartHandle } from 'flint-chart/react';
-import { clickHighlight } from 'flint-chart/interactive';
+import { FlintChart, type FlintChartHandle } from 'flint-chart/react/vegalite';
+import { clickHighlight } from 'flint-chart/interactive/vegalite';
 
 const chartRef = useRef<FlintChartHandle>(null);
 
@@ -848,7 +872,7 @@ per field; every chart emphasizes the marks that meet it, the source included,
 through one `linked-selection` layer; a reset on any chart clears it everywhere.
 
 ```ts
-import { linkCharts, mountChart, clickHighlight, brushX } from 'flint-chart/interactive';
+import { linkCharts, mountChart, clickHighlight, brushX } from 'flint-chart/interactive/vegalite';
 
 const link = linkCharts({
   bars: { input: barsInput, surface: mountChart(barsEl, barsInput, { backend: 'vegalite', interactions: [clickHighlight()] }) },
@@ -876,7 +900,7 @@ link.onCondition(({ condition }) => renderTable(rows.filter((r) => meets(r, cond
   the charts filtered data as below.
 
 ```tsx
-import { FlintChart, useLinkedCharts } from 'flint-chart/react';
+import { FlintChart, useLinkedCharts } from 'flint-chart/react/vegalite';
 
 const link = useLinkedCharts({ bars: barsInput, trend: trendInput }, { fields: ['region', 'month'] });
 <FlintChart spec={barsInput} {...link.chart('bars')} />;
@@ -1043,7 +1067,7 @@ Two bar charts share a `Country` field: GDP per country, and population per
 country. A click on one emphasizes the same country on both.
 
 ```ts
-import { mountChart, clickHighlight, linkCharts } from 'flint-chart/interactive';
+import { mountChart, clickHighlight, linkCharts } from 'flint-chart/interactive/vegalite';
 
 const mount = (el: HTMLElement, input: ChartAssemblyInput) =>
   ({ input, surface: mountChart(el, input, { backend: 'vegalite', interactions: [clickHighlight({ targets: ['mark'] })] }) });

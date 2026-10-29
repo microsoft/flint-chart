@@ -76,15 +76,32 @@ For MCP clients, the server can run with `npx`:
 npx -y flint-chart-mcp
 ```
 
-For JavaScript or TypeScript projects, install Flint first and add only the
-renderer peer dependencies needed by the backend you will render:
+For JavaScript or TypeScript projects, install Flint, plus the library of
+any backend besides Vega-Lite that the app draws with:
 
-```bash
-npm install flint-chart
-npm install vega vega-lite vega-embed  # browser Vega-Lite rendering
-npm install echarts                    # ECharts rendering
-npm install chart.js                   # Chart.js rendering
-```
+| Draw with | Install | React | Without React |
+| --- | --- | --- | --- |
+| Vega-Lite (default) | `flint-chart` | `flint-chart/react/vegalite` | `flint-chart/interactive/vegalite` |
+| ECharts | `flint-chart echarts` | `flint-chart/react/echarts` | `flint-chart/interactive/echarts` |
+| Chart.js | `flint-chart chart.js` | `flint-chart/react/chartjs` | `flint-chart/interactive/chartjs` |
+| Plotly | `flint-chart plotly.js-dist-min` | `flint-chart/react/plotly` | `flint-chart/interactive/plotly` |
+| Any, chosen at runtime | `flint-chart echarts chart.js plotly.js-dist-min` | `flint-chart/react` | `flint-chart/interactive` |
+
+- `npm install flint-chart` brings Vega-Lite (`vega`, `vega-lite`,
+  `vega-tooltip`). ECharts, Chart.js and Plotly are optional peers: install the
+  library only for a backend the app draws with. React is an optional peer for
+  the React entries.
+- Import every interactive name (presets, `mountChart`, update helpers, types)
+  from the entry of the backend you draw with; each entry exports the same
+  names. Import the plain `flint-chart/react` or `flint-chart/interactive` only
+  when all three optional libraries are installed: a bundler resolves every
+  backend an entry can reach, so a missing one fails the build.
+- Compiling alone (`assembleVegaLite`, `assembleECharts`, `assembleChartjs`,
+  `assemblePlotly` from `flint-chart`) needs no chart library.
+- `flint-chart/render` (static SVG) also needs `echarts` installed.
+- To draw a second backend from a one-backend entry, install its library and
+  pass its factory: `renderers: { echarts: createEChartsInteractiveRenderer }`,
+  imported from `flint-chart/echarts/interactive`.
 
 Then compile with the requested backend:
 

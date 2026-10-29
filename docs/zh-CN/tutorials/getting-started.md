@@ -14,24 +14,22 @@ Flint 的思路很简单：先描述**数据代表什么**，再说明**你想�
 npm install flint-chart
 ```
 
-若要在浏览器中渲染 Vega-Lite 图表，还需安装渲染栈：
+默认后端 Vega-Lite 只需这一步：`vega`、`vega-lite` 与 `vega-tooltip` 随之安装。
+React 是 `<FlintChart>` 的可选 peer 依赖。ECharts、Chart.js 与 Plotly 为可选 peer
+依赖：安装所用后端的库，并从该后端的入口导入。
 
-```bash
-npm install vega vega-lite vega-embed
-```
-
-使用 Flint 的交互式图表（`<FlintChart>`、`mountChart`）时，安装所用后端的库，
-并从该后端的入口导入；该入口不会引用其他后端：
-
-| 后端 | 安装 | React | 不用 React |
+| 绘制后端 | 安装 | React | 不用 React |
 |---|---|---|---|
-| Vega-Lite | `vega vega-lite vega-tooltip` | `flint-chart/react/vegalite` | `flint-chart/interactive/vegalite` |
-| ECharts | `echarts` | `flint-chart/react/echarts` | `flint-chart/interactive/echarts` |
-| Chart.js | `chart.js` | `flint-chart/react/chartjs` | `flint-chart/interactive/chartjs` |
-| Plotly | `plotly.js-dist-min` | `flint-chart/react/plotly` | `flint-chart/interactive/plotly` |
+| Vega-Lite（默认） | `flint-chart` | `flint-chart/react/vegalite` | `flint-chart/interactive/vegalite` |
+| ECharts | `flint-chart echarts` | `flint-chart/react/echarts` | `flint-chart/interactive/echarts` |
+| Chart.js | `flint-chart chart.js` | `flint-chart/react/chartjs` | `flint-chart/interactive/chartjs` |
+| Plotly | `flint-chart plotly.js-dist-min` | `flint-chart/react/plotly` | `flint-chart/interactive/plotly` |
+| 运行时任选 | `flint-chart echarts chart.js plotly.js-dist-min` | `flint-chart/react` | `flint-chart/interactive` |
 
-`flint-chart/react` 与 `flint-chart/interactive` 可在任一后端上绘制，因此打包器
-会要求四个库全部安装。
+打包器会解析入口可达的全部后端，因此仅在三个可选库都已安装时才导入
+`flint-chart/react` 或 `flint-chart/interactive`。只编译（`assembleVegaLite`、
+`assembleECharts` 等）不需要任何图表库。若要用自己的代码嵌入编译出的 Vega-Lite
+规范，再添加 `vega-embed`。
 
 ### Python 规划中
 

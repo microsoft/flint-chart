@@ -183,30 +183,14 @@
   "peerDependencies": {
     "chart.js": "^4.0.0",
     "echarts": "^5.0.0 || ^6.0.0",
-    "plotly.js": "^2.0.0 || ^3.0.0",
     "plotly.js-dist-min": "^2.0.0 || ^3.0.0",
-    "react": ">=18",
-    "vega": "^5.0.0 || ^6.0.0",
-    "vega-lite": "^5.0.0 || ^6.0.0",
-    "vega-tooltip": "^1.0.0"
+    "react": ">=18"
   },
   "peerDependenciesMeta": {
-    "vega": {
-      "optional": true
-    },
-    "vega-lite": {
-      "optional": true
-    },
-    "vega-tooltip": {
-      "optional": true
-    },
-    "echarts": {
-      "optional": true
-    },
     "chart.js": {
       "optional": true
     },
-    "plotly.js": {
+    "echarts": {
       "optional": true
     },
     "plotly.js-dist-min": {
@@ -245,6 +229,9 @@
   "dependencies": {
     "@floating-ui/dom": "^1.7.4",
     "d3-time": "^3.1.0",
-    "d3-time-format": "^4.1.0"
+    "d3-time-format": "^4.1.0",
+    "vega": "^5.0.0 || ^6.0.0",
+    "vega-lite": "^5.0.0 || ^6.0.0",
+    "vega-tooltip": "^1.0.0"
   }
 }

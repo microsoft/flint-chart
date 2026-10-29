@@ -18,26 +18,24 @@ Install Flint:
 npm install flint-chart
 ```
 
-If you want to render Vega-Lite charts in the browser, also install the renderer
-stack:
+That is all Vega-Lite, the default backend, needs: `vega`, `vega-lite` and
+`vega-tooltip` come with it. React is an optional peer for `<FlintChart>`.
+ECharts, Chart.js and Plotly are optional peers: install the library for the
+backend you draw with, and import that backend's entry.
 
-```bash
-npm install vega vega-lite vega-embed
-```
-
-For Flint's interactive charts (`<FlintChart>`, `mountChart`), install the
-library of the backend you draw with and import that backend's entry, which
-reaches no other backend:
-
-| Backend | Install | React | Without React |
+| Draw with | Install | React | Without React |
 |---|---|---|---|
-| Vega-Lite | `vega vega-lite vega-tooltip` | `flint-chart/react/vegalite` | `flint-chart/interactive/vegalite` |
-| ECharts | `echarts` | `flint-chart/react/echarts` | `flint-chart/interactive/echarts` |
-| Chart.js | `chart.js` | `flint-chart/react/chartjs` | `flint-chart/interactive/chartjs` |
-| Plotly | `plotly.js-dist-min` | `flint-chart/react/plotly` | `flint-chart/interactive/plotly` |
+| Vega-Lite (default) | `flint-chart` | `flint-chart/react/vegalite` | `flint-chart/interactive/vegalite` |
+| ECharts | `flint-chart echarts` | `flint-chart/react/echarts` | `flint-chart/interactive/echarts` |
+| Chart.js | `flint-chart chart.js` | `flint-chart/react/chartjs` | `flint-chart/interactive/chartjs` |
+| Plotly | `flint-chart plotly.js-dist-min` | `flint-chart/react/plotly` | `flint-chart/interactive/plotly` |
+| Any, chosen at runtime | `flint-chart echarts chart.js plotly.js-dist-min` | `flint-chart/react` | `flint-chart/interactive` |
 
-`flint-chart/react` and `flint-chart/interactive` draw on any backend, so a
-bundler expects all four libraries installed.
+A bundler resolves every backend an entry can reach, so import the plain
+`flint-chart/react` or `flint-chart/interactive` only with all three optional
+libraries installed. Compiling alone (`assembleVegaLite`, `assembleECharts`, …)
+needs no chart library. To embed a compiled Vega-Lite spec with your own code,
+add `vega-embed`.
 
 ### Python planned
 

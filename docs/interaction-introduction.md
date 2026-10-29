@@ -36,7 +36,7 @@ You can configure the same behavior in either form:
 ```
 
 ```ts
-import { mountChart, clickHighlight } from 'flint-chart/interactive';
+import { mountChart, clickHighlight } from 'flint-chart/interactive/vegalite';
 
 const surface = mountChart(container, input, {
   backend: 'vegalite',
