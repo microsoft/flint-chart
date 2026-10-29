@@ -11,7 +11,7 @@
  */
 import { format as formatNumber } from 'd3-format';
 import type { ChannelSemantics } from './types';
-import { resolveDisplayUnit, type DisplayUnit } from './field-semantics';
+import { percentRepresentation, resolveDisplayUnit, type DisplayUnit } from './field-semantics';
 import { COMPACT_SUFFIXES, DEFAULT_COMPACT_TYPES, compactApplies } from './number-compact';
 import { getRegistryEntry, isRegistered } from './type-registry';
 
@@ -46,7 +46,7 @@ export function kpiNumberFormat(cs: ChannelSemantics | undefined, values: readon
     const unit = resolveDisplayUnit(annotation);
     const statedPercent = /%/.test(cs?.format?.pattern ?? '');
     const percent = statedPercent || entry?.formatClass === 'percent';
-    const fractional = percent && (statedPercent || (nums.length > 0 && nums.filter((v) => Math.abs(v) <= 1).length / nums.length >= 0.8));
+    const fractional = percent && (statedPercent || ((nums.length > 0 || !!annotation?.percentScale) && percentRepresentation(annotation, nums) === '0-1'));
 
     const prefix = unit?.placement === 'value' && unit.position === 'prefix' ? unit.text : '';
     const unitSuffix = unit?.placement === 'value' && unit.position === 'suffix'

@@ -14,8 +14,8 @@ import type { App, McpUiHostContext } from '@modelcontextprotocol/ext-apps';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { ChartAssemblyInput, ChartOption, ChartUpdate, ChartWarning } from 'flint-chart';
 import { drawsAsTable, getChartTransform, validateChart, validateLinks } from 'flint-chart';
-import type { ChartChange, ChartState, InteractiveChartSurface } from 'flint-chart/interactive';
-import { FlintChart, FlintTable } from 'flint-chart/react';
+import type { ChartChange, ChartState, InteractiveChartSurface } from 'flint-chart/interactive/vegalite';
+import { FlintChart, FlintTable } from 'flint-chart/react/vegalite';
 import { expressionInterpreter } from 'vega-interpreter';
 
 import { ActionButton, ThemeControl } from './controls';
@@ -26,7 +26,7 @@ import { SelectionChips, chipText, impliedParts, partText, type SelectionChip } 
 import { VIEW_SWITCH_LABEL, ViewSwitchIcon, useChartTable, type CellView } from './chart-table-view';
 import { tablePng } from './table-export';
 import { usePageScroll } from './page-scroll';
-import { conditionUpdates, selectionParts, type LinkCondition } from 'flint-chart/interactive';
+import { conditionUpdates, selectionParts, type LinkCondition } from 'flint-chart/interactive/vegalite';
 import { chartContext, chartView, type ChartGesture } from '../../src/chart-context';
 import {
   buildPanelModel,

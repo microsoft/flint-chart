@@ -25,6 +25,20 @@ stack:
 npm install vega vega-lite vega-embed
 ```
 
+For Flint's interactive charts (`<FlintChart>`, `mountChart`), install the
+library of the backend you draw with and import that backend's entry, which
+reaches no other backend:
+
+| Backend | Install | React | Without React |
+|---|---|---|---|
+| Vega-Lite | `vega vega-lite vega-tooltip` | `flint-chart/react/vegalite` | `flint-chart/interactive/vegalite` |
+| ECharts | `echarts` | `flint-chart/react/echarts` | `flint-chart/interactive/echarts` |
+| Chart.js | `chart.js` | `flint-chart/react/chartjs` | `flint-chart/interactive/chartjs` |
+| Plotly | `plotly.js-dist-min` | `flint-chart/react/plotly` | `flint-chart/interactive/plotly` |
+
+`flint-chart/react` and `flint-chart/interactive` draw on any backend, so a
+bundler expects all four libraries installed.
+
 ### Python planned
 
 The Python package is planned for a later release and is not included in the

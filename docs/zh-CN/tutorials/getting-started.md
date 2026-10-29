@@ -20,6 +20,19 @@ npm install flint-chart
 npm install vega vega-lite vega-embed
 ```
 
+使用 Flint 的交互式图表（`<FlintChart>`、`mountChart`）时，安装所用后端的库，
+并从该后端的入口导入；该入口不会引用其他后端：
+
+| 后端 | 安装 | React | 不用 React |
+|---|---|---|---|
+| Vega-Lite | `vega vega-lite vega-tooltip` | `flint-chart/react/vegalite` | `flint-chart/interactive/vegalite` |
+| ECharts | `echarts` | `flint-chart/react/echarts` | `flint-chart/interactive/echarts` |
+| Chart.js | `chart.js` | `flint-chart/react/chartjs` | `flint-chart/interactive/chartjs` |
+| Plotly | `plotly.js-dist-min` | `flint-chart/react/plotly` | `flint-chart/interactive/plotly` |
+
+`flint-chart/react` 与 `flint-chart/interactive` 可在任一后端上绘制，因此打包器
+会要求四个库全部安装。
+
 ### Python 规划中
 
 Python 包计划在后续版本发布，不包含在首次公开发版中。目前请使用 JavaScript/TypeScript 包或 MCP 服务器；贡献者仍可从源码使用 Python 移植版。

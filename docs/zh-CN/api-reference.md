@@ -42,6 +42,7 @@ interface SemanticAnnotation {
   unit?: string;                        // e.g. USD, °C
   sortOrder?: string[];                 // custom ordinal order
   colors?: Record<string, string>;      // 绑定到取值的颜色，如 { DFL: "#0793AB" }
+  percentScale?: 'fraction' | 'percent'; // 百分比的存储方式：45% 存为 0.45 还是 45
 }
 ```
 
@@ -364,7 +365,9 @@ const result = validateChart(input, 'vegalite', { updates });
 | `flint-chart/chartjs` | Chart.js 模板与 `assembleChartjs` |
 | `flint-chart/validate` | `validateChart` 与输入校验辅助函数 |
 | `flint-chart/interactive` | `mountChart`、交互预设与更新辅助函数 |
+| `flint-chart/interactive/<backend>` | 同上；`mountChart` 只加载该后端（`vegalite`、`echarts`、`chartjs`、`plotly`） |
 | `flint-chart/react` | `<FlintChart>` 组件（React 为可选 peer 依赖） |
+| `flint-chart/react/<backend>` | 同上；`<FlintChart>` 只加载该后端，应用只需安装该后端的库 |
 | `flint-chart/render` | `renderSvg`，无需 DOM 即可输出静态 SVG |
 | `flint-chart/test-data` | 图库生成器（`TEST_GENERATORS`） |
 

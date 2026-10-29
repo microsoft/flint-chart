@@ -6,6 +6,10 @@ export default defineConfig({
     // Resolve the library from source so tests don't depend on a prior build.
     // The longer alias comes first, so the bare name does not swallow it.
     alias: [
+      {
+        find: /^flint-chart\/(react|interactive)\/(vegalite|echarts|chartjs|plotly)$/,
+        replacement: fileURLToPath(new URL('../flint-js/src/', import.meta.url)) + '$1/$2.ts',
+      },
       { find: 'flint-chart/interactive', replacement: fileURLToPath(new URL('../flint-js/src/interactive/index.ts', import.meta.url)) },
       { find: 'flint-chart', replacement: fileURLToPath(new URL('../flint-js/src/index.ts', import.meta.url)) },
     ],

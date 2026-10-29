@@ -111,6 +111,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the next `show`. A card the host draws again without its result calls `show`
   with the spec it was given.
 
+### Fixed
+
+- `flint-chart/react` and `flint-chart/interactive` no longer leave an app that installs one
+  backend unable to build: new entries `flint-chart/react/<backend>` and
+  `flint-chart/interactive/<backend>` (`vegalite`, `echarts`, `chartjs`, `plotly`) load only that
+  backend, so a bundler resolves no other backend's library. `<FlintChart>` and `mountChart` take a
+  `renderers` map of factories from `flint-chart/<backend>/interactive` to draw with another backend
+  besides. The default entries still load every backend. The MCP view now imports the Vega-Lite
+  entries in place of stubbing the other backends at build time (#155).
+- A percentage field's storage is no longer guessed from the values where the annotation states
+  it: the new `percentScale` (`"fraction"` | `"percent"`) annotation is used as stated, and an
+  `intrinsicDomain` within ±1 (fractions) or reaching 100 (percent points) settles it too. A growth
+  rate stored as fractions mostly past 1 (2.4 for 240%) was printed as "2.4%", and the same column
+  was formatted two ways depending on which rows a query returned. Axes, tooltips, value domains
+  and KPI cards all read the stated scale (#154).
+
 ## [1.0.1] - 2026-10-21
 
 Released together for `flint-chart`, `flint-chart-mcp`, and the Copilot Canvas plugin.

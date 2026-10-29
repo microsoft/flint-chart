@@ -4,6 +4,8 @@ import type { CanvasInteractionAction, CanvasInteractionEvent } from './language
 import type { ChartUpdate, ChartUpdateResult } from './language/updates';
 import type { AssistedTargetingOptions } from '../core/interaction-spec';
 import type { InteractionResetGesture } from './reset';
+import type { VegaInteractiveRendererOptions } from '../vegalite/interactive';
+import type { EChartsInteractiveRendererOptions } from '../echarts/interactive';
 
 export type {
     AssistedTargetingOptions,
@@ -134,6 +136,24 @@ export interface InteractiveChartSurfaceOptions {
 
 export type InteractiveBackend = 'vegalite' | 'echarts' | 'chartjs' | 'plotly';
 
+/**
+ * Each backend's interactive renderer factory, as `flint-chart/<backend>/interactive` exports it
+ * (`createVegaInteractiveRenderer`, `createEChartsInteractiveRenderer`,
+ * `createChartjsInteractiveRenderer`, `createPlotlyInteractiveRenderer`). A factory given here is
+ * used in place of the one the entry would load, so an app bundles only the backends it imports.
+ */
+export interface InteractiveRenderers {
+    vegalite?: (options?: VegaInteractiveRendererOptions) => InteractiveRendererAdapter;
+    echarts?: (options?: EChartsInteractiveRendererOptions) => InteractiveRendererAdapter;
+    chartjs?: () => InteractiveRendererAdapter;
+    plotly?: () => InteractiveRendererAdapter;
+}
+
+/** How an entry loads each backend's renderer factory when the host passes none. */
+export type InteractiveRendererLoaders = {
+    [B in InteractiveBackend]?: () => Promise<NonNullable<InteractiveRenderers[B]>>;
+};
+
 export interface BuildInteractiveChartOptions extends InteractiveChartSurfaceOptions {
     backend: InteractiveBackend;
     renderer?: 'canvas' | 'svg';
@@ -150,6 +170,12 @@ export interface BuildInteractiveChartOptions extends InteractiveChartSurfaceOpt
      * ceiling on the sides given, so the chart lays out for that room.
      */
     availableSize?: { width?: number; height?: number };
+    /**
+     * Renderer factories to draw with, by backend, in place of the ones the entry loads. With
+     * `flint-chart/react/<backend>` (or `flint-chart/interactive/<backend>`) only that backend is
+     * loaded; pass another here to draw with it too.
+     */
+    renderers?: InteractiveRenderers;
 }
 
 export interface InteractiveChartSurface {

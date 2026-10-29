@@ -560,6 +560,10 @@ understates what you know:
 - `intrinsicDomain` — the field's own bounds, for bounded scales only: `[1, 5]`
   for a five-star rating, `[0, 100]` for a percentage score. Not for
   open-ended measures.
+- `percentScale` — `"fraction"` or `"percent"`: how a `Percentage` or
+  `PercentageChange` field is stored (0.45 or 45 for 45%). Set it when you know;
+  otherwise Flint guesses from the values, which misreads fractions mostly past
+  1 (growth of 2.4 meaning 240%).
 - `divergingMidpoint` — where the middle colour of a diverging scale sits.
   Set it if you can tell what the reader is comparing against; leave it out if
   you can't.

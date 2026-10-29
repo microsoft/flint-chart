@@ -43,6 +43,7 @@ interface SemanticAnnotation {
   unit?: string;                        // e.g. USD, °C
   sortOrder?: string[];                 // custom ordinal order
   colors?: Record<string, string>;      // colours bound to values, e.g. { DFL: "#0793AB" }
+  percentScale?: 'fraction' | 'percent'; // how a percentage is stored: 0.45 or 45 for 45%
 }
 ```
 
@@ -469,7 +470,9 @@ Inspect `_warnings` or `ChartWarning` arrays in integration code to surface trun
 | `flint-chart/chartjs` | Chart.js templates and `assembleChartjs` |
 | `flint-chart/validate` | `validateChart` and input validation helpers |
 | `flint-chart/interactive` | `mountChart`, interaction presets, update helpers |
+| `flint-chart/interactive/<backend>` | The same; `mountChart` loads only that backend (`vegalite`, `echarts`, `chartjs`, `plotly`) |
 | `flint-chart/react` | `<FlintChart>` component (React is an optional peer dependency) |
+| `flint-chart/react/<backend>` | The same; `<FlintChart>` loads only that backend, so an app needs only its library installed |
 | `flint-chart/render` | `renderSvg` for static SVG without a DOM |
 | `flint-chart/test-data` | Gallery generators (`TEST_GENERATORS`) |
 

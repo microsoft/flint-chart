@@ -102,11 +102,24 @@ Are you a developer building agent apps? Use
 to bring charts into your apps, dashboards, and data stories:
 
 ```bash
-npm install flint-chart
+npm install flint-chart vega vega-lite vega-tooltip   # plus react for <FlintChart>
 ```
 
 The library compiles Flint specs into backend-native chart specs and provides
-React and vanilla JavaScript APIs for embedding interactive charts.
+React and vanilla JavaScript APIs for embedding interactive charts. Compiling
+needs `flint-chart` alone; drawing needs the library of the backend you draw
+with, each an optional peer dependency you install yourself:
+
+| Backend | Install | React | Without React |
+|---|---|---|---|
+| Vega-Lite | `vega vega-lite vega-tooltip` | `flint-chart/react/vegalite` | `flint-chart/interactive/vegalite` |
+| ECharts | `echarts` | `flint-chart/react/echarts` | `flint-chart/interactive/echarts` |
+| Chart.js | `chart.js` | `flint-chart/react/chartjs` | `flint-chart/interactive/chartjs` |
+| Plotly | `plotly.js-dist-min` | `flint-chart/react/plotly` | `flint-chart/interactive/plotly` |
+
+Each backend's entry reaches only that library. `flint-chart/react` and
+`flint-chart/interactive` draw on any backend, so a bundler expects all four
+installed.
 
 A Flint spec describes the data, semantic types, and field mappings, with
 optional theme and interaction settings. In React, pass it to `<FlintChart>`
@@ -114,7 +127,7 @@ to embed an interactive chart:
 
 ```tsx
 import type { ChartAssemblyInput } from 'flint-chart';
-import { FlintChart } from 'flint-chart/react';
+import { FlintChart } from 'flint-chart/react/vegalite';
 
 const spec: ChartAssemblyInput = {
   data: { values: [
@@ -210,7 +223,7 @@ events into semantic information, so your app only answers with high-level
 chart updates:
 
 ```tsx
-import { FlintChart } from 'flint-chart/react';
+import { FlintChart } from 'flint-chart/react/vegalite';
 
 <FlintChart
   spec={{ ...input, interaction_spec: { interactions: [{ type: 'brush-x' }] } }}

@@ -42,6 +42,8 @@ import { clickHighlight } from 'flint-chart/interactive';
 />;
 ```
 
+`flint-chart/react` can draw on any backend, so a bundler expects every backend's library installed (`vega`, `echarts`, `chart.js`, `plotly.js-dist-min`). An app that installs one imports that backend's entry, which reaches no other: `flint-chart/react/vegalite`, `/echarts`, `/chartjs` or `/plotly` (and `flint-chart/interactive/<backend>` for `mountChart`). The exports are the same. To draw a second backend from such an entry, pass its factory from `flint-chart/<backend>/interactive` in `renderers`, e.g. `renderers={{ echarts: createEChartsInteractiveRenderer }}`.
+
 A spec with no interactions renders a static chart; a chart is interactive only if its spec or the `interactions` prop declares an interaction. A static chart mounts no interaction runtime, so it costs about the same as a plain Vega-Lite embed. To drive a chart without interactions from the host, pass `updates`; even `updates={[]}` mounts the runtime so the ref's `applyUpdate` works. On a static chart `applyUpdate` warns and returns `null`. `interactions` takes preset factories, never JSON entries: an array adds to the spec's `interaction_spec`, and a function `(fromSpec) => definitions` receives the spec's definitions and returns the full list. A preset rebuilt with the same id and options keeps the mounted chart, so inline factory calls are fine; changing an option remounts it. Function-valued options, such as `clickAnnotate`'s `format`, are read at mount.
 
 | Prop | Purpose |
@@ -55,6 +57,7 @@ A spec with no interactions renders a static chart; a chart is interactive only 
 | `onError` | The chart failed: a compile error, a malformed `interaction_spec`, or a code interaction the chart cannot honour. The box shows a muted error in place of the chart |
 | `fallback` | Shown until the chart mounts, including in server rendering |
 | `ariaLabel`, `chartId` | `ariaLabel` applies in place; a new `chartId` remounts the chart. `expressionInterpreter` is read at mount |
+| `backend`, `renderers` | The backend to draw with (default `vegalite`), and renderer factories by backend for backends the entry does not load. Read at mount |
 
 A ref gives a `FlintChartHandle` with `surface` (the mounted `InteractiveChartSurface`, or `null`), `applyUpdate`, `clearUpdate`, `dispatch`, `getState`, and `refresh`. The `selectionUpdate(id, selection)` and `viewportUpdate(id, viewport)` helpers build the updates a selection or navigation preset writes: `selection` takes elements or a field key, and `viewport` takes `[start, end]` per axis or a `ChartState.viewport`. `null` clears the selection or returns the viewport home.
 

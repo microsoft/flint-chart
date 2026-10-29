@@ -360,6 +360,11 @@ interface SemanticAnnotation {
      * Well-known types (Month, DayOfWeek) need not provide this.
      */
     sortOrder?: string[];
+    /**
+     * How a percentage is stored: 'fraction' (0.45 is 45%) or 'percent' (45 is 45%).
+     * Skips representation detection (§3.4).
+     */
+    percentScale?: 'fraction' | 'percent';
 }
 ```
 
@@ -388,7 +393,7 @@ Some types appear in different numeric encodings. The builder resolves these rep
 
 | Type | Representations | Detection |
 |---|---|---|
-| **Percentage** | 0–1 fractional vs 0–100 whole | `max(data) ≤ 1` → fractional; else whole; or `intrinsicDomain` |
+| **Percentage** | 0–1 fractional vs 0–100 whole | `percentScale`; else a decisive `intrinsicDomain`; else ≥80% of `abs(data) ≤ 1` → fractional |
 | **Timestamp** | Unix s, Unix ms, ISO string | Magnitude >1e12 → ms; >1e9 → s; string → parse |
 | **Month / Day** | Numeric vs abbreviated vs full name | Data type + pattern matching |
 | **Boolean** | true/false, 0/1, Yes/No | Data type + distinct values |
@@ -401,7 +406,7 @@ Some types appear in different numeric encodings. The builder resolves these rep
 | Domain | [0, 1] | [0, 100] |
 | Ticks | 0, 0.25, 0.5, 0.75, 1.0 | 0, 25, 50, 75, 100 |
 
-Priority: (1) explicit `intrinsicDomain`, (2) data inspection, (3) conservative default. If at least 80% of absolute values are ≤1, treat the field as fractional.
+Priority: (1) explicit `percentScale` (`'fraction'` or `'percent'`), (2) an `intrinsicDomain` that settles it (within ±1 is fractional; reaching 100 is whole), (3) data inspection, (4) conservative default. If at least 80% of absolute values are ≤1, treat the field as fractional. A growth rate stored as fractions mostly past 1 (2.4 for 240%) needs `percentScale: 'fraction'`: its values read as whole numbers.
 
 ## §3.5 Accepting string or object
 

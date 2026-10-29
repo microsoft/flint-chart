@@ -98,6 +98,14 @@ export interface SemanticAnnotation {
      * higher-is-better, temperatures run warm-high).
      */
     polarity?: 'higher-is-better' | 'lower-is-better';
+
+    /**
+     * How a percentage field's numbers are stored: `fraction` (0.45 is 45%) or `percent` (45 is
+     * 45%). Unset ⇒ a decisive `intrinsicDomain` says (within ±1 is fractions; reaching 100 is
+     * percent points), else the values do. State it where the values cannot tell: a growth rate
+     * stored as fractions mostly past 1 (2.4 is 240%).
+     */
+    percentScale?: 'fraction' | 'percent';
 }
 
 /** d3-compatible format specification */
@@ -331,6 +339,27 @@ function detectPercentageRepresentation(values: number[]): '0-1' | '0-100' {
 }
 
 /**
+ * How a percentage field's numbers are stored, from what the annotation states before what the
+ * values suggest: `percentScale` first, then an `intrinsicDomain` that settles it (within ±1 is
+ * fractions; reaching 100 is percent points), then the values ({@link detectPercentageRepresentation}).
+ * A stated scale keeps one column formatted one way whichever rows a query returns.
+ */
+export function percentRepresentation(
+    annotation: Pick<SemanticAnnotation, 'percentScale' | 'intrinsicDomain'> | undefined,
+    values: number[],
+): '0-1' | '0-100' {
+    if (annotation?.percentScale === 'fraction') return '0-1';
+    if (annotation?.percentScale === 'percent') return '0-100';
+    const domain = annotation?.intrinsicDomain;
+    if (Array.isArray(domain) && domain.length === 2 && domain.every(Number.isFinite)) {
+        const reach = Math.max(Math.abs(domain[0]), Math.abs(domain[1]));
+        if (reach > 0 && reach <= 1) return '0-1';
+        if (reach >= 100) return '0-100';
+    }
+    return detectPercentageRepresentation(values);
+}
+
+/**
  * Detect the maximum number of meaningful decimal places in a set of values.
  *
  * Returns 0 for all-integer data, 1 for data like [3.7, 4.2], 2 for [1.25, 3.50], etc.
@@ -417,12 +446,12 @@ export function resolveFormat(
         }
 
         case 'percent': {
-            // Without intrinsicDomain we can't reliably distinguish 0–1
-            // from 0–100, so defer to VL.
-            if (!annotation.intrinsicDomain) {
+            // Without intrinsicDomain or a stated scale we can't reliably
+            // distinguish 0–1 from 0–100, so defer to VL.
+            if (!annotation.intrinsicDomain && !annotation.percentScale) {
                 return { tooltipFormat: { pattern: precisionFormat(nums) } };
             }
-            const rep = detectPercentageRepresentation(nums);
+            const rep = percentRepresentation(annotation, nums);
             if (rep === '0-1') {
                 // 0–1 fractional → axis must transform (0.45 → "45%")
                 const p = detectPrecision(nums);
@@ -798,7 +827,7 @@ export function resolveDomainConstraint(
     if (semanticType === 'Percentage') {
         const nums = values.filter((v: any) => typeof v === 'number' && !isNaN(v));
         if (nums.length > 0) {
-            const rep = detectPercentageRepresentation(nums);
+            const rep = percentRepresentation(annotation, nums);
             const M = rep === '0-1' ? 1 : 100;
             return snapToBoundHeuristic([0, M], values);
         }
