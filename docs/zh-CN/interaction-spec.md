@@ -135,7 +135,7 @@ Interaction "click-highlight" yields legend clicks to "legend-toggle".
 spec 条目和工厂调用是同一交互的两种写法：
 
 ```ts
-import { mountChart, clickHighlight } from 'flint-chart/interactive/vegalite';
+import { mountChart, clickHighlight } from 'flint-chart/interactive';
 
 // 来自 spec
 mountChart(container, { ...input, interaction_spec: { interactions: [{ type: 'click-highlight', options: { dimOpacity: 0.2 } }] } });

@@ -469,10 +469,10 @@ Inspect `_warnings` or `ChartWarning` arrays in integration code to surface trun
 | `flint-chart/echarts` | ECharts templates and `assembleECharts` |
 | `flint-chart/chartjs` | Chart.js templates and `assembleChartjs` |
 | `flint-chart/validate` | `validateChart` and input validation helpers |
-| `flint-chart/interactive` | `mountChart` on any backend, interaction presets, update helpers; needs `echarts`, `chart.js` and `plotly.js-dist-min` installed |
-| `flint-chart/interactive/<backend>` | The same; `mountChart` reaches only that backend (`vegalite`, `echarts`, `chartjs`, `plotly`), so only its library need be installed |
-| `flint-chart/react` | `<FlintChart>` on any backend (React is an optional peer); needs `echarts`, `chart.js` and `plotly.js-dist-min` installed |
-| `flint-chart/react/<backend>` | The same; `<FlintChart>` reaches only that backend, so only its library need be installed |
+| `flint-chart/interactive` | `mountChart`, interaction presets, update helpers |
+| `flint-chart/interactive/<backend>` | The same, reaching only that backend (`vegalite`, `echarts`, `chartjs`, `plotly`): for one-file bundles |
+| `flint-chart/react` | `<FlintChart>` component (React is an optional peer dependency) |
+| `flint-chart/react/<backend>` | The same, reaching only that backend: for one-file bundles |
 | `flint-chart/render` | `renderSvg` for static SVG without a DOM |
 | `flint-chart/test-data` | Gallery generators (`TEST_GENERATORS`) |
 

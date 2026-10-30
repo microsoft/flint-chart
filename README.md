@@ -106,22 +106,9 @@ npm install flint-chart
 ```
 
 The library compiles Flint specs into backend-native chart specs and provides
-React and vanilla JavaScript APIs for embedding interactive charts. Vega-Lite,
-the default backend, comes with it; React is an optional peer for
-`<FlintChart>`. ECharts, Chart.js and Plotly are optional peers too: install
-the library and import that backend's entry.
-
-| Draw with | Install | React | Without React |
-|---|---|---|---|
-| Vega-Lite (default) | `flint-chart` | `flint-chart/react/vegalite` | `flint-chart/interactive/vegalite` |
-| ECharts | `flint-chart echarts` | `flint-chart/react/echarts` | `flint-chart/interactive/echarts` |
-| Chart.js | `flint-chart chart.js` | `flint-chart/react/chartjs` | `flint-chart/interactive/chartjs` |
-| Plotly | `flint-chart plotly.js-dist-min` | `flint-chart/react/plotly` | `flint-chart/interactive/plotly` |
-| Any, chosen at runtime | `flint-chart echarts chart.js plotly.js-dist-min` | `flint-chart/react` | `flint-chart/interactive` |
-
-Compiling alone (`assembleVegaLite`, `assembleECharts`, …) needs no chart
-library. A bundler resolves every backend an entry can reach, so import
-`flint-chart/react` or `flint-chart/interactive` only with all of them installed.
+React and vanilla JavaScript APIs for embedding interactive charts. It comes
+with every backend it draws with (Vega-Lite, ECharts, Chart.js, Plotly); React
+is an optional peer for `<FlintChart>`.
 
 A Flint spec describes the data, semantic types, and field mappings, with
 optional theme and interaction settings. In React, pass it to `<FlintChart>`
@@ -129,7 +116,7 @@ to embed an interactive chart:
 
 ```tsx
 import type { ChartAssemblyInput } from 'flint-chart';
-import { FlintChart } from 'flint-chart/react/vegalite';
+import { FlintChart } from 'flint-chart/react';
 
 const spec: ChartAssemblyInput = {
   data: { values: [
@@ -157,7 +144,7 @@ https://github.com/microsoft/flint-chart/blob/main/agent-skills/flint-chart-auth
 https://github.com/microsoft/flint-chart/blob/main/agent-skills/flint-interaction-author/SKILL.md
 
 Use these skills to add a chart to this app.
-Install flint-chart (and the chart library for any backend besides Vega-Lite).
+Install flint-chart (it includes its chart renderers) and add it to this project.
 Plot monthly users by region from our data in Economist style.
 Let readers hover to compare regions at each month, and add a region selector
 that updates the chart.
@@ -225,7 +212,7 @@ events into semantic information, so your app only answers with high-level
 chart updates:
 
 ```tsx
-import { FlintChart } from 'flint-chart/react/vegalite';
+import { FlintChart } from 'flint-chart/react';
 
 <FlintChart
   spec={{ ...input, interaction_spec: { interactions: [{ type: 'brush-x' }] } }}

@@ -20,29 +20,9 @@ own apps (React is an optional peer dependency).
 npm install flint-chart
 ```
 
-That is all Vega-Lite, the default backend, needs: `vega`, `vega-lite` and
-`vega-tooltip` come with it. React is an optional peer, needed only for
-the React entries. ECharts, Chart.js and Plotly are optional peers: install
-the library for the backend you draw with and import that backend's entry.
-
-| Draw with | Install | React | Without React |
-|---|---|---|---|
-| Vega-Lite (default) | `flint-chart` | `flint-chart/react/vegalite` | `flint-chart/interactive/vegalite` |
-| ECharts | `flint-chart echarts` | `flint-chart/react/echarts` | `flint-chart/interactive/echarts` |
-| Chart.js | `flint-chart chart.js` | `flint-chart/react/chartjs` | `flint-chart/interactive/chartjs` |
-| Plotly | `flint-chart plotly.js-dist-min` | `flint-chart/react/plotly` | `flint-chart/interactive/plotly` |
-| Any, chosen at runtime | `flint-chart echarts chart.js plotly.js-dist-min` | `flint-chart/react` | `flint-chart/interactive` |
-
-- A bundler resolves every backend an entry can reach, dynamic imports
-  included. Import `flint-chart/react` or `flint-chart/interactive` only with
-  all three optional libraries installed; otherwise the build fails on the
-  missing one.
-- Compiling alone (`assembleVegaLite`, `assembleECharts`, `assembleChartjs`,
-  `assemblePlotly`) needs no chart library.
-- `flint-chart/render` (static SVG) also needs `echarts` installed.
-- To draw a second backend from a one-backend entry, install its library and
-  pass its factory: `renderers={{ echarts: createEChartsInteractiveRenderer }}`
-  with `createEChartsInteractiveRenderer` from `flint-chart/echarts/interactive`.
+It comes with every backend it draws with: Vega-Lite (`vega`, `vega-lite`,
+`vega-tooltip`), ECharts, Chart.js and Plotly (`plotly.js-dist-min`). React is
+an optional peer, needed only for `flint-chart/react`.
 
 ## Quick start
 
@@ -99,10 +79,10 @@ const xl = assembleExcel(input);       // Native Excel chart artifact
 
 Add `interaction_spec` to make a chart interactive with any of 23 presets, such
 as `click-highlight`, `brush-x`, `inspect-index`, `navigate`, or `legend-toggle`.
-Interactions run on the Vega-Lite surface, which `flint-chart` installs:
+Interactions run on the Vega-Lite surface:
 
 ```tsx
-import { FlintChart } from 'flint-chart/react/vegalite';
+import { FlintChart } from 'flint-chart/react';
 
 <FlintChart
   spec={{ ...input, interaction_spec: { interactions: [{ type: 'click-highlight' }] } }}
@@ -112,10 +92,17 @@ import { FlintChart } from 'flint-chart/react/vegalite';
 />
 ```
 
-To draw with another backend, see [Install](#install).
+Pass `backend="echarts"` (or `chartjs`, `plotly`) to draw with another library.
+
+An app that bundles into one file (no code splitting) can import a backend's
+own entry, `flint-chart/react/vegalite` (or `/echarts`, `/chartjs`, `/plotly`;
+`flint-chart/interactive/<backend>` likewise), which reaches no other backend's
+library, so the file carries only that one. To draw a second backend from such
+an entry, pass its factory: `renderers={{ echarts: createEChartsInteractiveRenderer }}`,
+with `createEChartsInteractiveRenderer` from `flint-chart/echarts/interactive`.
 
 Without React, `mountChart(element, input, { backend: 'vegalite' })` from
-`flint-chart/interactive/vegalite` mounts the same chart in any page. Bespoke interactions map semantic events to chart
+`flint-chart/interactive` mounts the same chart in any page. Bespoke interactions map semantic events to chart
 updates with the [interaction API](https://microsoft.github.io/flint-chart/#/documentation/interaction-api);
 see the [interaction presets](https://microsoft.github.io/flint-chart/#/interactions/gallery)
 and [advanced interactions](https://microsoft.github.io/flint-chart/#/interactions/advanced).
@@ -132,10 +119,10 @@ and [advanced interactions](https://microsoft.github.io/flint-chart/#/interactio
 | `flint-chart/plotly` | Plotly backend |
 | `flint-chart/excel` | Native Excel / Office.js backend |
 | `flint-chart/validate` | `validateChart` — per-problem input validation for agent loops |
-| `flint-chart/interactive` | `mountChart` on any backend (needs every backend's library), interaction presets, and update helpers |
-| `flint-chart/interactive/<backend>` | The same, with `mountChart` reaching only `vegalite`, `echarts`, `chartjs` or `plotly` |
-| `flint-chart/react` | `<FlintChart>` on any backend (needs every backend's library; React is an optional peer) |
-| `flint-chart/react/<backend>` | The same, with `<FlintChart>` reaching only `vegalite`, `echarts`, `chartjs` or `plotly` |
+| `flint-chart/interactive` | `mountChart`, interaction presets, and update helpers |
+| `flint-chart/interactive/<backend>` | The same, reaching only `vegalite`, `echarts`, `chartjs` or `plotly`: for one-file bundles |
+| `flint-chart/react` | `<FlintChart>` component (React is an optional peer dependency) |
+| `flint-chart/react/<backend>` | The same, reaching only `vegalite`, `echarts`, `chartjs` or `plotly`: for one-file bundles |
 | `flint-chart/render` | `renderSvg` — static SVG output (Vega-Lite or ECharts) |
 | `flint-chart/image-charts` | Image-Charts URL backend |
 | `flint-chart/test-data` | Sample data generators used by the gallery and tests |

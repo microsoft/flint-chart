@@ -75,19 +75,12 @@ const echartsOption = assembleECharts(input);
 const chartjsConfig = assembleChartjs(input);
 ```
 
-`flint-chart` 自带 Vega-Lite；用其他后端渲染时再添加对应的库：
+`flint-chart` 自带全部后端的库（Vega-Lite、ECharts、Chart.js、Plotly），一次安装即可用任一后端渲染：
 
 ```bash
 npm install flint-chart
-npm install echarts              # ECharts 渲染
-npm install chart.js             # Chart.js 渲染
-npm install plotly.js-dist-min   # Plotly 渲染
-npm install vega-embed           # 仅在自行嵌入编译出的 Vega-Lite 规范时需要
+npm install vega-embed   # 仅在自行嵌入编译出的 Vega-Lite 规范时需要
 ```
-
-交互式图表请从所用后端的入口导入：`flint-chart/react/vegalite`（或 `/echarts`、
-`/chartjs`、`/plotly`）与 `flint-chart/interactive/vegalite` 等。完整对照表见
-[快速开始](getting-started.md#安装)。
 
 Python 支持将使用相同的输入结构，但计划在后续版本发布，不属于首次公开发版。目前请在已发布工作流中使用 npm 包或 MCP 服务器。
 

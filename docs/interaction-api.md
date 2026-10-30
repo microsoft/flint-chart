@@ -4,18 +4,18 @@ Use the functional Flint API to mount reusable interaction presets, create bespo
 
 The compiler resolves raw triggers into **semantic events** that identify chart elements and data, and renders **update operators** on the canvas. You choose the triggers and define the response in a `handle` function, without reverse-engineering rendering logic or manipulating renderer-specific data.
 
-> Flint's interaction presets currently support Vega-Lite. Mount your chart with `mountChart()`, or render `<FlintChart>` from `flint-chart/react/vegalite`, to enable them. On another backend the chart renders static with an `interactions_ignored` warning.
+> Flint's interaction presets currently support Vega-Lite. Mount your chart with `mountChart()`, or render `<FlintChart>` from `flint-chart/react`, to enable them. On another backend the chart renders static with an `interactions_ignored` warning.
 
 > For agents: the [interaction-author skill](https://github.com/microsoft/flint-chart/blob/main/agent-skills/flint-interaction-author/SKILL.md) covers this API as well as the presets: the `ChartUpdate` an application or an agent applies, reading the chart state, linking charts, and bespoke definitions. The MCP server serves it as `flint://interaction-skill`.
 
 ## Mount an interactive chart
 
-Import the API from `flint-chart/interactive/vegalite` and pass a backend and interaction definitions to `mountChart(container, input, { backend, interactions })`. `container` is the chart's DOM element and `input` is your existing `ChartAssemblyInput`. `buildInteractiveChart` is the earlier name of the same function and remains as an alias.
+Import the API from `flint-chart/interactive` and pass a backend and interaction definitions to `mountChart(container, input, { backend, interactions })`. `container` is the chart's DOM element and `input` is your existing `ChartAssemblyInput`. `buildInteractiveChart` is the earlier name of the same function and remains as an alias.
 
 You can use preset factories in code:
 
 ```ts
-import { mountChart, clickHighlight } from 'flint-chart/interactive/vegalite';
+import { mountChart, clickHighlight } from 'flint-chart/interactive';
 
 const surface = mountChart(container, input, {
   backend: 'vegalite',
@@ -28,11 +28,11 @@ A factory and its declarative preset describe the same behavior. Spec entries mo
 
 ## Render the chart in React
 
-`flint-chart/react/vegalite` (like every `flint-chart/react` entry) exports `<FlintChart>`, which mounts the chart through `mountChart` and remounts it when the spec content changes. Rows are compared by reference, so pass the same array to keep the chart mounted. React is an optional peer dependency, needed only for this subpath.
+`flint-chart/react` exports `<FlintChart>`, which mounts the chart through `mountChart` and remounts it when the spec content changes. Rows are compared by reference, so pass the same array to keep the chart mounted. React is an optional peer dependency, needed only for this subpath.
 
 ```tsx
-import { FlintChart } from 'flint-chart/react/vegalite';
-import { clickHighlight } from 'flint-chart/interactive/vegalite';
+import { FlintChart } from 'flint-chart/react';
+import { clickHighlight } from 'flint-chart/interactive';
 
 <FlintChart
   spec={input}
@@ -42,7 +42,7 @@ import { clickHighlight } from 'flint-chart/interactive/vegalite';
 />;
 ```
 
-`npm install flint-chart` brings Vega-Lite, so `flint-chart/react/vegalite` and `flint-chart/interactive/vegalite` need nothing else; every preset, update helper and type is exported from them. For ECharts, Chart.js or Plotly, install `echarts`, `chart.js` or `plotly.js-dist-min` and import `flint-chart/react/<backend>` (or `flint-chart/interactive/<backend>`); the exports are the same. The plain `flint-chart/react` and `flint-chart/interactive` draw on any backend, so a bundler resolves all four libraries: import them only with all installed. To draw a second backend from a one-backend entry, pass its factory from `flint-chart/<backend>/interactive` in `renderers`, e.g. `renderers={{ echarts: createEChartsInteractiveRenderer }}`.
+`flint-chart` comes with every backend's library, so any `backend` draws as installed. An app that bundles into one file (no code splitting) can import a backend's own entry, `flint-chart/react/vegalite`, `/echarts`, `/chartjs` or `/plotly` (and `flint-chart/interactive/<backend>` for `mountChart`), which reaches no other backend's library; the exports are the same. To draw a second backend from such an entry, pass its factory from `flint-chart/<backend>/interactive` in `renderers`, e.g. `renderers={{ echarts: createEChartsInteractiveRenderer }}`.
 
 A spec with no interactions renders a static chart; a chart is interactive only if its spec or the `interactions` prop declares an interaction. A static chart mounts no interaction runtime, so it costs about the same as a plain Vega-Lite embed. To drive a chart without interactions from the host, pass `updates`; even `updates={[]}` mounts the runtime so the ref's `applyUpdate` works. On a static chart `applyUpdate` warns and returns `null`. `interactions` takes preset factories, never JSON entries: an array adds to the spec's `interaction_spec`, and a function `(fromSpec) => definitions` receives the spec's definitions and returns the full list. A preset rebuilt with the same id and options keeps the mounted chart, so inline factory calls are fine; changing an option remounts it. Function-valued options, such as `clickAnnotate`'s `format`, are read at mount.
 
@@ -74,7 +74,7 @@ import {
   mountChart,
   clickHighlight,
   navigate,
-} from 'flint-chart/interactive/vegalite';
+} from 'flint-chart/interactive';
 
 const surface = mountChart(container, input, {
   backend: 'vegalite',
@@ -96,7 +96,7 @@ This example uses a country chart whose data includes a `Country` field. Clickin
 import {
   mountChart,
   type CanvasInteractionDef,
-} from 'flint-chart/interactive/vegalite';
+} from 'flint-chart/interactive';
 
 const countryDetails: CanvasInteractionDef = {
   id: 'country-details',
@@ -145,7 +145,7 @@ An `externalInteraction` has no canvas trigger. The application sends a payload 
 import {
   mountChart,
   externalInteraction,
-} from 'flint-chart/interactive/vegalite';
+} from 'flint-chart/interactive';
 
 const countrySelection = externalInteraction<{ Country: string }>({
   id: 'country-table',
@@ -182,7 +182,7 @@ Call `dispatch` from the table's row-selection handler. Targets use semantic dat
 Use it sparingly. Filter controls suit a field the chart does not encode, such as a year in a snapshot or a population group, where the reader picks the slice to see. List those one or two fields in `fields` rather than relying on the automatic pick of up to four. A field already on the chart has a lighter preset: `legend-toggle` for colour, `brush-x` or `navigate` for a continuous axis, and `click-highlight` for categories. A fixed subset belongs in the data, and slices compared side by side belong in a facet.
 
 ```ts
-import { mountChart, filterControls } from 'flint-chart/interactive/vegalite';
+import { mountChart, filterControls } from 'flint-chart/interactive';
 
 const surface = mountChart(container, input, {
   backend: 'vegalite',
@@ -205,7 +205,7 @@ With `render: false` the preset draws nothing; your application draws its own co
 `contextMenu` is the other widget: a menu of your application's actions that opens beside the marks the reader picks. `gesture` sets how they pick them: a `rectangle` (the default) or a brush that stays on screen to move or resize, a `lasso`, a `click`, a `right-click`, or a `long-press`. Picking an item emits a `flint-interaction` event with `action: 'menu-select'`, the item's id in `event.item`, and the picked marks as `event.target`; your application performs the action. The menu closes when the selection clears, on Escape, or on a click elsewhere. With `render: false` it draws nothing, and you open your own menu from the selection's `commit` events.
 
 ```ts
-import { mountChart, contextMenu } from 'flint-chart/interactive/vegalite';
+import { mountChart, contextMenu } from 'flint-chart/interactive';
 
 mountChart(container, input, {
   interactions: [

@@ -364,10 +364,10 @@ const result = validateChart(input, 'vegalite', { updates });
 | `flint-chart/echarts` | ECharts 模板与 `assembleECharts` |
 | `flint-chart/chartjs` | Chart.js 模板与 `assembleChartjs` |
 | `flint-chart/validate` | `validateChart` 与输入校验辅助函数 |
-| `flint-chart/interactive` | 可用任一后端的 `mountChart`、交互预设与更新辅助函数；需安装 `echarts`、`chart.js` 与 `plotly.js-dist-min` |
-| `flint-chart/interactive/<backend>` | 同上；`mountChart` 只引用该后端（`vegalite`、`echarts`、`chartjs`、`plotly`），只需安装该后端的库 |
-| `flint-chart/react` | 可用任一后端的 `<FlintChart>`（React 为可选 peer 依赖）；需安装 `echarts`、`chart.js` 与 `plotly.js-dist-min` |
-| `flint-chart/react/<backend>` | 同上；`<FlintChart>` 只引用该后端，只需安装该后端的库 |
+| `flint-chart/interactive` | `mountChart`、交互预设与更新辅助函数 |
+| `flint-chart/interactive/<backend>` | 同上，只引用该后端（`vegalite`、`echarts`、`chartjs`、`plotly`）：用于单文件打包 |
+| `flint-chart/react` | `<FlintChart>` 组件（React 为可选 peer 依赖） |
+| `flint-chart/react/<backend>` | 同上，只引用该后端：用于单文件打包 |
 | `flint-chart/render` | `renderSvg`，无需 DOM 即可输出静态 SVG |
 | `flint-chart/test-data` | 图库生成器（`TEST_GENERATORS`） |
 

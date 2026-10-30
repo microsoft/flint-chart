@@ -95,21 +95,13 @@ const echartsOption = assembleECharts(input);
 const chartjsConfig = assembleChartjs(input);
 ```
 
-`flint-chart` brings Vega-Lite; add the library of any other backend you
-render with:
+`flint-chart` comes with every backend's library (Vega-Lite, ECharts, Chart.js,
+Plotly), so one install renders with any of them:
 
 ```bash
 npm install flint-chart
-npm install echarts              # ECharts rendering
-npm install chart.js             # Chart.js rendering
-npm install plotly.js-dist-min   # Plotly rendering
-npm install vega-embed           # only to embed a compiled Vega-Lite spec yourself
+npm install vega-embed   # only to embed a compiled Vega-Lite spec yourself
 ```
-
-For interactive charts, import the entry of the backend you draw with:
-`flint-chart/react/vegalite` (or `/echarts`, `/chartjs`, `/plotly`) and
-`flint-chart/interactive/vegalite` and so on. See
-[Getting started](getting-started.md#install) for the full table.
 
 Python support will use the same input shape, but it is planned for a later
 release and is not part of the first public launch. For now, use the npm package

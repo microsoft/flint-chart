@@ -12,7 +12,7 @@ Vega-Lite backend. Plotly, ECharts, and Chart.js have no interaction runtime yet
 the plan for Plotly is at the end of this document.
 
 ```ts
-import { accessibleNavigation, legendToggle } from 'flint-chart/interactive/vegalite';
+import { accessibleNavigation, legendToggle } from 'flint-chart/interactive';
 
 mountChart(host, input, {
     backend: 'vegalite',

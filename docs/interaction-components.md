@@ -15,7 +15,7 @@ import {
   mountChart,
   clickHighlight,
   type FlintInteractionEventDetail,
-} from 'flint-chart/interactive/vegalite';
+} from 'flint-chart/interactive';
 
 const surface = mountChart(container, input, {
   backend: 'vegalite',

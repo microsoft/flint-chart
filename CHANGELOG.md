@@ -113,20 +113,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- An app that installs only some backends no longer fails to build (#155):
-  - `vega`, `vega-lite` and `vega-tooltip` are now dependencies, so `npm install flint-chart` is
-    the whole install for Vega-Lite, the default backend. ECharts, Chart.js and Plotly stay
-    optional peers (`echarts`, `chart.js`, `plotly.js-dist-min`); the unused `plotly.js` peer is
-    dropped.
-  - New entries `flint-chart/react/<backend>` and `flint-chart/interactive/<backend>`
-    (`vegalite`, `echarts`, `chartjs`, `plotly`) export what `flint-chart/react` and
-    `flint-chart/interactive` do but reach only that backend, so a bundler resolves no other
-    backend's library. The plain entries still draw on any backend and need every library.
-  - `<FlintChart>` and `mountChart` take a `renderers` map of factories from
-    `flint-chart/<backend>/interactive` to draw another backend from a one-backend entry.
-  - The docs and agent skills lead with the Vega-Lite entries and state, per backend, what to
-    install and import. The MCP view imports the Vega-Lite entries in place of stubbing the
-    other backends at build time.
+- An app no longer fails to build for want of a backend it does not draw with (#155):
+  `flint-chart` now depends on every backend it draws with (`vega`, `vega-lite`, `vega-tooltip`,
+  `echarts`, `chart.js`, `plotly.js-dist-min`), so `npm install flint-chart` is the whole install
+  and `flint-chart/react` and `flint-chart/interactive` draw on any backend as installed. React
+  stays an optional peer; the unused `plotly.js` peer is dropped. Plotly is held to `^2.35.0`, the
+  line Flint's Plotly layout is tested against.
+  - For an app bundled into one file (no code splitting), new entries `flint-chart/react/<backend>`
+    and `flint-chart/interactive/<backend>` (`vegalite`, `echarts`, `chartjs`, `plotly`) export
+    the same names but reach only that backend, so the file carries one library. `<FlintChart>`
+    and `mountChart` take a `renderers` map of factories from `flint-chart/<backend>/interactive`
+    to draw another backend from such an entry. The MCP view imports the Vega-Lite entries in
+    place of stubbing the other backends at build time.
 - A percentage field's storage is no longer guessed from the values where the annotation states
   it: the new `percentScale` (`"fraction"` | `"percent"`) annotation is used as stated, and an
   `intrinsicDomain` within ±1 (fractions) or reaching 100 (percent points) settles it too. A growth

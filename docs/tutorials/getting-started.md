@@ -18,24 +18,14 @@ Install Flint:
 npm install flint-chart
 ```
 
-That is all Vega-Lite, the default backend, needs: `vega`, `vega-lite` and
-`vega-tooltip` come with it. React is an optional peer for `<FlintChart>`.
-ECharts, Chart.js and Plotly are optional peers: install the library for the
-backend you draw with, and import that backend's entry.
+`flint-chart` comes with every backend it draws with (Vega-Lite, ECharts,
+Chart.js, Plotly), so `<FlintChart>` from `flint-chart/react` (with React) and
+`mountChart` from `flint-chart/interactive` work on any backend as installed. To
+embed a compiled Vega-Lite spec with your own code instead, add `vega-embed`:
 
-| Draw with | Install | React | Without React |
-|---|---|---|---|
-| Vega-Lite (default) | `flint-chart` | `flint-chart/react/vegalite` | `flint-chart/interactive/vegalite` |
-| ECharts | `flint-chart echarts` | `flint-chart/react/echarts` | `flint-chart/interactive/echarts` |
-| Chart.js | `flint-chart chart.js` | `flint-chart/react/chartjs` | `flint-chart/interactive/chartjs` |
-| Plotly | `flint-chart plotly.js-dist-min` | `flint-chart/react/plotly` | `flint-chart/interactive/plotly` |
-| Any, chosen at runtime | `flint-chart echarts chart.js plotly.js-dist-min` | `flint-chart/react` | `flint-chart/interactive` |
-
-A bundler resolves every backend an entry can reach, so import the plain
-`flint-chart/react` or `flint-chart/interactive` only with all three optional
-libraries installed. Compiling alone (`assembleVegaLite`, `assembleECharts`, …)
-needs no chart library. To embed a compiled Vega-Lite spec with your own code,
-add `vega-embed`.
+```bash
+npm install vega-embed
+```
 
 ### Python planned
 
