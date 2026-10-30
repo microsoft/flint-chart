@@ -24,10 +24,12 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: npm
       - run: npm ci
+      - run: npm run check:chart-types -w packages/flint-js
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run test
       - run: npm run build
+      - run: npm run test:types -w packages/flint-js
 
   site:
     name: Build site
