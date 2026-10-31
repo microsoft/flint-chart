@@ -81,6 +81,7 @@ export interface FocusOverlayController {
     /**
      * `fade` cross-fades a change of selection with a transition: what `from` held and the
      * selection no longer does fades out as `progress` runs to 1, and what it newly holds fades in.
+     * Both sides are compared by element identity, so an element whose value changed stays lit.
      */
     render(
         selected: ReadonlySet<string>,
@@ -92,7 +93,10 @@ export interface FocusOverlayController {
 }
 
 export interface FocusFade {
+    /** The identities of the elements selected before the change. */
     readonly from: ReadonlySet<string>;
+    /** An item's identity, read from its row. */
+    readonly identityOf: (datum: Record<string, unknown>) => string;
     readonly progress: number;
 }
 
@@ -149,17 +153,26 @@ export function createFocusOverlay({
         fade?: FocusFade,
     ): void => {
         focusLayer.replaceChildren();
-        const selected: ReadonlySet<string> = fade ? new Set([...current, ...fade.from]) : current;
+        const scene = sceneItems(view);
+        // The items drawn now whose element was selected before the change.
+        const was = new Set<string>();
+        if (fade) {
+            for (const item of scene) {
+                const datum = renderHit(item)?.datum;
+                const key = datum?.[INTERACTION_KEY];
+                if (typeof key === 'string' && fade.from.has(fade.identityOf(datum!))) was.add(key);
+            }
+        }
+        const selected: ReadonlySet<string> = fade ? new Set([...current, ...was]) : current;
         const strength = (key: unknown): number => {
-            if (!fade || typeof key !== 'string' || hoveredPathKeys.has(key) || (current.has(key) && fade.from.has(key))) return 1;
+            if (!fade || typeof key !== 'string' || hoveredPathKeys.has(key) || (current.has(key) && was.has(key))) return 1;
             if (current.has(key)) return fade.progress;
-            return fade.from.has(key) ? 1 - fade.progress : 1;
+            return was.has(key) ? 1 - fade.progress : 1;
         };
         const faded = (element: Element, key: unknown): void => {
             const value = strength(key);
             if (value < 1) element.setAttribute('opacity', String(Math.max(0, value) * Number(element.getAttribute('opacity') ?? 1)));
         };
-        const scene = sceneItems(view);
         for (const item of scene) {
             if (item.mark?.marktype === 'symbol') {
                 const key = renderHit(item)?.datum[INTERACTION_KEY];

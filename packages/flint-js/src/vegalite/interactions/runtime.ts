@@ -65,6 +65,7 @@ import {
     SCENE_T_SIGNAL,
     setSceneExits,
 } from './scene-motion';
+import { identityKey } from './motion-transform';
 
 import {
     INTERACTION_KEY,
@@ -108,7 +109,7 @@ import {
     eligibleReorderAxesForAxis,
     eligibleReorderAxesForHit,
 } from './presentation/drag-reorder-overlay';
-import { createFocusOverlay } from './presentation/focus-overlay';
+import { createFocusOverlay, type FocusFade } from './presentation/focus-overlay';
 import { createFreeformOverlay } from './presentation/freeform-overlay';
 import { createTargetFeedbackOverlay } from './presentation/target-feedback-overlay';
 import { createLegendRangeOverlay } from './presentation/legend-range-overlay';
@@ -911,7 +912,7 @@ export function mountVegaInteractions(
         : createVegaNavigationController(view, plan.navigationAxes ?? {});
     const selectedKeys = (): Set<string> => new Set(emphasizedRenderKeys);
     // While a transition runs, the selection drawn on top cross-fades from the one drawn before.
-    let focusFade: { from: ReadonlySet<string>; progress: number } | undefined;
+    let focusFade: FocusFade | undefined;
     const renderPathFocus = (): void => focusOverlay.render(selectedKeys(), hoveredPathKeys, hoveredMarkKeys, focusFade);
     const renderLegendRange = (): void => legendRangeOverlay.render(selectedLegend, hoveredLegend);
     renderPathFocus();
@@ -929,6 +930,11 @@ export function mountVegaInteractions(
         const marks = allHits().filter((hit) => hit.source === 'mark').map((hit) => ({ mark: hit.markName, datum: hit.datum }));
         return identityRepeats(marks, fields) ? [] : fields;
     })();
+    const focusIdentityOf = (datum: Record<string, unknown>): string => String(identityKey(datum, elementIdentity()));
+    /** The identities of the elements emphasized now, so a selection is followed across a change of rows. */
+    const focusedIdentities = (): Set<string> => new Set(allHits()
+        .filter((hit) => emphasizedRenderKeys.has(String(hit.datum[INTERACTION_KEY])))
+        .map((hit) => focusIdentityOf(hit.datum)));
     const resolveContext = (hits: readonly RenderHit[]) => ({
         allHits: hits,
         keyField: INTERACTION_KEY,
@@ -1656,8 +1662,8 @@ export function mountVegaInteractions(
         const overlaysBefore = new Set([...container.querySelectorAll('[data-flint-overlay]')]
             .map((element) => element.getAttribute('data-flint-overlay')));
         const notesBefore = new Set(container.querySelectorAll('[data-flint-annotation]'));
-        const focusFrom = selectedKeys();
-        focusFade = { from: focusFrom, progress: 0 };
+        const focusFrom = focusedIdentities();
+        focusFade = { from: focusFrom, identityOf: focusIdentityOf, progress: 0 };
         // The motion this one interrupts must not settle the scene back to rest once it is cancelled.
         const interrupted = sceneMotion;
         sceneMotion = undefined;
@@ -1670,7 +1676,7 @@ export function mountVegaInteractions(
         view.signal(SCENE_EXIT_SIGNAL, 0);
         await renderUpdates();
         for (const note of notesBefore) if (!note.isConnected) fadeOutNote(note as HTMLElement);
-        const focusNow = selectedKeys();
+        const focusNow = focusedIdentities();
         if (focusNow.size === focusFrom.size && [...focusNow].every((key) => focusFrom.has(key))) focusFade = undefined;
         outlineGeneration += 1;
         view.signal(SCENE_OUTLINE_SIGNAL, placeOutlineStarts(view, from, plan.identityFields ?? []) ? outlineGeneration : null);
