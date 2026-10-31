@@ -180,12 +180,12 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
     }
     const overridden = applyEncodingOverrides(chartTemplate, transformed.encodings, chartProperties);
     // Several rows on one mark's key: aggregate the measure (and say so) rather than overplot.
-    const implicit = resolveImplicitAggregation(chartTemplate.chart, overridden, data, semanticTypes);
+    const implicit = resolveImplicitAggregation(chartTemplate.chart, overridden, data, semanticTypes, input.options?.versionFields);
     const encodings = implicit.encodings;
     warnings.push(...implicit.warnings);
 
     // Optional aggregation transform — see vegalite/assemble for rationale.
-    data = applyAggregation(encodings, data);
+    data = applyAggregation(encodings, data, input.options?.versionFields);
 
     // ═══════════════════════════════════════════════════════════════════════
     // PHASE 0: Resolve Semantics (shared — completely target-agnostic)

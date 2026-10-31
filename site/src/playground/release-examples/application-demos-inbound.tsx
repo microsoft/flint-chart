@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent } from 'react';
 import type { ChartAssemblyInput, InteractionEntry } from 'flint-chart';
 import {
   externalInteraction,
@@ -23,6 +23,8 @@ type Row = Record<string, unknown>;
 
 const CONTROL = 'control';
 
+type Phase = 'preview' | 'commit';
+
 function controlled<P>(handle: (payload: P) => ChartUpdate['ops']): readonly InteractionDef[] {
   return [externalInteraction<P>({ id: CONTROL, handle: (payload) => ({ id: CONTROL, ops: handle(payload) }) })];
 }
@@ -38,12 +40,27 @@ function rowsOfFixture(fixture: InteractionDemoFixture): Row[] {
 /** The handle of the mounted chart, and a dispatch to its control that reports anything not applied. */
 function useControl<P>(chartId: string) {
   const chart = useRef<FlintChartHandle>(null);
-  const send = useCallback((payload: P) => {
-    void chart.current?.dispatch(CONTROL, payload).then((result) => {
+  const send = useCallback((payload: P, phase: Phase = 'commit') => {
+    void chart.current?.dispatch(CONTROL, payload, { phase }).then((result) => {
       if (result?.status !== 'applied') console.warn(`${chartId}: ${result?.status ?? 'no handler'}`, result);
     });
   }, [chartId]);
   return { chart, send };
+}
+
+/** A range input's phase: previews while the pointer holds it, and its value on release lands as a commit. */
+function useHeldRange(release: (value: number) => void) {
+  const held = useRef(false);
+  const phase = (): Phase => (held.current ? 'preview' : 'commit');
+  const handlers = {
+    onPointerDown: () => { held.current = true; },
+    onPointerUp: (event: PointerEvent<HTMLInputElement>) => {
+      if (!held.current) return;
+      held.current = false;
+      release(Number(event.currentTarget.value));
+    },
+  };
+  return { phase, handlers };
 }
 
 const CLEAR_STYLE: ChartUpdate['ops'] = [{ op: 'set-style', targets: [], value: { state: 'normal' } }];
@@ -268,16 +285,17 @@ export function SetDataDemo() {
   const [year, setYear] = useState(YEARS[0]);
   const rows = pricesIn(year);
   const base = new Map(pricesIn(YEARS[0]).map((row) => [String(row.Item), Number(row['Price ($)'])]));
-  const pick = (next: number) => {
+  const pick = (next: number, phase: Phase) => {
     setYear(next);
-    send({ year: next });
+    send({ year: next }, phase);
   };
+  const slider = useHeldRange((index) => pick(YEARS[index], 'commit'));
 
   return <DemoColumns
     panel={<>
       <label className="app-demo-field">
         <span>Year</span>
-        <SiteRange min={0} max={YEARS.length - 1} step={1} value={YEARS.indexOf(year)} onChange={(event) => pick(YEARS[Number(event.target.value)])} />
+        <SiteRange min={0} max={YEARS.length - 1} step={1} value={YEARS.indexOf(year)} {...slider.handlers} onChange={(event) => pick(YEARS[Number(event.target.value)], slider.phase())} />
         <strong>August {year}</strong>
       </label>
       <dl className="it-definition-list app-demo-list">
@@ -311,22 +329,6 @@ const GDP_COUNTRIES = [...new Set(gdp.rows.map((row) => row.country))].sort();
 const gdpIn = (year: number): GdpRow[] => gdp.rows.filter((row) => row.year === year);
 const gdpRow = (country: string, value: number): Row => ({ Country: country, 'GDP ($ trillion)': value });
 const gdpRows = (year: number): Row[] => gdpIn(year).map((row) => gdpRow(row.country, row.gdp));
-
-const TOP = 10;
-
-/**
- * The rows part-way from one year to the next: shared countries move, leavers
- * shrink to zero, entrants grow from it. Only the ten largest of the frame are
- * kept, so the bar count, and with it the chart's height, never changes.
- */
-function gdpBetween(from: number, to: number, t: number): Row[] {
-  const a = new Map(gdpIn(from).map((row) => [row.country, row.gdp]));
-  const b = new Map(gdpIn(to).map((row) => [row.country, row.gdp]));
-  return [...new Set([...a.keys(), ...b.keys()])]
-    .map((country) => gdpRow(country, (a.get(country) ?? 0) * (1 - t) + (b.get(country) ?? 0) * t))
-    .sort((x, y) => Number(y['GDP ($ trillion)']) - Number(x['GDP ($ trillion)']))
-    .slice(0, TOP);
-}
 
 type GdpEvent = { year: number; title: string; note: string; country?: string };
 const GDP_EVENTS: GdpEvent[] = [
@@ -386,59 +388,52 @@ const GDP_INITIAL_UPDATES: readonly ChartUpdate[] = [{ id: FOLLOW, ops: [
 ] }];
 
 const STEP_MS = 900;
+/** Each year of the race eases into the next at one speed, so the bars run on without stopping. */
+const RACE_STEP = { duration: STEP_MS, easing: 'linear' } as const;
+const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
 export function SetWindowDemo() {
   const chart = useRef<FlintChartHandle>(null);
-  const send = useCallback(async (frame: GdpFrame) => {
-    const data = await chart.current?.dispatch(CONTROL, frame.rows);
-    const follow = await chart.current?.dispatch(FOLLOW, frame);
-    for (const result of [data, follow]) {
+  const send = useCallback(async (frame: GdpFrame, phase: Phase = 'commit', transition?: typeof RACE_STEP) => {
+    const options = transition ? { phase, transition } : { phase };
+    const results = await Promise.all([
+      chart.current?.dispatch(CONTROL, frame.rows, options),
+      chart.current?.dispatch(FOLLOW, frame, options),
+    ]);
+    for (const result of results) {
       if (result && result.status !== 'applied') console.warn(`app-demo-window: ${result.status}`, result);
     }
   }, []);
   const [year, setYear] = useState(FIRST_GDP_YEAR);
   const [follow, setFollow] = useState<string | null>(null);
   const [playing, setPlaying] = useState(false);
-  const run = useRef<{ frame: number; busy: boolean; follow: string | null } | null>(null);
+  const run = useRef<{ follow: string | null } | null>(null);
   const reachedEvent = useRef<HTMLLIElement>(null);
 
-  const show = useCallback((next: number, followed: string | null) => {
+  const show = useCallback((next: number, followed: string | null, phase: Phase = 'commit') => {
     setYear(next);
-    void send({ rows: gdpRows(next), follow: followed, event: eventOf(next) });
+    void send({ rows: gdpRows(next), follow: followed, event: eventOf(next) }, phase);
   }, [send]);
 
   const stop = useCallback(() => {
-    if (run.current) cancelAnimationFrame(run.current.frame);
     run.current = null;
     setPlaying(false);
   }, []);
 
+  // Each year is one committed update; the chart's own transition carries the bars between years.
   const play = useCallback((from: number) => {
     stop();
-    const state = { frame: 0, busy: false, follow };
+    const state = { follow };
     run.current = state;
     setPlaying(true);
-    let year = from;
-    let started = performance.now();
-    const tick = (now: number) => {
-      if (run.current !== state) return;
-      const t = Math.min(1, (now - started) / STEP_MS);
-      if (!state.busy) {
-        state.busy = true;
-        const frame: GdpFrame = t < 1
-          ? { rows: gdpBetween(year, year + 1, t), follow: state.follow, event: eventOf(year) }
-          : { rows: gdpRows(year + 1), follow: state.follow, event: eventOf(year + 1) };
-        void send(frame).then(() => { state.busy = false; });
-        if (t >= 1) {
-          year += 1;
-          started = now;
-          setYear(year);
-          if (year >= LAST_GDP_YEAR) { stop(); return; }
-        }
+    void (async () => {
+      for (let next = from + 1; next <= LAST_GDP_YEAR; next += 1) {
+        if (run.current !== state) return;
+        setYear(next);
+        await Promise.all([send({ rows: gdpRows(next), follow: state.follow, event: eventOf(next) }, 'commit', RACE_STEP), wait(STEP_MS)]);
       }
-      state.frame = requestAnimationFrame(tick);
-    };
-    state.frame = requestAnimationFrame(tick);
+      if (run.current === state) stop();
+    })();
   }, [follow, send, stop]);
 
   useEffect(() => stop, [stop]);
@@ -454,10 +449,11 @@ export function SetWindowDemo() {
     if (offset) list.scrollBy({ top: offset, behavior: 'smooth' });
   }, [year]);
 
-  const pick = (next: number) => {
+  const pick = (next: number, phase: Phase = 'commit') => {
     stop();
-    show(next, follow);
+    show(next, follow, phase);
   };
+  const slider = useHeldRange((next) => pick(next));
   const track = (next: string | null) => {
     setFollow(next);
     if (run.current) run.current.follow = next;
@@ -477,7 +473,7 @@ export function SetWindowDemo() {
     panel={<div className="app-demo-gdp-panel">
       <div className="app-demo-year-row">
         <strong>{year}</strong>
-        <SiteRange min={FIRST_GDP_YEAR} max={LAST_GDP_YEAR} step={1} value={year} aria-label="Year" onChange={(event) => pick(Number(event.target.value))} />
+        <SiteRange min={FIRST_GDP_YEAR} max={LAST_GDP_YEAR} step={1} value={year} aria-label="Year" {...slider.handlers} onChange={(event) => pick(Number(event.target.value), slider.phase())} />
         <button type="button" className="app-demo-play" onClick={togglePlay} aria-pressed={playing}>{playing ? 'Pause' : year >= LAST_GDP_YEAR ? 'Replay' : 'Play'}</button>
       </div>
       <label className="app-demo-field">

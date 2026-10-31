@@ -7,11 +7,12 @@ import {
 import type { InteractionDef } from '../interactions';
 import { INTERACTION_PRESETS, type InteractionPresetDefinition } from './registry';
 import { INTERACTION_RESET_GESTURES, isResetGesture } from '../reset';
+import { validateTransition } from '../transition';
 
 export interface ResolvedInteractionSpec {
     /** Definitions in spec order, each tagged `origin: 'spec'`; `filter-controls` is the one external definition. */
     readonly interactions: readonly InteractionDef[];
-    readonly surface: Pick<InteractionSpec, 'assistedTargeting' | 'keyboardTargeting'>;
+    readonly surface: Pick<InteractionSpec, 'assistedTargeting' | 'keyboardTargeting' | 'transition'>;
 }
 
 const EMPTY: ResolvedInteractionSpec = Object.freeze({
@@ -19,7 +20,7 @@ const EMPTY: ResolvedInteractionSpec = Object.freeze({
     surface: Object.freeze({}),
 });
 
-const KNOWN_KEYS = new Set(['interactions', 'assistedTargeting', 'keyboardTargeting']);
+const KNOWN_KEYS = new Set(['interactions', 'assistedTargeting', 'keyboardTargeting', 'transition']);
 const RETIRED_KEYS: Record<string, string> = {
     dismiss: 'put a "reset" list on each interaction instead',
     updates: 'state arrives through the surface (applyUpdate, setUpdates, dispatch), not the spec',
@@ -52,6 +53,7 @@ export function resolveInteractionSpec(spec: InteractionSpec | undefined): Resol
     if (!Array.isArray(spec.interactions)) {
         throw new Error('interaction_spec.interactions must be an array of preset entries.');
     }
+    const transition = validateTransition('interaction_spec.transition', spec.transition);
     const interactions: InteractionDef[] = [];
     const idOwners = new Map<string, number>();
     spec.interactions.forEach((entry, index) => {
@@ -127,6 +129,7 @@ export function resolveInteractionSpec(spec: InteractionSpec | undefined): Resol
         surface: {
             ...(spec.assistedTargeting !== undefined ? { assistedTargeting: spec.assistedTargeting } : {}),
             ...(spec.keyboardTargeting !== undefined ? { keyboardTargeting: spec.keyboardTargeting } : {}),
+            ...(transition ? { transition } : {}),
         },
     };
 }

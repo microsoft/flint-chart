@@ -9,7 +9,8 @@ import { getVisCategory, inferVisCategory } from '../core/semantic-types';
 import { normalizeAnnotation, resolveFormat } from '../core/field-semantics';
 import { resolveTemporalFormat } from '../core/resolve-semantics';
 import { timeFormat, utcFormat } from 'd3-time-format';
-import type { ExternalInteractionDef, InteractionDef } from './interactions';
+import type { ExternalInteractionDef, InteractionDef, TransitionOption } from './interactions';
+import { validateTransition } from './transition';
 import { normalizedOpacity } from './presets/utils';
 import { conditionNumber } from '../core/target-selector';
 
@@ -38,7 +39,7 @@ export interface FilterFieldOptions {
     all?: boolean;
 }
 
-export interface FilterControlsOptions {
+export interface FilterControlsOptions extends TransitionOption {
     id?: string;
     /**
      * The fields that get a control. Listed fields always get one. When absent, the
@@ -222,9 +223,11 @@ export function filterControls(options: FilterControlsOptions = {}): FilterContr
         const shown = passing.length > 0 ? passing : lastShown ?? rows;
         return { id, ops: [{ op: 'set-data', source: 'main', value: { rows: shown } }] };
     };
+    const transition = validateTransition(`filterControls "${id}"`, options.transition);
     return {
         id,
         external: true,
+        ...(transition ? { transition } : {}),
         preset: 'filter-controls',
         filterControls: runtime,
         handle(payload, context) {
@@ -248,6 +251,18 @@ export function filterControls(options: FilterControlsOptions = {}): FilterContr
             return updateFor(context);
         },
     };
+}
+
+/**
+ * The fields a filter control shows one value of at a time: each value is another version of the
+ * same marks. The chart compiles knowing them, so it never aggregates two versions together.
+ */
+export function versionFieldsOf(input: ChartAssemblyInput, interactions: readonly InteractionDef[]): string[] {
+    return [...new Set(interactions.filter(isFilterControls)
+        .filter((definition) => (definition.filterControls.options.mode ?? 'filter') === 'filter')
+        .flatMap((definition) => describeFilterFields(input, definition.filterControls.options, interactions.filter((other) => other !== definition))
+            .filter((descriptor) => descriptor.required)
+            .map((descriptor) => descriptor.field)))];
 }
 
 /** The filters of every filter-controls definition, merged; undefined when none has one. */
@@ -284,7 +299,6 @@ function splitsMarks(
     const chartType = input.chart_spec.chartType ?? '';
     const connected = /line|area/i.test(chartType);
     const keys = [...channels].filter(([name, channel]) => {
-        if (channel !== 'x' && channel !== 'y') return true;
         if (semanticCategory(input, name, rows.map((row) => row[name])) !== 'quantitative') return true;
         return connected && channel === 'x';
     }).map(([name]) => name);

@@ -1,5 +1,9 @@
 import type { CategoryViewport, ChartAssemblyInput, ChartWarning } from '../core/types';
 import type {
+    ChartChange,
+    ChartChangePhase,
+    ChartUpdateApplyOptions,
+    ChartUpdateTransition,
     InteractiveChartSurface,
     InteractiveChartSurfaceOptions,
     InteractiveRenderer,
@@ -8,8 +12,10 @@ import type {
     ViewportState,
 } from './types';
 import { isExternalInteraction, type FlintInteractionEventDetail } from './interactions';
-import { describeFilterFields, isFilterControls, type FilterControlsDef, type FilterControlsPayload } from './filter-controls';
+import { describeFilterFields, isFilterControls, versionFieldsOf, type FilterControlsDef, type FilterControlsPayload } from './filter-controls';
 import { isContextMenu, mountContextMenu } from './context-menu';
+import { transitionBetween } from './morph';
+import { transitionDuration, transitionEasing } from './transition';
 import { mountFilterEmptyNotice, mountFilterStrip, resolveFilterPlacement } from './filter-controls-dom';
 import type { ChartUpdate, ChartUpdateResult } from './language/updates';
 
@@ -212,7 +218,16 @@ export function mountInteractiveChartSurface(
 ): InteractiveChartSurface {
     const chartId = options.chartId ?? nextChartId();
     const root = document.createElement('div');
-    const chart = document.createElement('div');
+    let chart = document.createElement('div');
+    let currentInput = input;
+    // The host's committed layers, carried onto the chart a new input mounts.
+    const hostLayers = new Map<string, ChartUpdate>((options.updates ?? []).map((update) => [update.id, update]));
+    const changeListeners = new Set<(change: ChartChange) => void>();
+    let unsubscribeRenderer: (() => void) | undefined;
+    const listenTo = (next: InteractiveRenderer): void => {
+        unsubscribeRenderer?.();
+        unsubscribeRenderer = next.onChange?.((change) => { for (const listener of changeListeners) listener(change); });
+    };
     const state: ViewportState = {};
     const rails = new Map<ViewportChannel, ReturnType<typeof createViewportRail>>();
     const interactions = options.interactions ?? [];
@@ -225,6 +240,11 @@ export function mountInteractiveChartSurface(
     const body = drawnFilters.length > 0 ? document.createElement('div') : root;
     const strips: { destroy(): void }[] = [];
     for (const definition of filterDefs) definition.filterControls.bindRows(input.data.values ?? []);
+    /** The input as the chart compiles it: told which fields a control shows one version of at a time. */
+    const versioned = (next: ChartAssemblyInput): ChartAssemblyInput => {
+        const versionFields = versionFieldsOf(next, interactions);
+        return versionFields.length > 0 ? { ...next, options: { ...next.options, versionFields } } : next;
+    };
     let renderer: InteractiveRenderer | undefined;
     let updateTimer: number | undefined;
     let destroyed = false;
@@ -250,7 +270,7 @@ export function mountInteractiveChartSurface(
     }
     chart.dataset.flintChart = '';
     // The chart keeps its compiled width; handling any overflow is the host's decision.
-    applyStyles(chart, { gridColumn: '1', gridRow: '1', minWidth: '0' });
+    applyStyles(chart, { gridColumn: '1', gridRow: '1', minWidth: '0', position: 'relative' });
     body.append(chart);
     container.replaceChildren(root);
     for (const definition of interactions.filter(isContextMenu)) {
@@ -285,12 +305,13 @@ export function mountInteractiveChartSurface(
         unsupportedOps: [...new Set(update.ops.map((op) => op.op))],
     });
 
-    const ready = adapter.mount(chart, input).then(async (mounted) => {
+    const ready = adapter.mount(chart, versioned(input)).then(async (mounted) => {
         if (destroyed) {
             mounted.destroy();
             return;
         }
         renderer = mounted;
+        listenTo(mounted);
         warnings.push(...(mounted.warnings ?? []));
         if (warnings.length > 0) {
             // A host that never reads `surface.warnings` still learns what the chart dropped.
@@ -302,7 +323,7 @@ export function mountInteractiveChartSurface(
         const initialUpdates = options.updates ?? [];
         if (initialUpdates.length > 0) {
             if (!mounted.setUpdates) throw new Error('This interactive backend does not support chart updates.');
-            const results = await mounted.setUpdates(initialUpdates);
+            const results = await mounted.setUpdates(initialUpdates, { transition: { duration: 0 } });
             results.forEach((result, index) => {
                 if (result.status === 'applied') return;
                 const parts = [
@@ -359,12 +380,18 @@ export function mountInteractiveChartSurface(
         definition: FilterControlsDef,
         payload: FilterControlsPayload,
         source: 'reader' | 'host',
+        target: InteractiveRenderer | undefined = renderer,
+        transition: ChartUpdateTransition | undefined = definition.transition,
     ): Promise<ChartUpdateResult | null> => {
-        if (destroyed || !renderer?.getInteractionContext) return null;
-        const update = definition.handle(payload, renderer.getInteractionContext());
+        if (destroyed || !target?.getInteractionContext) return null;
+        const update = definition.handle(payload, target.getInteractionContext());
         if (!update) return null;
-        if (!renderer.applyUpdate) return unsupportedUpdate(update);
-        const result = await renderer.applyUpdate(update, { interactionId: definition.id, source });
+        if (!target.applyUpdate) return unsupportedUpdate(update);
+        const result = await target.applyUpdate(update, {
+            interactionId: definition.id,
+            source,
+            ...(transition ? { transition } : {}),
+        });
         syncRails();
         return result;
     };
@@ -430,6 +457,113 @@ export function mountInteractiveChartSurface(
         }
     }
 
+    const trackHostLayer = (update: ChartUpdate, phase: ChartChangePhase | undefined): void => {
+        if (phase === undefined || phase === 'commit') hostLayers.set(update.id, update);
+    };
+
+    let latestInput = 0;
+    let inputQueue: Promise<void> = Promise.resolve();
+    /**
+     * Draws a new input in place. The chart mounts beside the one on screen, takes the host's
+     * layers and the filters, and the two trade places through `transitionBetween`: a morph along
+     * a listed chart transition, else a cross-fade. A reader's own state starts afresh. One input
+     * draws at a time; a call that a newer one overtakes while it waits is dropped.
+     */
+    function setInput(next: ChartAssemblyInput, setOptions: Pick<ChartUpdateApplyOptions, 'transition'> = {}): Promise<void> {
+        const ticket = ++latestInput;
+        const run = inputQueue.then(() => (ticket === latestInput ? drawInput(next, setOptions, () => ticket !== latestInput) : undefined));
+        inputQueue = run.catch(() => undefined);
+        return run;
+    }
+
+    async function drawInput(
+        next: ChartAssemblyInput,
+        setOptions: Pick<ChartUpdateApplyOptions, 'transition'>,
+        superseded: () => boolean,
+    ): Promise<void> {
+        await ready;
+        if (destroyed || !renderer) return;
+        if (next === currentInput || JSON.stringify(next) === JSON.stringify(currentInput)) return;
+        if (JSON.stringify(next.interaction_spec ?? null) !== JSON.stringify(currentInput.interaction_spec ?? null)) {
+            throw new Error('setInput keeps the interactions the chart mounted with; mount the chart again to change interaction_spec.');
+        }
+        if (rails.size > 0) throw new Error('setInput cannot replace a chart that scrolls its categories; mount it again instead.');
+        const stage = document.createElement('div');
+        stage.dataset.flintChart = '';
+        applyStyles(stage, { gridColumn: '1', gridRow: '1', minWidth: '0', position: 'relative', opacity: '0' });
+        // The body keeps the size it has until the swap moves it to the size it has around the next chart.
+        const held = { width: body.style.width, height: body.style.height };
+        const release = (): void => { applyStyles(body, held); };
+        const hold = (width: number, height: number): void => { applyStyles(body, { width: `${width}px`, height: `${height}px` }); };
+        const measure = (): { width: number; height: number } => {
+            const box = body.getBoundingClientRect();
+            const scale = body.offsetWidth > 0 ? box.width / body.offsetWidth : 1;
+            return { width: box.width / scale, height: box.height / scale };
+        };
+        const fromSize = measure();
+        hold(fromSize.width, fromSize.height);
+        body.append(stage);
+        let mounted: InteractiveRenderer;
+        try {
+            mounted = await adapter.mount(stage, versioned(next));
+        } catch (error) {
+            stage.remove();
+            release();
+            throw error;
+        }
+        if (destroyed || superseded() || mounted.viewports.length > 0) {
+            mounted.destroy();
+            stage.remove();
+            release();
+            if (destroyed || superseded()) return;
+            throw new Error('setInput cannot draw a chart that scrolls its categories; mount it again instead.');
+        }
+        for (const interaction of interactions) if (!isExternalInteraction(interaction)) interaction.onReset?.();
+        const jump: ChartUpdateTransition = { duration: 0 };
+        const carried = new Map(hostLayers);
+        if (carried.size > 0) await mounted.setUpdates?.([...carried.values()], { transition: jump });
+        for (const definition of filterDefs) {
+            definition.filterControls.bindRows(next.data.values ?? []);
+            const filters = definition.filterControls.getFilters();
+            if (Object.keys(filters).length > 0) await applyFilter(definition, { filters }, 'host', mounted, jump);
+        }
+        const layer = document.createElement('div');
+        applyStyles(layer, { gridColumn: '1', gridRow: '1', position: 'relative', pointerEvents: 'none', zIndex: '5' });
+        body.append(layer);
+        const previous = renderer;
+        release();
+        chart.style.display = 'none';
+        const toSize = measure();
+        chart.style.display = '';
+        hold(fromSize.width, fromSize.height);
+        await transitionBetween({
+            from: { element: chart, source: previous, chartType: currentInput.chart_spec.chartType },
+            to: { element: stage, source: mounted, chartType: next.chart_spec.chartType },
+            stage: layer,
+            duration: transitionDuration(setOptions.transition, options.transition),
+            easing: transitionEasing(setOptions.transition, options.transition),
+            onFrame: (t) => hold(
+                fromSize.width + (toSize.width - fromSize.width) * t,
+                fromSize.height + (toSize.height - fromSize.height) * t,
+            ),
+        });
+        layer.remove();
+        release();
+        stage.style.opacity = '';
+        previous.destroy();
+        chart.remove();
+        chart = stage;
+        renderer = mounted;
+        currentInput = next;
+        listenTo(mounted);
+        // The warnings are the drawn chart's: a new chart type may admit other interactions.
+        warnings.splice(0, warnings.length, ...(options.warnings ?? []), ...(mounted.warnings ?? []));
+        root.setAttribute('aria-label', options.ariaLabel ?? next.chart_spec.title ?? 'Interactive chart');
+        // Host calls made while the two charts traded places reached the chart that left.
+        for (const [id, update] of hostLayers) if (carried.get(id) !== update) await mounted.applyUpdate?.(update, { transition: jump });
+        for (const id of carried.keys()) if (!hostLayers.has(id)) await mounted.clearUpdate?.(id);
+    }
+
     return {
         element: root,
         chartId,
@@ -441,7 +575,7 @@ export function mountInteractiveChartSurface(
         },
         getViewportState: () => ({ ...state }),
         setViewport,
-        dispatch: async (interactionId, payload) => {
+        dispatch: async (interactionId, payload, dispatchOptions) => {
             await ready;
             if (destroyed) return null;
             const interaction = externalInteractions.get(interactionId);
@@ -460,11 +594,19 @@ export function mountInteractiveChartSurface(
             const update = interaction.handle(payload, renderer.getInteractionContext());
             if (!update) return null;
             if (!renderer.applyUpdate) return unsupportedUpdate(update);
-            return renderer.applyUpdate(update, { interactionId });
+            trackHostLayer(update, dispatchOptions?.phase);
+            return renderer.applyUpdate(update, {
+                interactionId,
+                ...(dispatchOptions?.phase ? { phase: dispatchOptions.phase } : {}),
+                ...(dispatchOptions?.transition ?? interaction.transition
+                    ? { transition: dispatchOptions?.transition ?? interaction.transition }
+                    : {}),
+            });
         },
         applyUpdate: async (update, applyOptions) => {
             await ready;
             if (destroyed || !renderer?.applyUpdate) return unsupportedUpdate(update);
+            trackHostLayer(update, applyOptions?.phase);
             return renderer.applyUpdate(update, applyOptions);
         },
         setUpdates: async (updates) => {
@@ -472,24 +614,20 @@ export function mountInteractiveChartSurface(
             if (destroyed || !renderer?.setUpdates) {
                 return updates.map(unsupportedUpdate);
             }
+            hostLayers.clear();
+            for (const update of updates) hostLayers.set(update.id, update);
             return renderer.setUpdates(updates);
         },
         clearUpdate: async (id) => {
             await ready;
+            hostLayers.delete(id);
             if (!destroyed) await renderer?.clearUpdate?.(id);
         },
+        setInput,
         getState: () => (destroyed ? undefined : renderer?.getState?.()),
         onChange: (callback) => {
-            let active = true;
-            let unsubscribe: (() => void) | undefined;
-            void ready.then(() => {
-                if (!active || destroyed) return;
-                unsubscribe = renderer?.onChange?.(callback);
-            }, () => undefined);
-            return () => {
-                active = false;
-                unsubscribe?.();
-            };
+            changeListeners.add(callback);
+            return () => { changeListeners.delete(callback); };
         },
         onInteraction: (callback) => {
             const listener = (event: Event): void => {
@@ -511,6 +649,7 @@ export function mountInteractiveChartSurface(
             destroyed = true;
             if (updateTimer !== undefined) window.clearTimeout(updateTimer);
             for (const strip of strips) strip.destroy();
+            unsubscribeRenderer?.();
             renderer?.destroy();
             container.replaceChildren();
         },

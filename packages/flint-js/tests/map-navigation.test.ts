@@ -456,7 +456,7 @@ describe('globe navigation', () => {
         expect(controller.focus?.()).toEqual(expect.objectContaining({ Country: 'France', Warming: 2 }));
     });
 
-    it('faces the middle of a box, and tweens there the short way round', async () => {
+    it('faces the middle of a box, and moves there the short way round', async () => {
         // Centred on the Pacific: the box lies across the antimeridian, 50° east.
         const { view, controller } = await mountedGlobe([150, 0]);
         const frames: string[] = [];

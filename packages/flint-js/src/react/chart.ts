@@ -29,6 +29,7 @@ import {
     type ChartChange,
     type ChartUpdate,
     type ChartUpdateApplyOptions,
+    type ChartUpdateTransition,
     type ChartUpdateResult,
     type ChartState,
     type ExternalInteractionDef,
@@ -112,6 +113,11 @@ export interface FlintChartProps {
     expressionInterpreter?: unknown;
     /** Changing it re-renders the chart. */
     background?: string;
+    /**
+     * How every committed change animates unless an interaction or a call names its own; defaults to
+     * 300 ms. Updates read it at mount; a new spec reads the value it has when the spec changes.
+     */
+    transition?: ChartUpdateTransition;
     /** The box the chart sits in, in pixels or a CSS length. Omitted: the chart's natural size. */
     width?: number | string;
     height?: number | string;
@@ -126,7 +132,7 @@ export interface FlintChartProps {
     onInteraction?: (detail: FlintInteractionEventDetail) => void;
     /** After each mount, each applied host update, and each relayout in place. */
     onRender?: (chart: InteractiveChartSurface) => void;
-    /** After each mount: that mount's warnings, possibly none. */
+    /** After each mount and each new spec drawn in place: that chart's warnings, possibly none. */
     onWarnings?: (warnings: readonly ChartWarning[]) => void;
     /**
      * The chart failed: a compile error, a malformed `interaction_spec`, or a code interaction
@@ -148,7 +154,7 @@ export interface FlintChartHandle {
     readonly surface: InteractiveChartSurface | null;
     applyUpdate(update: ChartUpdate, options?: ChartUpdateApplyOptions): Promise<ChartUpdateResult | null>;
     clearUpdate(id: string): Promise<void>;
-    dispatch(interactionId: string, payload: unknown): Promise<ChartUpdateResult | null>;
+    dispatch(interactionId: string, payload: unknown, options?: Pick<ChartUpdateApplyOptions, 'phase' | 'transition'>): Promise<ChartUpdateResult | null>;
     getState(): ChartState | undefined;
     refresh(): void;
 }
@@ -306,6 +312,9 @@ export function createFlintChart(loaders: InteractiveRendererLoaders) {
         const [remounts, setRemounts] = useState(0);
 
         const specKey = useMemo(() => flintSpecKey(spec), [spec]);
+        // A new spec draws in place through `setInput`; only a new `interaction_spec` mounts the chart again.
+        const interactionSpecKey = useMemo(() => JSON.stringify(spec.interaction_spec ?? null), [specKey]);
+        const drawnSpecRef = useRef(specKey);
         // Once per spec content, so an inline `interactions` function receives the same definitions each render.
         const fromSpec = useMemo(() => specInteractions(spec), [specKey]);
 
@@ -357,6 +366,7 @@ export function createFlintChart(loaders: InteractiveRendererLoaders) {
                 } };
                 return canvas;
             });
+            drawnSpecRef.current = specKey;
             const initialUpdates = propsRef.current.updates ?? [];
             appliedRef.current = new Map(initialUpdates.map((update) => [update.id, flintUpdateKey(update)]));
             ownersRef.current = new Map(initialUpdates.map((update) => [update.id, 'host' as const]));
@@ -385,6 +395,7 @@ export function createFlintChart(loaders: InteractiveRendererLoaders) {
                     renderers: propsRef.current.renderers,
                     expressionInterpreter: propsRef.current.expressionInterpreter,
                     ariaLabel: propsRef.current.ariaLabel,
+                    transition: propsRef.current.transition,
                     interactions: definitions,
                     updates: initialUpdates,
                     semanticUpdates: updatable,
@@ -423,7 +434,27 @@ export function createFlintChart(loaders: InteractiveRendererLoaders) {
                 stage.style.pointerEvents = 'none';
                 retiringRef.current.push({ surface, stage });
             };
-        }, [specKey, definitionsKey, updatable, backend, renderer, background, chartId, waiting, relayout, remounts]);
+        }, [interactionSpecKey, definitionsKey, updatable, backend, renderer, background, chartId, waiting, relayout, remounts]);
+
+        useEffect(() => {
+            const surface = surfaceRef.current;
+            if (!surface || drawnSpecRef.current === specKey) return undefined;
+            drawnSpecRef.current = specKey;
+            let live = true;
+            const transition = propsRef.current.transition;
+            void surface.setInput(resolved.input, transition ? { transition } : {}).then(
+                async () => {
+                    const warnings = await surface.warnings;
+                    if (!live) return;
+                    propsRef.current.onWarnings?.(warnings);
+                    propsRef.current.onRender?.(surface);
+                },
+                () => { if (live) setRemounts((count) => count + 1); },
+            );
+            return () => {
+                live = false;
+            };
+        }, [specKey]);
 
         // A new room lays the chart out again in place, or remounts it when its layout changes in kind.
         useEffect(() => {
@@ -553,7 +584,7 @@ export function createFlintChart(loaders: InteractiveRendererLoaders) {
             clearUpdate: async (id) => {
                 await surfaceRef.current?.clearUpdate(id);
             },
-            dispatch: async (interactionId, payload) => surfaceRef.current?.dispatch(interactionId, payload) ?? null,
+            dispatch: async (interactionId, payload, options) => surfaceRef.current?.dispatch(interactionId, payload, options) ?? null,
             getState: () => surfaceRef.current?.getState(),
             refresh: () => surfaceRef.current?.refresh(),
         }), []);

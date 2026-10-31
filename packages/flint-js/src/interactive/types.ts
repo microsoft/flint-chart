@@ -2,10 +2,13 @@ import type { CategoryViewport, ChartAssemblyInput, ChartWarning } from '../core
 import type { ChartState, FlintInteractionEventDetail, InteractionContext, InteractionDef, SemanticTarget } from './interactions';
 import type { CanvasInteractionAction, CanvasInteractionEvent } from './language/events';
 import type { ChartUpdate, ChartUpdateResult } from './language/updates';
-import type { AssistedTargetingOptions } from '../core/interaction-spec';
+import type { AssistedTargetingOptions, ChartUpdateTransition } from '../core/interaction-spec';
+
+export type { ChartUpdateTransition, TransitionEasing } from '../core/interaction-spec';
 import type { InteractionResetGesture } from './reset';
 import type { VegaInteractiveRendererOptions } from '../vegalite/interactive';
 import type { EChartsInteractiveRendererOptions } from '../echarts/interactive';
+import type { FrameScene, MorphScene } from './morph';
 
 export type {
     AssistedTargetingOptions,
@@ -23,11 +26,6 @@ export interface ViewportGeometry {
 
 export type ChartUpdateComposition = 'auto';
 
-/** Animates a viewport change over `duration` milliseconds; projected charts honour it. */
-export interface ChartUpdateTransition {
-    duration: number;
-}
-
 export interface ChartUpdateApplyOptions {
     composition?: ChartUpdateComposition;
     transition?: ChartUpdateTransition;
@@ -35,6 +33,12 @@ export interface ChartUpdateApplyOptions {
     interactionId?: string;
     /** Who asked for the update, reported as the change's `source`. Defaults to `host`. */
     source?: ChartChangeSource;
+    /**
+     * Where the update stands, as a reader's gesture does. `preview` shows it at once and
+     * replaces the last preview with its id; `commit` keeps it and animates; `cancel` drops the
+     * preview with its id. Defaults to `commit`.
+     */
+    phase?: ChartChangePhase;
 }
 
 export type ChartChangePhase = 'preview' | 'commit' | 'cancel';
@@ -49,7 +53,7 @@ export type ChartStateFacet = 'selected' | 'hidden' | 'viewport' | 'windows' | '
 export interface ChartChange {
     /** `preview` while a gesture runs, `commit` for a committed change, `cancel` when a gesture ends with none. */
     phase: ChartChangePhase;
-    /** `host` for `updates`, `applyUpdate`, `clearUpdate` and `dispatch`; always `commit`. */
+    /** `host` for `updates`, `applyUpdate`, `clearUpdate` and `dispatch`. */
     source: ChartChangeSource;
     changed: readonly ChartStateFacet[];
     /** The interaction behind the change: a reader's gesture, or an external interaction run by `dispatch`. */
@@ -112,8 +116,14 @@ export interface InteractiveRenderer {
     /** Re-project overlays after the host rescales the chart in a way CSS cannot report. */
     refresh?(): void;
     applyUpdate?(update: ChartUpdate, options?: ChartUpdateApplyOptions): Promise<ChartUpdateResult>;
-    setUpdates?(updates: readonly ChartUpdate[]): Promise<readonly ChartUpdateResult[]>;
+    setUpdates?(updates: readonly ChartUpdate[], options?: Pick<ChartUpdateApplyOptions, 'transition'>): Promise<readonly ChartUpdateResult[]>;
     clearUpdate?(id: string): Promise<void>;
+    /** What the chart draws, for a morph to another chart. */
+    morphScene?(): MorphScene | undefined;
+    /** Everything the chart draws, as parts another layer can draw, for a change of chart. */
+    frameScene?(): FrameScene | undefined;
+    /** Stops drawing while another layer draws the chart's parts. */
+    setDrawnHidden?(hidden: boolean): void;
     destroy(): void;
 }
 
@@ -132,6 +142,8 @@ export interface InteractiveChartSurfaceOptions {
     keyboardTargeting?: boolean;
     /** Warnings known before the mount; the surface reports them with the mount's own. */
     warnings?: readonly ChartWarning[];
+    /** How long every committed change animates unless an interaction or a call names its own. Defaults to 300 ms. */
+    transition?: ChartUpdateTransition;
 }
 
 export type InteractiveBackend = 'vegalite' | 'echarts' | 'chartjs' | 'plotly';
@@ -195,10 +207,25 @@ export interface InteractiveChartSurface {
     readonly layout: ChartLayout | undefined;
     getViewportState(): ViewportState;
     setViewport(channel: ViewportChannel, start: number): void;
-    dispatch(interactionId: string, payload: unknown): Promise<ChartUpdateResult | null>;
+    /**
+     * Runs an external interaction; `options.phase` marks a change still in progress, as `applyUpdate`
+     * does, and `options.transition` animates this call, ahead of the interaction's own.
+     */
+    dispatch(
+        interactionId: string,
+        payload: unknown,
+        options?: Pick<ChartUpdateApplyOptions, 'phase' | 'transition'>,
+    ): Promise<ChartUpdateResult | null>;
     applyUpdate(update: ChartUpdate, options?: ChartUpdateApplyOptions): Promise<ChartUpdateResult>;
     setUpdates(updates: readonly ChartUpdate[]): Promise<readonly ChartUpdateResult[]>;
     clearUpdate(id: string): Promise<void>;
+    /**
+     * Draws a new input in place, keeping this surface and its element. The host's updates and
+     * the filters carry over; a reader's selections, hidden series and zoom start afresh. The
+     * marks morph along a chart transition Flint lists, else the charts cross-fade, over
+     * `transition` (the chart's by default). `interaction_spec` must not change.
+     */
+    setInput(input: ChartAssemblyInput, options?: Pick<ChartUpdateApplyOptions, 'transition'>): Promise<void>;
     /** What the chart shows now, previews included; undefined before the mount or after destroy. */
     getState(): ChartState | undefined;
     /** Hears every change to what the chart shows, after the render; returns the unsubscribe. */

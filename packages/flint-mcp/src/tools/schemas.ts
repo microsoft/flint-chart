@@ -5,6 +5,7 @@ import { z } from 'zod';
 import {
   CHART_UPDATE_OPS,
   INTERACTION_PRESET_TYPES,
+  TRANSITION_EASINGS,
   type ChartAssemblyInput,
   type InteractionPresetType,
 } from 'flint-chart';
@@ -147,6 +148,10 @@ export function buildAssemblyInputShape(disableFileReference = false) {
           .describe('One entry per behaviour: a gesture the user named, or a question their goal asks of the chart. Take the presets and their options from list_interaction_presets with the chosen chartType.'),
         assistedTargeting: z.union([z.boolean(), z.record(z.string(), z.any())]).optional(),
         keyboardTargeting: z.boolean().optional(),
+        transition: z
+          .object({ duration: z.number().min(0), easing: z.enum(TRANSITION_EASINGS).optional() })
+          .optional()
+          .describe('How long every committed change animates unless an interaction names its own. Defaults to 300 ms; { duration: 0 } jumps.'),
       })
       .optional()
       .describe(

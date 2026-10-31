@@ -1186,7 +1186,7 @@ describe('Vega-Lite semantic interactions', () => {
         view.finalize();
     });
 
-    it('tweens a Vega scale domain to its target and keeps the tween through a render', async () => {
+    it('moves a Vega scale domain to its target and keeps the motion through a render', async () => {
         const spec = assembleVegaLite({
             chart_spec: {
                 chartType: 'Scatter Plot',
@@ -1208,12 +1208,12 @@ describe('Vega-Lite semantic interactions', () => {
             factor: 4, anchor: { x: 0.25, y: 0.5 },
         }, guard)!;
 
-        // The tween starts on the domain on screen; nothing lands before the first frame.
+        // The motion starts on the domain on screen; nothing lands before the first frame.
         const phases: string[] = [];
         expect(controller.apply(zoom, { transition: { duration: 60, onFrame: (phase) => phases.push(phase) } })).toBe(true);
         await view.runAsync();
         expect(view.scale('x').domain().map(Number)).toEqual(initial);
-        // The runtime's baseline reset and the re-applied target keep the tween.
+        // The runtime's baseline reset and the re-applied target keep the motion.
         expect(controller.apply({ op: 'set-viewport', axes: 'x', value: {} }, { baseline: true })).toBe(true);
         expect(controller.apply(zoom)).toBe(true);
         await view.runAsync();
@@ -1226,7 +1226,7 @@ describe('Vega-Lite semantic interactions', () => {
         expect(phases.slice(0, -1).every((phase) => phase === 'preview')).toBe(true);
         expect(phases[phases.length - 1]).toBe('commit');
 
-        // A tween home reports as a reset, passes through the frames between, and lands on the initial domain.
+        // A move home reports as a reset, passes through the frames between, and lands on the initial domain.
         const operations: string[] = [];
         const spans: number[] = [];
         controller.apply({ op: 'set-viewport', axes: 'x', value: {} }, {
@@ -1244,7 +1244,7 @@ describe('Vega-Lite semantic interactions', () => {
         expect(view.scale('x').domain().map(Number)).toEqual(initial);
         expect(spans.some((span) => span > target[1] - target[0] && span < initial[1] - initial[0])).toBe(true);
 
-        // A plain viewport change cancels a running tween.
+        // A plain viewport change cancels a running motion.
         const cancelled: string[] = [];
         controller.apply(zoom, { transition: { duration: 500, onFrame: (phase) => cancelled.push(phase) } });
         controller.apply({ op: 'set-viewport', axes: 'x', value: {} });
@@ -4914,6 +4914,11 @@ describe('elementsFromHits', () => {
         expect(semanticElementRenderKeys(elements[0])).toEqual(['a']);
         expect(semanticElementRenderKeys(elements[1])).toEqual(['b', 'c']);
         expect(elements[1].value).toEqual({ Year: 2013, Share: 13, Segment: 'Hidden' });
+    });
+
+    it('reports an element in field terms, without the columns the renderer adds', () => {
+        const hits: RenderHit[] = [{ datum: { ...row(2012, 'a'), color_Segment_sort_index: 0, _vgsid_: 4 }, source: 'mark', markType: 'symbol' }];
+        expect(elementsFromHits(hits, key)[0].value).toEqual({ Year: 2012, Share: 12, Segment: 'Hidden' });
     });
 
     it('keeps one key per element when every vertex starts a segment', () => {

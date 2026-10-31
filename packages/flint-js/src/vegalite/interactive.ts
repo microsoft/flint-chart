@@ -1,12 +1,12 @@
 import type { ViewNode } from '../core/views';
 import { applyCategoryViewports, resolveCategoryViewport } from '../core/filter-overflow';
 import type { CategoryViewport, ChartAssemblyInput } from '../core/types';
-import { convertTemporalData, temporalFieldValue } from '../core/resolve-semantics';
+import { temporalFieldValue } from '../core/resolve-semantics';
 import { createChangeFilter } from '../interactive/chart-state';
 import { currentFilters, isFilterControls } from '../interactive/filter-controls';
 import { createFloatingPanel } from '../interactive/floating-panel';
 import { isCanvasInteraction, type ChartState, type InteractionContext, type InteractionDef } from '../interactive/interactions';
-import type { InteractiveRendererAdapter, TargetFeedbackOptions, ViewportState } from '../interactive/types';
+import type { ChartUpdateTransition, InteractiveRendererAdapter, TargetFeedbackOptions, ViewportState } from '../interactive/types';
 import { openVegaLiteSession, type Replanned } from './assemble';
 import { canvasFurnitureMarkup, readCanvasFurniture, readCanvasPatterns, type CanvasPattern } from './canvas-furniture';
 import { enableGuideLabelTooltips, planTemporalTickValues } from './instantiate-spec';
@@ -33,6 +33,8 @@ import {
     type LiveLayoutPlanner,
 } from './interactions/live-layout';
 import { mountVegaInteractions } from './interactions/runtime';
+import { bindLegendDomains, captureMorphScene, hasSceneMotion, injectAxisMotion, injectScaleMotion, injectSizeMotion } from './interactions/scene-motion';
+import { captureFrameScene } from './interactions/frame-scene';
 import { advanceLiveValues, bindLiveValues, LIVE_VALUES_SIGNAL, liveValuesChange } from './live-values';
 import { readDrawnLayout } from './drawn-layout';
 import { vegaRendererOrigin } from './interactions/hit-adapter';
@@ -93,6 +95,15 @@ function createTooltip(container: HTMLElement) {
     return { call, destroy() { panel.destroy(); style.remove(); } };
 }
 
+/** Whether two lists hold the same records, row by row and field by field. */
+function sameRecords(a: readonly Record<string, unknown>[], b: readonly Record<string, unknown>[]): boolean {
+    return a.length === b.length && a.every((row, index) => {
+        const other = b[index]!;
+        const keys = Object.keys(row);
+        return keys.length === Object.keys(other).length && keys.every((key) => Object.is(row[key], other[key]));
+    });
+}
+
 export interface VegaInteractiveRendererOptions {
     renderer?: 'canvas' | 'svg';
     interactions?: readonly InteractionDef[];
@@ -103,6 +114,8 @@ export interface VegaInteractiveRendererOptions {
     hoverTolerance?: number;
     keyboardTargeting?: boolean;
     targetFeedback?: { assisted: TargetFeedbackOptions | false; keyboard: TargetFeedbackOptions | false };
+    /** How long committed changes animate unless an interaction or a call names its own. */
+    transition?: ChartUpdateTransition;
     /** Bind the chart's layout values to a signal, so `relayout` can lay it out again in place. */
     liveValues?: boolean;
 }
@@ -340,6 +353,8 @@ export function createVegaInteractiveRenderer(
             // The Vega spec a plan of this chart mounts as, with the interactions compiled in.
             const shape = (planned: Pick<Replanned, 'spec' | 'axisLabels' | 'dataLabels'>) => {
                 const shapedSpec = planned.spec;
+                // What each mark is about, from the compile itself: a chart without interactions still morphs into its next spec by it.
+                const morphFields: readonly string[] = shapedSpec._interactionSemantics?.identityFields ?? [];
                 const interactionPlan = addVegaLiteInteractions(
                     shapedSpec,
                     interactions,
@@ -389,19 +404,27 @@ export function createVegaInteractiveRenderer(
                         .map((axis) => injectVegaReorderSignal(vegaSpec, axis))
                         .filter((axis): axis is NonNullable<typeof axis> => !!axis);
                     interactionPlan.reorderAxis = interactionPlan.reorderAxes[0];
+                    injectAxisMotion(vegaSpec);
+                    interactionPlan.legendDomains = bindLegendDomains(vegaSpec, interactionPlan.legendDomains);
+                    interactionPlan.movingScales = injectScaleMotion(vegaSpec);
+                    interactionPlan.movingSizes = injectSizeMotion(vegaSpec);
                 }
-                return { interactionPlan, vegaSpec, relaidSignals, livePlanner };
+                return { interactionPlan, vegaSpec, relaidSignals, livePlanner, morphFields };
             };
             const shaped = shape(drawn);
-            const { interactionPlan, vegaSpec, relaidSignals } = shaped;
+            const { interactionPlan, vegaSpec, relaidSignals, morphFields } = shaped;
             let livePlanner = shaped.livePlanner;
             // A chart laid out for its room binds its layout values, so a new room is pushed in place.
             let liveValues = options.liveValues && viewports.length === 0 && !interactionPlan?.geoNavigation
                 ? bindLiveValues(vegaSpec)
                 : undefined;
-            const source = vegaSpec.data
-                ?.find((entry: any) => Array.isArray(entry.values) && !INTERACTION_STORES.includes(entry.name))
-                ?.name as string | undefined;
+            const inlineData = ((vegaSpec.data ?? []) as any[])
+                .filter((entry) => Array.isArray(entry.values) && !INTERACTION_STORES.includes(entry.name));
+            // The dataset the input's own rows land in; a template that shapes its rows at assembly has none.
+            const rowsSource = interactionPlan?.rowIndexed
+                ? inlineData.find((entry) => sameRecords(entry.values, interactionPlan.sourceRecords))?.name as string | undefined
+                : undefined;
+            const source = rowsSource ?? (viewports.length > 0 ? inlineData[0]?.name as string | undefined : undefined);
             if (viewports.length > 0 && !source) {
                 throw new Error('Compiled chart has no mutable inline data source.');
             }
@@ -417,7 +440,21 @@ export function createVegaInteractiveRenderer(
                         })(),
                 };
                 interactionPlan.mutableDataSource = source;
-                interactionPlan.prepareDataRows = (rows) => convertTemporalData([...rows], firstInput.semantic_types ?? {});
+                if (!source) {
+                    const reshaped = new WeakMap<readonly Record<string, unknown>[], Record<string, readonly Record<string, unknown>[]>>();
+                    interactionPlan.reshapeRows = (rows) => {
+                        const current = rows ?? inputRows;
+                        const cached = reshaped.get(current);
+                        if (cached) return cached;
+                        const next = shape(session.replan({ rows: current })).vegaSpec;
+                        const datasets: Record<string, readonly Record<string, unknown>[]> = Object.fromEntries(((next.data ?? []) as any[])
+                            .filter((entry) => Array.isArray(entry.values) && !INTERACTION_STORES.includes(entry.name))
+                            .map((entry) => [entry.name, entry.values]));
+                        reshaped.set(current, datasets);
+                        return datasets;
+                    };
+                }
+                interactionPlan.prepareDataRows = (rows) => drawn.shapeRows(rows);
                 interactionPlan.initialDataRows = interactionPlan.prepareDataRows(firstInput.data.values ?? []);
                 interactionPlan.temporalValue = (field, value) => temporalFieldValue(field, value, firstInput.semantic_types ?? {});
                 if (viewports.length > 0) interactionPlan.windowDataRows = (rows) => windowRows(rows ?? inputRows);
@@ -495,6 +532,7 @@ export function createVegaInteractiveRenderer(
                     options.hoverTolerance ?? 0,
                     options.keyboardTargeting ?? false,
                     options.targetFeedback,
+                    options.transition,
                 )
                 : undefined;
 
@@ -558,6 +596,26 @@ export function createVegaInteractiveRenderer(
                 selected: [],
             });
 
+            // Where the drawn canvas or svg sits in the container, and how far it reaches.
+            const drawnBox = (): { left: number; top: number; right: number; bottom: number } => {
+                const drawnElement = container.querySelector<Element>('canvas, svg');
+                if (!drawnElement) return { left: 0, top: 0, right: 0, bottom: 0 };
+                const box = drawnElement.getBoundingClientRect();
+                const frame = container.getBoundingClientRect();
+                const scale = container.offsetWidth > 0 ? frame.width / container.offsetWidth : 1;
+                return {
+                    left: (box.left - frame.left) / scale,
+                    top: (box.top - frame.top) / scale,
+                    right: (box.right - frame.left) / scale,
+                    bottom: (box.bottom - frame.top) / scale,
+                };
+            };
+            const drawnOrigin = (): { x: number; y: number } => {
+                const { left, top } = drawnBox();
+                const [originX, originY] = view.origin();
+                const padding = view.padding() as { left?: number; top?: number };
+                return { x: left + originX + (padding.left ?? 0), y: top + originY + (padding.top ?? 0) };
+            };
             return {
                 viewports,
                 warnings: interactionPlan?.warnings ?? [],
@@ -569,6 +627,20 @@ export function createVegaInteractiveRenderer(
                 },
                 getInteractionContext() {
                     return interactionController?.getInteractionContext() ?? fallbackContext();
+                },
+                morphScene() {
+                    const fields = interactionPlan ? interactionPlan.identityFields ?? [] : morphFields;
+                    if (destroyed || fields.length === 0 || (interactionPlan && !hasSceneMotion(view))) return undefined;
+                    return captureMorphScene(view, fields, drawnOrigin());
+                },
+                frameScene() {
+                    if (destroyed) return undefined;
+                    const { right, bottom } = drawnBox();
+                    return captureFrameScene(view, drawnOrigin(), { width: right, height: bottom });
+                },
+                setDrawnHidden(hidden) {
+                    const drawnElement = container.querySelector<HTMLElement | SVGElement>('canvas, svg');
+                    if (drawnElement) drawnElement.style.visibility = hidden ? 'hidden' : '';
                 },
                 getState() {
                     return withWindows(interactionController?.getInteractionContext() ?? fallbackContext());
@@ -590,8 +662,8 @@ export function createVegaInteractiveRenderer(
                         unsupportedOps: [...new Set(update.ops.map((op) => op.op))],
                     };
                 },
-                async setUpdates(updates) {
-                    if (interactionController) return interactionController.setUpdates(updates);
+                async setUpdates(updates, options) {
+                    if (interactionController) return interactionController.setUpdates(updates, options);
                     return updates.map((update) => ({
                         status: 'unsupported' as const,
                         resolvedTargets: 0,

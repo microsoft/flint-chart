@@ -124,6 +124,81 @@ hit and geometry, and the state after the change. The DOM event is the raw gestu
 before the chart reacts; `onChange` is what the chart shows, fired after. The rows stay with the
 host: it queries its own data from the values and the geometry, and the chart hands over no copy.
 
+## §2.5 Motion
+
+A committed update eases from what the chart draws to what the update says; a preview shows at
+once. The phase decides, not the source: a click, a legend toggle, a brush release, a reset, and a
+host's `applyUpdate`, `setUpdates`, `clearUpdate`, or `dispatch` commit and move, while a hover, a
+pan, a wheel zoom, a brush in progress, and a host call with `phase: 'preview'` follow the hand.
+A host that streams a drag sends previews and commits where it lets go; `phase: 'cancel'` drops
+the preview with that id.
+
+The duration is the first one named: the call's `transition`, the interaction's (every preset
+takes `transition`), the chart's (`interaction_spec.transition` or `mountChart({ transition })`),
+else 300 ms. `{ duration: 0 }` jumps, and `prefers-reduced-motion` turns every duration off.
+The same transition names its easing: `ease-in-out` by default, or `linear`, which holds one
+speed and runs the leave, move and arrive stages together, so data that streams in at a steady
+interval slides on without stopping at each update.
+Motion is interaction state, not style: `theme_spec` does not carry it, the assemblers never read
+it, and a static render has none.
+
+What moves follows from why it moves: so the reader can follow what changed. Two rules decide
+the scope. Every frame is a chart that reads true, so a mark and the axis it is read against
+move through the same scale; what is animated is the mapping. And only what exists on both
+sides of a change can move, matched by meaning: an element by its identity, a scale by its
+name, an axis label by its value, a legend entry by its value, a note by its target. What has no
+counterpart arrives or leaves; text with no meaningful in-between (a title) does not move.
+
+An element's identity is what it is about, not what it says: a bar's category and series, a line
+vertex's x and series, a radar vertex's axis and series, a Gantt bar's task. Its values (a bar's
+height, a vertex's position along its spoke, a task's dates) are what change. The chart type
+declares it: by default the fields it keys on, less those a channel draws as a quantity; a type
+whose roles differ (a Gantt's dates are values, a line's dates are its index) states its own.
+Everything that must follow an element through a change reads the same identity. A held
+selection, a hidden series and a note re-find their elements among the new rows: a `where` or a
+`key` runs again as the predicate it is, and an element a reader picked is found by its identity,
+so a changed value never makes it another element. One that is absent recedes the rest until it
+returns. The animation matches marks by it, so a value moves rather than fading out and in. Where
+a chart has no identity (anonymous points, or several sharing a colour), each row is its own
+element, and a change of data starts it afresh.
+
+So a committed change moves each continuous scale an axis reads from the domain drawn to the
+new one, linearly or, on a log scale, geometrically, and axes, ticks and gridlines ride it. Marks
+move in data units: each frame mixes a row's value toward its new one and places it through the
+scale as that frame draws it, so a bar sits on its gridline mid-way. What a scale does not
+explain moves in screen units: a new order (the labels of a discrete axis glide with it), a
+stack re-forming, sizes, angles, colours. A chart whose size follows its data (a bar per
+category) moves to its new size with the change, and while it moves a line clips to its plot: a
+stretch it lost slides out through the edge with the scale, and a stretch it gained slides in. Legend entries fade between shown, dimmed and hidden.
+The stages run in order and share the duration: rows that leave fade out where they stood (a
+quarter), what stays moves, rows that arrive fade in (a quarter); a note or an overlay the update
+adds waits for the marks to land. Post-encoding formulas do the mixing from a frame captured
+before the render, so no data transform re-runs per frame, SVG and canvas move alike, and a
+change mid-flight starts from the frame on screen. `set-viewport` moves the same scales through
+its own domain path. `getState()` reports where an update goes, never a frame, and a host's call
+resolves when the motion ends. Past 2,000 drawn items a committed change jumps. Scales in
+the chart's top scope move; a faceted or concatenated chart's own scales do not yet, and its
+marks move in screen units.
+
+Out of scope by the same rules: a preview, which follows the hand; a resize of the room the
+host gives the chart, which changes room, not meaning; a theme, which changes style, not meaning,
+and so cross-fades at most.
+
+A new chart type is not an update: it changes `chart_spec`, what the chart means, so it reaches
+the chart through `surface.setInput(input)`, which `FlintChart` calls when its `spec` changes.
+The next chart mounts beside the one on screen, takes the host's layers and the filters, and
+the two hand over with the same `transition`, by the same two rules. While they do, neither
+chart draws; a layer draws both, part by part, with the backend's own renderer. What the two
+share moves and resizes from one to the other: an axis label by its text, a tick or gridline by
+its value, a domain line by its axis, a title by its text, a legend entry by its value, a
+group's box by its place. Along a change `chart-transitions.ts` lists, with row fields both
+charts share, each mark morphs into its counterpart, and what has no counterpart leaves in the
+first quarter and arrives in the last. Otherwise the marks have no counterparts either, and
+what has none cross-fades over the whole duration, so the plot never stands empty. The
+chart's box moves from its size to the next chart's with them. A reader's own selections,
+hidden series and zoom start afresh, and a new `interaction_spec` needs a new mount. Past
+1,000 items or parts on either side, the two charts cross-fade.
+
 # §3 The specification
 
 ```json
@@ -319,8 +394,8 @@ runs the gestures. A gesture resets only the interactions whose list holds it, e
 id: retained updates are cleared, a stateful brush clears through its controller, `navigate`
 and `brush-zoom` fly home through the navigation controller, and a preset with closure state
 drops it through `onReset()`. The flight home, like the zoom a brush commits, animates over
-400 ms by default; `resetTransition: { duration: 0 }` jumps. Panning and wheel zooming follow
-the pointer and never animate.
+the interaction's `transition`, 300 ms by default; `transition: { duration: 0 }` jumps.
+Panning and wheel zooming follow the pointer and never animate.
 
 A chart with an `escape` reset becomes focusable and takes focus on a pointer press, so Escape
 reaches the chart the reader touched last and no other. Host updates applied through the surface

@@ -10,8 +10,10 @@ import {
     type CanvasInteractionDef,
     type FlintInteractionEventDetail,
     type InteractionDef,
+    type TransitionOption,
 } from './interactions';
 import type { InteractionResetGesture } from './reset';
+import { validateTransition } from './transition';
 
 /** One action the menu lists. The host performs it when the reader picks it. */
 export interface ContextMenuItem {
@@ -22,7 +24,7 @@ export interface ContextMenuItem {
 /** How the reader picks the marks the menu acts on. */
 export type ContextMenuGesture = 'rectangle' | 'lasso' | 'brush-x' | 'brush-y' | 'click' | 'right-click' | 'long-press';
 
-export interface ContextMenuOptions {
+export interface ContextMenuOptions extends TransitionOption {
     id?: string;
     /** The actions the menu lists. Picking one emits a `menu-select` event whose `item` is the action's id and whose target is the selected marks. */
     items: readonly ContextMenuItem[];
@@ -94,7 +96,14 @@ export function contextMenu(options: ContextMenuOptions): ContextMenuDef {
         seen.add(item.id);
     }
     const { id: _id, ...presetOptions } = options;
-    return { ...selectionFor(id, options), preset: 'context-menu', presetOptions, contextMenu: { options } };
+    const transition = validateTransition(`contextMenu "${id}"`, options.transition);
+    return {
+        ...selectionFor(id, options),
+        preset: 'context-menu',
+        presetOptions,
+        ...(transition ? { transition } : {}),
+        contextMenu: { options },
+    };
 }
 
 const TEXT = '#1f2937';

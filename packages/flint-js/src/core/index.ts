@@ -207,6 +207,7 @@ export { isRegistered, getRegisteredTypes } from './type-registry';
 // Declarative interactions: the JSON contract read by flint-chart/interactive
 export {
     INTERACTION_PRESET_TYPES,
+    TRANSITION_EASINGS,
     INTERACTION_CAPABILITIES,
     INTERACTION_CAPABILITY_DESCRIPTIONS,
     INTERACTION_PRESET_REQUIREMENTS,
@@ -218,6 +219,8 @@ export {
     type InteractionEntry,
     type InteractionSpec,
     type AssistedTargetingOptions,
+    type ChartUpdateTransition,
+    type TransitionEasing,
     type TargetDetailsOptions,
     type TargetFeedbackOptions,
 } from './interaction-spec';

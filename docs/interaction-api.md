@@ -59,7 +59,7 @@ A spec with no interactions renders a static chart; a chart is interactive only 
 | `ariaLabel`, `chartId` | `ariaLabel` applies in place; a new `chartId` remounts the chart. `expressionInterpreter` is read at mount |
 | `backend`, `renderers` | The backend to draw with (default `vegalite`), and renderer factories by backend for backends the entry does not load. Read at mount |
 
-A ref gives a `FlintChartHandle` with `surface` (the mounted `InteractiveChartSurface`, or `null`), `applyUpdate`, `clearUpdate`, `dispatch`, `getState`, and `refresh`. The `selectionUpdate(id, selection)` and `viewportUpdate(id, viewport)` helpers build the updates a selection or navigation preset writes: `selection` takes elements or a field key, and `viewport` takes `[start, end]` per axis or a `ChartState.viewport`. `null` clears the selection or returns the viewport home.
+A new `spec` draws in place through `surface.setInput`, morphing the marks along a chart transition Flint lists and cross-fading otherwise; only new interactions or a new `interaction_spec` mount the chart again. A ref gives a `FlintChartHandle` with `surface` (the mounted `InteractiveChartSurface`, or `null`), `applyUpdate`, `clearUpdate`, `dispatch`, `getState`, and `refresh`. The `selectionUpdate(id, selection)` and `viewportUpdate(id, viewport)` helpers build the updates a selection or navigation preset writes: `selection` takes elements or a field key, and `viewport` takes `[start, end]` per axis or a `ChartState.viewport`. `null` clears the selection or returns the viewport home.
 
 For a static image without a DOM, `renderSvg(input, { backend })` from `flint-chart/render` returns an SVG string for `vegalite` or `echarts`.
 
@@ -225,7 +225,7 @@ container.addEventListener('flint-interaction', (event) => {
 
 `set-style` controls emphasis or visibility, `set-annotation` adds or clears a label, and `set-viewport` changes the visible domains. Other operators reorder categories, add overlays, or replace data. A single handler can return multiple operators in one update.
 
-The container emits `flint-interaction` events with the interaction id and semantic target. Your application can listen to those events to filter a table or update other widgets; Flint renders only the canvas updates. Applications can also submit operators directly through `surface.applyUpdate()` or `surface.setUpdates()`. See [Components](interaction-components.md) for the event envelope, action families, listener examples, and chart update API.
+The container emits `flint-interaction` events with the interaction id and semantic target. Your application can listen to those events to filter a table or update other widgets; Flint renders only the canvas updates. Applications can also submit operators directly through `surface.applyUpdate()` or `surface.setUpdates()`. A committed update eases from what the chart draws (300 ms unless `transition` says otherwise); a host that streams a drag or a scrub passes `{ phase: 'preview' }` on each step and commits where it lets go. See [Interaction Design](design-interactions.md#25-motion). See [Components](interaction-components.md) for the event envelope, action families, listener examples, and chart update API.
 
 ## Read the chart
 

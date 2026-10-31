@@ -57,6 +57,18 @@ export interface VegaAxisTarget {
 
 export interface VegaInteractionPlan {
     fields: readonly string[];
+    /** The fields that say what an element is about, which hold across changes of data. Empty names rows by their whole key. */
+    identityFields?: readonly string[];
+    /**
+     * For a chart whose template shapes its rows at assembly (a radar's positions, spokes and rings):
+     * every inline dataset the chart draws for these rows, by name, compiled again. Absent when the
+     * input's rows land in a dataset of their own, which `set-data` replaces directly.
+     */
+    reshapeRows?: (rows: readonly Record<string, unknown>[] | undefined) => Readonly<Record<string, readonly Record<string, unknown>[]>>;
+    /** The continuous scales a transition moves the domain of. */
+    movingScales?: readonly import('./scene-motion').MovingScale[];
+    /** The chart's sizes a transition moves when its data changes them. */
+    movingSizes?: readonly import('./scene-motion').MovingSize[];
     sourceRecords: readonly Record<string, unknown>[];
     provenanceFields: readonly string[];
     temporalProvenanceFields: readonly string[];
@@ -68,6 +80,8 @@ export interface VegaInteractionPlan {
     groupHoverEmphasis?: InteractionContext['groupHoverEmphasis'];
     resolveGroupValue?: InteractionContext['resolveGroupValue'];
     legendFields?: Readonly<Record<string, string>>;
+    /** Continuous legend scales held through hides; each follows the rows the chart is given. */
+    legendDomains?: readonly LegendDomain[];
     axisFields?: Partial<Record<'x' | 'y', { field: string; type: string }>>;
     indexAxis?: 'x' | 'y';
     axisTargets?: Readonly<Record<string, VegaAxisTarget>>;
@@ -116,4 +130,17 @@ export interface VegaInteractionPlan {
     interactions?: readonly CanvasInteractionDef[];
     /** One warning per spec interaction the chart could not honour and dropped. */
     warnings?: readonly ChartWarning[];
+}
+
+/**
+ * A continuous legend's scale, held to the rows the chart is given so a hide does not shrink the
+ * legend under the reader, and moved to new rows when the chart is given them.
+ */
+export interface LegendDomain {
+    readonly channel: string;
+    readonly field: string;
+    /** The scale runs from the largest value to the smallest. */
+    readonly descending: boolean;
+    /** The signal that holds the domain, once the chart is compiled. */
+    readonly signal?: string;
 }

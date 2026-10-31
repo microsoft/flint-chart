@@ -1040,6 +1040,12 @@ export interface ChartTemplateDef {
         channelSemantics: Readonly<Record<string, ChannelSemantics>>;
     }) => {
         fields: string[];
+        /**
+         * The fields that say what an element is about, which hold across changes of data: a bar's
+         * category and series, a line vertex's x and series. Defaults to `fields` less those any
+         * channel draws as a quantity; a template whose roles differ (a Gantt's dates) states them.
+         */
+        identityFields?: readonly string[];
         provenanceFields?: readonly string[];
         temporalProvenanceFields?: readonly string[];
         rangeProvenance?: readonly { field: string; startField: string; endField: string }[];
@@ -1489,6 +1495,12 @@ export interface AssembleOptions {
      * decides whether they show.
      */
     liveLayoutSignal?: string;
+    /**
+     * Set by the interactive renderer when a control shows one value of these fields at a time:
+     * each value is a version of the same marks, so rows of different versions are never
+     * aggregated together.
+     */
+    versionFields?: readonly string[];
     /**
      * Fraction of each step reserved for inter-category padding (0–1).
      * VL pads *inside* the step (band = step × (1 − padding)), so this

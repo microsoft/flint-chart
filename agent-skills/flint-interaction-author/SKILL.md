@@ -134,9 +134,10 @@ a shape; `navigate` moves continuously, `brush-zoom` jumps into a box;
 
 "Needs" is what the chart type offers; `list_chart_types` has already applied
 it to the list it returns. The data confirms a few at mount, in Step 3. A
-viewport a gesture commits, and a reset, fly over 400 ms;
-`"transition": { "duration": 0 }` or `"resetTransition": { "duration": 0 }`
-jumps. Panning and wheel zooming follow the pointer.
+viewport a gesture commits, and a reset, fly over 300 ms. Every preset takes
+`"transition": { "duration": ms }`, and `interaction_spec.transition` sets the
+chart's default; `{ "duration": 0 }` jumps. Panning and wheel zooming follow
+the pointer.
 
 **`filter-controls`.** It draws real controls beside the chart and changes the
 rows the chart shows, so it answers a request that names a field to filter by
@@ -331,7 +332,7 @@ source by `npm run gen:reference`:
 interface ChartChange {
   // `preview` while a gesture runs, `commit` for a committed change, `cancel` when a gesture ends with none.
   phase: ChartChangePhase;
-  // `host` for `updates`, `applyUpdate`, `clearUpdate` and `dispatch`; always `commit`.
+  // `host` for `updates`, `applyUpdate`, `clearUpdate` and `dispatch`.
   source: ChartChangeSource;
   changed: ChartStateFacet[];
   // The interaction behind the change: a reader's gesture, or an external interaction run by `dispatch`.
@@ -729,10 +730,11 @@ surface.destroy();
 | Member | What it does |
 | --- | --- |
 | `ready`, `warnings` | Promises: the first render; the dropped or yielded interactions. Every call below waits for `ready` itself. |
-| `applyUpdate(update, options?)` | Retains one update by id; replaces the layer with the same id. `options.transition.duration` animates a viewport. |
+| `applyUpdate(update, options?)` | Retains one update by id; replaces the layer with the same id, easing from what is drawn (300 ms by default). `options.transition` sets the duration, `{ duration: 0 }` jumps. `options.phase: 'preview'` shows a streamed change at once (a drag, a scrub), `commit` keeps and animates it, `cancel` drops the preview. |
 | `setUpdates(updates)` | Replaces every retained update. |
 | `clearUpdate(id)` | Removes one layer. |
-| `dispatch(id, payload)` | Runs an `externalInteraction` handler and applies what it returns. |
+| `dispatch(id, payload, options?)` | Runs an `externalInteraction` handler and applies what it returns; `options.phase` and `options.transition` as for `applyUpdate`. |
+| `setInput(input, options?)` | Draws a new input in place (new data, chart type or theme), keeping the surface. Marks morph along a chart transition Flint lists, else the charts cross-fade. Host updates and filters carry over; a reader's state starts afresh; `interaction_spec` must not change. |
 | `getState()` | What the chart shows now; `undefined` before `ready`. |
 | `onChange(callback)` | Every change to that state, after the render; returns the unsubscribe. |
 | `layout` | Once ready: `plot`, the plot box `{ width, height }` on a chart that draws one plot; `views`, each drawn view as `{ role, box: { x, y, width, height } }` (role `plot`, `text`, `tile` or `rule`; facet panels row by row); `block`, the box the views take with their axes and headers, without title and keys. Boxes are in pixels from the drawn chart's top left, read from what it drew, so they follow filters and resizes. `undefined` on charts with a category rail and on non-Vega-Lite backends. |
@@ -795,7 +797,7 @@ const chartRef = useRef<FlintChartHandle>(null);
 | `updates` | Host updates, diffed by id. Passing even `[]` mounts the runtime on a chart with no interactions. |
 | `width`, `height`, `fit` | The box. `fit` is `scale-down` (default; never scales up), `crop` (natural size, clipped), or `relayout` (the box becomes the layout room; a resize remounts once it settles, so a selection does not survive it). |
 | `onChange`, `onInteraction` | The state after a change, and the raw gesture record. |
-| `onRender`, `onWarnings`, `onError` | Each mount's render and warnings; a failed mount, shown in the box as a muted error. |
+| `onRender`, `onWarnings`, `onError` | Each render and its warnings, after a mount or a new spec drawn in place; a failed mount, shown in the box as a muted error. |
 | `fallback` | Shown until the chart mounts. |
 | `ariaLabel`, `chartId` | `ariaLabel` applies in place; a new `chartId` remounts. |
 

@@ -26,7 +26,7 @@ import './map-semantic-zoom-stage.css';
  *
  * A click on a state flies into it: the host answers the click with a
  * `set-viewport` op that names the region and asks for a transition. Flint
- * fits the extent to the state's own shape, tweens the projection there, and
+ * fits the extent to the state's own shape, moves the projection there, and
  * flips to the county level on the last frame. The breadcrumb flies back.
  *
  * Data: Chetty & Hendren (2018), causal place effects by county — the study
@@ -99,7 +99,7 @@ export function MapSemanticZoomStage({ compact = false, dataset = MOBILITY_DATAS
       domainGuard: { minVisibleFraction: 0.04, maxVisibleFraction: 1, overscrollFraction: 0 },
       // A click on empty map flies home; the bare stage keeps the double-click.
       reset: dataset.bare ? ['double-click'] : ['click-none'],
-      resetTransition: { duration: FLY_MS },
+      transition: { duration: FLY_MS },
     }),
     CLICK_REGION,
   ], [dataset.bare]);

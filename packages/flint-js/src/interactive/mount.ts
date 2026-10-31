@@ -53,7 +53,7 @@ export function mountChartWith(
         return withCanvasSize(chartInput, availableSize);
     };
     // The spec and the code are two sources of one configuration; the spec comes first.
-    const { interactions, updates, assistedTargeting, keyboardTargeting, warnings } =
+    const { interactions, updates, assistedTargeting, keyboardTargeting, transition, warnings } =
         composeInteractiveOptions(input, options);
     const canvasInteractions = interactions.filter(isCanvasInteraction);
     const hoverTolerance = Math.max(0, ...canvasInteractions
@@ -88,11 +88,12 @@ export function mountChartWith(
                                 keyboard: keyboardTargeting ? {} : false,
                             },
                             keyboardTargeting,
+                            transition,
                             liveValues: availableSize !== undefined,
                         }).mount(chartContainer, await sized(chartInput));
                     },
                 },
-                { className, ariaLabel, chartId, updates, interactions, warnings },
+                { className, ariaLabel, chartId, updates, interactions, warnings, transition },
             );
         case 'echarts':
             return mountInteractiveChartSurface(
@@ -104,7 +105,7 @@ export function mountChartWith(
                         return createEChartsInteractiveRenderer({ renderer }).mount(chartContainer, await sized(chartInput));
                     },
                 },
-                { className, ariaLabel, chartId, updates, interactions, warnings },
+                { className, ariaLabel, chartId, updates, interactions, warnings, transition },
             );
         case 'chartjs':
             return mountInteractiveChartSurface(
@@ -116,7 +117,7 @@ export function mountChartWith(
                         return createChartjsInteractiveRenderer().mount(chartContainer, await sized(chartInput));
                     },
                 },
-                { className, ariaLabel, chartId, updates, interactions, warnings },
+                { className, ariaLabel, chartId, updates, interactions, warnings, transition },
             );
         case 'plotly':
             return mountInteractiveChartSurface(
@@ -128,7 +129,7 @@ export function mountChartWith(
                         return createPlotlyInteractiveRenderer().mount(chartContainer, await sized(chartInput));
                     },
                 },
-                { className, ariaLabel, chartId, updates, interactions, warnings },
+                { className, ariaLabel, chartId, updates, interactions, warnings, transition },
             );
     }
 }

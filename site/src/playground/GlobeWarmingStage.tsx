@@ -24,7 +24,7 @@ import './globe-warming-stage.css';
  * beside the globe.
  *
  * A click on a country, or a chip, turns the globe to face it: one `set-viewport`
- * op naming a region (or a box), with a transition. Flint tweens the rotation the
+ * op naming a region (or a box), with a transition. Flint moves the rotation the
  * short way round.
  *
  * Data: average surface temperature in 2016–2025 against 1951–1980, by country,
@@ -157,7 +157,7 @@ export function GlobeWarmingStage({ layout = 'side' }: { layout?: 'side' | 'stac
     navigate({
       domainGuard: { minVisibleFraction: 0.15, maxVisibleFraction: 1, overscrollFraction: 0 },
       reset: ['double-click'],
-      resetTransition: { duration: TURN_MS },
+      transition: { duration: TURN_MS },
     }),
     CLICK_COUNTRY,
   ], []);

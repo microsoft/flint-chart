@@ -55,6 +55,7 @@ export const ganttChartDef: ChartTemplateDef = {
         const colorField = resolvedEncodings.color?.field;
         return {
             fields: fieldsFromEncodingChannels(resolvedEncodings, ['y', 'x', 'x2', 'color', 'detail']),
+            identityFields: fieldsFromEncodingChannels(resolvedEncodings, ['y', 'color', 'detail']),
             categoryField,
             seriesField,
             legendFields: colorField ? { color: colorField } : undefined,

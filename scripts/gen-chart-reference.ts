@@ -618,7 +618,7 @@ function collectPresetOptions(): Record<string, { name: string; type: string; re
         'InspectMode[]': 'InspectMode[]',
         'InspectIndexShow': "'all' | 'single' | { series: value }",
         "NavigationAxes | 'available'": "'x' | 'y' | 'xy' | 'available'",
-        'NavigationTransition': '{ duration: ms }',
+        'ChartUpdateTransition': "{ duration: ms, easing?: 'ease-in-out' | 'linear' }",
         'RegionGuideOptions | false': '{ visible?, style?: { fill?, fillOpacity?, stroke?, strokeOpacity?, strokeWidth? } } | false',
         'InspectGuideOptions | false': '{ visible?, style?: { color?, opacity?, width?, fillOpacity?, haloColor?, haloOpacity?, haloWidth? } } | false',
         'SemanticTargetSelector': '{ select: { key } | { where } }',
@@ -644,8 +644,10 @@ function collectPresetOptions(): Record<string, { name: string; type: string; re
         .flatMap((literal) => ts.isLiteralTypeNode(literal) && ts.isStringLiteral(literal.literal) ? [literal.literal.text] : []);
     const membersOf = (node: ts.Node, omit: ReadonlySet<string>): OptionRow[] => {
         if (ts.isInterfaceDeclaration(node)) {
-            const inherited = (node.heritageClauses ?? []).flatMap((clause) =>
-                clause.types.flatMap((type) => membersOf(type, omit)));
+            // The option every preset shares lists after a preset's own.
+            const bases = (node.heritageClauses ?? []).flatMap((clause) => clause.types);
+            const shared = (type: ts.ExpressionWithTypeArguments): boolean => type.expression.getText() === 'TransitionOption';
+            const inherited = bases.filter((type) => !shared(type)).flatMap((type) => membersOf(type, omit));
             const own = node.members.filter(ts.isPropertySignature).map((member) => ({
                 name: (member.name as ts.Identifier).text,
                 type: member.type ? typeText(member.type) : 'unknown',
@@ -654,6 +656,9 @@ function collectPresetOptions(): Record<string, { name: string; type: string; re
             }));
             const byName = new Map(inherited.map((row) => [row.name, row]));
             for (const row of own) byName.set(row.name, row);
+            for (const row of bases.filter(shared).flatMap((type) => membersOf(type, omit))) {
+                if (!byName.has(row.name)) byName.set(row.name, row);
+            }
             return [...byName.values()].filter((row) => !omit.has(row.name) && row.name !== 'id');
         }
         if (ts.isTypeAliasDeclaration(node)) return membersOf(node.type, omit);

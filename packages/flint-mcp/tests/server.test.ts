@@ -228,7 +228,7 @@ describe('MCP server', () => {
     const highlight = presets.find((preset: any) => preset.type === 'click-highlight');
     expect(highlight.requires).toContain('elements');
     expect(highlight.defaultReset).toEqual(['click-none', 'escape']);
-    expect(highlight.options.map((option: any) => option.name)).toEqual(['dimOpacity', 'targets', 'reset']);
+    expect(highlight.options.map((option: any) => option.name)).toEqual(['dimOpacity', 'targets', 'reset', 'transition']);
 
     const pie: any = await client.callTool({ name: 'list_interaction_presets', arguments: { chartType: 'Pie Chart' } });
     const pieTypes = JSON.parse(pie.content[0].text).presets.map((preset: any) => preset.type);

@@ -9,6 +9,8 @@ import type { InteractionEventSource, NavigationResetGesture } from './triggers'
 export type { NavigationResetGesture } from './triggers';
 import { NAVIGATION_RESET, NO_RESET, SELECTION_RESET, normalizeResetGestures, type InteractionResetGesture } from './reset';
 import type { InteractionPresetType } from '../core/interaction-spec';
+import { validateTransition } from './transition';
+import type { ChartUpdateTransition } from './types';
 import type { AccessibleNavigationSection, InspectIndexShow, InspectMode } from './triggers';
 import type { InspectGuideOptions, RegionGuideOptions } from './guides';
 import type { InteractionAffordanceTarget, InteractionAffordances } from './affordances';
@@ -130,16 +132,16 @@ export interface CanvasInteractionDef {
     /** Retained updates from interactions in the same group replace one another. */
     readonly retainedStateGroup?: string;
     readonly navigationDomainGuard?: NavigationDomainGuard;
-    /** A viewport this interaction commits tweens into place over this duration. */
-    readonly navigationTransition?: NavigationTransition;
-    /** A reset gesture on this interaction tweens home over this duration. */
-    readonly navigationResetTransition?: NavigationTransition;
+    /** How long this interaction's committed changes animate, its resets included; absent takes the chart's. */
+    readonly transition?: ChartUpdateTransition;
     handle?(event: CanvasInteractionEvent, context: InteractionContext): ChartUpdate | null;
 }
 
 export interface ExternalInteractionDef<TPayload = unknown> {
     readonly id: string;
     readonly external: true;
+    /** How long the changes this interaction commits animate; absent takes the chart's. */
+    readonly transition?: ChartUpdateTransition;
     handle(payload: TPayload, context: InteractionContext): ChartUpdate | null;
 }
 
@@ -147,9 +149,18 @@ export type InteractionDef = CanvasInteractionDef | ExternalInteractionDef<unkno
 
 export function externalInteraction<TPayload>(definition: {
     id: string;
+    transition?: ChartUpdateTransition;
     handle(payload: TPayload, context: InteractionContext): ChartUpdate | null;
 }): ExternalInteractionDef<TPayload> {
-    return { ...definition, external: true };
+    const { transition, ...rest } = definition;
+    const validated = validateTransition(`externalInteraction "${definition.id}"`, transition);
+    return { ...rest, ...(validated ? { transition: validated } : {}), external: true };
+}
+
+/** The option every preset takes: how long the changes it commits animate. */
+export interface TransitionOption {
+    /** How this interaction's committed changes animate, its reset included: how long, and with which easing. Defaults to the chart's transition; `{ duration: 0 }` jumps. */
+    transition?: ChartUpdateTransition;
 }
 
 export function isCanvasInteraction(interaction: InteractionDef): interaction is CanvasInteractionDef {
@@ -164,7 +175,7 @@ export type GroupBy =
     | string
     | readonly string[];
 
-export interface AxisHighlightOptions {
+export interface AxisHighlightOptions extends TransitionOption {
     id?: string;
     /** Limits the preset to one axis; both discrete axes when unset. */
     axis?: 'x' | 'y';
@@ -177,7 +188,7 @@ export interface AxisHighlightOptions {
 
 export type ClickHighlightTarget = 'mark' | 'legend' | 'discreteAxis';
 
-export interface ClickHighlightOptions {
+export interface ClickHighlightOptions extends TransitionOption {
     id?: string;
     dimOpacity?: number;
     /** Semantic surfaces activated by this preset. Defaults to all three targets. */
@@ -186,7 +197,7 @@ export interface ClickHighlightOptions {
     reset?: readonly InteractionResetGesture[];
 }
 
-export interface ClickGroupFocusOptions {
+export interface ClickGroupFocusOptions extends TransitionOption {
     id?: string;
     dimOpacity?: number;
     groupBy?: GroupBy;
@@ -194,7 +205,7 @@ export interface ClickGroupFocusOptions {
     reset?: readonly InteractionResetGesture[];
 }
 
-export interface ClickAnnotateOptions {
+export interface ClickAnnotateOptions extends TransitionOption {
     id?: string;
     dimOpacity?: number;
     format?: (element: SemanticElement, context: InteractionContext) => string;
@@ -208,7 +219,7 @@ export interface LinkedBrushOptions extends SelectOptions {
     brush?: 'rectangle' | 'lasso';
 }
 
-export interface HoverGroupFocusOptions {
+export interface HoverGroupFocusOptions extends TransitionOption {
     id?: string;
     groupBy: string | readonly string[];
     /**
@@ -224,7 +235,7 @@ export interface HoverGroupFocusOptions {
     tolerance?: number;
 }
 
-export interface SelectOptions {
+export interface SelectOptions extends TransitionOption {
     id?: string;
     /** The marks the region lists: those it touches, or only those it contains. Defaults to 'intersect'. */
     match?: 'intersect' | 'contain';
@@ -244,18 +255,18 @@ export type AngularBrushOptions = SelectOptions;
 /** A lasso has no stateful mode: its freehand region ends at the commit. */
 export type LassoSelectOptions = Omit<SelectOptions, 'mode'>;
 
-export interface LegendToggleOptions {
+export interface LegendToggleOptions extends TransitionOption {
     id?: string;
     mutedOpacity?: number;
     /** Hidden series are a setting, so nothing resets them unless this list says so. */
     reset?: readonly InteractionResetGesture[];
 }
 
-export interface ContextActivateOptions {
+export interface ContextActivateOptions extends TransitionOption {
     id?: string;
 }
 
-export interface InspectOptions {
+export interface InspectOptions extends TransitionOption {
     id?: string;
     /** The axes the pointer reads, with an optional comparison per axis. Defaults to 'xy'. */
     mode?: InspectMode;
@@ -269,7 +280,7 @@ export interface InspectOptions {
     dimOpacity?: number;
 }
 
-export interface InspectIndexOptions {
+export interface InspectIndexOptions extends TransitionOption {
     id?: string;
     /** The axis an index slice is read along. Defaults to the chart's index axis: the temporal one, else the discrete one beside a measure, else x. */
     axis?: 'x' | 'y';
@@ -287,20 +298,16 @@ export interface InspectIndexOptions {
     reset?: readonly InteractionResetGesture[];
 }
 
-export interface BrushZoomOptions {
+export interface BrushZoomOptions extends TransitionOption {
     id?: string;
     /** Defaults to 'xy'. */
     axes?: 'x' | 'y' | 'xy';
     guide?: RegionGuideOptions | false;
     /** Returns the viewport to the full frame. Defaults to ['double-click', 'escape']. */
     reset?: readonly InteractionResetGesture[];
-    /** The zoom into the brushed region. Defaults to 400 ms; `{ duration: 0 }` jumps. */
-    transition?: NavigationTransition;
-    /** The flight home on reset. Defaults to 400 ms; `{ duration: 0 }` jumps. */
-    resetTransition?: NavigationTransition;
 }
 
-export interface LongPressOptions {
+export interface LongPressOptions extends TransitionOption {
     id?: string;
     /** Defaults to 500. */
     holdMs?: number;
@@ -309,19 +316,14 @@ export interface LongPressOptions {
     reset?: readonly InteractionResetGesture[];
 }
 
-export interface DoubleActivateOptions {
+export interface DoubleActivateOptions extends TransitionOption {
     id?: string;
     dimOpacity?: number;
     /** Gestures that return this interaction to its neutral state. */
     reset?: readonly InteractionResetGesture[];
 }
 
-/** How long a gesture-driven viewport change animates, in milliseconds; 0 turns the animation off. */
-export interface NavigationTransition {
-    duration: number;
-}
-
-export interface NavigateOptions {
+export interface NavigateOptions extends TransitionOption {
     id?: string;
     /** 'available' navigates every axis the chart confirms. Defaults to 'available'. */
     axes?: NavigationAxes | 'available';
@@ -334,11 +336,9 @@ export interface NavigateOptions {
     domainGuard?: Partial<NavigationDomainGuard>;
     /** Returns the viewport to the full frame. Defaults to ['double-click']. */
     reset?: readonly NavigationResetGesture[];
-    /** The flight home on reset. Defaults to 400 ms; `{ duration: 0 }` jumps. */
-    resetTransition?: NavigationTransition;
 }
 
-export interface AccessibleNavigationOptions {
+export interface AccessibleNavigationOptions extends TransitionOption {
     id?: string;
     /** Dim the marks outside the focused element, as a click highlight does. Defaults to true. */
     emphasis?: boolean;
@@ -351,15 +351,16 @@ export interface AccessibleNavigationOptions {
     maxFields?: number;
 }
 
-export interface DragReorderOptions {
+export interface DragReorderOptions extends TransitionOption {
     id?: string;
     /** The order is a setting, so nothing resets it unless this list says so. */
     reset?: readonly InteractionResetGesture[];
 }
 
-function asPreset(type: InteractionPresetType, definition: CanvasInteractionDef, options: { id?: string }): CanvasInteractionDef {
+function asPreset(type: InteractionPresetType, definition: CanvasInteractionDef, options: { id?: string } & TransitionOption): CanvasInteractionDef {
     const { id: _id, ...presetOptions } = options;
-    return { ...definition, preset: type, presetOptions };
+    const transition = validateTransition(`${type}()`, options.transition);
+    return { ...definition, preset: type, presetOptions, ...(transition ? { transition } : {}) };
 }
 
 /** Attaches the normalised reset list; presets that retain nothing never pass through here. */
