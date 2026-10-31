@@ -10,8 +10,16 @@ export const SCENE_ENTER_SIGNAL = '__flint_scene_enter';
 /** The leave stage's progress: rows gone from the chart fade out over it. */
 export const SCENE_EXIT_SIGNAL = '__flint_scene_exit';
 
+/** The generation of outline starts the current tween placed on its items; null when none. */
+export const SCENE_OUTLINE_SIGNAL = '__flint_scene_outline';
+
 /** Set on a mark's snapshot whose tween keys repeat: its items are matched by their whole row key. */
 const WHOLE_KEY_FLAG = '__flint_whole_key';
+/** On an item of an outline: what it starts from, sampled from the outline drawn before. */
+const OUTLINE_FROM = '__flint_outline_from';
+/** On an item of an outline: the generation its start belongs to. */
+const OUTLINE_GENERATION = '__flint_outline_generation';
+const outlineEntry = (name: string): string => `__outline:${name}`;
 
 const POSITION_CHANNELS: Record<string, readonly string[]> = {
     rect: ['x', 'y', 'width', 'height'],
@@ -145,6 +153,40 @@ function dataFormulas(mark: Record<string, any>, channels: readonly DataChannel[
     return formulas;
 }
 
+/** An area draws from its start and its size, so its size follows the ends the tween mixed. */
+function sizeFormulas(markType: string): Record<string, unknown>[] {
+    if (markType !== 'area') return [];
+    return [['x', 'x2', 'width'], ['y', 'y2', 'height']].map(([start, end, size]) => ({
+        type: 'formula',
+        as: size,
+        expr: `isNumber(datum.${end}) && isNumber(datum.${size}) ? datum.${end} - datum.${start} : datum.${size}`,
+    }));
+}
+
+/**
+ * An item that arrives is placed through the scale as the frame draws it, which can put it outside
+ * the plot while the axes still show the old domain. Until it starts to fade in, it waits at the
+ * plot's edge, so an item nobody sees takes no room from the title, the axes or the panels.
+ */
+function arrivalFormulas(channels: readonly DataChannel[], entering: string): Record<string, unknown>[] {
+    const formulas: Record<string, unknown>[] = [];
+    for (const [start, end, size] of [['x', 'x2', 'width'], ['y', 'y2', 'height']] as const) {
+        const scale = channels.find((entry) => entry.channel === start || entry.channel === end)?.scale;
+        if (!scale) continue;
+        const range = `range(${JSON.stringify(scale)})`;
+        const clamp = (value: string) => `clamp(${value}, min(${range}[0], ${range}[1]), max(${range}[0], ${range}[1]))`;
+        const far = `__flint_far_${start}`;
+        formulas.push(
+            { type: 'formula', as: far, expr: `isNumber(datum.${size}) ? datum.${start} + datum.${size} : isNumber(datum.${end}) ? datum.${end} : null` },
+            { type: 'formula', as: start, expr: `${entering} && isNumber(datum.${start}) ? ${clamp(`datum.${start}`)} : datum.${start}` },
+            { type: 'formula', as: far, expr: `${entering} && isNumber(datum.${far}) ? ${clamp(`datum.${far}`)} : datum.${far}` },
+            { type: 'formula', as: size, expr: `isNumber(datum.${size}) && isNumber(datum.${far}) ? datum.${far} - datum.${start} : datum.${size}` },
+            { type: 'formula', as: end, expr: `isNumber(datum.${end}) && isNumber(datum.${far}) ? datum.${far} : datum.${end}` },
+        );
+    }
+    return formulas;
+}
+
 function walkMarks(marks: readonly Record<string, any>[] | undefined, visit: (mark: Record<string, any>) => void): void {
     for (const mark of marks ?? []) {
         visit(mark);
@@ -171,19 +213,28 @@ export function injectSceneTween(vegaSpec: Record<string, any>, identityFields: 
         if (!mark.name) mark.name = `__flint_tweened_${unnamed++}`;
         const markFrom = `(${SCENE_FROM_SIGNAL} ? ${SCENE_FROM_SIGNAL}[${JSON.stringify(mark.name)}] : null)`;
         const rowKey = `(${markFrom}.${WHOLE_KEY_FLAG} ? datum.datum.${INTERACTION_KEY} : ${key})`;
-        const from = `(isValid(${markFrom}) && datum.datum ? ${markFrom}[${rowKey}] : null)`;
+        const keyed = `(isValid(${markFrom}) && datum.datum ? ${markFrom}[${rowKey}] : null)`;
+        const outline = Boolean(PATH_CHANNELS[mark.type]);
+        const from = outline
+            ? `(${SCENE_OUTLINE_SIGNAL} && datum.${OUTLINE_GENERATION} === ${SCENE_OUTLINE_SIGNAL} ? datum.${OUTLINE_FROM} : ${keyed})`
+            : keyed;
+        const positions = dataChannels(mark, continuous);
+        const entering = `(isValid(${markFrom}) && datum.datum && isString(datum.datum.${INTERACTION_KEY}) && !isValid(${from}) && ${SCENE_ENTER_SIGNAL} <= 0)`;
         mark.encode = {
             ...mark.encode,
             update: {
                 ...(mark.encode.update ?? {}),
                 __flint_scene_t: { signal: SCENE_T_SIGNAL },
                 __flint_scene_enter: { signal: SCENE_ENTER_SIGNAL },
+                ...(outline ? { __flint_scene_outline: { signal: SCENE_OUTLINE_SIGNAL } } : {}),
             },
         };
         mark.transform = [
             ...(Array.isArray(mark.transform) ? mark.transform : []),
             ...channels.map((channel) => numericFormula(from, channel)),
-            ...dataFormulas(mark, dataChannels(mark, continuous), from),
+            ...dataFormulas(mark, positions, from),
+            ...sizeFormulas(mark.type),
+            ...arrivalFormulas(positions, entering),
             ...COLOUR_CHANNELS.map((channel) => colourFormula(from, channel)),
             enterFormula(markFrom, from),
         ];
@@ -197,6 +248,7 @@ export function injectSceneTween(vegaSpec: Record<string, any>, identityFields: 
         { name: SCENE_T_SIGNAL, value: 1 },
         { name: SCENE_ENTER_SIGNAL, value: 1 },
         { name: SCENE_EXIT_SIGNAL, value: 1 },
+        { name: SCENE_OUTLINE_SIGNAL, value: null },
     ];
     injectLegendTween(vegaSpec);
     const fading = { signal: `(isNumber(datum.opacity) ? datum.opacity : 1) * (1 - ${SCENE_EXIT_SIGNAL})` };
@@ -443,19 +495,26 @@ export interface TweenedScale {
 }
 
 /**
- * Gives every continuous scale an axis reads a domain the runtime can hold: while its signal is
- * set, the scale draws that domain; unset, it falls back to what it drew before (a navigated
- * viewport, else its data). A transition moves the domain from the one drawn to the new one, so
- * axes, gridlines and marks read one scale on every frame.
+ * Gives every continuous scale an axis reads or a mark is placed by a domain the runtime can hold:
+ * while its signal is set, the scale draws that domain; unset, it falls back to what it drew before
+ * (a navigated viewport, else its data). A transition moves the domain from the one drawn to the
+ * new one, so axes, gridlines and marks read one scale on every frame.
  */
 export function injectScaleTween(vegaSpec: Record<string, any>): TweenedScale[] {
     if (!(vegaSpec.signals ?? []).some((signal: { name?: string }) => signal.name === SCENE_T_SIGNAL)) return [];
-    const axisScales = new Set<string>();
-    walkVegaScopes(vegaSpec, (scope) => { for (const axis of scope.axes ?? []) axisScales.add(axis.scale); });
+    const placing = new Set<string>();
+    walkVegaScopes(vegaSpec, (scope) => { for (const axis of scope.axes ?? []) placing.add(axis.scale); });
+    walkMarks(vegaSpec.marks, (mark) => {
+        const encode = { ...(mark.encode?.enter ?? {}), ...(mark.encode?.update ?? {}) };
+        for (const channel of ['x', 'x2', 'y', 'y2']) {
+            const scale = encode[channel]?.scale;
+            if (typeof scale === 'string') placing.add(scale);
+        }
+    });
     const tweened: TweenedScale[] = [];
     for (const scale of vegaSpec.scales ?? []) {
         const type = scale.type ?? 'linear';
-        if (!axisScales.has(scale.name) || !CONTINUOUS_SCALES.has(type)) continue;
+        if (!placing.has(scale.name) || !CONTINUOUS_SCALES.has(type)) continue;
         const signal = scaleTweenSignal(scale.name);
         vegaSpec.signals.push({ name: signal, value: null });
         const held = scale.domainRaw?.signal;
@@ -503,6 +562,12 @@ function keyedItem(item: any, identityFields: readonly string[]): KeyedItem | un
 /** The channels every keyed item draws now, as `injectSceneTween` reads them back. */
 export function captureScene(view: any, identityFields: readonly string[] = []): SceneSnapshot {
     const snapshot: SceneSnapshot = {};
+    const outlined = new Set<any>();
+    eachOutline(view, identityFields, (name, series, items) => {
+        const entries = snapshot[outlineEntry(name)] ?? (snapshot[outlineEntry(name)] = {});
+        entries[series] = items.map((item) => drawnValues(item, item.mark.marktype));
+        for (const item of items) outlined.add(item);
+    });
     const byMark = new Map<string, { marktype: string; items: KeyedItem[] }>();
     const visit = (node: any, axisScale?: string): void => {
         if (!node) return;
@@ -515,7 +580,7 @@ export function captureScene(view: any, identityFields: readonly string[] = []):
             const byValue = snapshot[axisEntry(axisScale, mark.role)] ?? (snapshot[axisEntry(axisScale, mark.role)] = {});
             byValue[String(node.datum.value)] = { x: node.x, y: node.y };
         }
-        const keyed = mark?.name && mark.marktype !== 'group' ? keyedItem(node, identityFields) : undefined;
+        const keyed = mark?.name && mark.marktype !== 'group' && !outlined.has(node) ? keyedItem(node, identityFields) : undefined;
         if (keyed) {
             const entry = byMark.get(mark.name) ?? { marktype: mark.marktype as string, items: [] as KeyedItem[] };
             entry.items.push(keyed);
@@ -529,11 +594,7 @@ export function captureScene(view: any, identityFields: readonly string[] = []):
         const { whole, byKey } = keyItems(items);
         const entries: Record<string, unknown> = whole ? { [WHOLE_KEY_FLAG]: true } : {};
         for (const [key, item] of byKey) {
-            const values: Record<string, unknown> = {};
-            for (const channel of [...channelsOf(marktype), ...COLOUR_CHANNELS]) {
-                const value = item[channel];
-                if (typeof value === 'number' || typeof value === 'string') values[channel] = value;
-            }
+            const values = drawnValues(item, marktype);
             for (const channel of ['x', 'x2', 'y', 'y2']) {
                 const value = item[`__flint_d_${channel}`];
                 if (typeof value === 'number' && Number.isFinite(value)) values[`__d_${channel}`] = value;
@@ -545,11 +606,78 @@ export function captureScene(view: any, identityFields: readonly string[] = []):
     return snapshot;
 }
 
+/** The channels an item draws that the tween mixes. */
+function drawnValues(item: any, marktype: string): Record<string, unknown> {
+    const values: Record<string, unknown> = {};
+    for (const channel of [...channelsOf(marktype), ...COLOUR_CHANNELS]) {
+        const value = item[channel];
+        if (typeof value === 'number' || typeof value === 'string') values[channel] = value;
+    }
+    return values;
+}
+
+/**
+ * Visits every path drawn through rows that do not tell its vertices apart: a violin's or a density's
+ * curve, a regression line. Its vertices all carry one key, or none, so the path is one element and
+ * its outline is its value. `series` names it by that key, or by its place among its mark's paths.
+ */
+function eachOutline(view: any, identityFields: readonly string[], visit: (name: string, series: string, items: readonly any[]) => void): void {
+    const seen = new Map<string, number>();
+    const walk = (mark: any): void => {
+        if (!mark) return;
+        if (mark.marktype === 'group') {
+            for (const item of mark.items ?? []) for (const child of item.items ?? []) walk(child);
+            return;
+        }
+        if (!PATH_CHANNELS[mark.marktype] || !mark.name || mark.role === 'scene-exit') return;
+        const items: any[] = mark.items ?? [];
+        const place = seen.get(mark.name) ?? 0;
+        seen.set(mark.name, place + 1);
+        if (items.length < 2) return;
+        const keys = new Set(items.map((item) => keyedItem(item, identityFields)?.tween));
+        if (keys.size !== 1) return;
+        const [key] = keys;
+        visit(mark.name, key ?? `#${place}`, items);
+    };
+    walk(view.scenegraph?.()?.root);
+}
+
+/**
+ * Gives each vertex of an outline drawn now the point at the same place along the outline drawn
+ * before, so the shape bends from one to the other whatever number of vertices each has. Returns
+ * whether any outline has a start.
+ */
+export function placeOutlineStarts(view: any, snapshot: SceneSnapshot, identityFields: readonly string[] = [], generation = 1): boolean {
+    let placed = false;
+    eachOutline(view, identityFields, (name, series, items) => {
+        const before = snapshot[outlineEntry(name)]?.[series] as Record<string, unknown>[] | undefined;
+        if (!before || before.length === 0) return;
+        const last = items.length - 1;
+        items.forEach((item, index) => {
+            const at = (last > 0 ? index / last : 0) * (before.length - 1);
+            const low = Math.floor(at);
+            const high = Math.min(low + 1, before.length - 1);
+            const share = at - low;
+            const values: Record<string, unknown> = {};
+            for (const [channel, a] of Object.entries(before[low]!)) {
+                const b = before[high]![channel];
+                values[channel] = typeof a === 'number' && typeof b === 'number' ? a + (b - a) * share : share < 0.5 ? a : b;
+            }
+            item[OUTLINE_FROM] = values;
+            item[OUTLINE_GENERATION] = generation;
+        });
+        placed = true;
+    });
+    return placed;
+}
+
 /** How many keyed items a snapshot holds. */
 export function sceneSize(snapshot: SceneSnapshot): number {
-    return Object.entries(snapshot).reduce((count, [name, entries]) => name.startsWith('__axis:') || name.startsWith('__legend:')
-        ? count
-        : count + Object.keys(entries).filter((key) => key !== WHOLE_KEY_FLAG).length, 0);
+    return Object.entries(snapshot).reduce((count, [name, entries]) => {
+        if (name.startsWith('__axis:') || name.startsWith('__legend:')) return count;
+        if (name.startsWith('__outline:')) return count + Object.values(entries).reduce((sum, vertices) => sum + (vertices as unknown[]).length, 0);
+        return count + Object.keys(entries).filter((key) => key !== WHOLE_KEY_FLAG).length;
+    }, 0);
 }
 
 /** Whether the view was compiled with the tween signals. */

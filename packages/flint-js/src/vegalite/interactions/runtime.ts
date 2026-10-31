@@ -53,9 +53,11 @@ import {
     captureScene,
     domainPath,
     hasSceneTween,
+    placeOutlineStarts,
     SCENE_ENTER_SIGNAL,
     SCENE_EXIT_SIGNAL,
     SCENE_FROM_SIGNAL,
+    SCENE_OUTLINE_SIGNAL,
     SCENE_T_SIGNAL,
     sceneSize,
     setSceneExits,
@@ -1577,6 +1579,7 @@ export function mountVegaInteractions(
         }
     };
     let sceneTween: Tween | undefined;
+    let outlineGeneration = 0;
     /**
      * Renders a committed change. Over a positive duration, what is drawn now moves to what the
      * change draws: the scene is captured, the change renders at progress 0, then the progress
@@ -1611,6 +1614,8 @@ export function mountVegaInteractions(
         view.signal(SCENE_ENTER_SIGNAL, 0);
         view.signal(SCENE_EXIT_SIGNAL, 0);
         await renderUpdates();
+        outlineGeneration += 1;
+        view.signal(SCENE_OUTLINE_SIGNAL, placeOutlineStarts(view, from, plan.identityFields ?? [], outlineGeneration) ? outlineGeneration : null);
         const ghostsAfter = captureGhosts(view, plan.identityFields);
         const leaving = setSceneExits(view, ghosts, ghostsAfter) > 0;
         const drawnBefore = new Set(ghosts.paths.flatMap((path) => path.keys.map((key) => `${path.name}\u0000${key}`)));
@@ -1644,6 +1649,7 @@ export function mountVegaInteractions(
             for (const { scale, path } of moving) view.signal(scale.signal, t >= 1 ? null : path(move));
             if (t >= 1) {
                 view.signal(SCENE_FROM_SIGNAL, null);
+                view.signal(SCENE_OUTLINE_SIGNAL, null);
                 setSceneExits(view, null);
             }
             await view.runAsync();
@@ -1659,6 +1665,7 @@ export function mountVegaInteractions(
                 setSceneExits(view, null);
                 for (const { scale } of moving) view.signal(scale.signal, null);
                 view.signal(SCENE_FROM_SIGNAL, null);
+                view.signal(SCENE_OUTLINE_SIGNAL, null);
                 view.signal(SCENE_T_SIGNAL, 1);
                 view.signal(SCENE_ENTER_SIGNAL, 1);
                 view.signal(SCENE_EXIT_SIGNAL, 1);

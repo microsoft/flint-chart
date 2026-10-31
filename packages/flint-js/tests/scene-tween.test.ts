@@ -4,10 +4,13 @@ import {
     captureGhosts,
     captureScene,
     domainPath,
+    injectScaleTween,
     injectSceneTween,
+    placeOutlineStarts,
     SCENE_ENTER_SIGNAL,
     SCENE_EXIT_SIGNAL,
     SCENE_FROM_SIGNAL,
+    SCENE_OUTLINE_SIGNAL,
     SCENE_T_SIGNAL,
     setSceneExits,
 } from '../src/vegalite/interactions/scene-tween';
@@ -44,6 +47,26 @@ function barSpec(order: string[]): Record<string, any> {
         }],
     };
 }
+
+function areaSpec(values: Record<string, number>[], key: string): Record<string, any> {
+    return {
+        width: 200,
+        height: 100,
+        data: [{ name: 'rows', values, transform: [{ type: 'formula', as: INTERACTION_KEY, expr: key }] }],
+        scales: [
+            { name: 'x', type: 'linear', domain: [0, 4], range: 'width' },
+            { name: 'y', type: 'linear', domain: [0, 100], range: 'height' },
+        ],
+        marks: [{
+            type: 'area',
+            name: 'band',
+            from: { data: 'rows' },
+            encode: { update: { x: { scale: 'x', field: 'i' }, y: { scale: 'y', field: 'v' }, y2: { scale: 'y', field: 'w' } } },
+        }],
+    };
+}
+
+const vertices = (view: View): any[] => (view.scenegraph() as any).root.items[0].items[0].items;
 
 const bars = (view: View): Record<string, any> => Object.fromEntries(
     (view.scenegraph() as any).root.items[0].items[0].items.map((item: any) => [item.datum.k, item]),
@@ -214,5 +237,72 @@ describe('scene tween', () => {
         view.signal(SCENE_FROM_SIGNAL, before).signal(SCENE_T_SIGNAL, 0.5);
         await view.runAsync();
         expect(bars(view).a.fill).toBe('rgb(18,43,92)');
+    });
+
+    it('keeps an area\'s size with the ends it mixes, so its edge does not jump', async () => {
+        const spec = areaSpec([{ i: 0, v: 40, w: 10 }, { i: 1, v: 60, w: 20 }], 'toString(datum.i)');
+        injectSceneTween(spec);
+        const view = new View(parse(spec), { renderer: 'none' });
+        await view.runAsync();
+        const before = captureScene(view);
+        const bottoms = vertices(view).map((item) => item.y + item.height);
+        view.data('rows', [{ i: 0, v: 80, w: 30 }, { i: 1, v: 90, w: 50 }]);
+        view.signal(SCENE_FROM_SIGNAL, before).signal(SCENE_T_SIGNAL, 0);
+        await view.runAsync();
+        expect(vertices(view).map((item) => item.y + item.height)).toEqual(bottoms);
+        expect(vertices(view).every((item) => item.height === item.y2 - item.y)).toBe(true);
+    });
+
+    it('holds an arriving item inside the plot until it starts to fade in', async () => {
+        const spec = barSpec(['a', 'b', 'c']);
+        spec.signals.push({ name: 'held', value: null });
+        spec.scales[1].domainRaw = { signal: 'held' };
+        spec.marks[0].encode.update.y = { scale: 'y', field: 'v' };
+        spec.marks[0].encode.update.y2 = { scale: 'y', value: 0 };
+        injectSceneTween(spec);
+        const view = new View(parse(spec), { renderer: 'none' });
+        await view.runAsync();
+        const before = captureScene(view);
+        delete before.bars.c;
+        view.data('rows', [{ k: 'a', v: 10 }, { k: 'b', v: 30 }, { k: 'c', v: 80 }]);
+        view.signal(SCENE_FROM_SIGNAL, before).signal(SCENE_T_SIGNAL, 0).signal(SCENE_ENTER_SIGNAL, 0).signal('held', [0, 40]);
+        await view.runAsync();
+        // Worth 80 on an axis that still ends at 40, c would stand 100 px above the plot.
+        expect(bars(view).c.y).toBe(0);
+        expect(bars(view).c.height).toBe(100);
+        view.signal(SCENE_ENTER_SIGNAL, 0.5);
+        await view.runAsync();
+        expect(bars(view).c.y).toBe(-100);
+    });
+
+    it('bends an outline whose vertices share one key from the shape drawn before', async () => {
+        const spec = areaSpec([{ i: 0, v: 10, w: 0 }, { i: 2, v: 30, w: 0 }, { i: 4, v: 10, w: 0 }], "'A'");
+        injectSceneTween(spec);
+        const view = new View(parse(spec), { renderer: 'none' });
+        await view.runAsync();
+        const before = captureScene(view);
+        const old = vertices(view).map((item) => [item.x, item.y]);
+        view.data('rows', [0, 1, 2, 3, 4].map((i) => ({ i, v: 50 + i, w: 0 })));
+        view.signal(SCENE_FROM_SIGNAL, before).signal(SCENE_T_SIGNAL, 0);
+        await view.runAsync();
+        expect(placeOutlineStarts(view, before, [], 7)).toBe(true);
+        view.signal(SCENE_OUTLINE_SIGNAL, 7);
+        await view.runAsync();
+        const start = vertices(view).map((item) => [item.x, item.y]);
+        expect(start[0]).toEqual(old[0]);
+        expect(start[2]).toEqual(old[1]);
+        expect(start[4]).toEqual(old[2]);
+        expect(start[1]).toEqual([(old[0]![0]! + old[1]![0]!) / 2, (old[0]![1]! + old[1]![1]!) / 2]);
+        view.signal(SCENE_T_SIGNAL, 1).signal(SCENE_FROM_SIGNAL, null).signal(SCENE_OUTLINE_SIGNAL, null);
+        await view.runAsync();
+        expect(vertices(view).map((item) => item.x)).toEqual([0, 50, 100, 150, 200]);
+    });
+
+    it('holds the domain of every continuous scale a mark is placed by, with or without an axis', () => {
+        const spec = areaSpec([{ i: 0, v: 40, w: 10 }, { i: 1, v: 60, w: 20 }], 'toString(datum.i)');
+        spec.scales.push({ name: 'shade', type: 'linear', domain: [0, 1], range: [0, 1] });
+        injectSceneTween(spec);
+        expect(injectScaleTween(spec).map((scale) => scale.name)).toEqual(['x', 'y']);
+        expect(spec.scales[1].domainRaw).toEqual({ signal: '__flint_domain_y' });
     });
 });
