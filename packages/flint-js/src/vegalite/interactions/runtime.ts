@@ -46,7 +46,9 @@ import { wheelZoomFactor } from '../../interactive/gestures/navigation';
 import type { CanvasInteractionEvent, DomainGeometry } from '../../interactive/language/events';
 import type { ChartAnnotation, ChartHiddenValue, ChartStateEntry, DomainValue } from '../../core/interaction-contracts';
 import type { ChartChangeReport, ChartUpdateApplyOptions, ChartUpdateTransition } from '../../interactive/types';
-import { transitionDuration } from '../../interactive/transition';
+import { runTween, transitionDuration, type Tween } from '../../interactive/transition';
+import { captureGhosts, captureScene, hasSceneTween, SCENE_FROM_SIGNAL, SCENE_T_SIGNAL, sceneSize, setSceneExits } from './scene-tween';
+
 import {
     INTERACTION_KEY,
     PATH_KEY_SUFFIX,
@@ -109,6 +111,11 @@ import {
     LEGEND_SELECTION_STORE,
     STYLE_SIGNAL,
 } from './stores';
+
+/** How long a note or overlay takes to fade in once the marks it points at have landed. */
+const REVEAL_MS = 200;
+/** Past this many drawn items a committed change jumps: capturing and mixing every item each frame would stutter. */
+const MAX_TWEENED_ITEMS = 2000;
 
 const EMPTY_SEMANTIC_SELECTION_KEY = '__flint_empty_semantic_selection';
 
@@ -363,7 +370,7 @@ export interface VegaInteractionController {
     /** Reports a change the renderer made outside the controller, such as a rail scroll. */
     reportChange(change: Omit<ChartChangeReport, 'state'>): void;
     applyUpdate(update: ChartUpdate, options?: ChartUpdateApplyOptions): Promise<ChartUpdateResult>;
-    setUpdates(updates: readonly ChartUpdate[]): Promise<readonly ChartUpdateResult[]>;
+    setUpdates(updates: readonly ChartUpdate[], options?: Pick<ChartUpdateApplyOptions, 'transition'>): Promise<readonly ChartUpdateResult[]>;
     clearUpdate(id: string): Promise<void>;
     refresh(): void;
     /** Draws the retained updates again, as after a rail scroll moves the category window. */
@@ -1439,6 +1446,89 @@ export function mountVegaInteractions(
         }
     };
 
+    const sceneTweenable = hasSceneTween(view);
+    // Notes and overlays an update adds wait for the marks they point at to land, then fade in.
+    const REVEAL_ATTRIBUTE = 'data-flint-reveal';
+    const holdWaiting = (): void => {
+        for (const element of container.querySelectorAll<HTMLElement | SVGElement>(`[${REVEAL_ATTRIBUTE}]`)) {
+            element.style.transition = 'none';
+            element.style.opacity = '0';
+        }
+    };
+    const revealWaiting = (): void => {
+        for (const element of container.querySelectorAll<HTMLElement | SVGElement>(`[${REVEAL_ATTRIBUTE}]`)) {
+            element.removeAttribute(REVEAL_ATTRIBUTE);
+            element.style.transition = `opacity ${REVEAL_MS}ms ease-out`;
+            element.style.opacity = '';
+        }
+    };
+    let sceneTween: Tween | undefined;
+    /**
+     * Renders a committed change. Over a positive duration, what is drawn now moves to what the
+     * change draws: the scene is captured, the change renders at progress 0, then the progress
+     * runs to 1. A change during a tween starts from the frame on screen. Resolves with the
+     * render; `settled` resolves when the motion ends.
+     */
+    const renderTransition = async (duration: number): Promise<{ settled: Promise<void> }> => {
+        if (!sceneTweenable || duration <= 0) {
+            await renderUpdates();
+            if (!sceneTween) revealWaiting();
+            return { settled: sceneTween?.done ?? Promise.resolve() };
+        }
+        const from = captureScene(view, plan.tweenFields);
+        if (sceneSize(from) > MAX_TWEENED_ITEMS) {
+            await renderUpdates();
+            revealWaiting();
+            return { settled: Promise.resolve() };
+        }
+        const ghosts = captureGhosts(view, plan.tweenFields);
+        const overlaysBefore = new Set([...container.querySelectorAll('[data-flint-overlay]')]
+            .map((element) => element.getAttribute('data-flint-overlay')));
+        const notesBefore = new Set(container.querySelectorAll('[data-flint-annotation]'));
+        // The tween this one interrupts must not settle the scene back to rest once it is cancelled.
+        const interrupted = sceneTween;
+        sceneTween = undefined;
+        interrupted?.cancel();
+        view.signal(SCENE_FROM_SIGNAL, from);
+        view.signal(SCENE_T_SIGNAL, 0);
+        await renderUpdates();
+        setSceneExits(view, ghosts, captureGhosts(view, plan.tweenFields));
+        await view.runAsync();
+        for (const element of container.querySelectorAll<HTMLElement | SVGElement>('[data-flint-overlay], [data-flint-annotation]')) {
+            const added = element.hasAttribute('data-flint-annotation')
+                ? !notesBefore.has(element)
+                : !overlaysBefore.has(element.getAttribute('data-flint-overlay'));
+            if (added) element.setAttribute(REVEAL_ATTRIBUTE, '');
+        }
+        holdWaiting();
+        const tween = runTween(duration, async (t) => {
+            view.signal(SCENE_T_SIGNAL, t);
+            if (t >= 1) {
+                view.signal(SCENE_FROM_SIGNAL, null);
+                setSceneExits(view, null);
+            }
+            await view.runAsync();
+            syncOverlays();
+            holdWaiting();
+        });
+        sceneTween = tween;
+        void tween.done.then(() => {
+            if (sceneTween !== tween) return;
+            sceneTween = undefined;
+            revealWaiting();
+            if (view.signal(SCENE_T_SIGNAL) !== 1) {
+                setSceneExits(view, null);
+                view.signal(SCENE_FROM_SIGNAL, null);
+                view.signal(SCENE_T_SIGNAL, 1);
+                void view.runAsync();
+            }
+        });
+        return { settled: tween.done };
+    };
+    /** The duration of a change that moves marks; a viewport alone tweens its domain instead. */
+    const sceneDuration = (update: ChartUpdate, transition: ChartUpdateTransition | undefined): number =>
+        transition && update.ops.some((op) => op.op !== 'set-viewport') ? transition.duration : 0;
+
     // A host may ask for one update's viewport to animate. Only that update's
     // op gets the tween; the render still re-applies every retained viewport.
     let pendingTransition: { id: string; duration: number } | undefined;
@@ -1471,14 +1561,18 @@ export function mountVegaInteractions(
             ? { id: update.id, duration: options.transition.duration }
             : undefined;
         const pendingTransitionUsed = pendingTransition !== undefined;
+        let rendered: { settled: Promise<void> };
         try {
-            await renderUpdates();
+            rendered = await renderTransition(destination === retainedUpdates ? sceneDuration(update, options?.transition) : 0);
         } finally {
             pendingTransition = undefined;
         }
         // A host's update settles with its last frame, so it can chain on it;
         // a gesture's tween runs on, so the next gesture is not held behind it.
-        if (pendingTransitionUsed && waitForTransition) await navigationController.settled?.();
+        if (waitForTransition) {
+            if (pendingTransitionUsed) await navigationController.settled?.();
+            await rendered.settled;
+        }
         return resolved.result;
     };
 
@@ -2383,7 +2477,8 @@ export function mountVegaInteractions(
             return;
         }
         selectedLegend = null;
-        void renderUpdates().then(() => notifyChange({ phase: 'commit', source: 'reader', reset: gesture }));
+        const duration = commitTransition(interactionsToReset(canvasInteractions, gesture)[0]?.transition)?.duration ?? 0;
+        void renderTransition(duration).then(() => notifyChange({ phase: 'commit', source: 'reader', reset: gesture }));
     };
     onLayoutChange = () => {
         if (!regionInteraction || !retainedUpdates.has(regionInteraction.id)) return;
@@ -3226,11 +3321,13 @@ export function mountVegaInteractions(
     const clearUpdate = async (id: string): Promise<void> => {
         if (id === regionInteraction?.id) regionGesture?.reset();
         if (!retainedUpdates.delete(id)) return;
-        await renderUpdates();
+        const { settled } = await renderTransition(commitTransition()?.duration ?? 0);
+        await settled;
         notifyChange({ phase: 'commit', source: 'host' });
     };
     const replaceUpdates = async (
         nextUpdates: readonly ChartUpdate[],
+        options?: Pick<ChartUpdateApplyOptions, 'transition'>,
     ): Promise<readonly ChartUpdateResult[]> => {
         retainedUpdates.clear();
         const results: ChartUpdateResult[] = [];
@@ -3239,7 +3336,8 @@ export function mountVegaInteractions(
             retainedUpdates.set(update.id, presentUpdate(resolved.update, context()));
             results.push(resolved.result);
         }
-        await renderUpdates();
+        const { settled } = await renderTransition(commitTransition(options?.transition)?.duration ?? 0);
+        await settled;
         notifyChange({ phase: 'commit', source: 'host' });
         return results;
     };

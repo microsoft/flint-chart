@@ -57,6 +57,8 @@ export interface VegaAxisTarget {
 
 export interface VegaInteractionPlan {
     fields: readonly string[];
+    /** The key fields that name a row across data changes: those no mark draws as a measure. Empty names rows by their whole key. */
+    tweenFields?: readonly string[];
     sourceRecords: readonly Record<string, unknown>[];
     provenanceFields: readonly string[];
     temporalProvenanceFields: readonly string[];

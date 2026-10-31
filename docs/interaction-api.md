@@ -225,7 +225,7 @@ container.addEventListener('flint-interaction', (event) => {
 
 `set-style` controls emphasis or visibility, `set-annotation` adds or clears a label, and `set-viewport` changes the visible domains. Other operators reorder categories, add overlays, or replace data. A single handler can return multiple operators in one update.
 
-The container emits `flint-interaction` events with the interaction id and semantic target. Your application can listen to those events to filter a table or update other widgets; Flint renders only the canvas updates. Applications can also submit operators directly through `surface.applyUpdate()` or `surface.setUpdates()`. See [Components](interaction-components.md) for the event envelope, action families, listener examples, and chart update API.
+The container emits `flint-interaction` events with the interaction id and semantic target. Your application can listen to those events to filter a table or update other widgets; Flint renders only the canvas updates. Applications can also submit operators directly through `surface.applyUpdate()` or `surface.setUpdates()`. A committed update eases from what the chart draws (400 ms unless `transition` says otherwise); a host that streams a drag or a scrub passes `{ phase: 'preview' }` on each step and commits where it lets go. See [Interaction Design](design-interactions.md#25-motion). See [Components](interaction-components.md) for the event envelope, action families, listener examples, and chart update API.
 
 ## Read the chart
 

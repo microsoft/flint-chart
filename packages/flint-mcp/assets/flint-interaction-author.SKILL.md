@@ -332,7 +332,7 @@ source by `npm run gen:reference`:
 interface ChartChange {
   // `preview` while a gesture runs, `commit` for a committed change, `cancel` when a gesture ends with none.
   phase: ChartChangePhase;
-  // `host` for `updates`, `applyUpdate`, `clearUpdate` and `dispatch`; always `commit`.
+  // `host` for `updates`, `applyUpdate`, `clearUpdate` and `dispatch`.
   source: ChartChangeSource;
   changed: ChartStateFacet[];
   // The interaction behind the change: a reader's gesture, or an external interaction run by `dispatch`.
@@ -730,10 +730,10 @@ surface.destroy();
 | Member | What it does |
 | --- | --- |
 | `ready`, `warnings` | Promises: the first render; the dropped or yielded interactions. Every call below waits for `ready` itself. |
-| `applyUpdate(update, options?)` | Retains one update by id; replaces the layer with the same id. `options.transition.duration` animates a viewport. |
+| `applyUpdate(update, options?)` | Retains one update by id; replaces the layer with the same id, easing from what is drawn (400 ms by default). `options.transition` sets the duration, `{ duration: 0 }` jumps. `options.phase: 'preview'` shows a streamed change at once (a drag, a scrub), `commit` keeps and animates it, `cancel` drops the preview. |
 | `setUpdates(updates)` | Replaces every retained update. |
 | `clearUpdate(id)` | Removes one layer. |
-| `dispatch(id, payload)` | Runs an `externalInteraction` handler and applies what it returns. |
+| `dispatch(id, payload, options?)` | Runs an `externalInteraction` handler and applies what it returns; `options.phase` as for `applyUpdate`. |
 | `getState()` | What the chart shows now; `undefined` before `ready`. |
 | `onChange(callback)` | Every change to that state, after the render; returns the unsubscribe. |
 | `layout` | Once ready: `plot`, the plot box `{ width, height }` on a chart that draws one plot; `views`, each drawn view as `{ role, box: { x, y, width, height } }` (role `plot`, `text`, `tile` or `rule`; facet panels row by row); `block`, the box the views take with their axes and headers, without title and keys. Boxes are in pixels from the drawn chart's top left, read from what it drew, so they follow filters and resizes. `undefined` on charts with a category rail and on non-Vega-Lite backends. |

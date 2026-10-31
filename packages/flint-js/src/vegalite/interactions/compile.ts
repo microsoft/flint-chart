@@ -19,6 +19,7 @@ import type {
     SelectionStyle,
     VegaInteractionPlan,
 } from './contracts';
+import { injectSceneTween } from './scene-tween';
 import {
     INTERACTION_KEY,
     INTERACTION_LEGEND_CHANNEL,
@@ -427,6 +428,22 @@ function pinLegendDomains(
     }
 }
 
+/** The fields any mark of the spec draws as a quantity. */
+function measureFields(spec: Record<string, any>, found = new Set<string>()): Set<string> {
+    for (const definition of Object.values(spec.encoding ?? {})) {
+        for (const entry of Array.isArray(definition) ? definition : [definition]) {
+            if (entry && typeof entry === 'object' && typeof entry.field === 'string' && entry.type === 'quantitative') {
+                found.add(entry.field);
+            }
+        }
+    }
+    for (const property of ['layer', 'hconcat', 'vconcat', 'concat'] as const) {
+        if (Array.isArray(spec[property])) for (const child of spec[property]) measureFields(child, found);
+    }
+    if (spec.spec && typeof spec.spec === 'object') measureFields(spec.spec, found);
+    return found;
+}
+
 function keyTransforms(fields: readonly string[]): Record<string, any>[] {
     return [
         { calculate: keyExpression(fields), as: INTERACTION_KEY },
@@ -575,8 +592,10 @@ export function addVegaLiteInteractions(
             ...keyTransforms(fields),
         ];
     }
+    const measures = measureFields(spec);
     return {
         fields,
+        tweenFields: fields.filter((field) => !measures.has(field)),
         sourceRecords,
         rowIndexed,
         provenanceFields: templateSemantics.provenanceFields ?? fields,
@@ -999,7 +1018,7 @@ function applyCompiledStyleChannels(marks: Record<string, any>[]): void {
 
 export function injectVegaInteractionStore(
     vegaSpec: Record<string, any>,
-    plan?: Pick<VegaInteractionPlan, 'dimOpacity' | 'renderHoverStyles' | 'selectionBoundary'>,
+    plan?: Pick<VegaInteractionPlan, 'dimOpacity' | 'renderHoverStyles' | 'selectionBoundary' | 'tweenFields'>,
 ): void {
     // Stores go first: transforms are parsed in data order, so a filter that reads a store
     // cannot resolve one declared after it.
@@ -1120,6 +1139,7 @@ export function injectVegaInteractionStore(
     if (!Array.isArray(vegaSpec.marks)) return;
     if (plan?.renderHoverStyles) applyCompiledHoverStyles(vegaSpec.marks, plan.renderHoverStyles, vegaSpec.config);
     applyCompiledStyleChannels(vegaSpec.marks);
+    injectSceneTween(vegaSpec, plan?.tweenFields ?? []);
     vegaSpec.marks.unshift({
         type: 'rect',
         name: CLEAR_MARK,

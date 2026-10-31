@@ -302,7 +302,7 @@ export function mountInteractiveChartSurface(
         const initialUpdates = options.updates ?? [];
         if (initialUpdates.length > 0) {
             if (!mounted.setUpdates) throw new Error('This interactive backend does not support chart updates.');
-            const results = await mounted.setUpdates(initialUpdates);
+            const results = await mounted.setUpdates(initialUpdates, { transition: { duration: 0 } });
             results.forEach((result, index) => {
                 if (result.status === 'applied') return;
                 const parts = [

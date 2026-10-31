@@ -124,6 +124,32 @@ hit and geometry, and the state after the change. The DOM event is the raw gestu
 before the chart reacts; `onChange` is what the chart shows, fired after. The rows stay with the
 host: it queries its own data from the values and the geometry, and the chart hands over no copy.
 
+## §2.5 Motion
+
+A committed update eases from what the chart draws to what the update says; a preview shows at
+once. The phase decides, not the source: a click, a legend toggle, a brush release, a reset, and a
+host's `applyUpdate`, `setUpdates`, `clearUpdate`, or `dispatch` commit and move, while a hover, a
+pan, a wheel zoom, a brush in progress, and a host call with `phase: 'preview'` follow the hand.
+A host that streams a drag sends previews and commits where it lets go; `phase: 'cancel'` drops
+the preview with that id.
+
+The duration is the first one named: the call's `transition`, the interaction's (every preset
+takes `transition`), the chart's (`interaction_spec.transition` or `mountChart({ transition })`),
+else 400 ms. `{ duration: 0 }` jumps, and `prefers-reduced-motion` turns every duration off.
+Motion is interaction state, not style: `theme_spec` does not carry it, the assemblers never read
+it, and a static render has none.
+
+One mechanism moves every op. Before a committed render the runtime captures what each mark draws,
+per mark and per row; the render then draws the new state, and post-encoding formulas mix each
+item from its captured channels as one progress signal runs from 0 to 1. Items are matched by the
+key fields that no mark draws as a measure, so a bar keeps its identity when its value changes.
+So emphasis fades, a new order glides (the axis labels with it), new rows move or fade in, rows
+that leave fade out where they stood, and a stack re-forms as shapes rather than as averaged rows.
+No data transform re-runs per frame, and SVG and canvas move alike. `set-viewport` keeps its own
+domain tween. A note or an overlay an update adds waits for the marks to land, then fades in.
+`getState()` reports where an update goes, never a frame, and a host's call resolves when the
+motion ends.
+
 # §3 The specification
 
 ```json

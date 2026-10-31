@@ -118,7 +118,7 @@ export interface InteractiveRenderer {
     /** Re-project overlays after the host rescales the chart in a way CSS cannot report. */
     refresh?(): void;
     applyUpdate?(update: ChartUpdate, options?: ChartUpdateApplyOptions): Promise<ChartUpdateResult>;
-    setUpdates?(updates: readonly ChartUpdate[]): Promise<readonly ChartUpdateResult[]>;
+    setUpdates?(updates: readonly ChartUpdate[], options?: Pick<ChartUpdateApplyOptions, 'transition'>): Promise<readonly ChartUpdateResult[]>;
     clearUpdate?(id: string): Promise<void>;
     destroy(): void;
 }

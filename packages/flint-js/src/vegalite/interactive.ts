@@ -33,6 +33,7 @@ import {
     type LiveLayoutPlanner,
 } from './interactions/live-layout';
 import { mountVegaInteractions } from './interactions/runtime';
+import { injectAxisTween } from './interactions/scene-tween';
 import { advanceLiveValues, bindLiveValues, LIVE_VALUES_SIGNAL, liveValuesChange } from './live-values';
 import { readDrawnLayout } from './drawn-layout';
 import { vegaRendererOrigin } from './interactions/hit-adapter';
@@ -391,6 +392,7 @@ export function createVegaInteractiveRenderer(
                         .map((axis) => injectVegaReorderSignal(vegaSpec, axis))
                         .filter((axis): axis is NonNullable<typeof axis> => !!axis);
                     interactionPlan.reorderAxis = interactionPlan.reorderAxes[0];
+                    injectAxisTween(vegaSpec, interactionPlan.reorderAxes.map((axis) => axis.scale));
                 }
                 return { interactionPlan, vegaSpec, relaidSignals, livePlanner };
             };
@@ -593,8 +595,8 @@ export function createVegaInteractiveRenderer(
                         unsupportedOps: [...new Set(update.ops.map((op) => op.op))],
                     };
                 },
-                async setUpdates(updates) {
-                    if (interactionController) return interactionController.setUpdates(updates);
+                async setUpdates(updates, options) {
+                    if (interactionController) return interactionController.setUpdates(updates, options);
                     return updates.map((update) => ({
                         status: 'unsupported' as const,
                         resolvedTargets: 0,
