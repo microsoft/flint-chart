@@ -618,7 +618,7 @@ function collectPresetOptions(): Record<string, { name: string; type: string; re
         'InspectMode[]': 'InspectMode[]',
         'InspectIndexShow': "'all' | 'single' | { series: value }",
         "NavigationAxes | 'available'": "'x' | 'y' | 'xy' | 'available'",
-        'NavigationTransition': '{ duration: ms }',
+        'ChartUpdateTransition': '{ duration: ms }',
         'RegionGuideOptions | false': '{ visible?, style?: { fill?, fillOpacity?, stroke?, strokeOpacity?, strokeWidth? } } | false',
         'InspectGuideOptions | false': '{ visible?, style?: { color?, opacity?, width?, fillOpacity?, haloColor?, haloOpacity?, haloWidth? } } | false',
         'SemanticTargetSelector': '{ select: { key } | { where } }',

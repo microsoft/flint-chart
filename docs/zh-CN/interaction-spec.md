@@ -55,8 +55,8 @@
 | `brush-x`、`brush-y` | 沿一条轴拖出区间；在极坐标图上，x 刷选是一个角度扇区。 | 元素、直角坐标区域 | click-none, escape |
 | `brush-angle` | 在饼图、环图、玫瑰图或雷达图上拖出角度扇区。 | 元素、角度区域 | click-none, escape |
 | `linked-brush` | 刷选标记，在其他视图中高亮相同的组（必须提供 `groupBy`）。 | 元素、直角坐标区域 | click-none, escape |
-| `brush-zoom` | 拖出矩形并放大到该范围（`axes`、`transition`、`resetTransition`）。 | 导航 | double-click, escape |
-| `navigate` | 拖动平移、滚轮或双指缩放连续坐标轴（`axes`、`pan`、`domainGuard`、`resetTransition`）。 | 导航 | double-click |
+| `brush-zoom` | 拖出矩形并放大到该范围（`axes`）。 | 导航 | double-click, escape |
+| `navigate` | 拖动平移、滚轮或双指缩放连续坐标轴（`axes`、`pan`、`domainGuard`）。 | 导航 | double-click |
 | `legend-toggle` | 点击图例项以隐藏或恢复其系列。 | 离散图例 | 无 |
 | `axis-highlight` | 点击离散坐标轴标签以强调该类别。 | 离散坐标轴 | click-none, escape |
 | `drag-reorder` | 拖动离散坐标轴标签以改变类别顺序。 | 可重排坐标轴 | 无 |
@@ -64,7 +64,7 @@
 
 选项名与 `flint-chart/interactive` 中对应工厂函数接受的选项一致；TypeScript 调用方可用该入口的 `InteractionPresetSpec` 获得逐类型的精确形状。
 
-手势提交的视口变化与重置默认以 400 ms 动画完成。`brush-zoom` 的 `"transition": { "duration": 0 }`，或任一预设的 `"resetTransition": { "duration": 0 }`，则直接跳转。平移与滚轮缩放跟随指针，从不做动画。
+手势提交的视口变化与重置默认以 400 ms 动画完成。每个预设都接受 `"transition": { "duration": ms }`，作用于它提交的变化（包括重置）；`interaction_spec.transition` 设定整张图表的默认值；`{ "duration": 0 }` 则直接跳转。平移与滚轮缩放跟随指针，从不做动画。
 
 ## 重置手势
 

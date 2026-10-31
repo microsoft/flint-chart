@@ -9,7 +9,8 @@ import { getVisCategory, inferVisCategory } from '../core/semantic-types';
 import { normalizeAnnotation, resolveFormat } from '../core/field-semantics';
 import { resolveTemporalFormat } from '../core/resolve-semantics';
 import { timeFormat, utcFormat } from 'd3-time-format';
-import type { ExternalInteractionDef, InteractionDef } from './interactions';
+import type { ExternalInteractionDef, InteractionDef, TransitionOption } from './interactions';
+import { validateTransition } from './transition';
 import { normalizedOpacity } from './presets/utils';
 import { conditionNumber } from '../core/target-selector';
 
@@ -38,7 +39,7 @@ export interface FilterFieldOptions {
     all?: boolean;
 }
 
-export interface FilterControlsOptions {
+export interface FilterControlsOptions extends TransitionOption {
     id?: string;
     /**
      * The fields that get a control. Listed fields always get one. When absent, the
@@ -222,9 +223,11 @@ export function filterControls(options: FilterControlsOptions = {}): FilterContr
         const shown = passing.length > 0 ? passing : lastShown ?? rows;
         return { id, ops: [{ op: 'set-data', source: 'main', value: { rows: shown } }] };
     };
+    const transition = validateTransition(`filterControls "${id}"`, options.transition);
     return {
         id,
         external: true,
+        ...(transition ? { transition } : {}),
         preset: 'filter-controls',
         filterControls: runtime,
         handle(payload, context) {

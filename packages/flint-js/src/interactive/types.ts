@@ -23,7 +23,7 @@ export interface ViewportGeometry {
 
 export type ChartUpdateComposition = 'auto';
 
-/** Animates a viewport change over `duration` milliseconds; projected charts honour it. */
+/** How long a committed change animates, in milliseconds; 0 jumps. */
 export interface ChartUpdateTransition {
     duration: number;
 }
@@ -35,6 +35,12 @@ export interface ChartUpdateApplyOptions {
     interactionId?: string;
     /** Who asked for the update, reported as the change's `source`. Defaults to `host`. */
     source?: ChartChangeSource;
+    /**
+     * Where the update stands, as a reader's gesture does. `preview` shows it at once and
+     * replaces the last preview with its id; `commit` keeps it and animates; `cancel` drops the
+     * preview with its id. Defaults to `commit`.
+     */
+    phase?: ChartChangePhase;
 }
 
 export type ChartChangePhase = 'preview' | 'commit' | 'cancel';
@@ -49,7 +55,7 @@ export type ChartStateFacet = 'selected' | 'hidden' | 'viewport' | 'windows' | '
 export interface ChartChange {
     /** `preview` while a gesture runs, `commit` for a committed change, `cancel` when a gesture ends with none. */
     phase: ChartChangePhase;
-    /** `host` for `updates`, `applyUpdate`, `clearUpdate` and `dispatch`; always `commit`. */
+    /** `host` for `updates`, `applyUpdate`, `clearUpdate` and `dispatch`. */
     source: ChartChangeSource;
     changed: readonly ChartStateFacet[];
     /** The interaction behind the change: a reader's gesture, or an external interaction run by `dispatch`. */
@@ -132,6 +138,8 @@ export interface InteractiveChartSurfaceOptions {
     keyboardTargeting?: boolean;
     /** Warnings known before the mount; the surface reports them with the mount's own. */
     warnings?: readonly ChartWarning[];
+    /** How long every committed change animates unless an interaction or a call names its own. Defaults to 400 ms. */
+    transition?: ChartUpdateTransition;
 }
 
 export type InteractiveBackend = 'vegalite' | 'echarts' | 'chartjs' | 'plotly';
@@ -195,7 +203,12 @@ export interface InteractiveChartSurface {
     readonly layout: ChartLayout | undefined;
     getViewportState(): ViewportState;
     setViewport(channel: ViewportChannel, start: number): void;
-    dispatch(interactionId: string, payload: unknown): Promise<ChartUpdateResult | null>;
+    /** Runs an external interaction; `options.phase` marks a change still in progress, as `applyUpdate` does. */
+    dispatch(
+        interactionId: string,
+        payload: unknown,
+        options?: Pick<ChartUpdateApplyOptions, 'phase'>,
+    ): Promise<ChartUpdateResult | null>;
     applyUpdate(update: ChartUpdate, options?: ChartUpdateApplyOptions): Promise<ChartUpdateResult>;
     setUpdates(updates: readonly ChartUpdate[]): Promise<readonly ChartUpdateResult[]>;
     clearUpdate(id: string): Promise<void>;

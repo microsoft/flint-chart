@@ -202,4 +202,6 @@ export interface InteractionSpec {
     /** Presets assist by default; false requires direct hits, maxDistance overrides eligible presets. */
     assistedTargeting?: boolean | AssistedTargetingOptions;
     keyboardTargeting?: boolean;
+    /** How long every committed change animates unless an interaction names its own. Defaults to 400 ms; `{ duration: 0 }` jumps. */
+    transition?: { duration: number };
 }

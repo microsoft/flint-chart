@@ -29,6 +29,7 @@ import {
     type ChartChange,
     type ChartUpdate,
     type ChartUpdateApplyOptions,
+    type ChartUpdateTransition,
     type ChartUpdateResult,
     type ChartState,
     type ExternalInteractionDef,
@@ -112,6 +113,8 @@ export interface FlintChartProps {
     expressionInterpreter?: unknown;
     /** Changing it re-renders the chart. */
     background?: string;
+    /** How long every committed change animates unless an interaction or a call names its own. Defaults to 400 ms; read at mount. */
+    transition?: ChartUpdateTransition;
     /** The box the chart sits in, in pixels or a CSS length. Omitted: the chart's natural size. */
     width?: number | string;
     height?: number | string;
@@ -148,7 +151,7 @@ export interface FlintChartHandle {
     readonly surface: InteractiveChartSurface | null;
     applyUpdate(update: ChartUpdate, options?: ChartUpdateApplyOptions): Promise<ChartUpdateResult | null>;
     clearUpdate(id: string): Promise<void>;
-    dispatch(interactionId: string, payload: unknown): Promise<ChartUpdateResult | null>;
+    dispatch(interactionId: string, payload: unknown, options?: Pick<ChartUpdateApplyOptions, 'phase'>): Promise<ChartUpdateResult | null>;
     getState(): ChartState | undefined;
     refresh(): void;
 }
@@ -385,6 +388,7 @@ export function createFlintChart(loaders: InteractiveRendererLoaders) {
                     renderers: propsRef.current.renderers,
                     expressionInterpreter: propsRef.current.expressionInterpreter,
                     ariaLabel: propsRef.current.ariaLabel,
+                    transition: propsRef.current.transition,
                     interactions: definitions,
                     updates: initialUpdates,
                     semanticUpdates: updatable,
@@ -553,7 +557,7 @@ export function createFlintChart(loaders: InteractiveRendererLoaders) {
             clearUpdate: async (id) => {
                 await surfaceRef.current?.clearUpdate(id);
             },
-            dispatch: async (interactionId, payload) => surfaceRef.current?.dispatch(interactionId, payload) ?? null,
+            dispatch: async (interactionId, payload, options) => surfaceRef.current?.dispatch(interactionId, payload, options) ?? null,
             getState: () => surfaceRef.current?.getState(),
             refresh: () => surfaceRef.current?.refresh(),
         }), []);

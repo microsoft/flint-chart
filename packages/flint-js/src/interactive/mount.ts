@@ -53,7 +53,7 @@ export function mountChartWith(
         return withCanvasSize(chartInput, availableSize);
     };
     // The spec and the code are two sources of one configuration; the spec comes first.
-    const { interactions, updates, assistedTargeting, keyboardTargeting, warnings } =
+    const { interactions, updates, assistedTargeting, keyboardTargeting, transition, warnings } =
         composeInteractiveOptions(input, options);
     const canvasInteractions = interactions.filter(isCanvasInteraction);
     const hoverTolerance = Math.max(0, ...canvasInteractions
@@ -88,6 +88,7 @@ export function mountChartWith(
                                 keyboard: keyboardTargeting ? {} : false,
                             },
                             keyboardTargeting,
+                            transition,
                             liveValues: availableSize !== undefined,
                         }).mount(chartContainer, await sized(chartInput));
                     },

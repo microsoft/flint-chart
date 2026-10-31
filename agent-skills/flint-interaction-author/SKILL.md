@@ -134,9 +134,10 @@ a shape; `navigate` moves continuously, `brush-zoom` jumps into a box;
 
 "Needs" is what the chart type offers; `list_chart_types` has already applied
 it to the list it returns. The data confirms a few at mount, in Step 3. A
-viewport a gesture commits, and a reset, fly over 400 ms;
-`"transition": { "duration": 0 }` or `"resetTransition": { "duration": 0 }`
-jumps. Panning and wheel zooming follow the pointer.
+viewport a gesture commits, and a reset, fly over 400 ms. Every preset takes
+`"transition": { "duration": ms }`, and `interaction_spec.transition` sets the
+chart's default; `{ "duration": 0 }` jumps. Panning and wheel zooming follow
+the pointer.
 
 **`filter-controls`.** It draws real controls beside the chart and changes the
 rows the chart shows, so it answers a request that names a field to filter by

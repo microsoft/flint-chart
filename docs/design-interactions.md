@@ -319,8 +319,8 @@ runs the gestures. A gesture resets only the interactions whose list holds it, e
 id: retained updates are cleared, a stateful brush clears through its controller, `navigate`
 and `brush-zoom` fly home through the navigation controller, and a preset with closure state
 drops it through `onReset()`. The flight home, like the zoom a brush commits, animates over
-400 ms by default; `resetTransition: { duration: 0 }` jumps. Panning and wheel zooming follow
-the pointer and never animate.
+the interaction's `transition`, 400 ms by default; `transition: { duration: 0 }` jumps.
+Panning and wheel zooming follow the pointer and never animate.
 
 A chart with an `escape` reset becomes focusable and takes focus on a pointer press, so Escape
 reaches the chart the reader touched last and no other. Host updates applied through the surface

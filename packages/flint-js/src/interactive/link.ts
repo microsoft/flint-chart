@@ -301,17 +301,20 @@ export function linkCharts(charts: Record<string, LinkedChart>, spec: LinkSpec, 
     let state: LinkState | null = null;
     let destroyed = false;
 
-    const show = () => {
+    /** Shows the link's state on every chart; a hover follows the pointer, so what it shows jumps. */
+    const show = (followsPointer = false) => {
         if (!state || destroyed) return;
         const snapshot = state.snapshot();
         const updates = conditionUpdates(state.links, snapshot.shown);
+        const jump = followsPointer ? { transition: { duration: 0 } } : undefined;
         for (const [id, chart] of Object.entries(charts)) {
             const layer = updates.get(id);
             if (layer) {
                 layered.add(id);
-                void chart.surface.applyUpdate(layer);
+                void chart.surface.applyUpdate(layer, jump);
             } else if (layered.delete(id)) {
-                void chart.surface.clearUpdate(LINK_LAYER);
+                if (jump) void chart.surface.applyUpdate({ id: LINK_LAYER, ops: [] }, jump);
+                else void chart.surface.clearUpdate(LINK_LAYER);
             }
         }
         for (const listener of listeners) listener(snapshot);
@@ -321,7 +324,7 @@ export function linkCharts(charts: Record<string, LinkedChart>, spec: LinkSpec, 
         if (!state) return;
         const { changed, dropOwn } = state.read(id, change);
         if (dropOwn) void chart.surface.clearUpdate(dropOwn);
-        if (changed) show();
+        if (changed) show(change.phase === 'preview');
     }));
 
     const ready = links.then((resolved) => {

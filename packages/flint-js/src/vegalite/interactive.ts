@@ -6,7 +6,7 @@ import { createChangeFilter } from '../interactive/chart-state';
 import { currentFilters, isFilterControls } from '../interactive/filter-controls';
 import { createFloatingPanel } from '../interactive/floating-panel';
 import { isCanvasInteraction, type ChartState, type InteractionContext, type InteractionDef } from '../interactive/interactions';
-import type { InteractiveRendererAdapter, TargetFeedbackOptions, ViewportState } from '../interactive/types';
+import type { ChartUpdateTransition, InteractiveRendererAdapter, TargetFeedbackOptions, ViewportState } from '../interactive/types';
 import { openVegaLiteSession, type Replanned } from './assemble';
 import { canvasFurnitureMarkup, readCanvasFurniture, readCanvasPatterns, type CanvasPattern } from './canvas-furniture';
 import { enableGuideLabelTooltips, planTemporalTickValues } from './instantiate-spec';
@@ -103,6 +103,8 @@ export interface VegaInteractiveRendererOptions {
     hoverTolerance?: number;
     keyboardTargeting?: boolean;
     targetFeedback?: { assisted: TargetFeedbackOptions | false; keyboard: TargetFeedbackOptions | false };
+    /** How long committed changes animate unless an interaction or a call names its own. */
+    transition?: ChartUpdateTransition;
     /** Bind the chart's layout values to a signal, so `relayout` can lay it out again in place. */
     liveValues?: boolean;
 }
@@ -495,6 +497,7 @@ export function createVegaInteractiveRenderer(
                     options.hoverTolerance ?? 0,
                     options.keyboardTargeting ?? false,
                     options.targetFeedback,
+                    options.transition,
                 )
                 : undefined;
 

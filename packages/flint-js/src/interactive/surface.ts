@@ -364,7 +364,11 @@ export function mountInteractiveChartSurface(
         const update = definition.handle(payload, renderer.getInteractionContext());
         if (!update) return null;
         if (!renderer.applyUpdate) return unsupportedUpdate(update);
-        const result = await renderer.applyUpdate(update, { interactionId: definition.id, source });
+        const result = await renderer.applyUpdate(update, {
+            interactionId: definition.id,
+            source,
+            ...(definition.transition ? { transition: definition.transition } : {}),
+        });
         syncRails();
         return result;
     };
@@ -441,7 +445,7 @@ export function mountInteractiveChartSurface(
         },
         getViewportState: () => ({ ...state }),
         setViewport,
-        dispatch: async (interactionId, payload) => {
+        dispatch: async (interactionId, payload, dispatchOptions) => {
             await ready;
             if (destroyed) return null;
             const interaction = externalInteractions.get(interactionId);
@@ -460,7 +464,11 @@ export function mountInteractiveChartSurface(
             const update = interaction.handle(payload, renderer.getInteractionContext());
             if (!update) return null;
             if (!renderer.applyUpdate) return unsupportedUpdate(update);
-            return renderer.applyUpdate(update, { interactionId });
+            return renderer.applyUpdate(update, {
+                interactionId,
+                ...(dispatchOptions?.phase ? { phase: dispatchOptions.phase } : {}),
+                ...(interaction.transition ? { transition: interaction.transition } : {}),
+            });
         },
         applyUpdate: async (update, applyOptions) => {
             await ready;

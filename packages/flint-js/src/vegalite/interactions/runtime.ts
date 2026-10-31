@@ -45,7 +45,8 @@ import { normalizeInspectGuideOptions } from '../../interactive/guides';
 import { wheelZoomFactor } from '../../interactive/gestures/navigation';
 import type { CanvasInteractionEvent, DomainGeometry } from '../../interactive/language/events';
 import type { ChartAnnotation, ChartHiddenValue, ChartStateEntry, DomainValue } from '../../core/interaction-contracts';
-import type { ChartChangeReport, ChartUpdateApplyOptions } from '../../interactive/types';
+import type { ChartChangeReport, ChartUpdateApplyOptions, ChartUpdateTransition } from '../../interactive/types';
+import { transitionDuration } from '../../interactive/transition';
 import {
     INTERACTION_KEY,
     PATH_KEY_SUFFIX,
@@ -610,8 +611,14 @@ export function mountVegaInteractions(
         assisted: import('../../interactive/types').TargetFeedbackOptions | false;
         keyboard: import('../../interactive/types').TargetFeedbackOptions | false;
     } | undefined = undefined,
+    defaultTransition: ChartUpdateTransition | undefined = undefined,
 ): VegaInteractionController {
     const canvasInteractions = interactions.filter(isCanvasInteraction);
+    /** The transition a committed change runs with, or undefined when it jumps. */
+    const commitTransition = (...sources: (ChartUpdateTransition | undefined)[]): ChartUpdateTransition | undefined => {
+        const duration = transitionDuration(...sources, defaultTransition);
+        return duration > 0 ? { duration } : undefined;
+    };
     const clickInteractions = resolve
         ? canvasInteractions.filter((interaction) => interaction.eventSource.gesture === 'click')
         : [];
@@ -668,10 +675,10 @@ export function mountVegaInteractions(
     const changeListeners = new Set<(change: ChartChangeReport) => void>();
     let lastPreviewKey: string | undefined;
     let hoverCueActive = false;
-    // A pointer move on the same mark is not a change. Two previews with one
+    // A pointer move on the same mark is not a change. Two reader previews with one
     // interaction, one target and one domain report once.
     const notifyChange = (change: Omit<ChartChangeReport, 'state'>): void => {
-        if (change.phase === 'preview') {
+        if (change.phase === 'preview' && change.source === 'reader') {
             const key = JSON.stringify([
                 change.interactionId,
                 change.action,
@@ -1460,9 +1467,10 @@ export function mountVegaInteractions(
         if (hasViewportOp(update)) supersedeRetainedViewports(retainedUpdates, update.id);
         destination.set(update.id, presented);
         if (legendSelection) selectedLegend = legendSelection;
-        pendingTransition = options?.transition
+        pendingTransition = options?.transition && options.transition.duration > 0
             ? { id: update.id, duration: options.transition.duration }
             : undefined;
+        const pendingTransitionUsed = pendingTransition !== undefined;
         try {
             await renderUpdates();
         } finally {
@@ -1470,7 +1478,7 @@ export function mountVegaInteractions(
         }
         // A host's update settles with its last frame, so it can chain on it;
         // a gesture's tween runs on, so the next gesture is not held behind it.
-        if (options?.transition && waitForTransition) await navigationController.settled?.();
+        if (pendingTransitionUsed && waitForTransition) await navigationController.settled?.();
         return resolved.result;
     };
 
@@ -1485,7 +1493,7 @@ export function mountVegaInteractions(
     // A held viewport flies home the way a navigate reset does: the home
     // update tweens, then leaves, so nothing stays retained once it lands.
     const flyViewportHome = (interaction: CanvasInteractionDef): boolean => {
-        const transition = interaction.navigationResetTransition;
+        const transition = commitTransition(interaction.transition);
         const axes = heldViewportAxes(interaction.id);
         if (!transition || axes === undefined) return false;
         previewUpdates.delete(interaction.id);
@@ -1623,9 +1631,8 @@ export function mountVegaInteractions(
         const request = applyHandler && interaction.handle
             ? interaction.handle(canvasEvent, context(!interaction.eventSource.viewport, interaction))
             : null;
-        // A committed viewport, a brush zoom, may tween into place.
-        const transition = event.phase === 'commit' && request && hasViewportOp(request)
-            ? interaction.navigationTransition
+        const transition = event.phase === 'commit' && request
+            ? commitTransition(interaction.transition)
             : undefined;
         await applyInteractionUpdate(interaction, event.phase, request, legendSelection, transition ? { transition } : undefined);
         notifyChange({
@@ -1666,7 +1673,7 @@ export function mountVegaInteractions(
             const request = interaction.handle?.(base, context(false)) ?? null;
             // A reset may tween home; its frames then report themselves.
             const transition = event.operation === 'reset' && event.phase === 'commit' && request
-                ? interaction.navigationResetTransition
+                ? commitTransition(interaction.transition)
                 : undefined;
             await applyInteractionUpdate(interaction, event.phase, request, null, transition ? { transition } : undefined);
             if (transition) return;
@@ -3244,8 +3251,22 @@ export function mountVegaInteractions(
         },
         reportChange: notifyChange,
         applyUpdate: async (update, options) => {
-            const result = await storeUpdate(update, retainedUpdates, null, options);
-            notifyChange({ phase: 'commit', source: options?.source ?? 'host', interactionId: options?.interactionId });
+            const phase = options?.phase ?? 'commit';
+            const source = options?.source ?? 'host';
+            if (phase === 'cancel') {
+                if (previewUpdates.delete(update.id)) await renderUpdates();
+                notifyChange({ phase, source, interactionId: options?.interactionId });
+                return { status: 'applied', resolvedTargets: 0, unresolvedTargets: [], unsupportedOps: [] };
+            }
+            if (phase === 'preview') {
+                const result = await storeUpdate(update, previewUpdates, null, { ...options, transition: undefined });
+                notifyChange({ phase, source, interactionId: options?.interactionId });
+                return result;
+            }
+            previewUpdates.delete(update.id);
+            const transition = commitTransition(options?.transition);
+            const result = await storeUpdate(update, retainedUpdates, null, { ...options, transition });
+            notifyChange({ phase, source, interactionId: options?.interactionId });
             return result;
         },
         setUpdates: replaceUpdates,
