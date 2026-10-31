@@ -483,17 +483,30 @@ export function mountInteractiveChartSurface(
         const stage = document.createElement('div');
         stage.dataset.flintChart = '';
         applyStyles(stage, { gridColumn: '1', gridRow: '1', minWidth: '0', position: 'relative', opacity: '0' });
+        // The body keeps the size it has until the swap moves it to the size it has around the next chart.
+        const held = { width: body.style.width, height: body.style.height };
+        const release = (): void => { applyStyles(body, held); };
+        const hold = (width: number, height: number): void => { applyStyles(body, { width: `${width}px`, height: `${height}px` }); };
+        const measure = (): { width: number; height: number } => {
+            const box = body.getBoundingClientRect();
+            const scale = body.offsetWidth > 0 ? box.width / body.offsetWidth : 1;
+            return { width: box.width / scale, height: box.height / scale };
+        };
+        const fromSize = measure();
+        hold(fromSize.width, fromSize.height);
         body.append(stage);
         let mounted: InteractiveRenderer;
         try {
             mounted = await adapter.mount(stage, next);
         } catch (error) {
             stage.remove();
+            release();
             throw error;
         }
         if (destroyed || superseded() || mounted.viewports.length > 0) {
             mounted.destroy();
             stage.remove();
+            release();
             if (destroyed || superseded()) return;
             throw new Error('setInput cannot draw a chart that scrolls its categories; mount it again instead.');
         }
@@ -503,13 +516,23 @@ export function mountInteractiveChartSurface(
         applyStyles(layer, { gridColumn: '1', gridRow: '1', position: 'relative', pointerEvents: 'none', zIndex: '5' });
         body.append(layer);
         const previous = renderer;
+        release();
+        chart.style.display = 'none';
+        const toSize = measure();
+        chart.style.display = '';
+        hold(fromSize.width, fromSize.height);
         await transitionBetween({
             from: { element: chart, source: previous, chartType: currentInput.chart_spec.chartType },
             to: { element: stage, source: mounted, chartType: next.chart_spec.chartType },
             stage: layer,
             duration: transitionDuration(setOptions.transition, options.transition),
+            onFrame: (t) => hold(
+                fromSize.width + (toSize.width - fromSize.width) * t,
+                fromSize.height + (toSize.height - fromSize.height) * t,
+            ),
         });
         layer.remove();
+        release();
         stage.style.opacity = '';
         previous.destroy();
         chart.remove();

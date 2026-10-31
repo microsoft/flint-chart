@@ -14,14 +14,51 @@ export interface MorphScene {
     readonly fields: readonly string[];
 }
 
-/** What a renderer offers a morph: its drawn items, and a way to stop drawing its marks while another layer does. */
-export interface MorphSource {
-    morphScene?(): MorphScene | undefined;
-    setMarksHidden?(hidden: boolean): Promise<void> | void;
+/** One drawn piece of a chart: a mark item, an axis label, a gridline, a title, a group's background. */
+export interface FramePart {
+    /** What the part shows, matched across charts by meaning; none when it has no counterpart. */
+    readonly key?: string;
+    /** The part's top-left corner, in the coordinates of the element the chart renders into. */
+    readonly x: number;
+    readonly y: number;
+    /** The part's size; a rule or a box with a counterpart grows to the counterpart's. */
+    readonly width: number;
+    readonly height: number;
+    /** Whether the mark morph draws it, when there is one. */
+    readonly morphed: boolean;
 }
 
-/** Past this many items on either side a change of chart cross-fades. */
-const MAX_MORPHED_ITEMS = 1500;
+/** Where a part is drawn in one frame: moved by `dx`, `dy`, sized `width` by `height`, and faded by `opacity`. */
+export interface FramePose {
+    readonly dx: number;
+    readonly dy: number;
+    readonly width: number;
+    readonly height: number;
+    readonly opacity: number;
+}
+
+/** Everything a chart draws, as parts, and a way to draw them posed on another layer. */
+export interface FrameScene {
+    readonly parts: readonly FramePart[];
+    /** The extent the chart draws over, from the element's top-left. */
+    readonly width: number;
+    readonly height: number;
+    draw(
+        layer: HTMLElement,
+        size: { width: number; height: number },
+        withBackground: boolean,
+    ): { render(poses: readonly FramePose[]): void; destroy(): void };
+}
+
+/** What a renderer offers a morph: its drawn items and parts, and a way to stop drawing them while a layer does. */
+export interface MorphSource {
+    morphScene?(): MorphScene | undefined;
+    frameScene?(): FrameScene | undefined;
+    setDrawnHidden?(hidden: boolean): void;
+}
+
+/** Past this many items or parts on either side a change of chart cross-fades. */
+const MAX_MORPHED_ITEMS = 1000;
 /** Points every outline is resampled to, so any two shapes mix point by point. */
 const OUTLINE_POINTS = 48;
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -155,6 +192,62 @@ export function buildMorph(from: MorphScene, to: MorphScene): { element: SVGSVGE
     return { element, render };
 }
 
+const clamp = (value: number): number => Math.min(1, Math.max(0, value));
+
+/**
+ * Each part's pose at `t`, on both sides. A part with a counterpart moves from where the last
+ * chart drew it to where the next one draws it, drawn by the last chart until halfway and by
+ * the next after. One without leaves over the first quarter or arrives over the last while
+ * the marks morph; when they do not, the marks are such parts too, and those cross-fade over
+ * the whole duration so the plot never stands empty.
+ */
+export function planFrames(
+    from: readonly FramePart[],
+    to: readonly FramePart[],
+    morphed: boolean,
+): (t: number) => { from: FramePose[]; to: FramePose[] } {
+    const drawn = (part: FramePart): boolean => !(morphed && part.morphed);
+    const waiting = new Map<string, number[]>();
+    from.forEach((part, index) => {
+        if (part.key === undefined || !drawn(part)) return;
+        waiting.set(part.key, [...(waiting.get(part.key) ?? []), index]);
+    });
+    const fromMatch = new Map<number, number>();
+    const toMatch = new Map<number, number>();
+    to.forEach((part, index) => {
+        if (part.key === undefined || !drawn(part)) return;
+        const match = waiting.get(part.key)?.shift();
+        if (match === undefined) return;
+        fromMatch.set(match, index);
+        toMatch.set(index, match);
+    });
+    const leave = (t: number): number => (morphed ? 1 - clamp(t * 4) : 1 - t);
+    const arrive = (t: number): number => (morphed ? clamp(t * 4 - 3) : t);
+    const still = (part: FramePart, opacity: number): FramePose => ({ dx: 0, dy: 0, width: part.width, height: part.height, opacity });
+    // A matched pair shares one pose, from the last chart's part at 0 to the next one's at 1.
+    const between = (a: FramePart, b: FramePart, t: number, origin: FramePart, opacity: number): FramePose => ({
+        dx: a.x + (b.x - a.x) * t - origin.x,
+        dy: a.y + (b.y - a.y) * t - origin.y,
+        width: a.width + (b.width - a.width) * t,
+        height: a.height + (b.height - a.height) * t,
+        opacity,
+    });
+    return (t) => ({
+        from: from.map((part, index) => {
+            if (!drawn(part)) return still(part, 0);
+            const match = fromMatch.get(index);
+            if (match === undefined) return still(part, leave(t));
+            return between(part, to[match]!, t, part, t < 0.5 ? 1 : 0);
+        }),
+        to: to.map((part, index) => {
+            if (!drawn(part)) return still(part, 0);
+            const match = toMatch.get(index);
+            if (match === undefined) return still(part, arrive(t));
+            return between(from[match]!, part, t, part, t < 0.5 ? 0 : 1);
+        }),
+    });
+}
+
 export interface ChartSwap {
     /** The element the outgoing chart renders into, and its renderer. */
     readonly from: { element: HTMLElement; source?: MorphSource; chartType: string };
@@ -162,17 +255,31 @@ export interface ChartSwap {
     /** The element both sit in; the morph layer is drawn over it. */
     readonly stage: HTMLElement;
     readonly duration: number;
+    /** Runs with each frame's progress, from 0 to 1. */
+    readonly onFrame?: (t: number) => void;
 }
 
 /**
- * Moves from one mounted chart to the next, both already in place over each other. Along a
- * listed chart transition whose two scenes share row fields, the marks morph on a layer above
- * while each chart's own marks stay hidden and their frames cross-fade; otherwise the charts
- * cross-fade. Resolves once the next chart shows alone.
+ * Moves from one mounted chart to the next, both already in place over each other. Both charts
+ * stop drawing while a layer draws their parts: what the two share (an axis label, a gridline, a
+ * title) moves from one place to the other, and the rest leaves or arrives. Along a listed chart
+ * transition whose two scenes share row fields, the marks morph into each other. A chart that
+ * cannot hand over its parts, or has too many, cross-fades. Resolves once the next chart shows alone.
  */
-export async function transitionBetween({ from, to, stage, duration }: ChartSwap): Promise<void> {
-    const fade = (element: HTMLElement, opacity: number) => { element.style.opacity = String(opacity); };
+export async function transitionBetween({ from, to, stage, duration, onFrame }: ChartSwap): Promise<void> {
+    const show = (element: HTMLElement, opacity: number) => { element.style.opacity = String(opacity); };
     if (duration <= 0) {
+        to.element.style.opacity = '';
+        return;
+    }
+    const fromFrame = from.source?.frameScene?.();
+    const toFrame = to.source?.frameScene?.();
+    if (!fromFrame || !toFrame || fromFrame.parts.length > MAX_MORPHED_ITEMS || toFrame.parts.length > MAX_MORPHED_ITEMS) {
+        await runTween(duration, (t) => {
+            onFrame?.(t);
+            show(to.element, Math.min(1, t * 2));
+            show(from.element, Math.min(1, 2 - t * 2));
+        }).done;
         to.element.style.opacity = '';
         return;
     }
@@ -181,19 +288,26 @@ export async function transitionBetween({ from, to, stage, duration }: ChartSwap
     const morph = isChartTransition(from.chartType, to.chartType) && fromScene && toScene
         ? buildMorph(fromScene, toScene)
         : undefined;
-    if (morph) {
-        await Promise.all([from.source?.setMarksHidden?.(true), to.source?.setMarksHidden?.(true)]);
-        stage.append(morph.element);
-    }
-    fade(to.element, 0);
-    await runTween(duration, (t) => {
+    const poses = planFrames(fromFrame.parts, toFrame.parts, Boolean(morph));
+    const size = { width: Math.max(fromFrame.width, toFrame.width), height: Math.max(fromFrame.height, toFrame.height) };
+    const fromLayer = fromFrame.draw(stage, size, true);
+    const toLayer = toFrame.draw(stage, size, false);
+    const drawFrame = (t: number): void => {
+        const pose = poses(t);
+        fromLayer.render(pose.from);
+        toLayer.render(pose.to);
         morph?.render(t);
-        fade(from.element, 1 - Math.min(1, t * 1.6));
-        fade(to.element, Math.max(0, t * 1.6 - 0.6));
+    };
+    drawFrame(0);
+    if (morph) stage.append(morph.element);
+    from.source?.setDrawnHidden?.(true);
+    await runTween(duration, (t) => {
+        onFrame?.(t);
+        drawFrame(t);
     }).done;
-    if (morph) {
-        await to.source?.setMarksHidden?.(false);
-        morph.element.remove();
-    }
+    from.source?.setDrawnHidden?.(false);
     to.element.style.opacity = '';
+    fromLayer.destroy();
+    toLayer.destroy();
+    morph?.element.remove();
 }

@@ -33,7 +33,8 @@ import {
     type LiveLayoutPlanner,
 } from './interactions/live-layout';
 import { mountVegaInteractions } from './interactions/runtime';
-import { captureMorphScene, hasSceneTween, injectAxisTween, injectScaleTween, SCENE_HIDDEN_SIGNAL } from './interactions/scene-tween';
+import { captureMorphScene, hasSceneTween, injectAxisTween, injectScaleTween } from './interactions/scene-tween';
+import { captureFrameScene } from './interactions/frame-scene';
 import { advanceLiveValues, bindLiveValues, LIVE_VALUES_SIGNAL, liveValuesChange } from './live-values';
 import { readDrawnLayout } from './drawn-layout';
 import { vegaRendererOrigin } from './interactions/hit-adapter';
@@ -591,6 +592,26 @@ export function createVegaInteractiveRenderer(
                 selected: [],
             });
 
+            // Where the drawn canvas or svg sits in the container, and how far it reaches.
+            const drawnBox = (): { left: number; top: number; right: number; bottom: number } => {
+                const drawnElement = container.querySelector<Element>('canvas, svg');
+                if (!drawnElement) return { left: 0, top: 0, right: 0, bottom: 0 };
+                const box = drawnElement.getBoundingClientRect();
+                const frame = container.getBoundingClientRect();
+                const scale = container.offsetWidth > 0 ? frame.width / container.offsetWidth : 1;
+                return {
+                    left: (box.left - frame.left) / scale,
+                    top: (box.top - frame.top) / scale,
+                    right: (box.right - frame.left) / scale,
+                    bottom: (box.bottom - frame.top) / scale,
+                };
+            };
+            const drawnOrigin = (): { x: number; y: number } => {
+                const { left, top } = drawnBox();
+                const [originX, originY] = view.origin();
+                const padding = view.padding() as { left?: number; top?: number };
+                return { x: left + originX + (padding.left ?? 0), y: top + originY + (padding.top ?? 0) };
+            };
             return {
                 viewports,
                 warnings: interactionPlan?.warnings ?? [],
@@ -606,17 +627,16 @@ export function createVegaInteractiveRenderer(
                 morphScene() {
                     const fields = interactionPlan?.identityFields ?? [];
                     if (destroyed || fields.length === 0 || !hasSceneTween(view)) return undefined;
-                    const drawnElement = container.querySelector<HTMLElement>('canvas, svg');
-                    const [originX, originY] = view.origin();
-                    return captureMorphScene(view, fields, {
-                        x: (drawnElement?.offsetLeft ?? 0) + originX,
-                        y: (drawnElement?.offsetTop ?? 0) + originY,
-                    });
+                    return captureMorphScene(view, fields, drawnOrigin());
                 },
-                async setMarksHidden(hidden) {
-                    if (destroyed || !hasSceneTween(view)) return;
-                    view.signal(SCENE_HIDDEN_SIGNAL, hidden);
-                    await view.runAsync();
+                frameScene() {
+                    if (destroyed) return undefined;
+                    const { right, bottom } = drawnBox();
+                    return captureFrameScene(view, drawnOrigin(), { width: right, height: bottom });
+                },
+                setDrawnHidden(hidden) {
+                    const drawnElement = container.querySelector<HTMLElement | SVGElement>('canvas, svg');
+                    if (drawnElement) drawnElement.style.visibility = hidden ? 'hidden' : '';
                 },
                 getState() {
                     return withWindows(interactionController?.getInteractionContext() ?? fallbackContext());

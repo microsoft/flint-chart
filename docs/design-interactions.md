@@ -179,10 +179,16 @@ not meaning; a theme, which changes style, not meaning, and so cross-fades at mo
 A new chart type is not an update: it changes `chart_spec`, what the chart means, so it reaches
 the chart through `surface.setInput(input)`, which `FlintChart` calls when its `spec` changes.
 The next chart mounts beside the one on screen, takes the host's layers and the filters, and
-the two hand over with the same `transition`. Along a change `chart-transitions.ts` lists, with
-row fields both charts share, each mark morphs into its counterpart while both charts hide
-their own marks and their frames cross-fade; any other change cross-fades. A reader's own
-selections, hidden series and zoom start afresh, and a new `interaction_spec` needs a new mount.
+the two hand over with the same `transition`, by the same two rules. While they do, neither
+chart draws; a layer draws both, part by part, with the backend's own renderer. What the two
+share moves and resizes from one to the other: an axis label by its text, a tick or gridline by
+its value, a domain line by its axis, a title by its text, a legend entry by its value, a
+group's box by its place. Along a change `chart-transitions.ts` lists, with row fields both
+charts share, each mark morphs into its counterpart, and what has no counterpart leaves in the
+first quarter and arrives in the last. Otherwise the marks have no counterparts either, and
+what has none cross-fades over the whole duration, so the plot never stands empty. The
+chart's box moves from its size to the next chart's with them. A reader's own selections,
+hidden series and zoom start afresh, and a new `interaction_spec` needs a new mount.
 
 # §3 The specification
 

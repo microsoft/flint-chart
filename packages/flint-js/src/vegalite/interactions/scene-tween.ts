@@ -9,8 +9,6 @@ export const SCENE_T_SIGNAL = '__flint_scene_t';
 export const SCENE_ENTER_SIGNAL = '__flint_scene_enter';
 /** The leave stage's progress: rows gone from the chart fade out over it. */
 export const SCENE_EXIT_SIGNAL = '__flint_scene_exit';
-/** True while another layer draws the marks, during a morph between two charts. */
-export const SCENE_HIDDEN_SIGNAL = '__flint_scene_hidden';
 
 /** Set on a mark's snapshot whose tween keys repeat: its items are matched by their whole row key. */
 const WHOLE_KEY_FLAG = '__flint_whole_key';
@@ -180,7 +178,6 @@ export function injectSceneTween(vegaSpec: Record<string, any>, identityFields: 
                 ...(mark.encode.update ?? {}),
                 __flint_scene_t: { signal: SCENE_T_SIGNAL },
                 __flint_scene_enter: { signal: SCENE_ENTER_SIGNAL },
-                __flint_scene_hidden: { signal: SCENE_HIDDEN_SIGNAL },
             },
         };
         mark.transform = [
@@ -189,7 +186,6 @@ export function injectSceneTween(vegaSpec: Record<string, any>, identityFields: 
             ...dataFormulas(mark, dataChannels(mark, continuous), from),
             ...COLOUR_CHANNELS.map((channel) => colourFormula(from, channel)),
             enterFormula(markFrom, from),
-            { type: 'formula', as: 'opacity', expr: `${SCENE_HIDDEN_SIGNAL} ? 0 : datum.opacity` },
         ];
         if (GHOST_CHANNELS[mark.type] || PATH_CHANNELS[mark.type]) ghostTypes.add(mark.type);
         tweened = true;
@@ -201,7 +197,6 @@ export function injectSceneTween(vegaSpec: Record<string, any>, identityFields: 
         { name: SCENE_T_SIGNAL, value: 1 },
         { name: SCENE_ENTER_SIGNAL, value: 1 },
         { name: SCENE_EXIT_SIGNAL, value: 1 },
-        { name: SCENE_HIDDEN_SIGNAL, value: false },
     ];
     injectLegendTween(vegaSpec);
     const fading = { signal: `(isNumber(datum.opacity) ? datum.opacity : 1) * (1 - ${SCENE_EXIT_SIGNAL})` };
@@ -567,7 +562,7 @@ export function hasSceneTween(view: any): boolean {
     }
 }
 
-const MORPH_TYPES: Record<string, readonly string[]> = {
+export const MORPH_TYPES: Record<string, readonly string[]> = {
     ...GHOST_CHANNELS,
     line: ['x', 'y', 'stroke', 'strokeWidth'],
 };

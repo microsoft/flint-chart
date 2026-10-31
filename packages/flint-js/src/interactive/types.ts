@@ -6,7 +6,7 @@ import type { AssistedTargetingOptions } from '../core/interaction-spec';
 import type { InteractionResetGesture } from './reset';
 import type { VegaInteractiveRendererOptions } from '../vegalite/interactive';
 import type { EChartsInteractiveRendererOptions } from '../echarts/interactive';
-import type { MorphScene } from './morph';
+import type { FrameScene, MorphScene } from './morph';
 
 export type {
     AssistedTargetingOptions,
@@ -123,8 +123,10 @@ export interface InteractiveRenderer {
     clearUpdate?(id: string): Promise<void>;
     /** What the chart draws, for a morph to another chart. */
     morphScene?(): MorphScene | undefined;
-    /** Stops drawing the marks while a morph layer draws them. */
-    setMarksHidden?(hidden: boolean): Promise<void>;
+    /** Everything the chart draws, as parts another layer can draw, for a change of chart. */
+    frameScene?(): FrameScene | undefined;
+    /** Stops drawing while another layer draws the chart's parts. */
+    setDrawnHidden?(hidden: boolean): void;
     destroy(): void;
 }
 
