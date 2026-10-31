@@ -134,7 +134,7 @@ a shape; `navigate` moves continuously, `brush-zoom` jumps into a box;
 
 "Needs" is what the chart type offers; `list_chart_types` has already applied
 it to the list it returns. The data confirms a few at mount, in Step 3. A
-viewport a gesture commits, and a reset, fly over 400 ms. Every preset takes
+viewport a gesture commits, and a reset, fly over 300 ms. Every preset takes
 `"transition": { "duration": ms }`, and `interaction_spec.transition` sets the
 chart's default; `{ "duration": 0 }` jumps. Panning and wheel zooming follow
 the pointer.
@@ -730,7 +730,7 @@ surface.destroy();
 | Member | What it does |
 | --- | --- |
 | `ready`, `warnings` | Promises: the first render; the dropped or yielded interactions. Every call below waits for `ready` itself. |
-| `applyUpdate(update, options?)` | Retains one update by id; replaces the layer with the same id, easing from what is drawn (400 ms by default). `options.transition` sets the duration, `{ duration: 0 }` jumps. `options.phase: 'preview'` shows a streamed change at once (a drag, a scrub), `commit` keeps and animates it, `cancel` drops the preview. |
+| `applyUpdate(update, options?)` | Retains one update by id; replaces the layer with the same id, easing from what is drawn (300 ms by default). `options.transition` sets the duration, `{ duration: 0 }` jumps. `options.phase: 'preview'` shows a streamed change at once (a drag, a scrub), `commit` keeps and animates it, `cancel` drops the preview. |
 | `setUpdates(updates)` | Replaces every retained update. |
 | `clearUpdate(id)` | Removes one layer. |
 | `dispatch(id, payload, options?)` | Runs an `externalInteraction` handler and applies what it returns; `options.phase` as for `applyUpdate`. |

@@ -75,7 +75,7 @@ rendered series colour. Nearby labels stagger along their guides to avoid overla
 on by default; `options.displayValue: false` hides them. Setting `guide: false` hides both the
 guides and their labels.
 
-A viewport a gesture commits, and a reset, animate over 400 ms. Every preset takes `"transition": { "duration": ms }` for the changes it commits, its reset included, and `interaction_spec.transition` sets the chart's own default; `{ "duration": 0 }` jumps. Panning and wheel zooming follow the pointer and never animate.
+A viewport a gesture commits, and a reset, animate over 300 ms. Every preset takes `"transition": { "duration": ms }` for the changes it commits, its reset included, and `interaction_spec.transition` sets the chart's own default; `{ "duration": 0 }` jumps. Panning and wheel zooming follow the pointer and never animate.
 
 ## Reset gestures
 

@@ -3,8 +3,12 @@ import { INTERACTION_KEY } from './stores';
 
 /** The drawn state a tween starts from: per mark name, per row key, each channel's value. */
 export const SCENE_FROM_SIGNAL = '__flint_scene_from';
-/** The tween's eased progress, 0 to 1; 1 when no tween runs. */
+/** The move stage's eased progress, 0 to 1; 1 when no tween runs. */
 export const SCENE_T_SIGNAL = '__flint_scene_t';
+/** The arrive stage's progress: rows new to the chart fade in over it. */
+export const SCENE_ENTER_SIGNAL = '__flint_scene_enter';
+/** The leave stage's progress: rows gone from the chart fade out over it. */
+export const SCENE_EXIT_SIGNAL = '__flint_scene_exit';
 /** True while another layer draws the marks, during a morph between two charts. */
 export const SCENE_HIDDEN_SIGNAL = '__flint_scene_hidden';
 
@@ -58,7 +62,7 @@ function enterFormula(markFrom: string, from: string): Record<string, unknown> {
         type: 'formula',
         as: 'opacity',
         expr: `isValid(${markFrom}) && datum.datum && isString(datum.datum.${INTERACTION_KEY}) && !isValid(${from}) `
-            + `? (isNumber(datum.opacity) ? datum.opacity : 1) * ${SCENE_T_SIGNAL} : datum.opacity`,
+            + `? (isNumber(datum.opacity) ? datum.opacity : 1) * ${SCENE_ENTER_SIGNAL} : datum.opacity`,
     };
 }
 
@@ -79,6 +83,70 @@ function tweenKey(datum: Record<string, unknown>, fields: readonly string[]): un
     return datum[INTERACTION_KEY];
 }
 
+const CONTINUOUS_SCALES = new Set(['linear', 'log', 'pow', 'sqrt', 'symlog', 'time', 'utc']);
+const SIMPLE_FIELD = /^[^.[\]\\]+$/;
+
+/** A position channel drawn as a continuous scale of a field or a constant: `scale(field) + offset`. */
+interface DataChannel {
+    readonly channel: 'x' | 'x2' | 'y' | 'y2';
+    readonly scale: string;
+    /** The channel's data value now, as an expression over a scene item. */
+    readonly value: string;
+    readonly offset: number;
+}
+
+function dataChannels(mark: Record<string, any>, continuous: ReadonlySet<string>): DataChannel[] {
+    const encode = { ...(mark.encode?.enter ?? {}), ...(mark.encode?.update ?? {}) };
+    return (['x', 'x2', 'y', 'y2'] as const).flatMap((channel) => {
+        const entry = encode[channel];
+        if (!entry || Array.isArray(entry) || typeof entry !== 'object' || !continuous.has(entry.scale)) return [];
+        if (Object.keys(entry).some((key) => !['scale', 'field', 'value', 'offset'].includes(key))) return [];
+        if (entry.offset !== undefined && typeof entry.offset !== 'number') return [];
+        const value = typeof entry.field === 'string' && SIMPLE_FIELD.test(entry.field)
+            ? `toNumber(datum.datum[${JSON.stringify(entry.field)}])`
+            : typeof entry.value === 'number' && entry.field === undefined ? String(entry.value) : undefined;
+        return value ? [{ channel, scale: entry.scale, value, offset: entry.offset ?? 0 }] : [];
+    });
+}
+
+/**
+ * Positions that move in data units: each frame mixes the row's captured data value toward its
+ * new one and places it through the scale as that frame draws it, so a mark stays true to its
+ * axis while the axis itself moves. Rects take their box from both ends.
+ */
+function dataFormulas(mark: Record<string, any>, channels: readonly DataChannel[], from: string): Record<string, unknown>[] {
+    if (channels.length === 0) return [];
+    const formulas: Record<string, unknown>[] = [];
+    for (const { channel, scale, value, offset } of channels) {
+        const was = `${from}.__d_${channel}`;
+        formulas.push({
+            type: 'formula',
+            as: `__flint_d_${channel}`,
+            expr: `isValid(${from}) && isNumber(${was}) && isNumber(${value}) ? ${was} + (${value} - ${was}) * ${SCENE_T_SIGNAL} : ${value}`,
+        });
+        formulas.push({
+            type: 'formula',
+            as: `__flint_p_${channel}`,
+            expr: `isValid(${from}) && isNumber(${was}) && isNumber(datum.__flint_d_${channel}) `
+                + `? scale(${JSON.stringify(scale)}, datum.__flint_d_${channel}) + ${offset} : null`,
+        });
+    }
+    const has = (channel: string) => channels.some((entry) => entry.channel === channel);
+    const box = mark.type === 'rect' || mark.type === 'image';
+    for (const [start, end, size] of [['x', 'x2', 'width'], ['y', 'y2', 'height']] as const) {
+        const a = `datum.__flint_p_${start}`;
+        const b = `datum.__flint_p_${end}`;
+        if (box && has(start) && has(end)) {
+            formulas.push({ type: 'formula', as: start, expr: `isNumber(${a}) && isNumber(${b}) ? min(${a}, ${b}) : datum.${start}` });
+            formulas.push({ type: 'formula', as: size, expr: `isNumber(${a}) && isNumber(${b}) ? abs(${a} - ${b}) : datum.${size}` });
+            continue;
+        }
+        if (has(start)) formulas.push({ type: 'formula', as: start, expr: `isNumber(${a}) ? ${a} : datum.${start}` });
+        if (has(end) && !box) formulas.push({ type: 'formula', as: end, expr: `isNumber(${b}) ? ${b} : datum.${end}` });
+    }
+    return formulas;
+}
+
 function walkMarks(marks: readonly Record<string, any>[] | undefined, visit: (mark: Record<string, any>) => void): void {
     for (const mark of marks ?? []) {
         visit(mark);
@@ -93,6 +161,9 @@ function walkMarks(marks: readonly Record<string, any>[] | undefined, visit: (ma
  */
 export function injectSceneTween(vegaSpec: Record<string, any>, tweenFields: readonly string[] = []): void {
     const key = tweenKeyExpression(tweenFields);
+    const continuous = new Set<string>((vegaSpec.scales ?? [])
+        .filter((scale: Record<string, any>) => CONTINUOUS_SCALES.has(scale.type ?? 'linear'))
+        .map((scale: Record<string, any>) => scale.name));
     let tweened = false;
     let unnamed = 0;
     const ghostTypes = new Set<string>();
@@ -108,12 +179,14 @@ export function injectSceneTween(vegaSpec: Record<string, any>, tweenFields: rea
             update: {
                 ...(mark.encode.update ?? {}),
                 __flint_scene_t: { signal: SCENE_T_SIGNAL },
+                __flint_scene_enter: { signal: SCENE_ENTER_SIGNAL },
                 __flint_scene_hidden: { signal: SCENE_HIDDEN_SIGNAL },
             },
         };
         mark.transform = [
             ...(Array.isArray(mark.transform) ? mark.transform : []),
             ...channels.map((channel) => numericFormula(from, channel)),
+            ...dataFormulas(mark, dataChannels(mark, continuous), from),
             ...COLOUR_CHANNELS.map((channel) => colourFormula(from, channel)),
             enterFormula(markFrom, from),
             { type: 'formula', as: 'opacity', expr: `${SCENE_HIDDEN_SIGNAL} ? 0 : datum.opacity` },
@@ -126,8 +199,11 @@ export function injectSceneTween(vegaSpec: Record<string, any>, tweenFields: rea
         ...(Array.isArray(vegaSpec.signals) ? vegaSpec.signals : []),
         { name: SCENE_FROM_SIGNAL, value: null },
         { name: SCENE_T_SIGNAL, value: 1 },
+        { name: SCENE_ENTER_SIGNAL, value: 1 },
+        { name: SCENE_EXIT_SIGNAL, value: 1 },
         { name: SCENE_HIDDEN_SIGNAL, value: false },
     ];
+    injectLegendTween(vegaSpec);
     for (const type of ghostTypes) {
         vegaSpec.data = [...(Array.isArray(vegaSpec.data) ? vegaSpec.data : []), { name: exitData(type), values: [] }];
         vegaSpec.marks = [...(vegaSpec.marks ?? []), {
@@ -139,7 +215,7 @@ export function injectSceneTween(vegaSpec: Record<string, any>, tweenFields: rea
             encode: {
                 update: {
                     ...Object.fromEntries(GHOST_CHANNELS[type]!.map((channel) => [channel, { field: channel }])),
-                    opacity: { signal: `(isNumber(datum.opacity) ? datum.opacity : 1) * (1 - ${SCENE_T_SIGNAL})` },
+                    opacity: { signal: `(isNumber(datum.opacity) ? datum.opacity : 1) * (1 - ${SCENE_EXIT_SIGNAL})` },
                 },
             },
         }];
@@ -196,8 +272,21 @@ export function captureGhosts(view: any, tweenFields: readonly string[] = []): S
     return { items };
 }
 
-/** Draws the items of `before` that `after` no longer has, to fade out as the tween runs; null clears them. */
-export function setSceneExits(view: any, before: SceneGhosts | null, after?: SceneGhosts): void {
+/** A domain's path from one end to the other: geometric on a log scale, linear otherwise; dates stay dates. */
+export function domainPath(type: string, from: readonly unknown[], to: readonly unknown[]): (t: number) => unknown[] {
+    const dates = from[0] instanceof Date || to[0] instanceof Date;
+    const geometric = type === 'log' && [...from, ...to].every((value) => Number(value) > 0);
+    return (t) => from.map((value, index) => {
+        const a = Number(value);
+        const b = Number(to[index] ?? value);
+        const mixed = geometric ? a * (b / a) ** t : a + (b - a) * t;
+        return dates ? new Date(mixed) : mixed;
+    });
+}
+
+/** Draws the items of `before` that `after` no longer has, to fade out over the leave stage; null clears them. Returns how many leave. */
+export function setSceneExits(view: any, before: SceneGhosts | null, after?: SceneGhosts): number {
+    let leaving = 0;
     for (const type of Object.keys(GHOST_CHANNELS)) {
         let rows: Record<string, unknown>[] = [];
         if (before && after) {
@@ -205,24 +294,61 @@ export function setSceneExits(view: any, before: SceneGhosts | null, after?: Sce
         }
         try {
             view.data(exitData(type), rows);
+            leaving += rows.length;
         } catch {
             // This chart draws no mark of this type.
         }
     }
+    return leaving;
+}
+
+const LEGEND_ROLES = ['legend-symbol', 'legend-label'] as const;
+const legendEntry = (role: string): string => `__legend:${role}`;
+
+/** An encoding's production rules as one expression, or undefined when one reads a field or a scale. */
+function ruleExpression(entry: unknown): string | undefined {
+    const rules = Array.isArray(entry) ? entry : [entry];
+    let expression = 'null';
+    for (const rule of [...rules].reverse()) {
+        if (!rule || typeof rule !== 'object' || Object.keys(rule).some((key) => !['test', 'value', 'signal'].includes(key))) return undefined;
+        const value = 'signal' in rule ? `(${rule.signal})` : JSON.stringify(rule.value ?? null);
+        expression = 'test' in rule ? `((${rule.test}) ? ${value} : ${expression})` : value;
+    }
+    return expression;
+}
+
+/** Lets a legend entry's symbol and label fade between states, shown, dimmed or hidden, with the marks. */
+function injectLegendTween(vegaSpec: Record<string, any>): void {
+    walkVegaScopes(vegaSpec, (scope) => {
+        for (const legend of scope.legends ?? []) {
+            for (const [part, role] of [['symbols', 'legend-symbol'], ['labels', 'legend-label']] as const) {
+                const update = legend.encode?.[part]?.update;
+                if (!update || !Array.isArray(update.opacity)) continue;
+                const target = ruleExpression(update.opacity);
+                if (!target) continue;
+                const entry = `${SCENE_FROM_SIGNAL}[${JSON.stringify(legendEntry(role))}]`;
+                const from = `(${SCENE_FROM_SIGNAL} && ${entry} ? ${entry}[datum.value] : null)`;
+                update.opacity = { signal: `isNumber(${from}) ? ${from} + (${target} - ${from}) * ${SCENE_T_SIGNAL} : ${target}` };
+            }
+        }
+    });
 }
 
 const AXIS_ROLES = ['axis-label', 'axis-tick'] as const;
 const axisEntry = (scale: string, role: string): string => `__axis:${scale}:${role}`;
 
 /**
- * Lets the labels and ticks of a discrete axis glide with their marks when its order changes:
- * each sits where the captured frame drew it and moves to its band's centre.
+ * Lets the labels and ticks of every discrete axis glide with their marks when the order or the
+ * categories change: each sits where the captured frame drew it and moves to its band's centre.
  */
-export function injectAxisTween(vegaSpec: Record<string, any>, scales: readonly string[]): void {
-    if (scales.length === 0 || !(vegaSpec.signals ?? []).some((signal: { name?: string }) => signal.name === SCENE_T_SIGNAL)) return;
+export function injectAxisTween(vegaSpec: Record<string, any>): void {
+    if (!(vegaSpec.signals ?? []).some((signal: { name?: string }) => signal.name === SCENE_T_SIGNAL)) return;
+    const discrete = new Set<string>((vegaSpec.scales ?? [])
+        .filter((scale: Record<string, any>) => scale.type === 'band' || scale.type === 'point')
+        .map((scale: Record<string, any>) => scale.name));
     walkVegaScopes(vegaSpec, (scope) => {
         for (const axis of scope.axes ?? []) {
-            if (!scales.includes(axis.scale)) continue;
+            if (!discrete.has(axis.scale)) continue;
             const channel = axis.orient === 'left' || axis.orient === 'right' ? 'y' : 'x';
             const scale = JSON.stringify(axis.scale);
             const centre = `scale(${scale}, datum.value) + bandwidth(${scale}) * 0.5`;
@@ -242,6 +368,38 @@ export function injectAxisTween(vegaSpec: Record<string, any>, scales: readonly 
             axis.encode = encode;
         }
     });
+}
+
+/** The signal that, while set, holds a continuous scale's domain during a transition. */
+export const scaleTweenSignal = (scale: string): string => `__flint_domain_${scale.replace(/\W/g, '_')}`;
+
+export interface TweenedScale {
+    readonly name: string;
+    readonly signal: string;
+    readonly type: string;
+}
+
+/**
+ * Gives every continuous scale an axis reads a domain the runtime can hold: while its signal is
+ * set, the scale draws that domain; unset, it falls back to what it drew before (a navigated
+ * viewport, else its data). A transition moves the domain from the one drawn to the new one, so
+ * axes, gridlines and marks read one scale on every frame.
+ */
+export function injectScaleTween(vegaSpec: Record<string, any>): TweenedScale[] {
+    if (!(vegaSpec.signals ?? []).some((signal: { name?: string }) => signal.name === SCENE_T_SIGNAL)) return [];
+    const axisScales = new Set<string>();
+    walkVegaScopes(vegaSpec, (scope) => { for (const axis of scope.axes ?? []) axisScales.add(axis.scale); });
+    const tweened: TweenedScale[] = [];
+    for (const scale of vegaSpec.scales ?? []) {
+        const type = scale.type ?? 'linear';
+        if (!axisScales.has(scale.name) || !CONTINUOUS_SCALES.has(type)) continue;
+        const signal = scaleTweenSignal(scale.name);
+        vegaSpec.signals.push({ name: signal, value: null });
+        const held = scale.domainRaw?.signal;
+        scale.domainRaw = { signal: held ? `${signal} || ${held}` : signal };
+        tweened.push({ name: scale.name, signal, type });
+    }
+    return tweened;
 }
 
 function walkVegaScopes(scope: Record<string, any>, visit: (scope: Record<string, any>) => void): void {
@@ -286,6 +444,10 @@ export function captureScene(view: any, tweenFields: readonly string[] = []): Sc
     const visit = (node: any, axisScale?: string): void => {
         if (!node) return;
         const mark = node.mark;
+        if (LEGEND_ROLES.includes(mark?.role) && node.datum && node.datum.value !== undefined && typeof node.opacity === 'number') {
+            const byValue = snapshot[legendEntry(mark.role)] ?? (snapshot[legendEntry(mark.role)] = {});
+            byValue[String(node.datum.value)] = node.opacity;
+        }
         if (axisScale && AXIS_ROLES.includes(mark?.role) && node.datum && node.datum.value !== undefined) {
             const byValue = snapshot[axisEntry(axisScale, mark.role)] ?? (snapshot[axisEntry(axisScale, mark.role)] = {});
             byValue[String(node.datum.value)] = { x: node.x, y: node.y };
@@ -309,6 +471,10 @@ export function captureScene(view: any, tweenFields: readonly string[] = []): Sc
                 const value = item[channel];
                 if (typeof value === 'number' || typeof value === 'string') values[channel] = value;
             }
+            for (const channel of ['x', 'x2', 'y', 'y2']) {
+                const value = item[`__flint_d_${channel}`];
+                if (typeof value === 'number' && Number.isFinite(value)) values[`__d_${channel}`] = value;
+            }
             entries[key] = values;
         }
         snapshot[name] = entries;
@@ -318,7 +484,7 @@ export function captureScene(view: any, tweenFields: readonly string[] = []): Sc
 
 /** How many keyed items a snapshot holds. */
 export function sceneSize(snapshot: SceneSnapshot): number {
-    return Object.entries(snapshot).reduce((count, [name, entries]) => name.startsWith('__axis:')
+    return Object.entries(snapshot).reduce((count, [name, entries]) => name.startsWith('__axis:') || name.startsWith('__legend:')
         ? count
         : count + Object.keys(entries).filter((key) => key !== WHOLE_KEY_FLAG).length, 0);
 }

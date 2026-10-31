@@ -135,20 +135,34 @@ the preview with that id.
 
 The duration is the first one named: the call's `transition`, the interaction's (every preset
 takes `transition`), the chart's (`interaction_spec.transition` or `mountChart({ transition })`),
-else 400 ms. `{ duration: 0 }` jumps, and `prefers-reduced-motion` turns every duration off.
+else 300 ms. `{ duration: 0 }` jumps, and `prefers-reduced-motion` turns every duration off.
 Motion is interaction state, not style: `theme_spec` does not carry it, the assemblers never read
 it, and a static render has none.
 
-One mechanism moves every op. Before a committed render the runtime captures what each mark draws,
-per mark and per row; the render then draws the new state, and post-encoding formulas mix each
-item from its captured channels as one progress signal runs from 0 to 1. Items are matched by the
-key fields that no mark draws as a measure, so a bar keeps its identity when its value changes.
-So emphasis fades, a new order glides (the axis labels with it), new rows move or fade in, rows
-that leave fade out where they stood, and a stack re-forms as shapes rather than as averaged rows.
-No data transform re-runs per frame, and SVG and canvas move alike. `set-viewport` keeps its own
-domain tween. A note or an overlay an update adds waits for the marks to land, then fades in.
-`getState()` reports where an update goes, never a frame, and a host's call resolves when the
-motion ends. Past 2,000 drawn items a committed change jumps.
+What moves follows from why it moves: so the reader can follow what changed. Two rules decide
+the scope. Every frame is a chart that reads true, so a mark and the axis it is read against
+move through the same scale; what is animated is the mapping. And only what exists on both
+sides of a change can move, matched by meaning: a row by the key fields no mark draws as a
+measure, a scale by its name, an axis label by its value, a legend entry by its value, a note
+by its target. What has no counterpart arrives or leaves; text with no meaningful in-between
+(a title) does not move.
+
+So a committed change moves each continuous scale an axis reads from the domain drawn to the
+new one, linearly or, on a log scale, geometrically, and axes, ticks and gridlines ride it. Marks
+move in data units: each frame mixes a row's value toward its new one and places it through the
+scale as that frame draws it, so a bar sits on its gridline mid-way. What a scale does not
+explain moves in screen units: a new order (the labels of a discrete axis glide with it), a
+stack re-forming, sizes, angles, colours. Legend entries fade between shown, dimmed and hidden.
+The stages run in order and share the duration: rows that leave fade out where they stood (a
+quarter), what stays moves, rows that arrive fade in (a quarter); a note or an overlay the update
+adds waits for the marks to land. Post-encoding formulas do the mixing from a frame captured
+before the render, so no data transform re-runs per frame, SVG and canvas move alike, and a
+change mid-flight starts from the frame on screen. `set-viewport` moves the same scales through
+its own domain path. `getState()` reports where an update goes, never a frame, and a host's call
+resolves when the motion ends. Past 2,000 drawn items a committed change jumps.
+
+Out of scope by the same rules: a preview, which follows the hand; a resize, which changes room,
+not meaning; a theme, which changes style, not meaning, and so cross-fades at most.
 
 A new chart type is not an update: it changes `chart_spec`, what the chart means, so it reaches
 the chart through `surface.setInput(input)`, which `FlintChart` calls when its `spec` changes.
@@ -353,7 +367,7 @@ runs the gestures. A gesture resets only the interactions whose list holds it, e
 id: retained updates are cleared, a stateful brush clears through its controller, `navigate`
 and `brush-zoom` fly home through the navigation controller, and a preset with closure state
 drops it through `onReset()`. The flight home, like the zoom a brush commits, animates over
-the interaction's `transition`, 400 ms by default; `transition: { duration: 0 }` jumps.
+the interaction's `transition`, 300 ms by default; `transition: { duration: 0 }` jumps.
 Panning and wheel zooming follow the pointer and never animate.
 
 A chart with an `escape` reset becomes focusable and takes focus on a pointer press, so Escape

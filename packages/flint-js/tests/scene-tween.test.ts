@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { parse, View } from 'vega';
-import { captureGhosts, captureScene, injectSceneTween, SCENE_FROM_SIGNAL, SCENE_T_SIGNAL, setSceneExits } from '../src/vegalite/interactions/scene-tween';
+import {
+    captureGhosts,
+    captureScene,
+    domainPath,
+    injectSceneTween,
+    SCENE_ENTER_SIGNAL,
+    SCENE_EXIT_SIGNAL,
+    SCENE_FROM_SIGNAL,
+    SCENE_T_SIGNAL,
+    setSceneExits,
+} from '../src/vegalite/interactions/scene-tween';
 import { INTERACTION_KEY } from '../src/vegalite/interactions/stores';
 
 function barSpec(order: string[]): Record<string, any> {
@@ -71,7 +81,7 @@ describe('scene tween', () => {
         await view.runAsync();
         const before = captureScene(view);
         delete before.bars.c;
-        view.signal(SCENE_FROM_SIGNAL, before).signal(SCENE_T_SIGNAL, 0.5);
+        view.signal(SCENE_FROM_SIGNAL, before).signal(SCENE_T_SIGNAL, 0.5).signal(SCENE_ENTER_SIGNAL, 0.5);
         await view.runAsync();
         expect(bars(view).c.opacity).toBeCloseTo(0.2);
         expect(bars(view).b.opacity).toBe(1);
@@ -100,8 +110,8 @@ describe('scene tween', () => {
         const before = captureGhosts(view);
         view.data('rows', [{ k: 'a', v: 10 }, { k: 'b', v: 30 }]);
         await view.runAsync();
-        setSceneExits(view, before, captureGhosts(view));
-        view.signal(SCENE_T_SIGNAL, 0.25);
+        expect(setSceneExits(view, before, captureGhosts(view))).toBe(1);
+        view.signal(SCENE_EXIT_SIGNAL, 0.25);
         await view.runAsync();
         const exits = (view.scenegraph() as any).root.items[0].items.find((mark: any) => mark.role === 'scene-exit').items;
         expect(exits).toHaveLength(1);
@@ -124,6 +134,33 @@ describe('scene tween', () => {
         await view.runAsync();
         expect(bars(view).a.x).toBe(100);
         expect(bars(view).b.x).toBe(100);
+    });
+
+    it('places a moving value through the scale as the frame draws it, so the mark stays true to its axis', async () => {
+        const spec = barSpec(['a', 'b', 'c']);
+        spec.signals.push({ name: 'held', value: null });
+        spec.scales[1].domainRaw = { signal: 'held' };
+        spec.marks[0].encode.update.y = { scale: 'y', field: 'v' };
+        spec.marks[0].encode.update.y2 = { scale: 'y', value: 0 };
+        injectSceneTween(spec);
+        const view = new View(parse(spec), { renderer: 'none' });
+        await view.runAsync();
+        const before = captureScene(view);
+        expect(before.bars.b).toMatchObject({ __d_y: 30, __d_y2: 0 });
+        view.data('rows', [{ k: 'a', v: 10 }, { k: 'b', v: 50 }, { k: 'c', v: 20 }]);
+        view.signal(SCENE_FROM_SIGNAL, before).signal(SCENE_T_SIGNAL, 0.5).signal('held', [0, 60]);
+        await view.runAsync();
+        // Halfway, b is worth 40 and the frame's scale runs to 60: 40 of 60 of 100 px, from the bottom.
+        expect(bars(view).b.y).toBeCloseTo(100 - (40 / 60) * 100);
+        expect(bars(view).b.height).toBeCloseTo((40 / 60) * 100);
+        expect(bars(view).a.y).toBeCloseTo(100 - (10 / 60) * 100);
+    });
+
+    it('moves a domain linearly, a log domain geometrically, and keeps dates as dates', () => {
+        expect(domainPath('linear', [0, 40], [0, 80])(0.5)).toEqual([0, 60]);
+        expect(domainPath('log', [1, 100], [1, 10000])(0.5)).toEqual([1, 1000]);
+        const [start] = domainPath('time', [new Date(0), new Date(10)], [new Date(100), new Date(10)])(0.5);
+        expect(start).toEqual(new Date(50));
     });
 
     it('mixes colours channel by channel', async () => {

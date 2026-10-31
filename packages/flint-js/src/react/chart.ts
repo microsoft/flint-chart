@@ -113,7 +113,7 @@ export interface FlintChartProps {
     expressionInterpreter?: unknown;
     /** Changing it re-renders the chart. */
     background?: string;
-    /** How long every committed change animates unless an interaction or a call names its own. Defaults to 400 ms; read at mount. */
+    /** How long every committed change animates unless an interaction or a call names its own. Defaults to 300 ms; read at mount. */
     transition?: ChartUpdateTransition;
     /** The box the chart sits in, in pixels or a CSS length. Omitted: the chart's natural size. */
     width?: number | string;

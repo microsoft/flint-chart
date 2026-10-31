@@ -46,8 +46,19 @@ import { wheelZoomFactor } from '../../interactive/gestures/navigation';
 import type { CanvasInteractionEvent, DomainGeometry } from '../../interactive/language/events';
 import type { ChartAnnotation, ChartHiddenValue, ChartStateEntry, DomainValue } from '../../core/interaction-contracts';
 import type { ChartChangeReport, ChartUpdateApplyOptions, ChartUpdateTransition } from '../../interactive/types';
-import { runTween, transitionDuration, type Tween } from '../../interactive/transition';
-import { captureGhosts, captureScene, hasSceneTween, SCENE_FROM_SIGNAL, SCENE_T_SIGNAL, sceneSize, setSceneExits } from './scene-tween';
+import { easeInOut, runTween, transitionDuration, type Tween } from '../../interactive/transition';
+import {
+    captureGhosts,
+    captureScene,
+    domainPath,
+    hasSceneTween,
+    SCENE_ENTER_SIGNAL,
+    SCENE_EXIT_SIGNAL,
+    SCENE_FROM_SIGNAL,
+    SCENE_T_SIGNAL,
+    sceneSize,
+    setSceneExits,
+} from './scene-tween';
 
 import {
     INTERACTION_KEY,
@@ -116,6 +127,31 @@ import {
 const REVEAL_MS = 200;
 /** Past this many drawn items a committed change jumps: capturing and mixing every item each frame would stutter. */
 const MAX_TWEENED_ITEMS = 2000;
+/** An update's content as text, to tell a repeat from a change; undefined when it cannot be written out. */
+function updateKey(update: ChartUpdate): string | undefined {
+    try {
+        return JSON.stringify(update, (_key, value) => (value instanceof Date ? value.getTime() : value));
+    } catch {
+        return undefined;
+    }
+}
+
+/** Whether two lists of rows hold the same values, row by row; dates compare by time. */
+function sameRows(a: readonly Record<string, unknown>[], b: readonly Record<string, unknown>[]): boolean {
+    if (a.length !== b.length) return false;
+    const same = (x: unknown, y: unknown): boolean => Object.is(x, y)
+        || (x instanceof Date && y instanceof Date && x.getTime() === y.getTime());
+    return a.every((row, index) => {
+        const other = b[index]!;
+        if (row === other) return true;
+        const keys = Object.keys(row);
+        return keys.length === Object.keys(other).length && keys.every((key) => same(row[key], other[key]));
+    });
+}
+
+/** The shares of a transition's duration that marks leaving and marks arriving take, when a change has them. */
+const LEAVE_SHARE = 0.25;
+const ARRIVE_SHARE = 0.25;
 
 const EMPTY_SEMANTIC_SELECTION_KEY = '__flint_empty_semantic_selection';
 
@@ -1343,7 +1379,7 @@ export function mountVegaInteractions(
         shownLayout = layout;
         // A windowed chart shows only the rows inside its category window, cut from whatever rows are current.
         if (plan.windowDataRows) dataRows = preparedRows(plan.windowDataRows(hostRows));
-        if (plan.mutableDataSource && dataRows !== renderedDataRows) {
+        if (plan.mutableDataSource && dataRows !== renderedDataRows && !sameRows(dataRows, renderedDataRows)) {
             for (const [name, value] of Object.entries(plan.dataSignals?.(hostRows) ?? {})) view.signal(name, value);
             view.change(
                 plan.mutableDataSource,
@@ -1447,6 +1483,7 @@ export function mountVegaInteractions(
     };
 
     const sceneTweenable = hasSceneTween(view);
+    const heldHostUpdates = new Map<string, { key: string; presented: ChartUpdate; result: ChartUpdateResult }>();
     // Notes and overlays an update adds wait for the marks they point at to land, then fade in.
     const REVEAL_ATTRIBUTE = 'data-flint-reveal';
     const holdWaiting = (): void => {
@@ -1482,6 +1519,8 @@ export function mountVegaInteractions(
             return { settled: Promise.resolve() };
         }
         const ghosts = captureGhosts(view, plan.tweenFields);
+        const scales = plan.tweenScales ?? [];
+        const domainsBefore = scales.map((scale) => [...(view.scale(scale.name)?.domain() ?? [])]);
         const overlaysBefore = new Set([...container.querySelectorAll('[data-flint-overlay]')]
             .map((element) => element.getAttribute('data-flint-overlay')));
         const notesBefore = new Set(container.querySelectorAll('[data-flint-annotation]'));
@@ -1489,10 +1528,23 @@ export function mountVegaInteractions(
         const interrupted = sceneTween;
         sceneTween = undefined;
         interrupted?.cancel();
+        for (const scale of scales) view.signal(scale.signal, null);
         view.signal(SCENE_FROM_SIGNAL, from);
         view.signal(SCENE_T_SIGNAL, 0);
+        view.signal(SCENE_ENTER_SIGNAL, 0);
+        view.signal(SCENE_EXIT_SIGNAL, 0);
         await renderUpdates();
-        setSceneExits(view, ghosts, captureGhosts(view, plan.tweenFields));
+        const ghostsAfter = captureGhosts(view, plan.tweenFields);
+        const leaving = setSceneExits(view, ghosts, ghostsAfter) > 0;
+        const arriving = [...ghostsAfter.items.keys()].some((id) => !ghosts.items.has(id));
+        const moving = scales.flatMap((scale, index) => {
+            const before = domainsBefore[index]!;
+            const after = [...(view.scale(scale.name)?.domain() ?? [])];
+            const same = before.length === after.length && before.every((value, at) => +value === +after[at]);
+            return same || before.length < 2 ? [] : [{ scale, path: domainPath(scale.type, before, after) }];
+        });
+        for (const { scale, path } of moving) view.signal(scale.signal, path(0));
+        if (!arriving) view.signal(SCENE_ENTER_SIGNAL, 1);
         await view.runAsync();
         for (const element of container.querySelectorAll<HTMLElement | SVGElement>('[data-flint-overlay], [data-flint-annotation]')) {
             const added = element.hasAttribute('data-flint-annotation')
@@ -1501,8 +1553,16 @@ export function mountVegaInteractions(
             if (added) element.setAttribute(REVEAL_ATTRIBUTE, '');
         }
         holdWaiting();
+        // Leave, move, arrive: the stages a change has share its duration, in that order.
+        const moveStart = leaving ? LEAVE_SHARE : 0;
+        const moveEnd = arriving ? 1 - ARRIVE_SHARE : 1;
+        const stage = (t: number, start: number, end: number): number => easeInOut(Math.max(0, Math.min(1, (t - start) / (end - start))));
         const tween = runTween(duration, async (t) => {
-            view.signal(SCENE_T_SIGNAL, t);
+            const move = stage(t, moveStart, moveEnd);
+            view.signal(SCENE_EXIT_SIGNAL, leaving ? stage(t, 0, LEAVE_SHARE) : 1);
+            view.signal(SCENE_T_SIGNAL, move);
+            view.signal(SCENE_ENTER_SIGNAL, arriving ? stage(t, moveEnd, 1) : 1);
+            for (const { scale, path } of moving) view.signal(scale.signal, t >= 1 ? null : path(move));
             if (t >= 1) {
                 view.signal(SCENE_FROM_SIGNAL, null);
                 setSceneExits(view, null);
@@ -1510,7 +1570,7 @@ export function mountVegaInteractions(
             await view.runAsync();
             syncOverlays();
             holdWaiting();
-        });
+        }, (t) => t);
         sceneTween = tween;
         void tween.done.then(() => {
             if (sceneTween !== tween) return;
@@ -1518,16 +1578,19 @@ export function mountVegaInteractions(
             revealWaiting();
             if (view.signal(SCENE_T_SIGNAL) !== 1) {
                 setSceneExits(view, null);
+                for (const { scale } of moving) view.signal(scale.signal, null);
                 view.signal(SCENE_FROM_SIGNAL, null);
                 view.signal(SCENE_T_SIGNAL, 1);
+                view.signal(SCENE_ENTER_SIGNAL, 1);
+                view.signal(SCENE_EXIT_SIGNAL, 1);
                 void view.runAsync();
             }
         });
         return { settled: tween.done };
     };
-    /** The duration of a change that moves marks; a viewport alone tweens its domain instead. */
+    /** The duration of a change that moves marks; a viewport alone tweens its domain instead. An empty layer clears what it held. */
     const sceneDuration = (update: ChartUpdate, transition: ChartUpdateTransition | undefined): number =>
-        transition && update.ops.some((op) => op.op !== 'set-viewport') ? transition.duration : 0;
+        transition && (update.ops.length === 0 || update.ops.some((op) => op.op !== 'set-viewport')) ? transition.duration : 0;
 
     // A host may ask for one update's viewport to animate. Only that update's
     // op gets the tween; the render still re-applies every retained viewport.
@@ -3362,9 +3425,18 @@ export function mountVegaInteractions(
                 notifyChange({ phase, source, interactionId: options?.interactionId });
                 return result;
             }
+            // An update the chart already holds, as it holds it, changes nothing: no render, no motion.
+            const key = updateKey(update);
+            const held = heldHostUpdates.get(update.id);
+            if (key !== undefined && held && held.key === key && retainedUpdates.get(update.id) === held.presented
+                && !previewUpdates.has(update.id)) {
+                return held.result;
+            }
             previewUpdates.delete(update.id);
             const transition = commitTransition(options?.transition);
             const result = await storeUpdate(update, retainedUpdates, null, { ...options, transition });
+            const presented = retainedUpdates.get(update.id);
+            if (key !== undefined && presented) heldHostUpdates.set(update.id, { key, presented, result });
             notifyChange({ phase, source, interactionId: options?.interactionId });
             return result;
         },

@@ -33,7 +33,7 @@ import {
     type LiveLayoutPlanner,
 } from './interactions/live-layout';
 import { mountVegaInteractions } from './interactions/runtime';
-import { captureMorphScene, hasSceneTween, injectAxisTween, SCENE_HIDDEN_SIGNAL } from './interactions/scene-tween';
+import { captureMorphScene, hasSceneTween, injectAxisTween, injectScaleTween, SCENE_HIDDEN_SIGNAL } from './interactions/scene-tween';
 import { advanceLiveValues, bindLiveValues, LIVE_VALUES_SIGNAL, liveValuesChange } from './live-values';
 import { readDrawnLayout } from './drawn-layout';
 import { vegaRendererOrigin } from './interactions/hit-adapter';
@@ -392,7 +392,8 @@ export function createVegaInteractiveRenderer(
                         .map((axis) => injectVegaReorderSignal(vegaSpec, axis))
                         .filter((axis): axis is NonNullable<typeof axis> => !!axis);
                     interactionPlan.reorderAxis = interactionPlan.reorderAxes[0];
-                    injectAxisTween(vegaSpec, interactionPlan.reorderAxes.map((axis) => axis.scale));
+                    injectAxisTween(vegaSpec);
+                    interactionPlan.tweenScales = injectScaleTween(vegaSpec);
                 }
                 return { interactionPlan, vegaSpec, relaidSignals, livePlanner };
             };

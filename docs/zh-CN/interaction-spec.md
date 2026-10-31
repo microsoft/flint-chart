@@ -64,7 +64,7 @@
 
 选项名与 `flint-chart/interactive` 中对应工厂函数接受的选项一致；TypeScript 调用方可用该入口的 `InteractionPresetSpec` 获得逐类型的精确形状。
 
-手势提交的视口变化与重置默认以 400 ms 动画完成。每个预设都接受 `"transition": { "duration": ms }`，作用于它提交的变化（包括重置）；`interaction_spec.transition` 设定整张图表的默认值；`{ "duration": 0 }` 则直接跳转。平移与滚轮缩放跟随指针，从不做动画。
+手势提交的视口变化与重置默认以 300 ms 动画完成。每个预设都接受 `"transition": { "duration": ms }`，作用于它提交的变化（包括重置）；`interaction_spec.transition` 设定整张图表的默认值；`{ "duration": 0 }` 则直接跳转。平移与滚轮缩放跟随指针，从不做动画。
 
 ## 重置手势
 

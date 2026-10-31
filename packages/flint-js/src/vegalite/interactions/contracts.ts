@@ -59,6 +59,8 @@ export interface VegaInteractionPlan {
     fields: readonly string[];
     /** The key fields that name a row across data changes: those no mark draws as a measure. Empty names rows by their whole key. */
     tweenFields?: readonly string[];
+    /** The continuous scales a transition moves the domain of. */
+    tweenScales?: readonly import('./scene-tween').TweenedScale[];
     sourceRecords: readonly Record<string, unknown>[];
     provenanceFields: readonly string[];
     temporalProvenanceFields: readonly string[];

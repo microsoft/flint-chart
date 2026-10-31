@@ -143,7 +143,7 @@ export interface InteractiveChartSurfaceOptions {
     keyboardTargeting?: boolean;
     /** Warnings known before the mount; the surface reports them with the mount's own. */
     warnings?: readonly ChartWarning[];
-    /** How long every committed change animates unless an interaction or a call names its own. Defaults to 400 ms. */
+    /** How long every committed change animates unless an interaction or a call names its own. Defaults to 300 ms. */
     transition?: ChartUpdateTransition;
 }
 

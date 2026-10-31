@@ -1,7 +1,7 @@
 import type { ChartUpdateTransition } from './types';
 
 /** How long a committed change animates when nothing names a duration. */
-export const DEFAULT_TRANSITION_MS = 400;
+export const DEFAULT_TRANSITION_MS = 300;
 
 export const now = (): number => (typeof performance !== 'undefined' ? performance.now() : Date.now());
 
@@ -43,10 +43,14 @@ export interface Tween {
 }
 
 /**
- * Runs `frame` once per animation frame with eased progress from 0 to 1 over `duration` ms,
+ * Runs `frame` once per animation frame with progress from 0 to 1, eased by `ease`, over `duration` ms,
  * waiting for each frame's work before the next. `frame(1)` always runs last, unless cancelled.
  */
-export function runTween(duration: number, frame: (t: number) => void | Promise<void>): Tween {
+export function runTween(
+    duration: number,
+    frame: (t: number) => void | Promise<void>,
+    ease: (t: number) => number = easeInOut,
+): Tween {
     let cancelled = false;
     let finish!: () => void;
     const done = new Promise<void>((resolve) => { finish = resolve; });
@@ -56,7 +60,7 @@ export function runTween(duration: number, frame: (t: number) => void | Promise<
         if (cancelled) return;
         startedAt ??= now();
         const t = duration > 0 ? Math.min(1, (now() - startedAt) / duration) : 1;
-        void Promise.resolve(frame(t >= 1 ? 1 : easeInOut(t))).then(() => {
+        void Promise.resolve(frame(t >= 1 ? 1 : ease(t))).then(() => {
             if (cancelled) return;
             if (t >= 1) finish();
             else nextFrame(step);
