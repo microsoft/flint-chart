@@ -1656,7 +1656,7 @@ export function mountVegaInteractions(
         sceneMotion = undefined;
         interrupted?.cancel();
         for (const scale of scales) view.signal(scale.signal, null);
-        for (const size of sizes) if (size.signal !== size.dimension) view.signal(size.signal, null);
+        for (const size of sizes) view.signal(size.signal, null);
         view.signal(SCENE_FROM_SIGNAL, from);
         view.signal(SCENE_T_SIGNAL, 0);
         view.signal(SCENE_ENTER_SIGNAL, 0);
@@ -1684,8 +1684,9 @@ export function mountVegaInteractions(
             const after = Number(view.signal(size.dimension));
             return Number.isFinite(before) && Number.isFinite(after) && Math.abs(after - before) > 0.5 ? [{ size, before, after }] : [];
         });
-        const settleSize = ({ size, after }: typeof resizing[number]) => view.signal(size.signal, size.signal === size.dimension ? after : null);
-        for (const { size, before } of resizing) view.signal(size.signal, before);
+        const drawnSize = ({ before, after }: typeof resizing[number], move: number): number => (before + (after - before) * move) / after;
+        const settleSize = ({ size }: typeof resizing[number]) => view.signal(size.signal, null);
+        for (const entry of resizing) view.signal(entry.size.signal, drawnSize(entry, 0));
         if (!arriving) view.signal(SCENE_ENTER_SIGNAL, 1);
         await view.runAsync();
         for (const element of container.querySelectorAll<HTMLElement | SVGElement>('[data-flint-overlay], [data-flint-annotation]')) {
@@ -1710,7 +1711,7 @@ export function mountVegaInteractions(
             for (const { scale, path } of moving) view.signal(scale.signal, t >= 1 ? null : path(move));
             for (const entry of resizing) {
                 if (t >= 1) settleSize(entry);
-                else view.signal(entry.size.signal, entry.before + (entry.after - entry.before) * move);
+                else view.signal(entry.size.signal, drawnSize(entry, move));
             }
             if (t >= 1) {
                 view.signal(SCENE_FROM_SIGNAL, null);

@@ -347,27 +347,35 @@ describe('scene motion', () => {
         expect(segment()[0].mark.clip).toBe(true);
     });
 
-    it('holds a size worked out from the data, sets a plain size directly, and leaves a chart without the motion alone', async () => {
+    it('leaves a size the data does not make alone', () => {
         const spec: Record<string, any> = {
-            signals: [{ name: 'x_step', value: 40 }, { name: 'width', update: "length(data('rows')) * x_step" }, { name: 'height', value: 100 }],
-            data: [{ name: 'rows', values: [{ k: 'a' }, { k: 'b' }] }],
-            marks: [{ type: 'rect', name: 'bars', from: { data: 'rows' }, encode: { update: { x: { value: 0 } } } }],
+            signals: [{ name: 'width', value: 200 }, { name: 'height', update: 'containerSize()[1]', on: [{ events: 'window:resize', update: 'containerSize()[1]' }] }],
+            marks: [{ type: 'rect', name: 'bars', encode: { update: { x: { value: 0 } } } }],
         };
         expect(injectSizeMotion(structuredClone(spec))).toEqual([]);
         injectSceneMotion(spec);
-        expect(injectSizeMotion(spec)).toEqual([
-            { dimension: 'width', signal: '__flint_size_width' },
-            { dimension: 'height', signal: 'height' },
-        ]);
+        expect(injectSizeMotion(spec)).toEqual([]);
+    });
+
+    it('moves a size made of band steps through the steps, so the bands grow with the size', async () => {
+        const spec: Record<string, any> = {
+            signals: [{ name: 'x_step', value: 40 }, { name: 'width', update: "bandspace(domain('x').length, 0, 0) * x_step" }],
+            data: [{ name: 'rows', values: [{ k: 'a' }, { k: 'b' }] }],
+            scales: [{ name: 'x', type: 'band', domain: { data: 'rows', field: 'k' }, range: { step: { signal: 'x_step' } } }],
+            marks: [{ type: 'rect', name: 'bars', from: { data: 'rows' }, encode: { update: { x: { scale: 'x', field: 'k' } } } }],
+        };
+        injectSceneMotion(spec);
+        expect(injectSizeMotion(spec)).toEqual([{ dimension: 'width', signal: '__flint_size_width_share' }]);
         const view = new View(parse(spec), { renderer: 'none' });
         await view.runAsync();
+        view.data('rows', [{ k: 'a' }, { k: 'b' }, { k: 'c' }, { k: 'd' }]).signal('__flint_size_width_share', 0.5);
+        await view.runAsync();
         expect(view.signal('width')).toBe(80);
-        view.data('rows', [{ k: 'a' }, { k: 'b' }, { k: 'c' }]).signal('__flint_size_width', 90);
+        expect(view.scale('x').bandwidth()).toBe(20);
+        view.signal('__flint_size_width_share', null);
         await view.runAsync();
-        expect(view.signal('width')).toBe(90);
-        view.signal('__flint_size_width', null);
-        await view.runAsync();
-        expect(view.signal('width')).toBe(120);
+        expect(view.signal('width')).toBe(160);
+        expect(view.scale('x').bandwidth()).toBe(40);
     });
 
     it('eases a change in or out by default, at one speed when asked, and names the easing of the first transition given', () => {

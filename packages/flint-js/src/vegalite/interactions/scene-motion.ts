@@ -623,14 +623,14 @@ export function injectScaleMotion(vegaSpec: Record<string, any>): MovingScale[] 
 
 export interface MovingSize {
     readonly dimension: 'width' | 'height';
-    /** The signal a transition sets: a hold the size reads first, or the size itself when it is a plain value. */
+    /** The share of the size a change leads to that is drawn now; null draws it whole. */
     readonly signal: string;
 }
 
 /**
- * Lets a transition move the chart's size when its data changes it, as with a bar per category:
- * a size worked out from the data reads a hold first, and a plain size is set directly. A size
- * the host's room sets changes outside transitions, so it still jumps.
+ * Lets a transition move the chart's size when its data changes it, as with a bar per category.
+ * Such a size is made of a scale's steps, so the motion scales the steps and the bands, the axis
+ * and the frame grow as one. A size the host's room sets changes outside transitions and jumps.
  */
 export function injectSizeMotion(vegaSpec: Record<string, any>): MovingSize[] {
     const signals: Record<string, any>[] = vegaSpec.signals ?? [];
@@ -638,15 +638,24 @@ export function injectSizeMotion(vegaSpec: Record<string, any>): MovingSize[] {
     const sizes: MovingSize[] = [];
     for (const dimension of ['width', 'height'] as const) {
         const signal = signals.find((candidate) => candidate.name === dimension);
-        if (!signal || signal.on) continue;
-        if (typeof signal.update === 'string') {
-            const hold = `__flint_size_${dimension}`;
-            signals.push({ name: hold, value: null });
-            signal.update = `isNumber(${hold}) ? ${hold} : (${signal.update})`;
-            sizes.push({ dimension, signal: hold });
-        } else if (typeof signal.value === 'number') {
-            sizes.push({ dimension, signal: dimension });
+        if (!signal || signal.on || typeof signal.update !== 'string') continue;
+        const update: string = signal.update;
+        const stepped = (vegaSpec.scales ?? []).filter((scale: Record<string, any>) => {
+            const step = scale.range?.step?.signal;
+            return typeof step === 'string' && new RegExp(`\\b${step}\\b`).test(update);
+        });
+        if (stepped.length === 0) continue;
+        const share = `__flint_size_${dimension}_share`;
+        const factor = `(isNumber(${share}) ? ${share} : 1)`;
+        signals.push({ name: share, value: null });
+        let scaled = update;
+        for (const scale of stepped) {
+            const step: string = scale.range.step.signal;
+            scaled = scaled.replace(new RegExp(`\\b${step}\\b`, 'g'), `(${step} * ${factor})`);
+            scale.range = { ...scale.range, step: { signal: `${step} * ${factor}` } };
         }
+        signal.update = scaled;
+        sizes.push({ dimension, signal: share });
     }
     return sizes;
 }
@@ -665,10 +674,6 @@ interface KeyedItem {
 }
 
 /**
- * Each mark's items under the keys the motion matches them by: the identity key, unless two of the
- * mark's items share one (a scatter coloured by group), and then the whole row key.
- */
-/**
  * Whether the identity names two drawn rows within one mark (points sharing a colour). It then
  * names no single element, and each row is its own.
  */
@@ -686,6 +691,10 @@ export function identityRepeats(
     return false;
 }
 
+/**
+ * Each mark's items under the keys the motion matches them by: the identity key, unless two of the
+ * mark's items share one (a scatter coloured by group), and then the whole row key.
+ */
 function keyItems(items: readonly KeyedItem[]): { whole: boolean; byKey: Map<string, any> } {
     const byIdentity = new Map<string, any>();
     for (const entry of items) {
