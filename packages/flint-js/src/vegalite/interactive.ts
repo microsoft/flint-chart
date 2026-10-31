@@ -33,7 +33,7 @@ import {
     type LiveLayoutPlanner,
 } from './interactions/live-layout';
 import { mountVegaInteractions } from './interactions/runtime';
-import { injectAxisTween } from './interactions/scene-tween';
+import { captureMorphScene, hasSceneTween, injectAxisTween, SCENE_HIDDEN_SIGNAL } from './interactions/scene-tween';
 import { advanceLiveValues, bindLiveValues, LIVE_VALUES_SIGNAL, liveValuesChange } from './live-values';
 import { readDrawnLayout } from './drawn-layout';
 import { vegaRendererOrigin } from './interactions/hit-adapter';
@@ -574,6 +574,21 @@ export function createVegaInteractiveRenderer(
                 },
                 getInteractionContext() {
                     return interactionController?.getInteractionContext() ?? fallbackContext();
+                },
+                morphScene() {
+                    const fields = interactionPlan?.tweenFields ?? [];
+                    if (destroyed || fields.length === 0 || !hasSceneTween(view)) return undefined;
+                    const drawnElement = container.querySelector<HTMLElement>('canvas, svg');
+                    const [originX, originY] = view.origin();
+                    return captureMorphScene(view, fields, {
+                        x: (drawnElement?.offsetLeft ?? 0) + originX,
+                        y: (drawnElement?.offsetTop ?? 0) + originY,
+                    });
+                },
+                async setMarksHidden(hidden) {
+                    if (destroyed || !hasSceneTween(view)) return;
+                    view.signal(SCENE_HIDDEN_SIGNAL, hidden);
+                    await view.runAsync();
                 },
                 getState() {
                     return withWindows(interactionController?.getInteractionContext() ?? fallbackContext());

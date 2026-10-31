@@ -6,6 +6,7 @@ import type { AssistedTargetingOptions } from '../core/interaction-spec';
 import type { InteractionResetGesture } from './reset';
 import type { VegaInteractiveRendererOptions } from '../vegalite/interactive';
 import type { EChartsInteractiveRendererOptions } from '../echarts/interactive';
+import type { MorphScene } from './morph';
 
 export type {
     AssistedTargetingOptions,
@@ -120,6 +121,10 @@ export interface InteractiveRenderer {
     applyUpdate?(update: ChartUpdate, options?: ChartUpdateApplyOptions): Promise<ChartUpdateResult>;
     setUpdates?(updates: readonly ChartUpdate[], options?: Pick<ChartUpdateApplyOptions, 'transition'>): Promise<readonly ChartUpdateResult[]>;
     clearUpdate?(id: string): Promise<void>;
+    /** What the chart draws, for a morph to another chart. */
+    morphScene?(): MorphScene | undefined;
+    /** Stops drawing the marks while a morph layer draws them. */
+    setMarksHidden?(hidden: boolean): Promise<void>;
     destroy(): void;
 }
 
@@ -212,6 +217,13 @@ export interface InteractiveChartSurface {
     applyUpdate(update: ChartUpdate, options?: ChartUpdateApplyOptions): Promise<ChartUpdateResult>;
     setUpdates(updates: readonly ChartUpdate[]): Promise<readonly ChartUpdateResult[]>;
     clearUpdate(id: string): Promise<void>;
+    /**
+     * Draws a new input in place, keeping this surface and its element. The host's updates and
+     * the filters carry over; a reader's selections, hidden series and zoom start afresh. The
+     * marks morph along a chart transition Flint lists, else the charts cross-fade, over
+     * `transition` (the chart's by default). `interaction_spec` must not change.
+     */
+    setInput(input: ChartAssemblyInput, options?: Pick<ChartUpdateApplyOptions, 'transition'>): Promise<void>;
     /** What the chart shows now, previews included; undefined before the mount or after destroy. */
     getState(): ChartState | undefined;
     /** Hears every change to what the chart shows, after the render; returns the unsubscribe. */

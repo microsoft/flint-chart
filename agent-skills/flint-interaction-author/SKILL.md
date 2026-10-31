@@ -734,6 +734,7 @@ surface.destroy();
 | `setUpdates(updates)` | Replaces every retained update. |
 | `clearUpdate(id)` | Removes one layer. |
 | `dispatch(id, payload, options?)` | Runs an `externalInteraction` handler and applies what it returns; `options.phase` as for `applyUpdate`. |
+| `setInput(input, options?)` | Draws a new input in place (new data, chart type or theme), keeping the surface. Marks morph along a chart transition Flint lists, else the charts cross-fade. Host updates and filters carry over; a reader's state starts afresh; `interaction_spec` must not change. |
 | `getState()` | What the chart shows now; `undefined` before `ready`. |
 | `onChange(callback)` | Every change to that state, after the render; returns the unsubscribe. |
 | `layout` | Once ready: `plot`, the plot box `{ width, height }` on a chart that draws one plot; `views`, each drawn view as `{ role, box: { x, y, width, height } }` (role `plot`, `text`, `tile` or `rule`; facet panels row by row); `block`, the box the views take with their axes and headers, without title and keys. Boxes are in pixels from the drawn chart's top left, read from what it drew, so they follow filters and resizes. `undefined` on charts with a category rail and on non-Vega-Lite backends. |

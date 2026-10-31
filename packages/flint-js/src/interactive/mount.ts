@@ -93,7 +93,7 @@ export function mountChartWith(
                         }).mount(chartContainer, await sized(chartInput));
                     },
                 },
-                { className, ariaLabel, chartId, updates, interactions, warnings },
+                { className, ariaLabel, chartId, updates, interactions, warnings, transition },
             );
         case 'echarts':
             return mountInteractiveChartSurface(
@@ -105,7 +105,7 @@ export function mountChartWith(
                         return createEChartsInteractiveRenderer({ renderer }).mount(chartContainer, await sized(chartInput));
                     },
                 },
-                { className, ariaLabel, chartId, updates, interactions, warnings },
+                { className, ariaLabel, chartId, updates, interactions, warnings, transition },
             );
         case 'chartjs':
             return mountInteractiveChartSurface(
@@ -117,7 +117,7 @@ export function mountChartWith(
                         return createChartjsInteractiveRenderer().mount(chartContainer, await sized(chartInput));
                     },
                 },
-                { className, ariaLabel, chartId, updates, interactions, warnings },
+                { className, ariaLabel, chartId, updates, interactions, warnings, transition },
             );
         case 'plotly':
             return mountInteractiveChartSurface(
@@ -129,7 +129,7 @@ export function mountChartWith(
                         return createPlotlyInteractiveRenderer().mount(chartContainer, await sized(chartInput));
                     },
                 },
-                { className, ariaLabel, chartId, updates, interactions, warnings },
+                { className, ariaLabel, chartId, updates, interactions, warnings, transition },
             );
     }
 }

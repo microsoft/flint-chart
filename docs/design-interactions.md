@@ -148,7 +148,15 @@ that leave fade out where they stood, and a stack re-forms as shapes rather than
 No data transform re-runs per frame, and SVG and canvas move alike. `set-viewport` keeps its own
 domain tween. A note or an overlay an update adds waits for the marks to land, then fades in.
 `getState()` reports where an update goes, never a frame, and a host's call resolves when the
-motion ends.
+motion ends. Past 2,000 drawn items a committed change jumps.
+
+A new chart type is not an update: it changes `chart_spec`, what the chart means, so it reaches
+the chart through `surface.setInput(input)`, which `FlintChart` calls when its `spec` changes.
+The next chart mounts beside the one on screen, takes the host's layers and the filters, and
+the two hand over with the same `transition`. Along a change `chart-transitions.ts` lists, with
+row fields both charts share, each mark morphs into its counterpart while both charts hide
+their own marks and their frames cross-fade; any other change cross-fades. A reader's own
+selections, hidden series and zoom start afresh, and a new `interaction_spec` needs a new mount.
 
 # §3 The specification
 

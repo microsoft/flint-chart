@@ -309,6 +309,9 @@ export function createFlintChart(loaders: InteractiveRendererLoaders) {
         const [remounts, setRemounts] = useState(0);
 
         const specKey = useMemo(() => flintSpecKey(spec), [spec]);
+        // A new spec draws in place through `setInput`; only a new `interaction_spec` mounts the chart again.
+        const interactionSpecKey = useMemo(() => JSON.stringify(spec.interaction_spec ?? null), [specKey]);
+        const drawnSpecRef = useRef(specKey);
         // Once per spec content, so an inline `interactions` function receives the same definitions each render.
         const fromSpec = useMemo(() => specInteractions(spec), [specKey]);
 
@@ -360,6 +363,7 @@ export function createFlintChart(loaders: InteractiveRendererLoaders) {
                 } };
                 return canvas;
             });
+            drawnSpecRef.current = specKey;
             const initialUpdates = propsRef.current.updates ?? [];
             appliedRef.current = new Map(initialUpdates.map((update) => [update.id, flintUpdateKey(update)]));
             ownersRef.current = new Map(initialUpdates.map((update) => [update.id, 'host' as const]));
@@ -427,7 +431,21 @@ export function createFlintChart(loaders: InteractiveRendererLoaders) {
                 stage.style.pointerEvents = 'none';
                 retiringRef.current.push({ surface, stage });
             };
-        }, [specKey, definitionsKey, updatable, backend, renderer, background, chartId, waiting, relayout, remounts]);
+        }, [interactionSpecKey, definitionsKey, updatable, backend, renderer, background, chartId, waiting, relayout, remounts]);
+
+        useEffect(() => {
+            const surface = surfaceRef.current;
+            if (!surface || drawnSpecRef.current === specKey) return undefined;
+            drawnSpecRef.current = specKey;
+            let live = true;
+            void surface.setInput(resolved.input).then(
+                () => { if (live) propsRef.current.onRender?.(surface); },
+                () => { if (live) setRemounts((count) => count + 1); },
+            );
+            return () => {
+                live = false;
+            };
+        }, [specKey]);
 
         // A new room lays the chart out again in place, or remounts it when its layout changes in kind.
         useEffect(() => {

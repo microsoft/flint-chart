@@ -3320,7 +3320,8 @@ export function mountVegaInteractions(
     };
     const clearUpdate = async (id: string): Promise<void> => {
         if (id === regionInteraction?.id) regionGesture?.reset();
-        if (!retainedUpdates.delete(id)) return;
+        const previewed = previewUpdates.delete(id);
+        if (!retainedUpdates.delete(id) && !previewed) return;
         const { settled } = await renderTransition(commitTransition()?.duration ?? 0);
         await settled;
         notifyChange({ phase: 'commit', source: 'host' });

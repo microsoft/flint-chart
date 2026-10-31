@@ -1,9 +1,12 @@
+import type { MorphItem, MorphScene } from '../../interactive/morph';
 import { INTERACTION_KEY } from './stores';
 
 /** The drawn state a tween starts from: per mark name, per row key, each channel's value. */
 export const SCENE_FROM_SIGNAL = '__flint_scene_from';
 /** The tween's eased progress, 0 to 1; 1 when no tween runs. */
 export const SCENE_T_SIGNAL = '__flint_scene_t';
+/** True while another layer draws the marks, during a morph between two charts. */
+export const SCENE_HIDDEN_SIGNAL = '__flint_scene_hidden';
 
 /** Set on a mark's snapshot whose tween keys repeat: its items are matched by their whole row key. */
 const WHOLE_KEY_FLAG = '__flint_whole_key';
@@ -100,12 +103,20 @@ export function injectSceneTween(vegaSpec: Record<string, any>, tweenFields: rea
         const markFrom = `(${SCENE_FROM_SIGNAL} ? ${SCENE_FROM_SIGNAL}[${JSON.stringify(mark.name)}] : null)`;
         const rowKey = `(${markFrom}.${WHOLE_KEY_FLAG} ? datum.datum.${INTERACTION_KEY} : ${key})`;
         const from = `(isValid(${markFrom}) && datum.datum ? ${markFrom}[${rowKey}] : null)`;
-        mark.encode = { ...mark.encode, update: { ...(mark.encode.update ?? {}), __flint_scene_t: { signal: SCENE_T_SIGNAL } } };
+        mark.encode = {
+            ...mark.encode,
+            update: {
+                ...(mark.encode.update ?? {}),
+                __flint_scene_t: { signal: SCENE_T_SIGNAL },
+                __flint_scene_hidden: { signal: SCENE_HIDDEN_SIGNAL },
+            },
+        };
         mark.transform = [
             ...(Array.isArray(mark.transform) ? mark.transform : []),
             ...channels.map((channel) => numericFormula(from, channel)),
             ...COLOUR_CHANNELS.map((channel) => colourFormula(from, channel)),
             enterFormula(markFrom, from),
+            { type: 'formula', as: 'opacity', expr: `${SCENE_HIDDEN_SIGNAL} ? 0 : datum.opacity` },
         ];
         if (GHOST_CHANNELS[mark.type]) ghostTypes.add(mark.type);
         tweened = true;
@@ -115,6 +126,7 @@ export function injectSceneTween(vegaSpec: Record<string, any>, tweenFields: rea
         ...(Array.isArray(vegaSpec.signals) ? vegaSpec.signals : []),
         { name: SCENE_FROM_SIGNAL, value: null },
         { name: SCENE_T_SIGNAL, value: 1 },
+        { name: SCENE_HIDDEN_SIGNAL, value: false },
     ];
     for (const type of ghostTypes) {
         vegaSpec.data = [...(Array.isArray(vegaSpec.data) ? vegaSpec.data : []), { name: exitData(type), values: [] }];
@@ -319,4 +331,33 @@ export function hasSceneTween(view: any): boolean {
     } catch {
         return false;
     }
+}
+
+const MORPH_TYPES: Record<string, readonly string[]> = {
+    ...GHOST_CHANNELS,
+    line: ['x', 'y', 'stroke', 'strokeWidth'],
+};
+
+/** Every keyed item of `view`, offset by where its root group sits in the rendered element. */
+export function captureMorphScene(view: any, fields: readonly string[], origin: { x: number; y: number }): MorphScene {
+    const items: MorphItem[] = [];
+    const visit = (node: any, offsetX: number, offsetY: number): void => {
+        for (const item of node?.items ?? []) {
+            const mark = item.mark;
+            if (mark?.marktype === 'group') {
+                for (const child of item.items ?? []) visit(child, offsetX + (item.x ?? 0), offsetY + (item.y ?? 0));
+                continue;
+            }
+            const channels = MORPH_TYPES[mark?.marktype];
+            if (!channels || mark?.role === 'scene-exit' || typeof item.datum?.[INTERACTION_KEY] !== 'string') continue;
+            const values: Record<string, unknown> = { opacity: item.opacity };
+            for (const channel of channels) if (item[channel] !== undefined) values[channel] = item[channel];
+            if (typeof values.x === 'number') values.x += offsetX + origin.x;
+            if (typeof values.y === 'number') values.y += offsetY + origin.y;
+            items.push({ type: mark.marktype, datum: item.datum, values });
+        }
+    };
+    const rootGroup = view.scenegraph?.()?.root?.items?.[0];
+    for (const child of rootGroup?.items ?? []) visit(child, rootGroup?.x ?? 0, rootGroup?.y ?? 0);
+    return { items, fields };
 }
