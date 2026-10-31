@@ -3,6 +3,7 @@ import type {
     NavigationRequest,
     NavigationUpdate,
 } from '../../interactive/interactions';
+import { runTween } from '../../interactive/transition';
 import type { VegaNavigationAxis } from './contracts';
 
 type Axis = 'x' | 'y';
@@ -84,16 +85,6 @@ function guardZoomFactor(
     const least = Math.min(1, currentSpan / (initialSpan * guard.maxVisibleFraction));
     return Math.min(most, Math.max(least, factor));
 }
-
-/** Frame timing shared by the viewport tweens of the scale and geo controllers. */
-export const now = (): number => (typeof performance !== 'undefined' ? performance.now() : Date.now());
-
-export const nextFrame = (callback: () => void): void => {
-    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => callback());
-    else setTimeout(callback, 16);
-};
-
-export const easeInOut = (t: number): number => (t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2);
 
 export interface NavigationApplyOptions {
     /**
@@ -182,36 +173,26 @@ export function createVegaNavigationController(
             return { axis, state, path: domainPath(state, liveDomain(state), update.value[axis] ?? state.initialDomain) };
         });
         const operation = axes.every((axis) => update.value[axis] === undefined) ? 'reset' : 'zoom';
-        let cancelled = false;
-        let finish!: () => void;
-        const done = new Promise<void>((resolve) => { finish = resolve; });
-        const startedAt = now();
         const entry: ActiveTransition = {
             key: valueKey(update),
             frame: Object.fromEntries(paths.map(({ axis, path }) => [axis, path(0)])),
-            done,
-            cancel: () => { cancelled = true; finish(); },
+            done: Promise.resolve(),
+            cancel: () => tween.cancel(),
         };
         active = entry;
         // The render that starts the tween draws the domain on screen, not the target.
         for (const { axis, state } of paths) view.signal(state.signal, entry.frame[axis]);
-        const step = (): void => {
-            if (cancelled) return;
-            const t = transition.duration > 0 ? Math.min(1, (now() - startedAt) / transition.duration) : 1;
+        const tween = runTween(transition.duration, async (t) => {
             const last = t >= 1;
             for (const { axis, state, path } of paths) {
-                entry.frame[axis] = last ? update.value[axis] ?? null : path(easeInOut(t));
+                entry.frame[axis] = last ? update.value[axis] ?? null : path(t);
                 view.signal(state.signal, entry.frame[axis]);
             }
             if (last && active === entry) active = undefined;
-            void Promise.resolve(view.runAsync()).then(() => {
-                if (cancelled) return;
-                transition.onFrame?.(last ? 'commit' : 'preview', operation);
-                if (last) finish();
-                else nextFrame(step);
-            });
-        };
-        nextFrame(step);
+            await view.runAsync();
+            transition.onFrame?.(last ? 'commit' : 'preview', operation);
+        });
+        entry.done = tween.done;
     };
 
     return {

@@ -27,12 +27,10 @@ export { GEO_LEVEL_SIGNAL, geoLevelGate, isGlobeProjection, type GeoLevel, type 
 import type { UpdateRegionSelector } from '../../core/interaction-contracts';
 import type { NavigationDomainGuard, NavigationUpdate } from '../../interactive/interactions';
 import type { VegaNavigationAxis } from './contracts';
+import { runTween } from '../../interactive/transition';
 import {
-    easeInOut,
     guardNavigationDomain,
     type NavigationApplyOptions,
-    nextFrame,
-    now,
     type VegaNavigationController,
 } from './navigation-scale';
 
@@ -698,41 +696,31 @@ export function createVegaGeoNavigationController(
         const startLevel = levelBeforeBaseline ?? currentLevel;
         levelBeforeBaseline = undefined;
         setLevel(startLevel);
-        let cancelled = false;
-        let finish!: () => void;
-        const done = new Promise<void>((resolve) => { finish = resolve; });
-        const startedAt = now();
         const entry: ActiveTransition = {
             key,
             frame: from,
             ...(toRotation ? { frameRotation: fromRotation } : {}),
             startLevel,
-            done,
-            cancel: () => { cancelled = true; finish(); },
+            done: Promise.resolve(),
+            cancel: () => tween.cancel(),
         };
         active = entry;
-        const step = (): void => {
-            if (cancelled) return;
-            const t = transition.duration > 0 ? Math.min(1, (now() - startedAt) / transition.duration) : 1;
+        const tween = runTween(transition.duration, async (t) => {
             const last = t >= 1;
-            entry.frame = last ? target : extentOf(path(easeInOut(t)));
+            entry.frame = last ? target : extentOf(path(t));
             view.signal(GEO_EXTENT_SIGNAL, last ? to : entry.frame);
             if (toRotation) {
-                entry.frameRotation = last ? toRotation : interpolateRotation(fromRotation, toRotation, easeInOut(t));
+                entry.frameRotation = last ? toRotation : interpolateRotation(fromRotation, toRotation, t);
                 view.signal(GEO_ROTATE_SIGNAL, entry.frameRotation);
             }
             if (last) {
                 if (active === entry) active = undefined;
                 setLevel(level);
             }
-            void Promise.resolve(view.runAsync()).then(() => {
-                if (cancelled) return;
-                transition.onFrame?.(last ? 'commit' : 'preview', to === null ? 'reset' : 'zoom');
-                if (last) finish();
-                else nextFrame(step);
-            });
-        };
-        nextFrame(step);
+            await view.runAsync();
+            transition.onFrame?.(last ? 'commit' : 'preview', to === null ? 'reset' : 'zoom');
+        });
+        entry.done = tween.done;
     };
 
     return {
