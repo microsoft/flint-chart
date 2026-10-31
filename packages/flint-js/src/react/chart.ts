@@ -113,7 +113,10 @@ export interface FlintChartProps {
     expressionInterpreter?: unknown;
     /** Changing it re-renders the chart. */
     background?: string;
-    /** How long every committed change animates unless an interaction or a call names its own. Defaults to 300 ms; read at mount. */
+    /**
+     * How every committed change animates unless an interaction or a call names its own; defaults to
+     * 300 ms. Updates read it at mount; a new spec reads the value it has when the spec changes.
+     */
     transition?: ChartUpdateTransition;
     /** The box the chart sits in, in pixels or a CSS length. Omitted: the chart's natural size. */
     width?: number | string;
@@ -129,7 +132,7 @@ export interface FlintChartProps {
     onInteraction?: (detail: FlintInteractionEventDetail) => void;
     /** After each mount, each applied host update, and each relayout in place. */
     onRender?: (chart: InteractiveChartSurface) => void;
-    /** After each mount: that mount's warnings, possibly none. */
+    /** After each mount and each new spec drawn in place: that chart's warnings, possibly none. */
     onWarnings?: (warnings: readonly ChartWarning[]) => void;
     /**
      * The chart failed: a compile error, a malformed `interaction_spec`, or a code interaction
@@ -438,8 +441,14 @@ export function createFlintChart(loaders: InteractiveRendererLoaders) {
             if (!surface || drawnSpecRef.current === specKey) return undefined;
             drawnSpecRef.current = specKey;
             let live = true;
-            void surface.setInput(resolved.input).then(
-                () => { if (live) propsRef.current.onRender?.(surface); },
+            const transition = propsRef.current.transition;
+            void surface.setInput(resolved.input, transition ? { transition } : {}).then(
+                async () => {
+                    const warnings = await surface.warnings;
+                    if (!live) return;
+                    propsRef.current.onWarnings?.(warnings);
+                    propsRef.current.onRender?.(surface);
+                },
                 () => { if (live) setRemounts((count) => count + 1); },
             );
             return () => {

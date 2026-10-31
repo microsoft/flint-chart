@@ -34,6 +34,24 @@ describe('frame parts across a change of chart', () => {
         expect(poses(1).to[0]!.opacity).toBe(0);
     });
 
+    it('turns and resizes a label about its anchor the shorter way, its two copies trading places', () => {
+        const label = (angle: number, fontSize: number, x: number): FramePart =>
+            ({ ...part('axis-label|bottom|Cat 01', x, 0), text: { x, y: 100, angle, fontSize } });
+        const poses = planFrames([label(0, 10, 50)], [label(270, 8, 40)], false);
+        const half = poses(0.5);
+        expect(half.from[0]!.text).toEqual({ x: 45, y: 100, angle: -45, fontSize: 9 });
+        expect(half.to[0]!.text).toEqual(half.from[0]!.text);
+        expect(poses(0.25).from[0]!.opacity).toBe(0.75);
+        expect(poses(0.25).to[0]!.opacity).toBe(0.25);
+    });
+
+    it('draws a label that only moves with one copy at a time', () => {
+        const label = (x: number): FramePart => ({ ...part('axis-label|bottom|Cat 01', x, 0), text: { x, y: 100, angle: 0, fontSize: 10 } });
+        const poses = planFrames([label(50)], [label(40)], false);
+        expect(poses(0.25).from[0]!.opacity).toBe(1);
+        expect(poses(0.25).to[0]!.opacity).toBe(0);
+    });
+
     it('pairs repeated keys in order', () => {
         const poses = planFrames([part('tick', 0, 0), part('tick', 0, 10)], [part('tick', 0, 20), part('tick', 0, 30)], false);
         expect(poses(0.4).from.map((pose) => pose.dy)).toEqual([8, 8]);

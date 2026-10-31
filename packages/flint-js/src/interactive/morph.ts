@@ -27,6 +27,15 @@ export interface FramePart {
     readonly height: number;
     /** Whether the mark morph draws it, when there is one. */
     readonly morphed: boolean;
+    /** A text part's anchor, in the same coordinates as `x` and `y`, its angle in degrees, and its font size. */
+    readonly text?: FrameText;
+}
+
+export interface FrameText {
+    readonly x: number;
+    readonly y: number;
+    readonly angle: number;
+    readonly fontSize: number;
 }
 
 /** Where a part is drawn in one frame: moved by `dx`, `dy`, sized `width` by `height`, and faded by `opacity`. */
@@ -36,6 +45,8 @@ export interface FramePose {
     readonly width: number;
     readonly height: number;
     readonly opacity: number;
+    /** Where a text part's anchor stands, how far it has turned, and how large it is drawn. */
+    readonly text?: FrameText;
 }
 
 /** Everything a chart draws, as parts, and a way to draw them posed on another layer. */
@@ -195,6 +206,21 @@ export function buildMorph(from: MorphScene, to: MorphScene): { element: SVGSVGE
 
 const clamp = (value: number): number => Math.min(1, Math.max(0, value));
 
+/** Whether a text pair turns or resizes; one that only moves is drawn by one copy at a time, at full strength. */
+const turns = (a: FramePart, b: FramePart): boolean =>
+    Boolean(a.text && b.text && (a.text.angle !== b.text.angle || a.text.fontSize !== b.text.fontSize));
+
+/** A text's pose part-way between two: its anchor and size mixed, its angle turned the shorter way. */
+function textBetween(a: FrameText, b: FrameText, t: number): FrameText {
+    const turn = ((((b.angle - a.angle) % 360) + 540) % 360) - 180;
+    return {
+        x: a.x + (b.x - a.x) * t,
+        y: a.y + (b.y - a.y) * t,
+        angle: a.angle + turn * t,
+        fontSize: a.fontSize + (b.fontSize - a.fontSize) * t,
+    };
+}
+
 /**
  * Each part's pose at `t`, on both sides. A part with a counterpart moves from where the last
  * chart drew it to where the next one draws it, drawn by the last chart until halfway and by
@@ -225,13 +251,15 @@ export function planFrames(
     const leave = (t: number): number => (morphed ? 1 - clamp(t * 4) : 1 - t);
     const arrive = (t: number): number => (morphed ? clamp(t * 4 - 3) : t);
     const still = (part: FramePart, opacity: number): FramePose => ({ dx: 0, dy: 0, width: part.width, height: part.height, opacity });
-    // A matched pair shares one pose, from the last chart's part at 0 to the next one's at 1.
+    // A matched pair shares one pose, from the last chart's part at 0 to the next one's at 1. A
+    // text pair also turns and resizes about its anchor, the two copies trading places as it does.
     const between = (a: FramePart, b: FramePart, t: number, origin: FramePart, opacity: number): FramePose => ({
         dx: a.x + (b.x - a.x) * t - origin.x,
         dy: a.y + (b.y - a.y) * t - origin.y,
         width: a.width + (b.width - a.width) * t,
         height: a.height + (b.height - a.height) * t,
-        opacity,
+        opacity: turns(a, b) ? (origin === a ? 1 - t : t) : opacity,
+        ...(a.text && b.text ? { text: textBetween(a.text, b.text, t) } : {}),
     });
     return (t) => ({
         from: from.map((part, index) => {

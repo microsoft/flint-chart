@@ -3,6 +3,7 @@ import type {
     ChartChange,
     ChartChangePhase,
     ChartUpdateApplyOptions,
+    ChartUpdateTransition,
     InteractiveChartSurface,
     InteractiveChartSurfaceOptions,
     InteractiveRenderer,
@@ -379,15 +380,17 @@ export function mountInteractiveChartSurface(
         definition: FilterControlsDef,
         payload: FilterControlsPayload,
         source: 'reader' | 'host',
+        target: InteractiveRenderer | undefined = renderer,
+        transition: ChartUpdateTransition | undefined = definition.transition,
     ): Promise<ChartUpdateResult | null> => {
-        if (destroyed || !renderer?.getInteractionContext) return null;
-        const update = definition.handle(payload, renderer.getInteractionContext());
+        if (destroyed || !target?.getInteractionContext) return null;
+        const update = definition.handle(payload, target.getInteractionContext());
         if (!update) return null;
-        if (!renderer.applyUpdate) return unsupportedUpdate(update);
-        const result = await renderer.applyUpdate(update, {
+        if (!target.applyUpdate) return unsupportedUpdate(update);
+        const result = await target.applyUpdate(update, {
             interactionId: definition.id,
             source,
-            ...(definition.transition ? { transition: definition.transition } : {}),
+            ...(transition ? { transition } : {}),
         });
         syncRails();
         return result;
@@ -460,11 +463,11 @@ export function mountInteractiveChartSurface(
 
     let latestInput = 0;
     let inputQueue: Promise<void> = Promise.resolve();
-    // One input draws at a time; a call that a newer one overtakes while it waits is dropped.
     /**
      * Draws a new input in place. The chart mounts beside the one on screen, takes the host's
      * layers and the filters, and the two trade places through `transitionBetween`: a morph along
-     * a listed chart transition, else a cross-fade. A reader's own state starts afresh.
+     * a listed chart transition, else a cross-fade. A reader's own state starts afresh. One input
+     * draws at a time; a call that a newer one overtakes while it waits is dropped.
      */
     function setInput(next: ChartAssemblyInput, setOptions: Pick<ChartUpdateApplyOptions, 'transition'> = {}): Promise<void> {
         const ticket = ++latestInput;
@@ -516,7 +519,14 @@ export function mountInteractiveChartSurface(
             throw new Error('setInput cannot draw a chart that scrolls its categories; mount it again instead.');
         }
         for (const interaction of interactions) if (!isExternalInteraction(interaction)) interaction.onReset?.();
-        if (hostLayers.size > 0) await mounted.setUpdates?.([...hostLayers.values()], { transition: { duration: 0 } });
+        const jump: ChartUpdateTransition = { duration: 0 };
+        const carried = new Map(hostLayers);
+        if (carried.size > 0) await mounted.setUpdates?.([...carried.values()], { transition: jump });
+        for (const definition of filterDefs) {
+            definition.filterControls.bindRows(next.data.values ?? []);
+            const filters = definition.filterControls.getFilters();
+            if (Object.keys(filters).length > 0) await applyFilter(definition, { filters }, 'host', mounted, jump);
+        }
         const layer = document.createElement('div');
         applyStyles(layer, { gridColumn: '1', gridRow: '1', position: 'relative', pointerEvents: 'none', zIndex: '5' });
         body.append(layer);
@@ -546,12 +556,12 @@ export function mountInteractiveChartSurface(
         renderer = mounted;
         currentInput = next;
         listenTo(mounted);
+        // The warnings are the drawn chart's: a new chart type may admit other interactions.
+        warnings.splice(0, warnings.length, ...(options.warnings ?? []), ...(mounted.warnings ?? []));
         root.setAttribute('aria-label', options.ariaLabel ?? next.chart_spec.title ?? 'Interactive chart');
-        for (const definition of filterDefs) {
-            definition.filterControls.bindRows(next.data.values ?? []);
-            const filters = definition.filterControls.getFilters();
-            if (Object.keys(filters).length > 0) await applyFilter(definition, { filters }, 'host');
-        }
+        // Host calls made while the two charts traded places reached the chart that left.
+        for (const [id, update] of hostLayers) if (carried.get(id) !== update) await mounted.applyUpdate?.(update, { transition: jump });
+        for (const id of carried.keys()) if (!hostLayers.has(id)) await mounted.clearUpdate?.(id);
     }
 
     return {

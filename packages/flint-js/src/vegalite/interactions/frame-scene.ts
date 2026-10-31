@@ -10,7 +10,8 @@ const EVERYWHERE = (): any => new Bounds().set(-1e5, -1e5, 1e5, 1e5);
 const AXIS_VALUE_ROLES = new Set(['axis-tick', 'axis-grid']);
 const TEXT_ROLES = new Set(['axis-label', 'axis-title', 'title-text', 'title-subtitle', 'legend-label', 'legend-title']);
 
-const textOf = (item: any): string => (Array.isArray(item.text) ? item.text.join('\n') : String(item.text ?? ''));
+/** A text's words, however its lines break: a label wrapped in one chart and not the other is the same label. */
+const textOf = (item: any): string => (Array.isArray(item.text) ? item.text.join(' ') : String(item.text ?? '')).replace(/\s+/g, ' ').trim();
 const valueOf = (value: unknown): string => (value instanceof Date ? String(value.getTime()) : String(value));
 
 /** What a frame item shows, by meaning: an axis label by its text, a gridline by its value, a title by its text. */
@@ -85,7 +86,10 @@ export function captureFrameScene(
         const morphed = Boolean(MORPH_TYPES[mark.marktype]) && items.some((item) => typeof item.datum?.[INTERACTION_KEY] === 'string');
         for (const item of items) {
             const drawn = box(item.bounds, item.x ?? 0, item.y ?? 0);
-            parts.push({ key: partKey(mark.role, item, orient), morphed, ...drawn, x: gx + drawn.x, y: gy + drawn.y, mark, items: [item], gx, gy });
+            const text = mark.marktype === 'text'
+                ? { x: gx + (item.x ?? 0), y: gy + (item.y ?? 0), angle: item.angle ?? 0, fontSize: item.fontSize ?? 11 }
+                : undefined;
+            parts.push({ key: partKey(mark.role, item, orient), morphed, ...drawn, x: gx + drawn.x, y: gy + drawn.y, ...(text ? { text } : {}), mark, items: [item], gx, gy });
         }
     };
     visit(root, origin.x, origin.y, '', '');
@@ -114,6 +118,12 @@ function poseItem(copy: any, item: any, part: SourcePart, pose: FramePose): void
     if (copy.mark.marktype === 'group') {
         copy.width = (item.width ?? 0) * sx;
         copy.height = (item.height ?? 0) * sy;
+    } else if (copy.mark.marktype === 'text' && pose.text) {
+        // The copy is drawn inside a wrapper moved by the pose, so its anchor is set back by that move.
+        copy.x = pose.text.x - part.gx - pose.dx;
+        copy.y = pose.text.y - part.gy - pose.dy;
+        copy.angle = pose.text.angle;
+        copy.fontSize = pose.text.fontSize;
     } else if (copy.mark.marktype === 'rule') {
         const x = item.x ?? 0;
         const y = item.y ?? 0;

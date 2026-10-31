@@ -840,7 +840,11 @@ export const MORPH_TYPES: Record<string, readonly string[]> = {
     line: ['x', 'y', 'stroke', 'strokeWidth'],
 };
 
-/** Every keyed item of `view`, offset by where its root group sits in the rendered element. */
+/**
+ * Every item of `view` that names its element, offset by where its root group sits in the
+ * rendered element: by its row key, or, on a chart compiled without interactions, by the
+ * identity fields its datum carries.
+ */
 export function captureMorphScene(view: any, fields: readonly string[], origin: { x: number; y: number }): MorphScene {
     const items: MorphItem[] = [];
     const visit = (node: any, offsetX: number, offsetY: number): void => {
@@ -851,7 +855,9 @@ export function captureMorphScene(view: any, fields: readonly string[], origin: 
                 continue;
             }
             const channels = MORPH_TYPES[mark?.marktype];
-            if (!channels || mark?.role === 'scene-exit' || typeof item.datum?.[INTERACTION_KEY] !== 'string') continue;
+            const named = typeof item.datum?.[INTERACTION_KEY] === 'string'
+                || (fields.length > 0 && fields.every((field) => item.datum?.[field] !== undefined && item.datum?.[field] !== null));
+            if (!channels || mark?.role === 'scene-exit' || !named) continue;
             const values: Record<string, unknown> = { opacity: item.opacity };
             for (const channel of channels) if (item[channel] !== undefined) values[channel] = item[channel];
             if (typeof values.x === 'number') values.x += offsetX + origin.x;

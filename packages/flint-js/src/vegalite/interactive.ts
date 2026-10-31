@@ -353,6 +353,8 @@ export function createVegaInteractiveRenderer(
             // The Vega spec a plan of this chart mounts as, with the interactions compiled in.
             const shape = (planned: Pick<Replanned, 'spec' | 'axisLabels' | 'dataLabels'>) => {
                 const shapedSpec = planned.spec;
+                // What each mark is about, from the compile itself: a chart without interactions still morphs into its next spec by it.
+                const morphFields: readonly string[] = shapedSpec._interactionSemantics?.identityFields ?? [];
                 const interactionPlan = addVegaLiteInteractions(
                     shapedSpec,
                     interactions,
@@ -407,10 +409,10 @@ export function createVegaInteractiveRenderer(
                     interactionPlan.tweenScales = injectScaleTween(vegaSpec);
                     interactionPlan.tweenSizes = injectSizeTween(vegaSpec);
                 }
-                return { interactionPlan, vegaSpec, relaidSignals, livePlanner };
+                return { interactionPlan, vegaSpec, relaidSignals, livePlanner, morphFields };
             };
             const shaped = shape(drawn);
-            const { interactionPlan, vegaSpec, relaidSignals } = shaped;
+            const { interactionPlan, vegaSpec, relaidSignals, morphFields } = shaped;
             let livePlanner = shaped.livePlanner;
             // A chart laid out for its room binds its layout values, so a new room is pushed in place.
             let liveValues = options.liveValues && viewports.length === 0 && !interactionPlan?.geoNavigation
@@ -627,8 +629,8 @@ export function createVegaInteractiveRenderer(
                     return interactionController?.getInteractionContext() ?? fallbackContext();
                 },
                 morphScene() {
-                    const fields = interactionPlan?.identityFields ?? [];
-                    if (destroyed || fields.length === 0 || !hasSceneTween(view)) return undefined;
+                    const fields = interactionPlan ? interactionPlan.identityFields ?? [] : morphFields;
+                    if (destroyed || fields.length === 0 || (interactionPlan && !hasSceneTween(view))) return undefined;
                     return captureMorphScene(view, fields, drawnOrigin());
                 },
                 frameScene() {

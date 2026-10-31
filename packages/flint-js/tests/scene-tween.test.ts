@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { parse, View } from 'vega';
 import {
     captureGhosts,
+    captureMorphScene,
     captureScene,
     domainPath,
     identityRepeats,
@@ -376,6 +377,16 @@ describe('scene tween', () => {
         expect(transitionEasing({ duration: 300 }, { duration: 800, easing: 'linear' })).toBe('ease-in-out');
         expect(validateTransition('test', { duration: 800, easing: 'linear' })).toEqual({ duration: 800, easing: 'linear' });
         expect(() => validateTransition('test', { duration: 800, easing: 'bounce' as never })).toThrow(/easing/);
+    });
+
+    it('names the marks of a chart without interactions for a morph by the identity fields their rows carry', async () => {
+        const spec = barSpec(['a', 'b', 'c']);
+        spec.data[0].transform = [];
+        const view = new View(parse(spec), { renderer: 'none' });
+        await view.runAsync();
+        expect(captureMorphScene(view, [], { x: 0, y: 0 }).items).toHaveLength(0);
+        const scene = captureMorphScene(view, ['k'], { x: 0, y: 0 });
+        expect(scene.items.map((item) => item.datum.k)).toEqual(['a', 'b', 'c']);
     });
 });
 
