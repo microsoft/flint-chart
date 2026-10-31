@@ -99,7 +99,7 @@ export function MapSemanticZoomStage({ compact = false, dataset = MOBILITY_DATAS
       domainGuard: { minVisibleFraction: 0.04, maxVisibleFraction: 1, overscrollFraction: 0 },
       // A click on empty map flies home; the bare stage keeps the double-click.
       reset: dataset.bare ? ['double-click'] : ['click-none'],
-      resetTransition: { duration: FLY_MS },
+      transition: { duration: FLY_MS },
     }),
     CLICK_REGION,
   ], [dataset.bare]);

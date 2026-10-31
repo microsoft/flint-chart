@@ -17,6 +17,9 @@ import { ThemeSwatches } from '../components/ThemeSwatches';
 import { BACKENDS } from '../shared/supported-backends';
 import { CONTENT_MAX_WIDTH, GITHUB_REPO, siteTheme } from '../shared/theme';
 
+/** An edit being typed draws at once: it is a draft, not a change to watch. */
+const JUMP = { duration: 0 };
+
 /**
  * The preview wall, in rows of four charts of a like height — measured as the mean drawn height
  * across Flint's defaults and a dozen houses, so a row stays even whichever theme is in view: the
@@ -391,7 +394,7 @@ function PreviewTile({
       }}
     >
       <ScaleToFit height={CHART_HEIGHT} minHeight={110} adaptiveHeight padding={2}>
-        <FlintView spec={input} renderer="svg" compact />
+        <FlintView spec={input} renderer="svg" compact transition={JUMP} />
       </ScaleToFit>
       <div className="theme-lab-tile-caption">{blurb}</div>
     </article>

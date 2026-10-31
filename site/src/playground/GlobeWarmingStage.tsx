@@ -157,7 +157,7 @@ export function GlobeWarmingStage({ layout = 'side' }: { layout?: 'side' | 'stac
     navigate({
       domainGuard: { minVisibleFraction: 0.15, maxVisibleFraction: 1, overscrollFraction: 0 },
       reset: ['double-click'],
-      resetTransition: { duration: TURN_MS },
+      transition: { duration: TURN_MS },
     }),
     CLICK_COUNTRY,
   ], []);

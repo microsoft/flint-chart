@@ -313,7 +313,7 @@ export function ClimatePhaseStage({ compact = false, height = compact ? 300 : 54
       startTime ??= time;
       const elapsedPhase = (time - startTime) / 400;
       const phase = startPhase + Math.min(12, elapsedPhase);
-      await chartRef.current?.dispatch(PLAYBACK_ID, { city: cityName, phase });
+      await chartRef.current?.dispatch(PLAYBACK_ID, { city: cityName, phase }, { phase: elapsedPhase >= 12 ? 'commit' : 'preview' });
       if (cancelled) return;
       if (elapsedPhase >= 12) {
         setIsPlaying(false);
@@ -327,6 +327,12 @@ export function ClimatePhaseStage({ compact = false, height = compact ? 300 : 54
       if (animationFrame !== undefined) window.cancelAnimationFrame(animationFrame);
     };
   }, [isPlaying]);
+
+  // Pausing lands the previewed frame; a click or drag on the chart replaces it instead.
+  const togglePlay = () => {
+    if (isPlaying) void chartRef.current?.dispatch(PLAYBACK_ID, { city: selectedCityRef.current, phase: activePhaseRef.current });
+    setIsPlaying((playing) => !playing);
+  };
 
   const selected = CLIMATE_CITIES.find(city => city.name === selectedCity) ?? CLIMATE_CITIES[0];
   const frame = frameAt(selected, activePhase);
@@ -363,7 +369,7 @@ export function ClimatePhaseStage({ compact = false, height = compact ? 300 : 54
           className="ic-pill"
           data-active={isPlaying}
           aria-pressed={isPlaying}
-          onClick={() => setIsPlaying((playing) => !playing)}
+          onClick={togglePlay}
         >
           {isPlaying ? 'Pause' : `▶ Play ${selectedCity}`}
         </button>
@@ -374,7 +380,7 @@ export function ClimatePhaseStage({ compact = false, height = compact ? 300 : 54
           <button type="button" className="cf-demo-play"
             title={isPlaying ? 'Pause' : `Play ${selectedCity}`}
             aria-label={isPlaying ? 'Pause' : `Play ${selectedCity}`} aria-pressed={isPlaying}
-            onClick={() => setIsPlaying(playing => !playing)}>
+            onClick={togglePlay}>
             {isPlaying ? <Pause size={14} aria-hidden="true" /> : <Play size={14} aria-hidden="true" />}
           </button>
         </div>
