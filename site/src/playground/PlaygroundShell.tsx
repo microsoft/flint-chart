@@ -51,6 +51,7 @@ const pages: NavEntry[] = [
       { to: 'interaction-conflicts', label: 'Conflict cases' },
       { to: 'chart-api-design', label: 'API design: FlintChart' },
       { to: 'annotation-lab', label: 'Annotation lab' },
+      { to: 'update-animation', label: 'Update animation' },
       { to: 'interaction-dashboard', label: 'Demo: dashboard' },
       { to: 'external-to-chart', label: 'Demo: external to chart' },
       { to: 'chart-to-external', label: 'Demo: chart to external' },
