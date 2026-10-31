@@ -1,5 +1,6 @@
 import { CHART_TRANSITIONS } from '../core/chart-transitions';
-import { runTween } from './transition';
+import { easingCurve, runTween } from './transition';
+import type { TransitionEasing } from './types';
 
 /** One drawn item of a chart, in the coordinates of the element the chart renders into. */
 export interface MorphItem {
@@ -255,6 +256,8 @@ export interface ChartSwap {
     /** The element both sit in; the morph layer is drawn over it. */
     readonly stage: HTMLElement;
     readonly duration: number;
+    /** How the swap moves over its duration; defaults to `ease-in-out`. */
+    readonly easing?: TransitionEasing;
     /** Runs with each frame's progress, from 0 to 1. */
     readonly onFrame?: (t: number) => void;
 }
@@ -266,7 +269,7 @@ export interface ChartSwap {
  * transition whose two scenes share row fields, the marks morph into each other. A chart that
  * cannot hand over its parts, or has too many, cross-fades. Resolves once the next chart shows alone.
  */
-export async function transitionBetween({ from, to, stage, duration, onFrame }: ChartSwap): Promise<void> {
+export async function transitionBetween({ from, to, stage, duration, easing, onFrame }: ChartSwap): Promise<void> {
     const show = (element: HTMLElement, opacity: number) => { element.style.opacity = String(opacity); };
     if (duration <= 0) {
         to.element.style.opacity = '';
@@ -279,7 +282,7 @@ export async function transitionBetween({ from, to, stage, duration, onFrame }: 
             onFrame?.(t);
             show(to.element, Math.min(1, t * 2));
             show(from.element, Math.min(1, 2 - t * 2));
-        }).done;
+        }, easingCurve(easing)).done;
         to.element.style.opacity = '';
         return;
     }
@@ -304,7 +307,7 @@ export async function transitionBetween({ from, to, stage, duration, onFrame }: 
     await runTween(duration, (t) => {
         onFrame?.(t);
         drawFrame(t);
-    }).done;
+    }, easingCurve(easing)).done;
     from.source?.setDrawnHidden?.(false);
     to.element.style.opacity = '';
     fromLayer.destroy();

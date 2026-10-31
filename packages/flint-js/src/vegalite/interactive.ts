@@ -33,7 +33,7 @@ import {
     type LiveLayoutPlanner,
 } from './interactions/live-layout';
 import { mountVegaInteractions } from './interactions/runtime';
-import { bindLegendDomains, captureMorphScene, hasSceneTween, injectAxisTween, injectScaleTween } from './interactions/scene-tween';
+import { bindLegendDomains, captureMorphScene, hasSceneTween, injectAxisTween, injectScaleTween, injectSizeTween } from './interactions/scene-tween';
 import { captureFrameScene } from './interactions/frame-scene';
 import { advanceLiveValues, bindLiveValues, LIVE_VALUES_SIGNAL, liveValuesChange } from './live-values';
 import { readDrawnLayout } from './drawn-layout';
@@ -405,6 +405,7 @@ export function createVegaInteractiveRenderer(
                     injectAxisTween(vegaSpec);
                     interactionPlan.legendDomains = bindLegendDomains(vegaSpec, interactionPlan.legendDomains);
                     interactionPlan.tweenScales = injectScaleTween(vegaSpec);
+                    interactionPlan.tweenSizes = injectSizeTween(vegaSpec);
                 }
                 return { interactionPlan, vegaSpec, relaidSignals, livePlanner };
             };

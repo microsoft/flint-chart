@@ -2,7 +2,9 @@ import type { CategoryViewport, ChartAssemblyInput, ChartWarning } from '../core
 import type { ChartState, FlintInteractionEventDetail, InteractionContext, InteractionDef, SemanticTarget } from './interactions';
 import type { CanvasInteractionAction, CanvasInteractionEvent } from './language/events';
 import type { ChartUpdate, ChartUpdateResult } from './language/updates';
-import type { AssistedTargetingOptions } from '../core/interaction-spec';
+import type { AssistedTargetingOptions, ChartUpdateTransition } from '../core/interaction-spec';
+
+export type { ChartUpdateTransition, TransitionEasing } from '../core/interaction-spec';
 import type { InteractionResetGesture } from './reset';
 import type { VegaInteractiveRendererOptions } from '../vegalite/interactive';
 import type { EChartsInteractiveRendererOptions } from '../echarts/interactive';
@@ -23,11 +25,6 @@ export interface ViewportGeometry {
 }
 
 export type ChartUpdateComposition = 'auto';
-
-/** How long a committed change animates, in milliseconds; 0 jumps. */
-export interface ChartUpdateTransition {
-    duration: number;
-}
 
 export interface ChartUpdateApplyOptions {
     composition?: ChartUpdateComposition;
@@ -210,11 +207,14 @@ export interface InteractiveChartSurface {
     readonly layout: ChartLayout | undefined;
     getViewportState(): ViewportState;
     setViewport(channel: ViewportChannel, start: number): void;
-    /** Runs an external interaction; `options.phase` marks a change still in progress, as `applyUpdate` does. */
+    /**
+     * Runs an external interaction; `options.phase` marks a change still in progress, as `applyUpdate`
+     * does, and `options.transition` animates this call, ahead of the interaction's own.
+     */
     dispatch(
         interactionId: string,
         payload: unknown,
-        options?: Pick<ChartUpdateApplyOptions, 'phase'>,
+        options?: Pick<ChartUpdateApplyOptions, 'phase' | 'transition'>,
     ): Promise<ChartUpdateResult | null>;
     applyUpdate(update: ChartUpdate, options?: ChartUpdateApplyOptions): Promise<ChartUpdateResult>;
     setUpdates(updates: readonly ChartUpdate[]): Promise<readonly ChartUpdateResult[]>;

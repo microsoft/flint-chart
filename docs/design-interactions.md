@@ -136,6 +136,9 @@ the preview with that id.
 The duration is the first one named: the call's `transition`, the interaction's (every preset
 takes `transition`), the chart's (`interaction_spec.transition` or `mountChart({ transition })`),
 else 300 ms. `{ duration: 0 }` jumps, and `prefers-reduced-motion` turns every duration off.
+The same transition names its easing: `ease-in-out` by default, or `linear`, which holds one
+speed and runs the leave, move and arrive stages together, so data that streams in at a steady
+interval slides on without stopping at each update.
 Motion is interaction state, not style: `theme_spec` does not carry it, the assemblers never read
 it, and a static render has none.
 
@@ -164,7 +167,9 @@ new one, linearly or, on a log scale, geometrically, and axes, ticks and gridlin
 move in data units: each frame mixes a row's value toward its new one and places it through the
 scale as that frame draws it, so a bar sits on its gridline mid-way. What a scale does not
 explain moves in screen units: a new order (the labels of a discrete axis glide with it), a
-stack re-forming, sizes, angles, colours. Legend entries fade between shown, dimmed and hidden.
+stack re-forming, sizes, angles, colours. A chart whose size follows its data (a bar per
+category) moves to its new size with the change, and while it moves a line clips to its plot: a
+stretch it lost slides out through the edge with the scale, and a stretch it gained slides in. Legend entries fade between shown, dimmed and hidden.
 The stages run in order and share the duration: rows that leave fade out where they stood (a
 quarter), what stays moves, rows that arrive fade in (a quarter); a note or an overlay the update
 adds waits for the marks to land. Post-encoding formulas do the mixing from a frame captured
@@ -173,8 +178,9 @@ change mid-flight starts from the frame on screen. `set-viewport` moves the same
 its own domain path. `getState()` reports where an update goes, never a frame, and a host's call
 resolves when the motion ends. Past 2,000 drawn items a committed change jumps.
 
-Out of scope by the same rules: a preview, which follows the hand; a resize, which changes room,
-not meaning; a theme, which changes style, not meaning, and so cross-fades at most.
+Out of scope by the same rules: a preview, which follows the hand; a resize of the room the
+host gives the chart, which changes room, not meaning; a theme, which changes style, not meaning,
+and so cross-fades at most.
 
 A new chart type is not an update: it changes `chart_spec`, what the chart means, so it reaches
 the chart through `surface.setInput(input)`, which `FlintChart` calls when its `spec` changes.

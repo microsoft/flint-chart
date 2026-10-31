@@ -159,7 +159,7 @@ export function externalInteraction<TPayload>(definition: {
 
 /** The option every preset takes: how long the changes it commits animate. */
 export interface TransitionOption {
-    /** How long this interaction's committed changes animate, its reset included. Defaults to the chart's transition; `{ duration: 0 }` jumps. */
+    /** How this interaction's committed changes animate, its reset included: how long, and with which easing. Defaults to the chart's transition; `{ duration: 0 }` jumps. */
     transition?: ChartUpdateTransition;
 }
 

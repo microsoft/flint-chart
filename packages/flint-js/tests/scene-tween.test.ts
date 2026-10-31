@@ -7,6 +7,7 @@ import {
     identityRepeats,
     injectScaleTween,
     injectSceneTween,
+    injectSizeTween,
     placeOutlineStarts,
     SCENE_ENTER_SIGNAL,
     SCENE_EXIT_SIGNAL,
@@ -16,6 +17,7 @@ import {
     setSceneExits,
 } from '../src/vegalite/interactions/scene-tween';
 import { INTERACTION_KEY } from '../src/vegalite/interactions/stores';
+import { easingCurve, transitionEasing, validateTransition } from '../src/interactive/transition';
 
 function barSpec(order: string[]): Record<string, any> {
     return {
@@ -305,6 +307,75 @@ describe('scene tween', () => {
         injectSceneTween(spec);
         expect(injectScaleTween(spec).map((scale) => scale.name)).toEqual(['x', 'y']);
         expect(spec.scales[1].domainRaw).toEqual({ signal: '__flint_domain_y' });
+    });
+
+    it('slides the stretch a staying line lost out with its scale, joined to the line and clipped to the plot', async () => {
+        const spec: Record<string, any> = {
+            signals: [{ name: 'width', value: 200 }, { name: 'height', value: 100 }, { name: 'held', value: null }],
+            data: [{
+                name: 'rows',
+                values: [0, 1, 2, 3].map((t) => ({ t, v: t })),
+                transform: [{ type: 'formula', as: INTERACTION_KEY, expr: 'toString(datum.t)' }],
+            }],
+            scales: [
+                { name: 'x', type: 'linear', domainRaw: { signal: 'held' }, domain: { data: 'rows', field: 't' }, range: 'width' },
+                { name: 'y', type: 'linear', domain: [0, 4], range: 'height' },
+            ],
+            marks: [{
+                type: 'line',
+                name: 'line',
+                from: { data: 'rows' },
+                encode: { update: { x: { scale: 'x', field: 't' }, y: { scale: 'y', field: 'v' } } },
+            }],
+        };
+        injectSceneTween(spec, ['t']);
+        expect(spec.marks[0].clip).toEqual({ signal: `${SCENE_T_SIGNAL} < 1` });
+        const view = new View(parse(spec), { renderer: 'none' });
+        await view.runAsync();
+        const before = captureGhosts(view, ['t']);
+        view.data('rows', [1, 2, 3, 4].map((t) => ({ t, v: t })));
+        await view.runAsync();
+        expect(setSceneExits(view, before, captureGhosts(view, ['t']))).toBe(0);
+        const segment = (): any[] => (view.scenegraph() as any).root.items[0].items
+            .find((mark: any) => mark.name === '__flint_scene_exit_line_series').items[0].items[0].items;
+        view.signal(SCENE_T_SIGNAL, 0.5).signal('held', [0.5, 3.5]);
+        await view.runAsync();
+        // The lost point 0 and the staying point 1, placed on the frame's domain [0.5, 3.5].
+        expect(segment().map((item: any) => Math.round(item.x))).toEqual([-33, 33]);
+        expect(segment()[0].opacity).toBe(1);
+        expect(segment()[0].mark.clip).toBe(true);
+    });
+
+    it('holds a size worked out from the data, sets a plain size directly, and leaves a chart without the tween alone', async () => {
+        const spec: Record<string, any> = {
+            signals: [{ name: 'x_step', value: 40 }, { name: 'width', update: "length(data('rows')) * x_step" }, { name: 'height', value: 100 }],
+            data: [{ name: 'rows', values: [{ k: 'a' }, { k: 'b' }] }],
+            marks: [{ type: 'rect', name: 'bars', from: { data: 'rows' }, encode: { update: { x: { value: 0 } } } }],
+        };
+        expect(injectSizeTween(structuredClone(spec))).toEqual([]);
+        injectSceneTween(spec);
+        expect(injectSizeTween(spec)).toEqual([
+            { dimension: 'width', signal: '__flint_size_width' },
+            { dimension: 'height', signal: 'height' },
+        ]);
+        const view = new View(parse(spec), { renderer: 'none' });
+        await view.runAsync();
+        expect(view.signal('width')).toBe(80);
+        view.data('rows', [{ k: 'a' }, { k: 'b' }, { k: 'c' }]).signal('__flint_size_width', 90);
+        await view.runAsync();
+        expect(view.signal('width')).toBe(90);
+        view.signal('__flint_size_width', null);
+        await view.runAsync();
+        expect(view.signal('width')).toBe(120);
+    });
+
+    it('eases a change in or out by default, at one speed when asked, and names the easing of the first transition given', () => {
+        expect(easingCurve(undefined)(0.25)).toBeCloseTo(0.125);
+        expect(easingCurve('linear')(0.25)).toBe(0.25);
+        expect(transitionEasing(undefined, { duration: 800, easing: 'linear' }, { duration: 300 })).toBe('linear');
+        expect(transitionEasing({ duration: 300 }, { duration: 800, easing: 'linear' })).toBe('ease-in-out');
+        expect(validateTransition('test', { duration: 800, easing: 'linear' })).toEqual({ duration: 800, easing: 'linear' });
+        expect(() => validateTransition('test', { duration: 800, easing: 'bounce' as never })).toThrow(/easing/);
     });
 });
 

@@ -14,7 +14,7 @@ import { isExternalInteraction, type FlintInteractionEventDetail } from './inter
 import { describeFilterFields, isFilterControls, versionFieldsOf, type FilterControlsDef, type FilterControlsPayload } from './filter-controls';
 import { isContextMenu, mountContextMenu } from './context-menu';
 import { transitionBetween } from './morph';
-import { transitionDuration } from './transition';
+import { transitionDuration, transitionEasing } from './transition';
 import { mountFilterEmptyNotice, mountFilterStrip, resolveFilterPlacement } from './filter-controls-dom';
 import type { ChartUpdate, ChartUpdateResult } from './language/updates';
 
@@ -531,6 +531,7 @@ export function mountInteractiveChartSurface(
             to: { element: stage, source: mounted, chartType: next.chart_spec.chartType },
             stage: layer,
             duration: transitionDuration(setOptions.transition, options.transition),
+            easing: transitionEasing(setOptions.transition, options.transition),
             onFrame: (t) => hold(
                 fromSize.width + (toSize.width - fromSize.width) * t,
                 fromSize.height + (toSize.height - fromSize.height) * t,
@@ -587,7 +588,9 @@ export function mountInteractiveChartSurface(
             return renderer.applyUpdate(update, {
                 interactionId,
                 ...(dispatchOptions?.phase ? { phase: dispatchOptions.phase } : {}),
-                ...(interaction.transition ? { transition: interaction.transition } : {}),
+                ...(dispatchOptions?.transition ?? interaction.transition
+                    ? { transition: dispatchOptions?.transition ?? interaction.transition }
+                    : {}),
             });
         },
         applyUpdate: async (update, applyOptions) => {

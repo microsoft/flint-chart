@@ -1,4 +1,4 @@
-import type { ChartUpdateTransition } from './types';
+import type { ChartUpdateTransition, TransitionEasing } from './types';
 
 /** How long a committed change animates when nothing names a duration. */
 export const DEFAULT_TRANSITION_MS = 300;
@@ -11,14 +11,26 @@ export const nextFrame = (callback: () => void): void => {
 };
 
 export const easeInOut = (t: number): number => (t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2);
+const EASINGS: Record<TransitionEasing, (t: number) => number> = { 'ease-in-out': easeInOut, linear: (t) => t };
 
-/** Validates a transition option; throws on a negative or non-finite duration. */
+/** The curve a named easing follows over a change's progress. */
+export const easingCurve = (easing: TransitionEasing | undefined): ((t: number) => number) => EASINGS[easing ?? 'ease-in-out'];
+
+/** Validates a transition option; throws on a negative or non-finite duration or an unknown easing. */
 export function validateTransition(owner: string, transition: ChartUpdateTransition | undefined): ChartUpdateTransition | undefined {
     if (transition === undefined) return undefined;
     if (!(transition && Number.isFinite(transition.duration) && transition.duration >= 0)) {
         throw new Error(`${owner} requires a finite, non-negative transition duration.`);
     }
-    return { duration: transition.duration };
+    if (transition.easing !== undefined && !(transition.easing in EASINGS)) {
+        throw new Error(`${owner}: transition easing must be one of ${Object.keys(EASINGS).join(', ')}.`);
+    }
+    return transition.easing ? { duration: transition.duration, easing: transition.easing } : { duration: transition.duration };
+}
+
+/** The easing of the first transition named, from the most specific source to the least. */
+export function transitionEasing(...sources: (ChartUpdateTransition | undefined)[]): TransitionEasing {
+    return sources.find((source) => source !== undefined)?.easing ?? 'ease-in-out';
 }
 
 function prefersReducedMotion(): boolean {

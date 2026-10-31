@@ -320,15 +320,24 @@ export function linkCharts(charts: Record<string, LinkedChart>, spec: LinkSpec, 
         for (const listener of listeners) listener(snapshot);
     };
 
-    const unsubscribers = Object.entries(charts).map(([id, chart]) => chart.surface.onChange((change) => {
+    // A commit made while the link still loads what each chart sends waits for it; only the latest counts.
+    const waiting = new Map<string, ChartChange>();
+    const read = (id: string, change: ChartChange): void => {
         if (!state) return;
         const { changed, dropOwn } = state.read(id, change);
-        if (dropOwn) void chart.surface.clearUpdate(dropOwn);
+        if (dropOwn) void charts[id]!.surface.clearUpdate(dropOwn);
         if (changed) show(change.phase === 'preview');
+    };
+    const unsubscribers = Object.entries(charts).map(([id, chart]) => chart.surface.onChange((change) => {
+        if (state) read(id, change);
+        else if (change.source !== 'host' && change.phase !== 'preview') waiting.set(id, change);
     }));
 
     const ready = links.then((resolved) => {
-        if (!destroyed) state = createLinkState(resolved);
+        if (destroyed) return;
+        state = createLinkState(resolved);
+        for (const [id, change] of waiting) read(id, change);
+        waiting.clear();
     });
 
     return {

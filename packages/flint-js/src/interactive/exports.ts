@@ -17,6 +17,7 @@ export type {
     ChartStateFacet,
     ChartUpdateApplyOptions,
     ChartUpdateTransition,
+    TransitionEasing,
     ChartUpdateComposition,
     InteractiveBackend,
     InteractiveChartSurface,

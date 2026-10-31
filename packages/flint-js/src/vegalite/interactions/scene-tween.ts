@@ -208,6 +208,7 @@ export function injectSceneTween(vegaSpec: Record<string, any>, identityFields: 
     let tweened = false;
     let unnamed = 0;
     const ghostTypes = new Set<string>();
+    const pathScales = new Set<string>();
     walkMarks(vegaSpec.marks, (mark) => {
         if (mark.type === 'group' || !mark.from || !mark.encode) return;
         const channels = channelsOf(mark.type);
@@ -220,6 +221,12 @@ export function injectSceneTween(vegaSpec: Record<string, any>, identityFields: 
             ? `(${SCENE_OUTLINE_SIGNAL} && datum.${OUTLINE_GENERATION} === ${SCENE_OUTLINE_SIGNAL} ? datum.${OUTLINE_FROM} : ${keyed})`
             : keyed;
         const positions = dataChannels(mark, continuous);
+        if (outline) {
+            // While a change runs, a line's ends slide in and out through the plot's edges.
+            if (!mark.clip) mark.clip = { signal: `${SCENE_T_SIGNAL} < 1` };
+            const scaleOf = (axis: 'x' | 'y') => positions.find((entry) => entry.channel === axis)?.scale ?? '';
+            pathScales.add(`${scaleOf('x')}|${scaleOf('y')}`);
+        }
         const entering = `(isValid(${markFrom}) && datum.datum && isString(datum.datum.${INTERACTION_KEY}) && !isValid(${from}) && ${SCENE_ENTER_SIGNAL} <= 0)`;
         mark.encode = {
             ...mark.encode,
@@ -257,23 +264,34 @@ export function injectSceneTween(vegaSpec: Record<string, any>, identityFields: 
         vegaSpec.data = [...(Array.isArray(vegaSpec.data) ? vegaSpec.data : []), { name: exitData(type), values: [] }];
         const pathChannels = PATH_CHANNELS[type];
         if (pathChannels) {
-            // A leaving series is one path drawn through its rows: one group per series draws it.
+            const [xScale, yScale] = pathScales.size === 1 ? [...pathScales][0]!.split('|') : ['', ''];
+            const placed = (channel: string, scale: string) => (scale
+                ? { signal: `isNumber(datum.__d_${channel}) ? scale(${JSON.stringify(scale)}, datum.__d_${channel}) : datum.${channel}` }
+                : { field: channel });
+            // A leaving series is one path drawn through its rows: one group per series draws it. A
+            // segment a staying line lost slides out with the scale, at full strength, through the plot's edge.
             vegaSpec.marks = [...(vegaSpec.marks ?? []), {
                 type: 'group',
                 name: `${exitData(type)}_series`,
                 role: 'scene-exit',
                 from: { facet: { data: exitData(type), name: `${exitData(type)}_rows`, groupby: '__series' } },
+                encode: { update: { width: { signal: 'width' }, height: { signal: 'height' } } },
                 marks: [{
                     type,
                     name: `${exitData(type)}_marks`,
                     role: 'scene-exit',
                     from: { data: `${exitData(type)}_rows` },
                     sort: { field: 'datum.__order' },
+                    clip: true,
                     interactive: false,
                     encode: {
                         update: {
                             ...Object.fromEntries(pathChannels.map((channel) => [channel, { field: channel }])),
-                            opacity: fading,
+                            x: placed('x', xScale!),
+                            y: placed('y', yScale!),
+                            ...(pathChannels.includes('y2') ? { y2: placed('y2', yScale!) } : {}),
+                            __flint_scene_t: { signal: SCENE_T_SIGNAL },
+                            opacity: { signal: `datum.__slides ? (isNumber(datum.opacity) ? datum.opacity : 1) : ${fading.signal}` },
                         },
                     },
                 }],
@@ -338,6 +356,12 @@ export function captureGhosts(view: any, identityFields: readonly string[] = [])
                 if (typeof values.x === 'number') values.x += offsetX;
                 if (typeof values.y === 'number') values.y += offsetY;
                 if (typeof values.y2 === 'number') values.y2 += offsetY;
+                if (offsetX === 0 && offsetY === 0) {
+                    for (const channel of ['x', 'y', 'y2']) {
+                        const value = item[`__flint_d_${channel}`];
+                        if (typeof value === 'number' && Number.isFinite(value)) values[`__d_${channel}`] = value;
+                    }
+                }
                 const path = pathOf.get(mark) ?? { name: mark.name as string, type: mark.marktype as string, keys: [] as string[], vertices: [] as Record<string, unknown>[] };
                 path.keys.push(key);
                 path.vertices.push(values);
@@ -395,7 +419,13 @@ export function setSceneExits(view: any, before: SceneGhosts | null, after?: Sce
         const gone = before && after
             ? before.paths.filter((path) => path.type === type && !path.keys.some((key) => drawnAfter.get(path.name)?.has(key)))
             : [];
-        const rows = gone.flatMap((path, series) => path.vertices.map((vertex, order) => ({ ...vertex, __series: series, __order: order })));
+        const segments = before && after
+            ? before.paths.filter((path) => path.type === type && !gone.includes(path)).flatMap((path) => lostSegments(path, drawnAfter.get(path.name)))
+            : [];
+        const rows = [
+            ...gone.map((path) => path.vertices),
+            ...segments.map((segment) => segment.map((vertex) => ({ ...vertex, __slides: true }))),
+        ].flatMap((vertices, series) => vertices.map((vertex, order) => ({ ...vertex, __series: series, __order: order })));
         try {
             view.data(exitData(type), rows);
             leaving += gone.length;
@@ -416,6 +446,32 @@ export function setSceneExits(view: any, before: SceneGhosts | null, after?: Sce
         }
     }
     return leaving;
+}
+
+/**
+ * The stretches of a path whose vertices the chart no longer draws, each with the staying vertex
+ * beside it, so the stretch stays joined to the line while it slides out.
+ */
+function lostSegments(
+    path: { keys: readonly string[]; vertices: readonly Record<string, unknown>[] },
+    drawn: ReadonlySet<string> | undefined,
+): Record<string, unknown>[][] {
+    if (!drawn) return [];
+    const segments: Record<string, unknown>[][] = [];
+    let run: number[] = [];
+    const close = (next: number) => {
+        if (run.length === 0) return;
+        const first = run[0]! - 1;
+        const indices = [...(first >= 0 ? [first] : []), ...run, ...(next < path.keys.length ? [next] : [])];
+        segments.push(indices.map((index) => path.vertices[index]!));
+        run = [];
+    };
+    path.keys.forEach((key, index) => {
+        if (drawn.has(key)) close(index);
+        else run.push(index);
+    });
+    close(path.keys.length);
+    return segments;
 }
 
 const LEGEND_ROLES = ['legend-symbol', 'legend-label'] as const;
@@ -563,6 +619,36 @@ export function injectScaleTween(vegaSpec: Record<string, any>): TweenedScale[] 
         tweened.push({ name: scale.name, signal, type });
     }
     return tweened;
+}
+
+export interface TweenedSize {
+    readonly dimension: 'width' | 'height';
+    /** The signal a transition sets: a hold the size reads first, or the size itself when it is a plain value. */
+    readonly signal: string;
+}
+
+/**
+ * Lets a transition move the chart's size when its data changes it, as with a bar per category:
+ * a size worked out from the data reads a hold first, and a plain size is set directly. A size
+ * the host's room sets changes outside transitions, so it still jumps.
+ */
+export function injectSizeTween(vegaSpec: Record<string, any>): TweenedSize[] {
+    const signals: Record<string, any>[] = vegaSpec.signals ?? [];
+    if (!signals.some((signal) => signal.name === SCENE_T_SIGNAL)) return [];
+    const sizes: TweenedSize[] = [];
+    for (const dimension of ['width', 'height'] as const) {
+        const signal = signals.find((candidate) => candidate.name === dimension);
+        if (!signal || signal.on) continue;
+        if (typeof signal.update === 'string') {
+            const hold = `__flint_size_${dimension}`;
+            signals.push({ name: hold, value: null });
+            signal.update = `isNumber(${hold}) ? ${hold} : (${signal.update})`;
+            sizes.push({ dimension, signal: hold });
+        } else if (typeof signal.value === 'number') {
+            sizes.push({ dimension, signal: dimension });
+        }
+    }
+    return sizes;
 }
 
 function walkVegaScopes(scope: Record<string, any>, visit: (scope: Record<string, any>) => void): void {

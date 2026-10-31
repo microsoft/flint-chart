@@ -151,7 +151,7 @@ export interface FlintChartHandle {
     readonly surface: InteractiveChartSurface | null;
     applyUpdate(update: ChartUpdate, options?: ChartUpdateApplyOptions): Promise<ChartUpdateResult | null>;
     clearUpdate(id: string): Promise<void>;
-    dispatch(interactionId: string, payload: unknown, options?: Pick<ChartUpdateApplyOptions, 'phase'>): Promise<ChartUpdateResult | null>;
+    dispatch(interactionId: string, payload: unknown, options?: Pick<ChartUpdateApplyOptions, 'phase' | 'transition'>): Promise<ChartUpdateResult | null>;
     getState(): ChartState | undefined;
     refresh(): void;
 }
