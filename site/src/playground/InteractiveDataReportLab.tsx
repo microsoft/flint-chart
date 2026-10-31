@@ -100,8 +100,6 @@ export function ReportSection({ spec, editable }: { spec: SectionSpec; editable?
 /* ---------- 2. the slides: one sentence at a time ---------- */
 
 const SLIDE_MS = 5000;
-/** The mark glide of `.idr-animated` charts; keep in step with interactive-data-report.css. */
-const GLIDE = { glideMs: 500 };
 
 /** The slides of one chart: a sideways scroller, one sentence per page, with the controls under it. */
 interface SlidePanelProps {
@@ -224,11 +222,11 @@ function SlidePanel({ slides, report, vertical = false, header }: SlidePanelProp
 export function SlideSection({ spec }: { spec: SectionSpec }) {
   const { live, presets } = useEditableSpec(spec);
   const slides = useMemo(() => sentencesOf(spec.paragraphs), [spec.paragraphs]);
-  const report = useReportChart(live, slides, undefined, GLIDE);
+  const report = useReportChart(live, slides);
   return (
     <article className="it-example idr-section" id={`section-${spec.id}`}>
       <SectionHeader spec={spec} presets={presets} />
-      <div className="it-workspace idr-slides idr-animated">
+      <div className="it-workspace idr-slides">
         <SlidePanel slides={slides} report={report} />
         <section className="it-chart-panel idr-slide-chart">
           <FlintChart {...report.chartProps} renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" />
@@ -256,7 +254,7 @@ export function ArticleSection({ spec, editable = true }: { spec: SectionSpec; e
   const slides = useMemo(() => paragraphSlides(spec.paragraphs).map((slide) => (
     slide.kind === 'title' ? { ...slide, detail: slide.detail ?? spec.byline } : slide
   )), [spec.byline, spec.paragraphs]);
-  const report = useReportChart(live, slides, undefined, GLIDE);
+  const report = useReportChart(live, slides);
   // When the title is the first slide, the panel has no fixed header above the slides.
   const header = slides[0]?.kind === 'title' ? undefined : (
     <header className="idr-article-head">
@@ -271,7 +269,7 @@ export function ArticleSection({ spec, editable = true }: { spec: SectionSpec; e
         <div />
         <PresetEditor editable={presets} />
       </header>}
-      <div className="it-workspace idr-slides idr-article idr-animated">
+      <div className="it-workspace idr-slides idr-article">
         <SlidePanel slides={slides} report={report} vertical header={header} />
         <section className="it-chart-panel idr-slide-chart">
           <FlintChart {...report.chartProps} renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" />
@@ -565,7 +563,7 @@ export function StorySection({ spec, story, onChange }: StorySectionProps) {
   const paragraph = useMemo<Paragraph>(() => story.flatMap((item, index) => (index === 0 ? [item] : [' ', item])), [story]);
   const storySpec = useMemo<SectionSpec>(() => ({ ...live, paragraphs: [paragraph] }), [live, paragraph]);
   const jump = useMemo(() => scrollToSentence(spec.id), [spec.id]);
-  const report = useReportChart(storySpec, story, jump, GLIDE);
+  const report = useReportChart(storySpec, story, jump);
 
   // The reader's own sentence: the chart's selection as an emphasis, with a text to rewrite.
   const addOwn = async () => {
@@ -585,7 +583,7 @@ export function StorySection({ spec, story, onChange }: StorySectionProps) {
   return (
     <article className="it-example idr-section" id={`section-${spec.id}`}>
       <SectionHeader spec={spec} presets={presets} />
-      <div className="it-workspace idr-story idr-animated">
+      <div className="it-workspace idr-story">
         <section className="it-chart-panel idr-slide-chart">
           <FlintChart {...report.chartProps} renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" />
         </section>

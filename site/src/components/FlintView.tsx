@@ -18,10 +18,12 @@ interface FlintViewProps {
   onChange?: FlintChartProps['onChange'];
   /** After each mount, with the mounted chart. */
   onRender?: FlintChartProps['onRender'];
+  /** How a new spec lands; `{ duration: 0 }` draws it at once, as an edit being typed should. */
+  transition?: FlintChartProps['transition'];
 }
 
 /** A `FlintChart` that shows its compile error (and optionally warnings) in place. */
-export function FlintView({ spec, backend, renderer = 'canvas', chartId, ariaLabel, showWarnings = false, compact = false, errorPrefix, onChange, onRender }: FlintViewProps) {
+export function FlintView({ spec, backend, renderer = 'canvas', chartId, ariaLabel, showWarnings = false, compact = false, errorPrefix, onChange, onRender, transition }: FlintViewProps) {
   const [warnings, setWarnings] = useState<readonly ChartWarning[]>([]);
   const [error, setError] = useState<string | null>(null);
   const onError = useCallback((err: Error) => setError(err.message), []);
@@ -44,6 +46,7 @@ export function FlintView({ spec, backend, renderer = 'canvas', chartId, ariaLab
           onRender={onRender}
           onError={onError}
           onChange={onChange}
+          transition={transition}
         />
       )}
       {error && (

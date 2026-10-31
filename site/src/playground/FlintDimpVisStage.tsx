@@ -281,7 +281,8 @@ export function FlintDimpVisStage({ large = false }: { large?: boolean } = {}) {
       // Ten data-years per second preserves the old five-second full run,
       // while animation frames provide fractional years between observations.
       const year = Math.min(2005, startYear + (time - startTime) / 100);
-      await chartRef.current?.dispatch(PLAYBACK_INTERACTION_ID, { country: 'China', year });
+      const phase = year >= 2005 ? 'commit' : 'preview';
+      await chartRef.current?.dispatch(PLAYBACK_INTERACTION_ID, { country: 'China', year }, { phase });
       if (cancelled) return;
       if (year >= 2005) {
         setIsPlaying(false);
@@ -332,7 +333,11 @@ export function FlintDimpVisStage({ large = false }: { large?: boolean } = {}) {
           className="ic-pill"
           data-active={isPlaying}
           aria-pressed={isPlaying}
-          onClick={() => setIsPlaying((playing) => !playing)}
+          onClick={() => {
+            // Pausing lands the previewed frame; a click or drag on the chart replaces it instead.
+            if (isPlaying) void chartRef.current?.dispatch(PLAYBACK_INTERACTION_ID, { country: 'China', year: activeYearRef.current });
+            setIsPlaying((playing) => !playing);
+          }}
         >
           {isPlaying ? 'Pause' : '▶ Play China'}
         </button>

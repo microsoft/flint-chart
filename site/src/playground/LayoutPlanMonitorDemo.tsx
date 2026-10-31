@@ -12,7 +12,7 @@ type Row = Record<string, unknown>;
 interface Snapshot {
   rows: number;
   chartType: string;
-  spec: any;
+  spec: ChartAssemblyInput;
   facts: string;
   warning?: string;
 }
@@ -157,17 +157,18 @@ function snapshot(stream: Stream, tick: number): Snapshot & { switched?: string 
   const rows = stream.rowsAt(tick);
   const authored = stream.base.chart_spec.chartType;
   const decision = stream.policy(rows);
-  const session = openVegaLiteSession({
+  const input: ChartAssemblyInput = {
     ...structuredClone(stream.base),
     data: { values: rows },
     ...(decision ? { chart_spec: { ...structuredClone(stream.base.chart_spec), chartProperties: { pivot: `type:${decision.to}` } } } : {}),
-  });
+  };
+  const session = openVegaLiteSession(input);
   const warnings: { message?: string }[] = session.spec?._warnings ?? [];
   const step = specStep(session.spec, 'width');
   return {
     rows: rows.length,
     chartType: decision?.to ?? authored,
-    spec: session.spec,
+    spec: input,
     facts: `${step !== undefined ? `${step.toFixed(0)} px bands · ` : ''}labels ${labelText(session.axisLabels.x)}`,
     warning: warnings.length > 0 ? 'some values cut to fit' : undefined,
     switched: decision?.reason,

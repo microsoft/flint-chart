@@ -18,7 +18,14 @@ export function isActivationAction(action: string): boolean {
     return action.startsWith('click-') || action === 'activate-element';
 }
 
-export function semanticElementIdentity(element: SemanticTarget['elements'][number]): string {
+/** What names an element: its identity fields where the chart has them, else everything it holds. */
+export function semanticElementIdentity(
+    element: SemanticTarget['elements'][number],
+    identityFields: readonly string[] = [],
+): string {
+    const value = element.value as Record<string, unknown>;
+    const named = identityFields.filter((field) => field in value);
+    if (named.length > 0) return JSON.stringify(named.map((field) => value[field]));
     return JSON.stringify([element.value, element.records ?? []]);
 }
 
@@ -36,15 +43,15 @@ export function emphasisUpdate(
     if (!target) return { id, ops: [{ op: 'set-style', targets: [], value: { state: 'normal' } }] };
     if (target.elements.length === 0) return null;
     const toggle = selectionMode(event.modifiers) === 'toggle';
-    const targetKeys = new Set(target.elements.map(semanticElementIdentity));
-    const allSelected = target.elements.every((element) =>
-        context.selected.some((selected) => semanticElementIdentity(selected) === semanticElementIdentity(element)));
+    const identity = (element: SemanticTarget['elements'][number]) => semanticElementIdentity(element, context.identityFields);
+    const targetKeys = new Set(target.elements.map(identity));
+    const selectedKeys = new Set(context.selected.map(identity));
+    const allSelected = target.elements.every((element) => selectedKeys.has(identity(element)));
     const elements = !toggle
         ? target.elements
         : allSelected
-            ? context.selected.filter((element) => !targetKeys.has(semanticElementIdentity(element)))
-            : [...context.selected, ...target.elements.filter((element) =>
-                !context.selected.some((selected) => semanticElementIdentity(selected) === semanticElementIdentity(element)))];
+            ? context.selected.filter((element) => !targetKeys.has(identity(element)))
+            : [...context.selected, ...target.elements.filter((element) => !selectedKeys.has(identity(element)))];
     return {
         id,
         ops: [{

@@ -101,10 +101,11 @@ The surface API is intentionally small:
 | `onChange(callback)` | Hear every change to that state after the render: a gesture frame, a commit, a cancel, a host call |
 | `layout` | Read the plot box the chart is drawn with, once ready; a filter that re-lays the chart out updates it (Vega-Lite charts that draw one plot) |
 | `flint-interaction` event | Receive every resolved canvas action before the chart reacts to it |
-| `applyUpdate(update)` | Apply precomputed retained chart state by ID |
+| `applyUpdate(update, options?)` | Apply precomputed retained chart state by ID; `phase` (`preview`, `commit`, `cancel`) and `transition` as below |
 | `setUpdates(updates)` | Replace the retained update collection |
 | `clearUpdate(id)` | Remove one retained update |
-| `dispatch(interactionId, payload)` | Invoke an external handler and report its update result |
+| `dispatch(interactionId, payload, options?)` | Invoke an external handler and report its update result; `phase` and `transition` as for `applyUpdate` |
+| `setInput(input, options?)` | Draw a new input in place (new data, chart type or theme), keeping the surface, host updates and filters |
 | `destroy()` | Remove listeners, renderer state, and DOM |
 
 ## Read the chart
@@ -874,6 +875,12 @@ await surface.setUpdates(updates);
 retained updates in insertion order: presentation selections accumulate, while later
 annotation, viewport, and order operations take precedence. The policy is explicit so
 future composition modes can extend the API without changing this default behavior.
+
+A committed update animates from what the chart draws to what it says: 300 ms by default,
+`transition` on the call, the interaction or the chart sets it, and `{ duration: 0 }` jumps.
+A call with `phase: 'preview'` shows at once and replaces the last preview with its id, as a
+reader's drag does; `commit` keeps and animates it; `cancel` drops it. `docs/design-interactions.md`
+§2.5 says what moves and why.
 
 Relative gesture data is not update state. Pan deltas, zoom factors, toggle modifiers,
 and drag positions are reduced by interaction state into absolute `set-viewport`,

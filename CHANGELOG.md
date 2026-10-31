@@ -91,6 +91,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ECharts binned colour scales break at round values (`roundBinEdges`), labelled as ranges; a
   continuous size or colour ramp beside the plot stands from the plot's top with its title
   centred over the bar.
+- Committed chart updates animate: marks move by their identity, scales and axes move with
+  them, rows that leave fade out and rows that arrive fade in, in 300 ms by default. Every
+  interaction, `interaction_spec.transition`, `mountChart({ transition })` and each host call
+  take a `transition` (`duration`, `easing`); `{ duration: 0 }` jumps, and reduced motion turns
+  motion off. Host calls take `phase: 'preview' | 'commit' | 'cancel'`.
+- `surface.setInput(input)` draws a new input in place, morphing between chart types Flint
+  lists a transition for; `FlintChart` routes a new `spec` through it and takes `transition`.
+- Templates may declare `identityFields`, the fields that name an element across data changes.
 
 ### Changed
 
@@ -99,6 +107,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Vega-Lite too, as ECharts and Plotly draw it. On a time scale its cells, one width each, stood
   at their months' starts, 28 to 31 days apart, with uneven gaps. The time scale stays one
   `xAxisType` / `yAxisType` choice away; a run with a gap, or of days, weeks or years, keeps it.
+- **Breaking:** `brushZoom` and `navigate` drop `resetTransition`; their `transition` covers the
+  reset too. The `NavigationTransition` type export is replaced by `TransitionOption`. The
+  default viewport motion is 300 ms (was 400 ms).
 - **Breaking (MCP):** the server keeps nothing between calls, so it runs
   stateless. `show` takes the spec itself, as `chart` or `board`, and draws it;
   `validate_chart` and the new `validate_board` check a spec and return the

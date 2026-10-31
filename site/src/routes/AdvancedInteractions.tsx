@@ -214,7 +214,7 @@ const SECTIONS: { title: string; cases: Case[] }[] = [
         id: 'you-draw-it',
         title: 'You draw it',
         icon: Pencil,
-        body: 'Draw the future part of a line chart with a freehand stroke; once every year is filled, the chart reveals the real series and scores the guess. Press Reset or double-click to start over. Approximate annual U.S. coal electricity-generation shares, 2000-2024, rounded to one decimal.',
+        body: 'Draw the future part of a line chart with a freehand stroke; once every year is filled, the chart reveals the real series and scores the guess. Press Start over or double-click the chart to draw again. Approximate annual U.S. coal electricity-generation shares, 2000-2024, rounded to one decimal.',
         credit: { label: 'U.S. Energy Information Administration, Electric Power Monthly', url: 'https://www.eia.gov/electricity/monthly/' },
         demo: <YouDrawItStage />,
         code: drawSource,

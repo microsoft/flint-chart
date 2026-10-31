@@ -139,6 +139,16 @@ describe('linkCharts', () => {
     };
     const whereOf = (update: ChartUpdate | undefined) => (update?.ops[0] as any)?.targets[0].select.where;
 
+    it('applies a commit made before the link is ready once it is', async () => {
+        const bars = fakeSurface();
+        const trend = fakeSurface();
+        const linked = linkCharts({ bars: { input, surface: bars.surface }, trend: { input, surface: trend.surface } }, { fields: ['region', 'month'] }, { links });
+        bars.emit({ interactionId: 'click-highlight', state: holding('click-highlight', 'retained', marks({ region: 'Asia' })) });
+        await linked.ready;
+        expect(linked.condition().condition).toEqual({ region: { in: ['Asia'] } });
+        expect(whereOf(trend.applied.at(-1))).toEqual({ region: { in: ['Asia'] } });
+    });
+
     it('shows a committed selection on every chart, and the source drops its own emphasis', async () => {
         const { bars, trend, linked } = await setup();
         bars.emit({ interactionId: 'click-highlight', state: holding('click-highlight', 'retained', marks({ region: 'Asia' })) });

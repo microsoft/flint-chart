@@ -58,8 +58,8 @@ State is not part of the spec. What the chart shows now, an emphasis, a note, a 
 | `brush-x`, `brush-y` | Drags an interval along one axis; on a polar chart the x brush is an angular sector. | elements, cartesian region | click-none, escape |
 | `brush-angle` | Drags an angular sector on a pie, donut, rose, or radar chart. | elements, angular region | click-none, escape |
 | `linked-brush` | Brushes marks to highlight the same groups elsewhere (`groupBy` required). | elements, cartesian region | click-none, escape |
-| `brush-zoom` | Drags a rectangle to zoom into it (`axes`, `transition`, `resetTransition`). | navigation | double-click, escape |
-| `navigate` | Drags to pan and scrolls or pinches to zoom continuous axes (`axes`, `pan`, `domainGuard`, `resetTransition`). | navigation | double-click |
+| `brush-zoom` | Drags a rectangle to zoom into it (`axes`). | navigation | double-click, escape |
+| `navigate` | Drags to pan and scrolls or pinches to zoom continuous axes (`axes`, `pan`, `domainGuard`). | navigation | double-click |
 | `legend-toggle` | Clicks a legend item to hide or restore its series. | discrete legend | none |
 | `filter-controls` | Draws one row of controls per field under the chart (pills, a segmented bar, a searchable dropdown, a slider, a range, a switch); they remove the rows that fail, or mute them with `mode: "highlight"` (`fields`, `mode`, `placement`, `render`, `initial`, `dimOpacity`). The state is reported as `state.filters`. Use it for one or two listed fields the chart does not encode, and only when the reader should narrow the data. In filter mode it is dropped on a scrolling category axis outside Vega-Lite. | none | none |
 | `context-menu` | Lets the reader pick marks with one `gesture` (`rectangle` by default, `lasso`, `brush-x`, `brush-y`, `click`, `right-click`, `long-press`) and opens a menu of host actions beside them; picking one emits `menu-select` with the item's id as `item` and the picked marks as the target. A rectangle or brush stays on screen to move or resize (`items` required, `gesture`, `dimOpacity`, `reset`, `render`). | elements, cartesian region | click-none, escape |
@@ -75,7 +75,7 @@ rendered series colour. Nearby labels stagger along their guides to avoid overla
 on by default; `options.displayValue: false` hides them. Setting `guide: false` hides both the
 guides and their labels.
 
-A viewport a gesture commits, and a reset, animate over 400 ms. `"transition": { "duration": 0 }` on `brush-zoom`, or `"resetTransition": { "duration": 0 }` on either preset, jumps instead. Panning and wheel zooming follow the pointer and never animate.
+A viewport a gesture commits, and a reset, animate over 300 ms. Every preset takes `"transition": { "duration": ms }` for the changes it commits, its reset included, and `interaction_spec.transition` sets the chart's own default; `{ "duration": 0 }` jumps. Panning and wheel zooming follow the pointer and never animate.
 
 ## Reset gestures
 

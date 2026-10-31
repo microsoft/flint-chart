@@ -16,9 +16,11 @@ import type {
     HoverStyle,
     SelectionBoundaryStyle,
     ContinuousColorFocusStyle,
+    LegendDomain,
     SelectionStyle,
     VegaInteractionPlan,
 } from './contracts';
+import { injectSceneMotion } from './scene-motion';
 import {
     INTERACTION_KEY,
     INTERACTION_LEGEND_CHANNEL,
@@ -35,6 +37,7 @@ import {
     AXIS_HOVER_STORE,
     LEGEND_SELECTION_STORE,
     STYLE_SIGNAL,
+    DIM_SIGNAL,
 } from './stores';
 import type { TemporalAxisPlanInputs } from '../instantiate-spec';
 import { bindTemporalAxisTicks, navigationDomainSignal, walkVegaGroups } from './live-layout';
@@ -57,6 +60,7 @@ interface TemplateInteractionSemantics {
     chartType?: string;
     capabilities: readonly InteractionCapability[];
     fields: string[];
+    identityFields?: readonly string[];
     sourceRecords?: readonly Record<string, unknown>[];
     provenanceFields?: readonly string[];
     temporalProvenanceFields?: readonly string[];
@@ -183,7 +187,6 @@ function instrumentNode(
     node: Record<string, any>,
     inherited: Record<string, any>,
     semanticFields: readonly string[],
-    dimOpacity: number,
     continuousColorFocus: ContinuousColorFocusStyle | undefined,
     selectableMarks: ReadonlySet<string>,
     config: Record<string, any> | undefined,
@@ -257,13 +260,13 @@ function instrumentNode(
         } : {}),
         opacity: continuousColor ? { value: authoredOpacity } : dataDrivenOpacity ? {
             condition: { test: selectionTest, ...encodedOpacity },
-            value: dimOpacity,
+            value: { expr: DIM_SIGNAL },
         } : {
             condition: {
                 test: `${selectionTest} || ${hoverTest}`,
                 value: authoredOpacity,
             },
-            value: Math.min(dimOpacity, authoredOpacity),
+            value: { expr: `min(${DIM_SIGNAL}, ${authoredOpacity})` },
         },
     };
     return true;
@@ -273,7 +276,6 @@ function instrumentMarks(
     spec: Record<string, any>,
     inherited: Record<string, any>,
     semanticFields: readonly string[],
-    dimOpacity: number,
     continuousColorFocus: ContinuousColorFocusStyle | undefined,
     selectableMarks: ReadonlySet<string>,
     config: Record<string, any> | undefined,
@@ -283,7 +285,6 @@ function instrumentMarks(
         spec,
         inherited,
         semanticFields,
-        dimOpacity,
         continuousColorFocus,
         selectableMarks,
         config,
@@ -295,7 +296,6 @@ function instrumentMarks(
                 child,
                 encoding,
                 semanticFields,
-                dimOpacity,
                 continuousColorFocus,
                 selectableMarks,
                 config,
@@ -307,7 +307,6 @@ function instrumentMarks(
             spec.spec,
             encoding,
             semanticFields,
-            dimOpacity,
             continuousColorFocus,
             selectableMarks,
             config,
@@ -363,6 +362,7 @@ function pinChannelDomain(
     channel: string,
     field: string,
     rows: readonly Record<string, any>[],
+    live: LegendDomain[],
 ): void {
     const encoding = spec.encoding?.[channel];
     if (encoding && encoding.field === field && encoding.scale?.domain === undefined) {
@@ -401,12 +401,15 @@ function pinChannelDomain(
             ? [values[0], values[values.length - 1]]
             : values;
         encoding.scale = { ...(encoding.scale ?? {}), domain };
+        if (encoding.type === 'quantitative' && values.length > 1 && !live.some((entry) => entry.channel === channel)) {
+            live.push({ channel, field, descending: Number(values[0]) > Number(values[values.length - 1]) });
+        }
     }
     for (const property of ['layer', 'hconcat', 'vconcat', 'concat'] as const) {
         if (!Array.isArray(spec[property])) continue;
-        for (const child of spec[property]) pinChannelDomain(child, channel, field, rows);
+        for (const child of spec[property]) pinChannelDomain(child, channel, field, rows, live);
     }
-    if (spec.spec && typeof spec.spec === 'object') pinChannelDomain(spec.spec, channel, field, rows);
+    if (spec.spec && typeof spec.spec === 'object') pinChannelDomain(spec.spec, channel, field, rows, live);
 }
 
 /**
@@ -416,15 +419,17 @@ function pinChannelDomain(
 function pinLegendDomains(
     spec: Record<string, any>,
     legendFields: Readonly<Record<string, string>> | undefined,
-): void {
+): LegendDomain[] {
+    const live: LegendDomain[] = [];
     const rows = inlineRows(spec);
-    if (rows.length === 0) return;
+    if (rows.length === 0) return live;
     for (const [channel, field] of Object.entries(legendFields ?? {})) {
         if (channel === 'size' || channel === 'opacity') continue;
         const values = [...new Set(rows.map((row) => row?.[field]).filter((value) => value !== undefined))];
         if (values.length === 0 || values.some((value) => typeof value !== 'string' && typeof value !== 'number')) continue;
-        pinChannelDomain(spec, channel === 'color' ? 'color' : channel, field, rows);
+        pinChannelDomain(spec, channel === 'color' ? 'color' : channel, field, rows, live);
     }
+    return live;
 }
 
 function keyTransforms(fields: readonly string[]): Record<string, any>[] {
@@ -555,7 +560,7 @@ export function addVegaLiteInteractions(
 
     const instrumented = needsSemanticPresentation
         ? instrumentMarks(
-            spec, {}, fields, dimOpacity,
+            spec, {}, fields,
             templateSemantics.neutralizeContinuousColor ? templateSemantics.continuousColorFocus : undefined,
             selectableMarks,
             spec.config,
@@ -565,9 +570,9 @@ export function addVegaLiteInteractions(
     const sourceRecords = templateSemantics.sourceRecords ?? inlineRows(spec).map((record) => ({ ...record }));
     const rowIndexed = instrumented ? stampSourceRows(spec, sourceRecords) : false;
     if (instrumented) addLocalKeyTransforms(spec, fields, selectableMarks);
-    if (instrumented && admitted.some((interaction) => affordsTarget(interaction, 'legend-item'))) {
-        pinLegendDomains(spec, templateSemantics.legendFields);
-    }
+    const legendDomains = instrumented && admitted.some((interaction) => affordsTarget(interaction, 'legend-item'))
+        ? pinLegendDomains(spec, templateSemantics.legendFields)
+        : [];
     stripInteractionProvenance(spec);
     if (instrumented) {
         spec.transform = [
@@ -577,6 +582,7 @@ export function addVegaLiteInteractions(
     }
     return {
         fields,
+        identityFields: templateSemantics.identityFields,
         sourceRecords,
         rowIndexed,
         provenanceFields: templateSemantics.provenanceFields ?? fields,
@@ -588,6 +594,7 @@ export function addVegaLiteInteractions(
         groupHoverEmphasis: templateSemantics.renderHoverStyles?.line ? 'highlight' : 'spotlight',
         resolveGroupValue: templateSemantics.resolveGroupValue,
         legendFields: templateSemantics.legendFields,
+        ...(legendDomains.length > 0 ? { legendDomains } : {}),
         axisFields: templateSemantics.axisFields,
         indexAxis: templateSemantics.indexAxis,
         rangeLegendChannels: templateSemantics.rangeLegendChannels,
@@ -919,7 +926,8 @@ function applyCompiledHoverStyles(
             if (channel === 'opacity' && (value === 'contrast' || value === 'spotlight')) {
                 const currentOpacity = Array.isArray(update.opacity) ? update.opacity : [update.opacity];
                 if (value === 'spotlight' && currentOpacity.some((entry: any) =>
-                    entry?.field !== undefined || entry?.signal !== undefined || entry?.condition?.field !== undefined
+                    entry?.field !== undefined || entry?.condition?.field !== undefined
+                    || (entry?.signal !== undefined && !String(entry.signal).includes(DIM_SIGNAL))
                 )) continue;
                 const numericValues = currentOpacity
                     .map((entry: any) => entry?.value)
@@ -999,7 +1007,7 @@ function applyCompiledStyleChannels(marks: Record<string, any>[]): void {
 
 export function injectVegaInteractionStore(
     vegaSpec: Record<string, any>,
-    plan?: Pick<VegaInteractionPlan, 'dimOpacity' | 'renderHoverStyles' | 'selectionBoundary'>,
+    plan?: Pick<VegaInteractionPlan, 'dimOpacity' | 'renderHoverStyles' | 'selectionBoundary' | 'identityFields'>,
 ): void {
     // Stores go first: transforms are parsed in data order, so a filter that reads a store
     // cannot resolve one declared after it.
@@ -1016,6 +1024,7 @@ export function injectVegaInteractionStore(
     vegaSpec.signals = [
         ...(Array.isArray(vegaSpec.signals) ? vegaSpec.signals : []),
         { name: STYLE_SIGNAL, value: {} },
+        { name: DIM_SIGNAL, value: plan?.dimOpacity ?? DEFAULT_DIM_OPACITY },
     ];
     const instrumentLegends = (scope: Record<string, any>): void => {
         for (const legend of scope.legends ?? []) {
@@ -1060,7 +1069,7 @@ export function injectVegaInteractionStore(
                         opacity: hiddenLegendItem ? [
                             { test: hiddenLegendItem, signal: `data('${LEGEND_HIDDEN_STORE}')[0].opacity` },
                             ...(peerOfSelectedLegend ? [
-                            { test: peerOfSelectedLegend, value: plan?.dimOpacity ?? DEFAULT_DIM_OPACITY },
+                            { test: peerOfSelectedLegend, signal: DIM_SIGNAL },
                             ] : []),
                             ...(kind === 'symbol' && hoveredLegendItem
                                 ? [{ test: hoveredLegendItem, value: 0.72 }]
@@ -1120,6 +1129,7 @@ export function injectVegaInteractionStore(
     if (!Array.isArray(vegaSpec.marks)) return;
     if (plan?.renderHoverStyles) applyCompiledHoverStyles(vegaSpec.marks, plan.renderHoverStyles, vegaSpec.config);
     applyCompiledStyleChannels(vegaSpec.marks);
+    injectSceneMotion(vegaSpec, plan?.identityFields ?? []);
     vegaSpec.marks.unshift({
         type: 'rect',
         name: CLEAR_MARK,

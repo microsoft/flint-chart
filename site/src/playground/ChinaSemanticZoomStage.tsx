@@ -110,7 +110,7 @@ const INTERACTIONS = [
     domainGuard: { minVisibleFraction: 0.03, maxVisibleFraction: 1, overscrollFraction: 0 },
     // A click on empty map, not a double-click, flies home.
     reset: ['click-none'],
-    resetTransition: { duration: FLY_MS },
+    transition: { duration: FLY_MS },
   }),
   HOVER_REGION,
 ];

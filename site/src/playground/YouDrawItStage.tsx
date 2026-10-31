@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { RotateCcw } from 'lucide-react';
 import type { ChartAssemblyInput } from 'flint-chart';
 import type { ChartChange } from 'flint-chart/interactive';
 import {
@@ -39,6 +40,9 @@ import {
 import './interaction-candidates.css';
 import './you-draw-it-stage.css';
 
+/** The overlay and the rows it covers trade places unseen; nothing on screen moves. */
+const SWAP = { duration: 0 };
+
 // Drawn smaller than the panel and scaled up, so the theme's small type reads at a comfortable size.
 const VIEW_SIZE = { width: 640, height: 380 };
 const REVEAL_DURATION_MS = 1400;
@@ -69,7 +73,7 @@ function chartInput(): ChartAssemblyInput {
     chart_spec: {
       chartType: 'Line Chart',
       title: 'Share of U.S. electricity from coal',
-      subtitle: `Percent of net generation, ${YEAR_DOMAIN[0]} to ${YEAR_DOMAIN[1]}. Draw where you think the line went after ${DRAW_START_YEAR}; double-click to start over`,
+      subtitle: `Percent of net generation, ${YEAR_DOMAIN[0]} to ${YEAR_DOMAIN[1]}. Draw where you think the line went after ${DRAW_START_YEAR}`,
       encodings: { x: 'Year', y: 'Share', color: 'Segment' },
       baseSize: VIEW_SIZE,
       canvasSize: VIEW_SIZE,
@@ -176,13 +180,15 @@ export function YouDrawItStage() {
     // Freeze the drawn line: dashed, no front marker.
     void chart.applyUpdate(drawnLineUpdate(finishedPath, true, BOUNDS));
 
+    // The reveal stays a preview to the end; clearRevealUpdate shares its id, so its commit drops it.
     const finish = async () => {
-      await chart.dispatch(REVEAL_INTERACTION_ID, { progress: 1 });
+      await chart.dispatch(REVEAL_INTERACTION_ID, { progress: 1 }, { phase: 'preview' });
       if (cancelled) return;
       // The hide layer goes before the overlay that covers the same path, so
       // the swap is invisible; the revealed layers then drop it for good.
-      await chart.clearUpdate(HIDE_UPDATE_ID);
-      await chart.applyUpdate(clearRevealUpdate());
+      // The picture is already final, so the swap jumps: an empty update clears the hide layer.
+      await chart.applyUpdate({ id: HIDE_UPDATE_ID, ops: [] }, { transition: SWAP });
+      await chart.applyUpdate(clearRevealUpdate(), { transition: SWAP });
       if (cancelled) return;
       const drawnEnd = finishedPath.samples[finishedPath.samples.length - 1].value;
       setScoreLayer(nextScore ? scoreUpdate(nextScore, COAL_SHARE_ROWS, BOUNDS, drawnEnd) : null);
@@ -196,7 +202,7 @@ export function YouDrawItStage() {
         await finish();
         return;
       }
-      await chart.dispatch(REVEAL_INTERACTION_ID, { progress });
+      await chart.dispatch(REVEAL_INTERACTION_ID, { progress }, { phase: 'preview' });
       if (cancelled) return;
       frame = window.requestAnimationFrame((next) => void tick(next));
     };
@@ -227,10 +233,6 @@ export function YouDrawItStage() {
       <div className="ic-flint-dimpvis-panel">
         <ScaleToFit height={540} adaptiveHeight padding={8} maxScale={1.4}>
           <div className="ic-flint-dimpvis-mount">
-            <div className="ic-toolbar">
-              <button type="button" className="ic-pill ydi-reset" data-ready={phase === 'revealed'}
-                disabled={phase === 'idle' || phase === 'revealing'} onClick={reset}>Reset</button>
-            </div>
             <FlintChart
               ref={chartRef}
               spec={spec}
@@ -241,6 +243,13 @@ export function YouDrawItStage() {
               chartId="you-draw-it-coal"
               onChange={onChange}
             />
+            <div className="ydi-toolbar" data-phase={phase}>
+              <button type="button" className="ydi-reset" disabled={phase === 'idle' || phase === 'revealing'}
+                title="Double-click the chart to start over too" onClick={reset}>
+                <RotateCcw size={13} aria-hidden="true" />
+                {phase === 'revealed' ? 'Try again' : 'Start over'}
+              </button>
+            </div>
           </div>
         </ScaleToFit>
       </div>

@@ -144,16 +144,9 @@ export function ConnectedModelsDemo() {
     const inWindow = names.size > 0 ? MODELS.filter((row) => names.has(row.Model)) : null;
     windowRef.current = inWindow;
     setWindow(inWindow);
-    void bars.current?.dispatch(FROM_SCATTER, { models: inWindow ?? MODELS }).then(async (result) => {
+    // A click on a company holds its bar by what it is about, so the bar stays lit among the new rows.
+    void bars.current?.dispatch(FROM_SCATTER, { models: inWindow ?? MODELS }).then((result) => {
       if (result && result.status !== 'applied') console.warn(`${BARS_ID}: ${result.status}`, result);
-      // The click's emphasis resolved to the old bars; after set-data the marks
-      // are new, so the lit company is restated by key under the same layer.
-      if (companyRef.current) {
-        await bars.current?.applyUpdate({
-          id: COMPANY_ID,
-          ops: [{ op: 'set-style', targets: [{ select: { key: { Company: companyRef.current } } }], value: { state: 'emphasized' } }],
-        });
-      }
     });
     // A narrower window also narrows the lit company.
     if (companyRef.current) lightCompany(companyRef.current);

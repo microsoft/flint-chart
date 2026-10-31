@@ -110,6 +110,7 @@ export const densityPlotDef: ChartTemplateDef = {
         const colorField = resolvedEncodings.color?.field;
         return {
             fields: [...new Set(['value', 'density', ...groupFields])],
+            identityFields: [...new Set(['value', ...groupFields])],
             seriesField,
             legendFields: colorField ? { color: colorField } : undefined,
             selectableMarks: ['area'],

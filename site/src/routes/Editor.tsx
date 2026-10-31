@@ -18,6 +18,9 @@ import {
 import { TEST_GENERATORS } from 'flint-chart/test-data';
 import { siteTheme } from '../shared/theme';
 
+/** An edit being typed draws at once: it is a draft, not a change to watch. */
+const JUMP = { duration: 0 };
+
 type Backend = PreviewBackend;
 
 type CompileResult<T> = { ok: true; value: T } | { ok: false; err: unknown };
@@ -299,6 +302,7 @@ function PreviewPane({
             backend={backend}
             renderer="svg"
             chartId="editor-chart"
+            transition={JUMP}
             showWarnings
             errorPrefix="Compile error:"
           />

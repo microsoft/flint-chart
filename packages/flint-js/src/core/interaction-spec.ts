@@ -11,6 +11,17 @@
  * envelope around them, so the core stays free of the interactive runtime.
  */
 
+/** How a change moves over its duration: `ease-in-out` starts and lands softly, `linear` holds one speed. */
+export const TRANSITION_EASINGS = ['ease-in-out', 'linear'] as const;
+export type TransitionEasing = typeof TRANSITION_EASINGS[number];
+
+/** How long a committed change animates, in milliseconds; 0 jumps. */
+export interface ChartUpdateTransition {
+    duration: number;
+    /** Defaults to `ease-in-out`; `linear` suits data that streams in, a change as long as its interval. */
+    easing?: TransitionEasing;
+}
+
 /** The shipped interaction presets. Each name is also that preset's default id. */
 export const INTERACTION_PRESET_TYPES = [
     'click-highlight',
@@ -202,4 +213,6 @@ export interface InteractionSpec {
     /** Presets assist by default; false requires direct hits, maxDistance overrides eligible presets. */
     assistedTargeting?: boolean | AssistedTargetingOptions;
     keyboardTargeting?: boolean;
+    /** How long every committed change animates unless an interaction names its own. Defaults to 300 ms; `{ duration: 0 }` jumps. */
+    transition?: ChartUpdateTransition;
 }

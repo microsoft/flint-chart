@@ -1,6 +1,7 @@
 import type { AccessibleElementDescription } from '../../../interactive/language/events';
 import type { AccessibleNavigationSection, AccessibleNavigationSettings } from '../../../interactive/triggers';
 import type { RenderHit } from '../../../core/interaction-contracts';
+import { isRenderColumn } from '../../../core/interaction-semantics';
 import {
     INTERACTION_KEY,
     INTERACTION_ROLE,
@@ -272,7 +273,7 @@ function formatValue(value: unknown, temporal = false): string {
 
 function isInternalField(field: string): boolean {
     return field.startsWith('_')
-        || field.endsWith('_sort_index')
+        || isRenderColumn(field)
         || field === 'type' || field === 'geometry' || field === 'properties';
 }
 

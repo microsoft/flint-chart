@@ -23,13 +23,16 @@ import { DemoColumns } from './application-demos-layout';
  * chart draws.
  */
 
-type Point = { x: number; y: number };
+type Point = { id: number; x: number; y: number };
 
 const CHART_ID = 'app-demo-datasaurus';
 const MORPH_ID = 'morph';
 const JUMP_ID = 'jump';
 const PATH_INK = '#e07b39';
-const TWEEN_MS_PER_STATION = 180;
+const MOTION_MS_PER_STATION = 180;
+/** A walk through several shapes moves at one speed, so it does not stop at each one it passes. */
+const STATION_STEP = { duration: MOTION_MS_PER_STATION, easing: 'linear' } as const;
+const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
 const SHAPE_LABELS: Record<string, string> = {
   dino: 'Dinosaur',
@@ -72,7 +75,7 @@ function cloudAt(position: number): Point[] {
   const t = Math.max(0, Math.min(1, position - from));
   const a = SETS[SHAPES[from]];
   const b = SETS[SHAPES[to]];
-  return a.map(([x, y], i) => ({ x: x + (b[i][0] - x) * t, y: y + (b[i][1] - y) * t }));
+  return a.map(([x, y], i) => ({ id: i, x: x + (b[i][0] - x) * t, y: y + (b[i][1] - y) * t }));
 }
 
 /** The handle's position in every shape, in list order. */
@@ -159,6 +162,7 @@ const MOUNT: readonly ChartUpdate[] = [frameUpdate(START)];
 const SPEC = {
   data: { values: cloudAt(START) },
   semantic_types: {
+    id: 'Category',
     x: { semanticType: 'Quantity', intrinsicDomain: [0, 100] },
     y: { semanticType: 'Quantity', intrinsicDomain: [0, 100] },
   },
@@ -166,7 +170,8 @@ const SPEC = {
   chart_spec: {
     chartType: 'Scatter Plot',
     title: 'Same statistics, different pictures',
-    encodings: { x: 'x', y: 'y' },
+    // Each point keeps its id from shape to shape, so a change of shape moves it rather than redrawing it.
+    encodings: { x: 'x', y: 'y', detail: 'id' },
     baseSize: { width: 420, height: 440 },
     chartProperties: { includeZero_x: true, includeZero_y: true },
   },
@@ -178,7 +183,8 @@ export function DatasaurusDemo() {
   const chart = useRef<FlintChartHandle>(null);
   const [position, setPosition] = useState(START);
   const positionRef = useRef(START);
-  const tween = useRef<number | null>(null);
+  // A new pick or a drag ends the stations a pick is still walking through.
+  const walk = useRef(0);
 
   const apply = useCallback((next: number): ChartUpdate => {
     positionRef.current = next;
@@ -194,8 +200,7 @@ export function DatasaurusDemo() {
       handle(event) {
         if (event.action !== 'drag' || event.phase === 'cancel') return null;
         if (event.phase === 'start') {
-          if (tween.current !== null) cancelAnimationFrame(tween.current);
-          tween.current = null;
+          walk.current += 1;
           return null;
         }
         const projection = event.geometry.projection;
@@ -213,27 +218,21 @@ export function DatasaurusDemo() {
     return [morph, jump];
   }, [apply]);
 
-  const send = useCallback((shape: number) => chart.current?.dispatch(JUMP_ID, { shape }).then((result) => {
+  const send = useCallback((shape: number) => chart.current?.dispatch(JUMP_ID, { shape }, { transition: STATION_STEP }).then((result) => {
     if (result && result.status !== 'applied') console.warn(`${CHART_ID}: ${result.status}`, result);
   }), []);
 
-  /** A shape button slides the handle along the path to its station, one frame at a time. */
-  const pick = (shape: number) => {
-    if (tween.current !== null) cancelAnimationFrame(tween.current);
+  /** A shape button walks the path to its station, one committed shape at a time; the chart eases between them. */
+  const pick = async (shape: number) => {
+    const run = ++walk.current;
     const from = positionRef.current;
-    const duration = TWEEN_MS_PER_STATION * Math.max(1, Math.abs(shape - from));
-    const started = performance.now();
-    let busy = false;
-    const step = (now: number) => {
-      const t = Math.min(1, (now - started) / duration);
-      const eased = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
-      if (!busy) {
-        busy = true;
-        void send(t >= 1 ? shape : from + (shape - from) * eased)?.then(() => { busy = false; });
-      }
-      tween.current = t < 1 ? requestAnimationFrame(step) : null;
-    };
-    tween.current = requestAnimationFrame(step);
+    const direction = Math.sign(shape - from);
+    if (direction === 0) return;
+    const first = direction > 0 ? Math.floor(from + 1e-6) + 1 : Math.ceil(from - 1e-6) - 1;
+    for (let station = first; direction > 0 ? station <= shape : station >= shape; station += direction) {
+      if (walk.current !== run) return;
+      await Promise.all([send(station), wait(MOTION_MS_PER_STATION)]);
+    }
   };
 
   const stats = useMemo(() => statsOf(cloudAt(position)), [position]);
@@ -249,7 +248,7 @@ export function DatasaurusDemo() {
             type="button"
             className={!between && nearest === index ? 'is-active' : ''}
             aria-pressed={!between && nearest === index}
-            onClick={() => pick(index)}
+            onClick={() => { void pick(index); }}
           >{SHAPE_LABELS[name]}</button>
         </li>)}
       </ul>

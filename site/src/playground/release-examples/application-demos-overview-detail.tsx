@@ -98,11 +98,11 @@ export function OverviewDetailDemo() {
   const detail = useRef<FlintChartHandle>(null);
   const [window, setWindow] = useState<Window | null>(null);
 
-  const frame = useCallback((next: Window | null, phase: ChartChange['phase']) => {
+  const frame = useCallback((next: Window | null, phase: 'preview' | 'commit') => {
     const value = next ? { x: next } : {};
     void detail.current?.applyUpdate(
       { id: FRAME_ID, ops: [{ op: 'set-viewport', axes: 'x', value }] },
-      phase === 'commit' ? { transition: { duration: 250 } } : undefined,
+      { phase },
     ).then((result) => {
       if (result && result.status !== 'applied') console.warn(`${DETAIL_ID}: ${result.status}`, result);
     });

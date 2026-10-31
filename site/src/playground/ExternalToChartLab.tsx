@@ -416,10 +416,12 @@ function ExternalDemoRow({ demo, compact = false, bidirectional }: {
   const payloadRef = useRef<MatchPayload | null>(demo.defaultSelection ?? null);
   const [lastPayload, setLastPayload] = useState<MatchPayload | null>(payloadRef.current);
   const interactionId = `${demo.id}-control`;
+  // Linked both ways, the control and a click on the chart write one entry, so each replaces the other.
+  const selectionId = groupField ? `${demo.id}-group` : interactionId;
   const interactions = useMemo<InteractionDef[]>(() => [externalInteraction<MatchPayload>({
     id: interactionId,
     handle: (payload) => ({
-      id: interactionId,
+      id: selectionId,
       ops: payload.match
         ? [{
             op: 'set-style',
@@ -432,7 +434,7 @@ function ExternalDemoRow({ demo, compact = false, bidirectional }: {
           }] : [])]
         : [{ op: 'set-style', targets: [], value: { state: 'normal' } }],
     }),
-  }), ...(groupField ? [clickGroupFocus({ groupBy: groupField })] : [])], [interactionId, groupField]);
+  }), ...(groupField ? [clickGroupFocus({ id: selectionId, groupBy: groupField })] : [])], [interactionId, selectionId, groupField]);
   // Each new mount starts from the control's current selection.
   const handleRender = useCallback(() => {
     if (payloadRef.current) void chartRef.current?.dispatch(interactionId, payloadRef.current);
@@ -449,21 +451,19 @@ function ExternalDemoRow({ demo, compact = false, bidirectional }: {
       payloadRef.current = payload;
       setLastPayload(payload);
       if (payload) void chartRef.current?.dispatch(interactionId, payload);
-      else void chartRef.current?.clearUpdate(interactionId);
+      else void chartRef.current?.clearUpdate(selectionId);
       return;
     }
     const group = groupField ? value?.[groupField] : undefined;
     const payload = typeof group === 'string' ? { label: group, match: { [groupField!]: group } } : { label: 'All' };
     payloadRef.current = payload;
     setLastPayload(payload);
-    void chartRef.current?.clearUpdate(interactionId);
-  }, [bidirectional, groupField, interactionId, demo.fixture]);
+  }, [bidirectional, groupField, interactionId, selectionId, demo.fixture]);
   const dispatch = async (payload: MatchPayload) => {
     payloadRef.current = payload;
     setLastPayload(payload);
     const chart = chartRef.current;
     if (!chart) return;
-    if (bidirectional) await chart.surface?.setUpdates([]);
     await chart.dispatch(interactionId, payload);
   };
 

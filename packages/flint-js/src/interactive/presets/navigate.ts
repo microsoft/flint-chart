@@ -2,7 +2,6 @@ import type {
     CanvasInteractionDef,
     NavigateOptions,
     NavigationDomainGuard,
-    NavigationTransition,
 } from '../interactions';
 import { navigationTrigger } from '../triggers';
 
@@ -11,22 +10,6 @@ const DEFAULT_DOMAIN_GUARD: NavigationDomainGuard = {
     maxVisibleFraction: 1,
     overscrollFraction: 0,
 };
-
-/** How long a gesture's viewport change animates when the preset does not say. */
-export const DEFAULT_NAVIGATION_TRANSITION_MS = 400;
-
-/** Validates a transition option; a zero duration turns the animation off. */
-export function resolveNavigationTransition(
-    preset: string,
-    option: string,
-    transition: NavigationTransition | undefined,
-): NavigationTransition | undefined {
-    if (transition === undefined) return { duration: DEFAULT_NAVIGATION_TRANSITION_MS };
-    if (!(Number.isFinite(transition.duration) && transition.duration >= 0)) {
-        throw new Error(`${preset}() requires a finite, non-negative ${option} duration.`);
-    }
-    return transition.duration > 0 ? { duration: transition.duration } : undefined;
-}
 
 function normalizedFraction(value: number | undefined, fallback: number, min: number): number {
     return Number.isFinite(value) ? Math.max(min, value!) : fallback;
@@ -54,11 +37,9 @@ export function createNavigateInteraction(options: NavigateOptions = {}): Canvas
     if (domainGuard.maxVisibleFraction < domainGuard.minVisibleFraction) {
         throw new Error('navigate() requires maxVisibleFraction >= minVisibleFraction.');
     }
-    const resetTransition = resolveNavigationTransition('navigate', 'resetTransition', options.resetTransition);
     return {
         id,
         navigationDomainGuard: domainGuard,
-        ...(resetTransition ? { navigationResetTransition: resetTransition } : {}),
         eventSource: navigationTrigger({
             axes: options.axes ?? 'available',
             pan: options.pan ?? true,

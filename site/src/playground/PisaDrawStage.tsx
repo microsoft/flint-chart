@@ -37,6 +37,9 @@ import {
 import './interaction-candidates.css';
 import './pisa-draw-stage.css';
 
+/** The overlay and the rows it covers trade places unseen; nothing on screen moves. */
+const SWAP = { duration: 0 };
+
 const DRAW_START_YEAR = 2012;
 const SCORE_DOMAIN: readonly [number, number] = [450, 515];
 const VIEW_SIZE = { width: 640, height: 420 };
@@ -202,7 +205,7 @@ export function PisaDrawStage({ theme, ink }: PisaDrawStageProps) {
   }, [phase, active, ink]);
 
   // The drawn lines belong to the draw interaction, and their style follows the
-  // active subject, so restate them on each new chart (a theme change remounts)
+  // active subject, so restate them on each new chart (a new theme draws a new chart)
   // and after each change of layers.
   const restateDrawnLines = useCallback(() => {
     const locked = phaseRef.current === 'revealing' || phaseRef.current === 'revealed';
@@ -231,13 +234,15 @@ export function PisaDrawStage({ theme, ink }: PisaDrawStageProps) {
     updateActive(null);
     updatePhase('revealing');
 
+    // The reveal stays a preview to the end; clearRevealUpdate shares its id, so its commit drops it.
     const finish = async () => {
-      await chart.dispatch(REVEAL_INTERACTION_ID, { progress: 1 });
+      await chart.dispatch(REVEAL_INTERACTION_ID, { progress: 1 }, { phase: 'preview' });
       if (cancelled) return;
       // The real series take over from the overlay along the same path: the
       // hide layer goes first, then the revealed layers drop it for good.
-      await chart.clearUpdate(HIDE_UPDATE_ID);
-      await chart.applyUpdate(clearRevealUpdate());
+      // The picture is already final, so the swap jumps: an empty update clears the hide layer.
+      await chart.applyUpdate({ id: HIDE_UPDATE_ID, ops: [] }, { transition: SWAP });
+      await chart.applyUpdate(clearRevealUpdate(), { transition: SWAP });
       if (cancelled) return;
       setScores(nextScores);
       updatePhase('revealed');
@@ -250,7 +255,7 @@ export function PisaDrawStage({ theme, ink }: PisaDrawStageProps) {
         await finish();
         return;
       }
-      await chart.dispatch(REVEAL_INTERACTION_ID, { progress });
+      await chart.dispatch(REVEAL_INTERACTION_ID, { progress }, { phase: 'preview' });
       if (cancelled) return;
       frame = window.requestAnimationFrame((next) => void tick(next));
     };

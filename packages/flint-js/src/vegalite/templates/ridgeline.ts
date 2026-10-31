@@ -504,6 +504,7 @@ export const ridgelinePlotDef: ChartTemplateDef = {
         const measure = discrete(resolvedEncodings.y) ? DENSITY : resolvedEncodings.y?.field ?? DENSITY;
         return {
             fields: [...new Set([...fieldsFromEncodingChannels(resolvedEncodings, ['x', 'y', 'color']), measure])],
+            identityFields: fieldsFromEncodingChannels(resolvedEncodings, ['x', 'y', 'color']).filter((field) => field !== measure),
             seriesField,
             selectableMarks: ['area'],
             renderHoverStyles: { area: { opacity: 'spotlight' } },

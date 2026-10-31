@@ -70,12 +70,17 @@ export function associateSemanticElementRenderKeys(
     return element;
 }
 
-function withoutRenderIdentity(
+/** A column the renderer adds to a row for itself: Flint's interaction keys, Vega's ids, Vega-Lite's sort indices. */
+export function isRenderColumn(field: string): boolean {
+    return field.startsWith('__flint_interaction_') || field === '_vgsid_' || field.endsWith('_sort_index');
+}
+
+export function withoutRenderIdentity(
     datum: Record<string, unknown>,
     keyField: string,
 ): Record<string, unknown> {
     return Object.fromEntries(Object.entries(datum).filter(([field]) =>
-        field !== keyField && !field.startsWith('__flint_interaction_') && field !== '_vgsid_'));
+        field !== keyField && !isRenderColumn(field)));
 }
 
 export function sourceRecordsForRenderedRecords(

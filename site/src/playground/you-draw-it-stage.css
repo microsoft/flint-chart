@@ -2,25 +2,57 @@
   position: relative;
 }
 
-.ydi-stage .ic-toolbar {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  z-index: 3;
-  min-width: 0;
+.ydi-stage .ydi-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  min-height: 28px;
+  padding: 0 12px 6px;
 }
 
-/* Once the answer is revealed, Reset is the next thing to do. */
-.ydi-stage .ydi-reset[data-ready='true'] {
-  border-color: #0078d4;
-  background: #0078d4;
-  color: #fff;
+.ydi-stage .ydi-reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #333;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1;
+  padding: 6px 8px;
+  cursor: pointer;
+}
+
+.ydi-stage .ydi-reset:hover:not(:disabled) {
+  background: #f1f3f5;
+}
+
+.ydi-stage .ydi-reset:focus-visible {
+  outline: 2px solid #18a1cd;
+  outline-offset: 1px;
+}
+
+/* Nothing to undo before the first stroke. */
+.ydi-stage .ydi-toolbar[data-phase='idle'] .ydi-reset {
+  visibility: hidden;
+}
+
+.ydi-stage .ydi-reset:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Once the answer is revealed, trying again is the next thing to do. */
+.ydi-stage .ydi-toolbar[data-phase='revealed'] .ydi-reset {
+  color: #18a1cd;
+  font-weight: 600;
 }
 
 .ydi-stage .ic-flint-dimpvis-mount {
   position: relative;
+  background: #fff;
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
 }
-

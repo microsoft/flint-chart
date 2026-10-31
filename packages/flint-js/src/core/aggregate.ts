@@ -46,15 +46,16 @@ export function resolveImplicitAggregation(
     encodings: Record<string, ChartEncoding>,
     data: any[],
     semanticTypes: Record<string, string | SemanticAnnotation>,
+    versionFields: readonly string[] = [],
 ): { encodings: Record<string, ChartEncoding>; warnings: ChartWarning[] } {
     const measures = ONE_MARK_PER_KEY[chartType];
     if (!measures || !data || data.length < 2) return { encodings, warnings: [] };
     const open = measures.filter((ch) => encodings[ch]?.field && !encodings[ch].aggregate);
     if (open.length === 0) return { encodings, warnings: [] };
 
-    const keyFields = [...new Set(Object.entries(encodings)
+    const keyFields = [...new Set([...Object.entries(encodings)
         .filter(([ch, enc]) => !measures.includes(ch) && enc?.field && !enc.aggregate)
-        .map(([, enc]) => enc.field as string))];
+        .map(([, enc]) => enc.field as string), ...versionFields])];
     const seen = new Set<string>();
     let rowsPerKey = 1;
     const counts = new Map<string, number>();
@@ -104,6 +105,7 @@ interface AggSpec {
 export function applyAggregation(
     encodings: Record<string, ChartEncoding>,
     data: any[],
+    versionFields: readonly string[] = [],
 ): any[] {
     if (!data || data.length === 0) return data;
 
@@ -134,6 +136,12 @@ export function applyAggregation(
         if (seen.has(enc.field)) continue;
         seen.add(enc.field);
         groupFields.push(enc.field);
+    }
+    // Rows of different versions are never one value: each version aggregates on its own.
+    for (const field of versionFields) {
+        if (seen.has(field) || !Object.prototype.hasOwnProperty.call(firstRow, field)) continue;
+        seen.add(field);
+        groupFields.push(field);
     }
 
     // Bucket rows by the tuple of group-field values (insertion order preserved).

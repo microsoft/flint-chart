@@ -3,6 +3,7 @@ import type { ChartAssemblyInput, ChartWarning } from '../../core/types';
 import { normalizeInteractions, type InteractionDef } from '../interactions';
 import type { BuildInteractiveChartOptions } from '../types';
 import { resolveInteractionSpec } from './resolve';
+import { validateTransition } from '../transition';
 
 export interface ComposedInteractiveOptions {
     /** Spec interactions first, then the code's, with no id shared between the two. */
@@ -11,6 +12,7 @@ export interface ComposedInteractiveOptions {
     readonly updates: readonly ChartUpdate[];
     readonly assistedTargeting: BuildInteractiveChartOptions['assistedTargeting'];
     readonly keyboardTargeting: boolean | undefined;
+    readonly transition: BuildInteractiveChartOptions['transition'];
     /** Warnings known before the mount, such as a spec a static backend ignores. */
     readonly warnings: readonly ChartWarning[];
 }
@@ -18,7 +20,7 @@ export interface ComposedInteractiveOptions {
 type ComposeInput = Pick<ChartAssemblyInput, 'interaction_spec'>;
 type ComposeOptions = Pick<
     BuildInteractiveChartOptions,
-    'backend' | 'interactions' | 'updates' | 'assistedTargeting' | 'keyboardTargeting'
+    'backend' | 'interactions' | 'updates' | 'assistedTargeting' | 'keyboardTargeting' | 'transition'
 >;
 
 /**
@@ -59,6 +61,7 @@ export function composeInteractiveOptions(input: ComposeInput, options: ComposeO
         updates: options.updates ?? [],
         assistedTargeting: options.assistedTargeting ?? resolved.surface.assistedTargeting,
         keyboardTargeting: options.keyboardTargeting ?? resolved.surface.keyboardTargeting,
+        transition: validateTransition('mountChart', options.transition) ?? resolved.surface.transition,
         warnings,
     };
 }
