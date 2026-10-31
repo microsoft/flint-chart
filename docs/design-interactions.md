@@ -176,7 +176,9 @@ adds waits for the marks to land. Post-encoding formulas do the mixing from a fr
 before the render, so no data transform re-runs per frame, SVG and canvas move alike, and a
 change mid-flight starts from the frame on screen. `set-viewport` moves the same scales through
 its own domain path. `getState()` reports where an update goes, never a frame, and a host's call
-resolves when the motion ends. Past 2,000 drawn items a committed change jumps.
+resolves when the motion ends. Past 2,000 drawn items a committed change jumps. Scales in
+the chart's top scope move; a faceted or concatenated chart's own scales do not yet, and its
+marks move in screen units.
 
 Out of scope by the same rules: a preview, which follows the hand; a resize of the room the
 host gives the chart, which changes room, not meaning; a theme, which changes style, not meaning,
@@ -194,7 +196,8 @@ charts share, each mark morphs into its counterpart, and what has no counterpart
 first quarter and arrives in the last. Otherwise the marks have no counterparts either, and
 what has none cross-fades over the whole duration, so the plot never stands empty. The
 chart's box moves from its size to the next chart's with them. A reader's own selections,
-hidden series and zoom start afresh, and a new `interaction_spec` needs a new mount.
+hidden series and zoom start afresh, and a new `interaction_spec` needs a new mount. Past
+1,000 items or parts on either side, the two charts cross-fade.
 
 # §3 The specification
 
