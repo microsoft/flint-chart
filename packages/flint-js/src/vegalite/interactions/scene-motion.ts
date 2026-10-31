@@ -381,7 +381,7 @@ export function captureGhosts(view: any, identityFields: readonly string[] = [])
     for (const child of rootGroup?.items ?? []) visit(child, 0, 0);
     const items = new Map<string, { type: string; values: Record<string, unknown> }>();
     for (const [name, { marktype, items: keyed }] of byMark) {
-        for (const [key, item] of keyItems(keyed).byKey) {
+        for (const [key, item] of keyItems(keyed, identityFields).byKey) {
             const [offsetX, offsetY] = offsets.get(item) ?? [0, 0];
             const values: Record<string, unknown> = { opacity: item.opacity };
             for (const channel of GHOST_CHANNELS[marktype]!) if (item[channel] !== undefined) values[channel] = item[channel];
@@ -695,15 +695,9 @@ export function identityRepeats(
  * Each mark's items under the keys the motion matches them by: the identity key, unless two of the
  * mark's items share one (a scatter coloured by group), and then the whole row key.
  */
-function keyItems(items: readonly KeyedItem[]): { whole: boolean; byKey: Map<string, any> } {
-    const byIdentity = new Map<string, any>();
-    for (const entry of items) {
-        if (byIdentity.has(entry.identity)) {
-            return { whole: true, byKey: new Map(items.map((candidate) => [candidate.whole, candidate.item])) };
-        }
-        byIdentity.set(entry.identity, entry.item);
-    }
-    return { whole: false, byKey: byIdentity };
+function keyItems(items: readonly KeyedItem[], identityFields: readonly string[]): { whole: boolean; byKey: Map<string, any> } {
+    const whole = identityRepeats(items.map((entry) => ({ datum: entry.item.datum })), identityFields);
+    return { whole, byKey: new Map(items.map((entry) => [whole ? entry.whole : entry.identity, entry.item])) };
 }
 
 function keyedItem(item: any, identityFields: readonly string[]): KeyedItem | undefined {
@@ -745,7 +739,7 @@ export function captureScene(view: any, identityFields: readonly string[] = []):
     };
     visit(view.scenegraph?.()?.root);
     for (const [name, { marktype, items }] of byMark) {
-        const { whole, byKey } = keyItems(items);
+        const { whole, byKey } = keyItems(items, identityFields);
         const entries: Record<string, unknown> = whole ? { [WHOLE_KEY_FLAG]: true } : {};
         for (const [key, item] of byKey) {
             const values = drawnValues(item, marktype);
