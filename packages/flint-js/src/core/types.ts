@@ -1496,6 +1496,12 @@ export interface AssembleOptions {
      */
     liveLayoutSignal?: string;
     /**
+     * Set by the interactive renderer when a control shows one value of these fields at a time:
+     * each value is a version of the same marks, so rows of different versions are never
+     * aggregated together.
+     */
+    versionFields?: readonly string[];
+    /**
      * Fraction of each step reserved for inter-category padding (0–1).
      * VL pads *inside* the step (band = step × (1 − padding)), so this
      * value should match VL's paddingInner.  ECharts pads *outside* the

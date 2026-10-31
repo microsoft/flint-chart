@@ -1,4 +1,5 @@
 import type { MorphItem, MorphScene } from '../../interactive/morph';
+import type { LegendDomain } from './contracts';
 import { INTERACTION_KEY } from './stores';
 
 /** The drawn state a tween starts from: per mark name, per row key, each channel's value. */
@@ -494,16 +495,56 @@ export interface TweenedScale {
     readonly type: string;
 }
 
+const LEGEND_SCALE_CHANNELS = ['fill', 'stroke', 'size', 'opacity', 'shape', 'strokeDash'] as const;
+
 /**
- * Gives every continuous scale an axis reads or a mark is placed by a domain the runtime can hold:
- * while its signal is set, the scale draws that domain; unset, it falls back to what it drew before
- * (a navigated viewport, else its data). A transition moves the domain from the one drawn to the
- * new one, so axes, gridlines and marks read one scale on every frame.
+ * Holds each continuous legend's domain in a signal, so the runtime can move it to the rows the
+ * chart is given. Returns the pins with their signals; a pin whose scale is not found keeps its domain.
+ */
+export function bindLegendDomains(vegaSpec: Record<string, any>, pins: readonly LegendDomain[] = []): LegendDomain[] {
+    const bound: LegendDomain[] = [];
+    for (const pin of pins) {
+        const candidates = (vegaSpec.scales ?? []).filter((scale: Record<string, any>) =>
+            (scale.name === pin.channel || String(scale.name).endsWith(`_${pin.channel}`)) && Array.isArray(scale.domain));
+        if (candidates.length !== 1) continue;
+        const scale = candidates[0];
+        const signal = `__flint_legend_domain_${String(scale.name).replace(/\W/g, '_')}`;
+        vegaSpec.signals = [...(vegaSpec.signals ?? []), { name: signal, value: scale.domain }];
+        scale.domain = { signal };
+        bound.push({ ...pin, signal });
+    }
+    return bound;
+}
+
+/** A legend domain over `rows`: the field's smallest and largest values, in the scale's direction. */
+export function legendDomainOf(pin: LegendDomain, rows: readonly Record<string, unknown>[]): [number, number] | undefined {
+    let low = Infinity;
+    let high = -Infinity;
+    for (const row of rows) {
+        const value = Number(row[pin.field]);
+        if (row[pin.field] === null || row[pin.field] === undefined || !Number.isFinite(value)) continue;
+        if (value < low) low = value;
+        if (value > high) high = value;
+    }
+    if (!(high > low)) return undefined;
+    return pin.descending ? [high, low] : [low, high];
+}
+
+/**
+ * Gives every continuous scale an axis or a legend reads, or a mark is placed by, a domain the
+ * runtime can hold: while its signal is set, the scale draws that domain; unset, it falls back to
+ * what it drew before (a navigated viewport, else its data). A transition moves the domain from the
+ * one drawn to the new one, so axes, legends, gridlines and marks read one scale on every frame.
  */
 export function injectScaleTween(vegaSpec: Record<string, any>): TweenedScale[] {
     if (!(vegaSpec.signals ?? []).some((signal: { name?: string }) => signal.name === SCENE_T_SIGNAL)) return [];
     const placing = new Set<string>();
     walkVegaScopes(vegaSpec, (scope) => { for (const axis of scope.axes ?? []) placing.add(axis.scale); });
+    walkVegaScopes(vegaSpec, (scope) => {
+        for (const legend of scope.legends ?? []) {
+            for (const channel of LEGEND_SCALE_CHANNELS) if (typeof legend[channel] === 'string') placing.add(legend[channel]);
+        }
+    });
     walkMarks(vegaSpec.marks, (mark) => {
         const encode = { ...(mark.encode?.enter ?? {}), ...(mark.encode?.update ?? {}) };
         for (const channel of ['x', 'x2', 'y', 'y2']) {
@@ -541,6 +582,24 @@ interface KeyedItem {
  * Each mark's items under the keys the tween matches them by: the tween key, unless two of the
  * mark's items share one (a scatter coloured by group), and then the whole row key.
  */
+/**
+ * Whether the identity names two drawn rows within one mark (points sharing a colour). It then
+ * names no single element, and each row is its own.
+ */
+export function identityRepeats(
+    items: readonly { readonly mark?: string; readonly datum: Record<string, unknown> }[],
+    identityFields: readonly string[],
+): boolean {
+    if (identityFields.length === 0) return false;
+    const seen = new Set<string>();
+    for (const { mark, datum } of items) {
+        const key = `${mark ?? ''}\u0000${String(tweenKey(datum, identityFields))}`;
+        if (seen.has(key)) return true;
+        seen.add(key);
+    }
+    return false;
+}
+
 function keyItems(items: readonly KeyedItem[]): { whole: boolean; byKey: Map<string, any> } {
     const byTween = new Map<string, any>();
     for (const entry of items) {

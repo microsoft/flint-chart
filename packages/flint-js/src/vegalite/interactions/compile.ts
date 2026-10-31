@@ -16,6 +16,7 @@ import type {
     HoverStyle,
     SelectionBoundaryStyle,
     ContinuousColorFocusStyle,
+    LegendDomain,
     SelectionStyle,
     VegaInteractionPlan,
 } from './contracts';
@@ -361,6 +362,7 @@ function pinChannelDomain(
     channel: string,
     field: string,
     rows: readonly Record<string, any>[],
+    live: LegendDomain[],
 ): void {
     const encoding = spec.encoding?.[channel];
     if (encoding && encoding.field === field && encoding.scale?.domain === undefined) {
@@ -399,12 +401,15 @@ function pinChannelDomain(
             ? [values[0], values[values.length - 1]]
             : values;
         encoding.scale = { ...(encoding.scale ?? {}), domain };
+        if (encoding.type === 'quantitative' && values.length > 1 && !live.some((entry) => entry.channel === channel)) {
+            live.push({ channel, field, descending: Number(values[0]) > Number(values[values.length - 1]) });
+        }
     }
     for (const property of ['layer', 'hconcat', 'vconcat', 'concat'] as const) {
         if (!Array.isArray(spec[property])) continue;
-        for (const child of spec[property]) pinChannelDomain(child, channel, field, rows);
+        for (const child of spec[property]) pinChannelDomain(child, channel, field, rows, live);
     }
-    if (spec.spec && typeof spec.spec === 'object') pinChannelDomain(spec.spec, channel, field, rows);
+    if (spec.spec && typeof spec.spec === 'object') pinChannelDomain(spec.spec, channel, field, rows, live);
 }
 
 /**
@@ -414,15 +419,17 @@ function pinChannelDomain(
 function pinLegendDomains(
     spec: Record<string, any>,
     legendFields: Readonly<Record<string, string>> | undefined,
-): void {
+): LegendDomain[] {
+    const live: LegendDomain[] = [];
     const rows = inlineRows(spec);
-    if (rows.length === 0) return;
+    if (rows.length === 0) return live;
     for (const [channel, field] of Object.entries(legendFields ?? {})) {
         if (channel === 'size' || channel === 'opacity') continue;
         const values = [...new Set(rows.map((row) => row?.[field]).filter((value) => value !== undefined))];
         if (values.length === 0 || values.some((value) => typeof value !== 'string' && typeof value !== 'number')) continue;
-        pinChannelDomain(spec, channel === 'color' ? 'color' : channel, field, rows);
+        pinChannelDomain(spec, channel === 'color' ? 'color' : channel, field, rows, live);
     }
+    return live;
 }
 
 function keyTransforms(fields: readonly string[]): Record<string, any>[] {
@@ -563,9 +570,9 @@ export function addVegaLiteInteractions(
     const sourceRecords = templateSemantics.sourceRecords ?? inlineRows(spec).map((record) => ({ ...record }));
     const rowIndexed = instrumented ? stampSourceRows(spec, sourceRecords) : false;
     if (instrumented) addLocalKeyTransforms(spec, fields, selectableMarks);
-    if (instrumented && admitted.some((interaction) => affordsTarget(interaction, 'legend-item'))) {
-        pinLegendDomains(spec, templateSemantics.legendFields);
-    }
+    const legendDomains = instrumented && admitted.some((interaction) => affordsTarget(interaction, 'legend-item'))
+        ? pinLegendDomains(spec, templateSemantics.legendFields)
+        : [];
     stripInteractionProvenance(spec);
     if (instrumented) {
         spec.transform = [
@@ -575,7 +582,7 @@ export function addVegaLiteInteractions(
     }
     return {
         fields,
-        identityFields: templateSemantics.identityFields ?? fields,
+        identityFields: templateSemantics.identityFields,
         sourceRecords,
         rowIndexed,
         provenanceFields: templateSemantics.provenanceFields ?? fields,
@@ -587,6 +594,7 @@ export function addVegaLiteInteractions(
         groupHoverEmphasis: templateSemantics.renderHoverStyles?.line ? 'highlight' : 'spotlight',
         resolveGroupValue: templateSemantics.resolveGroupValue,
         legendFields: templateSemantics.legendFields,
+        ...(legendDomains.length > 0 ? { legendDomains } : {}),
         axisFields: templateSemantics.axisFields,
         indexAxis: templateSemantics.indexAxis,
         rangeLegendChannels: templateSemantics.rangeLegendChannels,

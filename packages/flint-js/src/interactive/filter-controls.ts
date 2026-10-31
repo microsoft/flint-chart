@@ -253,6 +253,18 @@ export function filterControls(options: FilterControlsOptions = {}): FilterContr
     };
 }
 
+/**
+ * The fields a filter control shows one value of at a time: each value is another version of the
+ * same marks. The chart compiles knowing them, so it never aggregates two versions together.
+ */
+export function versionFieldsOf(input: ChartAssemblyInput, interactions: readonly InteractionDef[]): string[] {
+    return [...new Set(interactions.filter(isFilterControls)
+        .filter((definition) => (definition.filterControls.options.mode ?? 'filter') === 'filter')
+        .flatMap((definition) => describeFilterFields(input, definition.filterControls.options, interactions.filter((other) => other !== definition))
+            .filter((descriptor) => descriptor.required)
+            .map((descriptor) => descriptor.field)))];
+}
+
 /** The filters of every filter-controls definition, merged; undefined when none has one. */
 export function currentFilters(interactions: readonly InteractionDef[]): Record<string, FilterValue> | undefined {
     const controls = interactions.filter(isFilterControls);
@@ -287,7 +299,6 @@ function splitsMarks(
     const chartType = input.chart_spec.chartType ?? '';
     const connected = /line|area/i.test(chartType);
     const keys = [...channels].filter(([name, channel]) => {
-        if (channel !== 'x' && channel !== 'y') return true;
         if (semanticCategory(input, name, rows.map((row) => row[name])) !== 'quantitative') return true;
         return connected && channel === 'x';
     }).map(([name]) => name);

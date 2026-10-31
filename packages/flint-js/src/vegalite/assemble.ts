@@ -979,6 +979,8 @@ export interface VegaLiteSession {
      * the new room, title and furniture room included, and later changes of rows plan into that.
      */
     replan(change: ReplanChange): Replanned;
+    /** Rows shaped as the compile shaped the input's: series folded, measures aggregated, dates read. */
+    shapeRows(rows: readonly Record<string, unknown>[]): any[];
 }
 
 /**
@@ -1101,6 +1103,7 @@ export function openVegaLiteSession(
             }
             return planRows(change);
         },
+        shapeRows: (rows) => analysis.shapeRows(rows),
     };
 }
 

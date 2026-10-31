@@ -11,7 +11,7 @@ import type {
     ViewportState,
 } from './types';
 import { isExternalInteraction, type FlintInteractionEventDetail } from './interactions';
-import { describeFilterFields, isFilterControls, type FilterControlsDef, type FilterControlsPayload } from './filter-controls';
+import { describeFilterFields, isFilterControls, versionFieldsOf, type FilterControlsDef, type FilterControlsPayload } from './filter-controls';
 import { isContextMenu, mountContextMenu } from './context-menu';
 import { transitionBetween } from './morph';
 import { transitionDuration } from './transition';
@@ -239,6 +239,11 @@ export function mountInteractiveChartSurface(
     const body = drawnFilters.length > 0 ? document.createElement('div') : root;
     const strips: { destroy(): void }[] = [];
     for (const definition of filterDefs) definition.filterControls.bindRows(input.data.values ?? []);
+    /** The input as the chart compiles it: told which fields a control shows one version of at a time. */
+    const versioned = (next: ChartAssemblyInput): ChartAssemblyInput => {
+        const versionFields = versionFieldsOf(next, interactions);
+        return versionFields.length > 0 ? { ...next, options: { ...next.options, versionFields } } : next;
+    };
     let renderer: InteractiveRenderer | undefined;
     let updateTimer: number | undefined;
     let destroyed = false;
@@ -299,7 +304,7 @@ export function mountInteractiveChartSurface(
         unsupportedOps: [...new Set(update.ops.map((op) => op.op))],
     });
 
-    const ready = adapter.mount(chart, input).then(async (mounted) => {
+    const ready = adapter.mount(chart, versioned(input)).then(async (mounted) => {
         if (destroyed) {
             mounted.destroy();
             return;
@@ -497,7 +502,7 @@ export function mountInteractiveChartSurface(
         body.append(stage);
         let mounted: InteractiveRenderer;
         try {
-            mounted = await adapter.mount(stage, next);
+            mounted = await adapter.mount(stage, versioned(next));
         } catch (error) {
             stage.remove();
             release();

@@ -78,6 +78,8 @@ export interface VegaInteractionPlan {
     groupHoverEmphasis?: InteractionContext['groupHoverEmphasis'];
     resolveGroupValue?: InteractionContext['resolveGroupValue'];
     legendFields?: Readonly<Record<string, string>>;
+    /** Continuous legend scales held through hides; each follows the rows the chart is given. */
+    legendDomains?: readonly LegendDomain[];
     axisFields?: Partial<Record<'x' | 'y', { field: string; type: string }>>;
     indexAxis?: 'x' | 'y';
     axisTargets?: Readonly<Record<string, VegaAxisTarget>>;
@@ -126,4 +128,17 @@ export interface VegaInteractionPlan {
     interactions?: readonly CanvasInteractionDef[];
     /** One warning per spec interaction the chart could not honour and dropped. */
     warnings?: readonly ChartWarning[];
+}
+
+/**
+ * A continuous legend's scale, held to the rows the chart is given so a hide does not shrink the
+ * legend under the reader, and moved to new rows when the chart is given them.
+ */
+export interface LegendDomain {
+    readonly channel: string;
+    readonly field: string;
+    /** The scale runs from the largest value to the smallest. */
+    readonly descending: boolean;
+    /** The signal that holds the domain, once the chart is compiled. */
+    readonly signal?: string;
 }

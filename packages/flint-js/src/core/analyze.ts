@@ -51,6 +51,7 @@ export function analyzeChart(
     getTemplateDef: (chartType: string) => ChartTemplateDef | undefined,
 ): ChartAnalysis {
     const chartType = input.chart_spec.chartType;
+    const versionFields = input.options?.versionFields ?? [];
     // The colour encoding's own `colors` and `mid` speak for its field in this chart.
     const semanticTypes = withEncodingColorAnnotations(input.semantic_types ?? {}, input.chart_spec.encodings as Record<string, unknown>);
     let template = authored;
@@ -131,7 +132,7 @@ export function analyzeChart(
         ? template.normalizeEncodings(composedEncodings, data)
         : composedEncodings;
     // Several rows on one mark's key: aggregate the measure (and say so) rather than overplot.
-    const implicit = resolveImplicitAggregation(template.chart, normalizedEncodings, data, semanticTypes);
+    const implicit = resolveImplicitAggregation(template.chart, normalizedEncodings, data, semanticTypes, versionFields);
     const encodings = implicit.encodings;
     warnings.push(...implicit.warnings);
 
@@ -139,7 +140,7 @@ export function analyzeChart(
     // the rows here (grouping by the dimension channels) so the derived
     // `${field}_${op}` / `_count` columns the assemblers reference actually
     // exist. No-op when no encoding requests it or the data is pre-aggregated.
-    data = applyAggregation(encodings, data);
+    data = applyAggregation(encodings, data, versionFields);
 
     // ═══════════════════════════════════════════════════════════════════════
     // PHASE 0: Resolve Semantics (VL-free)
@@ -241,7 +242,7 @@ export function analyzeChart(
         templateMarkType,
         warnings,
         shapeRows: (rows) => convertTemporalData(
-            applyAggregation(encodings, normalizeStaticSeries(sortRepair.encodings, [...rows], semanticTypes, chartType).data),
+            applyAggregation(encodings, normalizeStaticSeries(sortRepair.encodings, [...rows], semanticTypes, chartType).data, versionFields),
             semanticTypes,
         ),
     };

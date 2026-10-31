@@ -53,6 +53,8 @@ import {
     captureScene,
     domainPath,
     hasSceneTween,
+    identityRepeats,
+    legendDomainOf,
     placeOutlineStarts,
     SCENE_ENTER_SIGNAL,
     SCENE_EXIT_SIGNAL,
@@ -915,6 +917,12 @@ export function mountVegaInteractions(
     const allHits = (): RenderHit[] => sceneItems(view)
         .map(renderHit)
         .filter((hit): hit is RenderHit => hit !== null);
+    /** The fields that name one drawn element: the chart's identity, unless it names several rows within a mark. */
+    const elementIdentity = (): readonly string[] => {
+        const fields = plan.identityFields ?? [];
+        const marks = allHits().filter((hit) => hit.source === 'mark').map((hit) => ({ mark: hit.markName, datum: hit.datum }));
+        return identityRepeats(marks, fields) ? [] : fields;
+    };
     const resolveContext = (hits: readonly RenderHit[]) => ({
         allHits: hits,
         keyField: INTERACTION_KEY,
@@ -1030,7 +1038,7 @@ export function mountVegaInteractions(
             resolveNavigation: navigationController.resolve,
             categoryField: plan.categoryField,
             seriesField: plan.seriesField,
-            identityFields: plan.identityFields,
+            get identityFields() { return elementIdentity(); },
             groupHoverEmphasis: plan.groupHoverEmphasis,
             legendDomains,
             categoryAxis: reorderAxis?.axis,
@@ -1092,7 +1100,7 @@ export function mountVegaInteractions(
             }
             const renderedKeys = drawnKeys();
             const hits = allHits();
-            const identity = plan.identityFields ?? [];
+            const identity = elementIdentity();
             const elements = target.elements.flatMap((element) => {
                 const held = semanticElementRenderKeys(element);
                 if (held.some((key) => renderedKeys.has(key))) return [element];
@@ -1102,9 +1110,7 @@ export function mountVegaInteractions(
                 const byIdentity = named.length > 0
                     ? hits.filter((hit) => named.every((field) => sameValue(hit.datum[field], value[field])))
                     : [];
-                const identityKeys = new Set(byIdentity.map((hit) => hit.datum[INTERACTION_KEY]));
-                // An identity that names more elements than the target held (points sharing a colour) is not one.
-                const matched = identityKeys.size > 0 && identityKeys.size <= Math.max(1, new Set(held.map((key) => key.replace(PATH_KEY_SUFFIX, ''))).size)
+                const matched = byIdentity.length > 0
                     ? byIdentity
                     : hits.filter((hit) => (element.records?.length ? element.records : [value]).some((record) =>
                         Object.entries(record).every(([field, recorded]) => sameValue(hit.datum[field], recorded))));
@@ -1320,6 +1326,12 @@ export function mountVegaInteractions(
         // A windowed chart shows only the rows inside its category window, cut from whatever rows are current.
         if (plan.windowDataRows) dataRows = preparedRows(plan.windowDataRows(hostRows));
         const rowsChange = dataRows !== renderedDataRows && !sameRows(dataRows, renderedDataRows);
+        if (rowsChange) {
+            for (const pin of plan.legendDomains ?? []) {
+                const domain = pin.signal ? legendDomainOf(pin, dataRows) : undefined;
+                if (domain) view.signal(pin.signal!, domain);
+            }
+        }
         if (plan.mutableDataSource && rowsChange) {
             for (const [name, value] of Object.entries(plan.dataSignals?.(hostRows) ?? {})) view.signal(name, value);
             view.change(
@@ -1430,7 +1442,7 @@ export function mountVegaInteractions(
                     navigationController.apply(op, transitionOptionsFor(update.id));
                 } else if (op.op === 'set-order' && op.scope === 'category') {
                     const axis = reorderAxes.find((candidate) => candidate.field === op.field);
-                    if (axis) view.signal(axis.signal, op.values);
+                    if (axis) view.signal(axis.signal, orderWithin(op.values, dataRows.map((row) => row[op.field])));
                 }
             }
         }
@@ -3535,4 +3547,20 @@ export function mountVegaInteractions(
         },
         destroy,
     };
+}
+
+const orderKey = (value: unknown): string => (value instanceof Date ? String(value.getTime()) : String(value));
+
+/**
+ * A held order applied to the categories drawn now: those it lists that are still present, in its
+ * order, then any it does not list, in the order the rows bring them. Without rows to read, the
+ * order stands as given.
+ */
+export function orderWithin(order: readonly unknown[], present: readonly unknown[]): unknown[] {
+    const drawn = new Map<string, unknown>();
+    for (const value of present) if (value !== undefined && !drawn.has(orderKey(value))) drawn.set(orderKey(value), value);
+    if (drawn.size === 0) return [...order];
+    const listed = order.filter((value) => drawn.has(orderKey(value))).map((value) => drawn.get(orderKey(value)));
+    const kept = new Set(listed.map(orderKey));
+    return [...listed, ...[...drawn.values()].filter((value) => !kept.has(orderKey(value)))];
 }

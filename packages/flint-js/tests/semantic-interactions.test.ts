@@ -4916,6 +4916,11 @@ describe('elementsFromHits', () => {
         expect(elements[1].value).toEqual({ Year: 2013, Share: 13, Segment: 'Hidden' });
     });
 
+    it('reports an element in field terms, without the columns the renderer adds', () => {
+        const hits: RenderHit[] = [{ datum: { ...row(2012, 'a'), color_Segment_sort_index: 0, _vgsid_: 4 }, source: 'mark', markType: 'symbol' }];
+        expect(elementsFromHits(hits, key)[0].value).toEqual({ Year: 2012, Share: 12, Segment: 'Hidden' });
+    });
+
     it('keeps one key per element when every vertex starts a segment', () => {
         const hits: RenderHit[] = [
             { datum: row(2012, 'a'), endDatum: row(2013, 'b'), source: 'mark', markType: 'line' },

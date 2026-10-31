@@ -4,6 +4,7 @@ import {
     captureGhosts,
     captureScene,
     domainPath,
+    identityRepeats,
     injectScaleTween,
     injectSceneTween,
     placeOutlineStarts,
@@ -304,5 +305,17 @@ describe('scene tween', () => {
         injectSceneTween(spec);
         expect(injectScaleTween(spec).map((scale) => scale.name)).toEqual(['x', 'y']);
         expect(spec.scales[1].domainRaw).toEqual({ signal: '__flint_domain_y' });
+    });
+});
+
+describe('identityRepeats', () => {
+    const row = (key: string, group: string) => ({ [INTERACTION_KEY]: key, group });
+    it('holds when one mark draws two rows with the same identity', () => {
+        expect(identityRepeats([{ mark: 'points', datum: row('1', 'a') }, { mark: 'points', datum: row('2', 'a') }], ['group'])).toBe(true);
+    });
+    it('does not hold across marks, for distinct identities, or without identity fields', () => {
+        expect(identityRepeats([{ mark: 'bars', datum: row('1', 'a') }, { mark: 'labels', datum: row('1', 'a') }], ['group'])).toBe(false);
+        expect(identityRepeats([{ mark: 'points', datum: row('1', 'a') }, { mark: 'points', datum: row('2', 'b') }], ['group'])).toBe(false);
+        expect(identityRepeats([{ mark: 'points', datum: row('1', 'a') }, { mark: 'points', datum: row('2', 'a') }], [])).toBe(false);
     });
 });

@@ -1,7 +1,7 @@
 import type { ViewNode } from '../core/views';
 import { applyCategoryViewports, resolveCategoryViewport } from '../core/filter-overflow';
 import type { CategoryViewport, ChartAssemblyInput } from '../core/types';
-import { convertTemporalData, temporalFieldValue } from '../core/resolve-semantics';
+import { temporalFieldValue } from '../core/resolve-semantics';
 import { createChangeFilter } from '../interactive/chart-state';
 import { currentFilters, isFilterControls } from '../interactive/filter-controls';
 import { createFloatingPanel } from '../interactive/floating-panel';
@@ -33,7 +33,7 @@ import {
     type LiveLayoutPlanner,
 } from './interactions/live-layout';
 import { mountVegaInteractions } from './interactions/runtime';
-import { captureMorphScene, hasSceneTween, injectAxisTween, injectScaleTween } from './interactions/scene-tween';
+import { bindLegendDomains, captureMorphScene, hasSceneTween, injectAxisTween, injectScaleTween } from './interactions/scene-tween';
 import { captureFrameScene } from './interactions/frame-scene';
 import { advanceLiveValues, bindLiveValues, LIVE_VALUES_SIGNAL, liveValuesChange } from './live-values';
 import { readDrawnLayout } from './drawn-layout';
@@ -403,6 +403,7 @@ export function createVegaInteractiveRenderer(
                         .filter((axis): axis is NonNullable<typeof axis> => !!axis);
                     interactionPlan.reorderAxis = interactionPlan.reorderAxes[0];
                     injectAxisTween(vegaSpec);
+                    interactionPlan.legendDomains = bindLegendDomains(vegaSpec, interactionPlan.legendDomains);
                     interactionPlan.tweenScales = injectScaleTween(vegaSpec);
                 }
                 return { interactionPlan, vegaSpec, relaidSignals, livePlanner };
@@ -450,7 +451,7 @@ export function createVegaInteractiveRenderer(
                         return datasets;
                     };
                 }
-                interactionPlan.prepareDataRows = (rows) => convertTemporalData([...rows], firstInput.semantic_types ?? {});
+                interactionPlan.prepareDataRows = (rows) => drawn.shapeRows(rows);
                 interactionPlan.initialDataRows = interactionPlan.prepareDataRows(firstInput.data.values ?? []);
                 interactionPlan.temporalValue = (field, value) => temporalFieldValue(field, value, firstInput.semantic_types ?? {});
                 if (viewports.length > 0) interactionPlan.windowDataRows = (rows) => windowRows(rows ?? inputRows);
