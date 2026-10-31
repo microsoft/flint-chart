@@ -3,7 +3,7 @@ import type {
     NavigationRequest,
     NavigationUpdate,
 } from '../../interactive/interactions';
-import { runTween } from '../../interactive/transition';
+import { runMotion } from '../../interactive/transition';
 import type { VegaNavigationAxis } from './contracts';
 
 type Axis = 'x' | 'y';
@@ -88,21 +88,21 @@ function guardZoomFactor(
 
 export interface NavigationApplyOptions {
     /**
-     * Tween the viewport to the update over `duration` ms. `onFrame` reports
+     * Moves the viewport to the update over `duration` ms. `onFrame` reports
      * each rendered frame, as a zoom or, when the target is the base fit, a reset.
      */
     transition?: {
         duration: number;
         onFrame?: (phase: 'preview' | 'commit', operation: 'zoom' | 'reset') => void;
     };
-    /** The runtime's own reset before it re-applies retained viewports; must not end a running tween. */
+    /** The runtime's own reset before it re-applies retained viewports; must not end a running motion. */
     baseline?: boolean;
 }
 
 export interface VegaNavigationController {
     resolve(event: NavigationRequest, guard: NavigationDomainGuard): NavigationUpdate | null;
     apply(update: NavigationUpdate, options?: NavigationApplyOptions): boolean;
-    /** Resolves once a running viewport tween has rendered its last frame. */
+    /** Resolves once a running viewport motion has rendered its last frame. */
     settled?(): Promise<void>;
     /** Scale-like inverters for navigation axes that have no Vega scale (geo). */
     scale?(name: string): { invert?(value: number): unknown } | undefined;
@@ -130,7 +130,7 @@ export function createVegaNavigationController(
     };
     const valueKey = (update: NavigationUpdate): string => JSON.stringify([update.axes, update.value]);
 
-    // A viewport tween renders one domain per animation frame. The centre
+    // A viewport motion renders one domain per animation frame. The centre
     // moves linearly and the span geometrically, in the axis's transformed
     // space, so a log axis and a zoom both read as one steady motion.
     interface ActiveTransition {
@@ -177,12 +177,12 @@ export function createVegaNavigationController(
             key: valueKey(update),
             frame: Object.fromEntries(paths.map(({ axis, path }) => [axis, path(0)])),
             done: Promise.resolve(),
-            cancel: () => tween.cancel(),
+            cancel: () => motion.cancel(),
         };
         active = entry;
-        // The render that starts the tween draws the domain on screen, not the target.
+        // The render that starts the motion draws the domain on screen, not the target.
         for (const { axis, state } of paths) view.signal(state.signal, entry.frame[axis]);
-        const tween = runTween(transition.duration, async (t) => {
+        const motion = runMotion(transition.duration, async (t) => {
             const last = t >= 1;
             for (const { axis, state, path } of paths) {
                 entry.frame[axis] = last ? update.value[axis] ?? null : path(t);
@@ -192,7 +192,7 @@ export function createVegaNavigationController(
             await view.runAsync();
             transition.onFrame?.(last ? 'commit' : 'preview', operation);
         });
-        entry.done = tween.done;
+        entry.done = motion.done;
     };
 
     return {
@@ -241,8 +241,8 @@ export function createVegaNavigationController(
             if (axes.length === 0) return false;
             if (active && (options?.baseline || active.key === valueKey(update))) {
                 // The runtime re-applies retained viewports, after its own
-                // reset, on every render: a render during a tween keeps the
-                // tween's frame on the axes it moves.
+                // reset, on every render: a render during a motion keeps the
+                // motion's frame on the axes it moves.
                 for (const axis of axes) {
                     const frame = active.frame[axis];
                     view.signal(states[axis]!.signal, frame === undefined ? update.value[axis] ?? null : frame);

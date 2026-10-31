@@ -27,7 +27,7 @@ export { GEO_LEVEL_SIGNAL, geoLevelGate, isGlobeProjection, type GeoLevel, type 
 import type { UpdateRegionSelector } from '../../core/interaction-contracts';
 import type { NavigationDomainGuard, NavigationUpdate } from '../../interactive/interactions';
 import type { VegaNavigationAxis } from './contracts';
-import { runTween } from '../../interactive/transition';
+import { runMotion } from '../../interactive/transition';
 import {
     guardNavigationDomain,
     type NavigationApplyOptions,
@@ -613,7 +613,7 @@ export function createVegaGeoNavigationController(
         return { extent, level };
     };
 
-    // A viewport tween renders one extent per animation frame and flips the
+    // A viewport motion renders one extent per animation frame and flips the
     // level only on the last, so no intermediate frame draws the finer level.
     interface ActiveTransition {
         key: string;
@@ -627,7 +627,7 @@ export function createVegaGeoNavigationController(
     let active: ActiveTransition | undefined;
     // The runtime's baseline reset (one per axis) flips the level to the
     // coarsest before it re-applies the retained viewport in the same
-    // synchronous pass; a tween that starts in that pass must still begin at
+    // synchronous pass; a motion that starts in that pass must still begin at
     // the level that was on screen. The record lives until the pass ends.
     let levelBeforeBaseline: string | undefined;
     const rememberLevelBeforeBaseline = (): void => {
@@ -702,10 +702,10 @@ export function createVegaGeoNavigationController(
             ...(toRotation ? { frameRotation: fromRotation } : {}),
             startLevel,
             done: Promise.resolve(),
-            cancel: () => tween.cancel(),
+            cancel: () => motion.cancel(),
         };
         active = entry;
-        const tween = runTween(transition.duration, async (t) => {
+        const motion = runMotion(transition.duration, async (t) => {
             const last = t >= 1;
             entry.frame = last ? target : extentOf(path(t));
             view.signal(GEO_EXTENT_SIGNAL, last ? to : entry.frame);
@@ -720,7 +720,7 @@ export function createVegaGeoNavigationController(
             await view.runAsync();
             transition.onFrame?.(last ? 'commit' : 'preview', to === null ? 'reset' : 'zoom');
         });
-        entry.done = tween.done;
+        entry.done = motion.done;
     };
 
     return {
@@ -789,8 +789,8 @@ export function createVegaGeoNavigationController(
             const key = valueKey(update.value);
             if (active && (options?.baseline || active.key === key)) {
                 // The runtime re-applies retained viewports, after its own
-                // reset, on every render: a render during a tween keeps the
-                // tween's frame and its starting level.
+                // reset, on every render: a render during a motion keeps the
+                // motion's frame and its starting level.
                 view.signal(GEO_EXTENT_SIGNAL, active.frame);
                 if (active.frameRotation) view.signal(GEO_ROTATE_SIGNAL, active.frameRotation);
                 setLevel(active.startLevel);

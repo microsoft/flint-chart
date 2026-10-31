@@ -3,7 +3,7 @@ import { applyAggregation, resolveImplicitAggregation } from '../src/core/aggreg
 import { filterControls, versionFieldsOf } from '../src/interactive/filter-controls';
 import { openVegaLiteSession } from '../src/vegalite/assemble';
 import { orderWithin } from '../src/vegalite/interactions/runtime';
-import { bindLegendDomains, legendDomainOf } from '../src/vegalite/interactions/scene-tween';
+import { bindLegendDomains, legendDomainOf } from '../src/vegalite/interactions/scene-motion';
 
 const week = (name: string, base: number) => ['Mon', 'Tue'].flatMap((Day, i) => ['9am', '10am'].map((Slot, j) => ({
     Week: name, Day, Slot, Visits: base + 10 * (i + j),

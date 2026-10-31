@@ -1,5 +1,5 @@
 import { CHART_TRANSITIONS } from '../core/chart-transitions';
-import { easingCurve, runTween } from './transition';
+import { easingCurve, runMotion } from './transition';
 import type { TransitionEasing } from './types';
 
 /** One drawn item of a chart, in the coordinates of the element the chart renders into. */
@@ -306,7 +306,7 @@ export async function transitionBetween({ from, to, stage, duration, easing, onF
     const fromFrame = from.source?.frameScene?.();
     const toFrame = to.source?.frameScene?.();
     if (!fromFrame || !toFrame || fromFrame.parts.length > MAX_MORPHED_ITEMS || toFrame.parts.length > MAX_MORPHED_ITEMS) {
-        await runTween(duration, (t) => {
+        await runMotion(duration, (t) => {
             onFrame?.(t);
             show(to.element, Math.min(1, t * 2));
             show(from.element, Math.min(1, 2 - t * 2));
@@ -332,7 +332,7 @@ export async function transitionBetween({ from, to, stage, duration, easing, onF
     drawFrame(0);
     if (morph) stage.append(morph.element);
     from.source?.setDrawnHidden?.(true);
-    await runTween(duration, (t) => {
+    await runMotion(duration, (t) => {
         onFrame?.(t);
         drawFrame(t);
     }, easingCurve(easing)).done;

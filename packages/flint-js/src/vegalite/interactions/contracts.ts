@@ -66,9 +66,9 @@ export interface VegaInteractionPlan {
      */
     reshapeRows?: (rows: readonly Record<string, unknown>[] | undefined) => Readonly<Record<string, readonly Record<string, unknown>[]>>;
     /** The continuous scales a transition moves the domain of. */
-    tweenScales?: readonly import('./scene-tween').TweenedScale[];
+    movingScales?: readonly import('./scene-motion').MovingScale[];
     /** The chart's sizes a transition moves when its data changes them. */
-    tweenSizes?: readonly import('./scene-tween').TweenedSize[];
+    movingSizes?: readonly import('./scene-motion').MovingSize[];
     sourceRecords: readonly Record<string, unknown>[];
     provenanceFields: readonly string[];
     temporalProvenanceFields: readonly string[];

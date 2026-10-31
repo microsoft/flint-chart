@@ -1,6 +1,6 @@
 import { Bounds, renderModule } from 'vega';
 import type { FramePart, FramePose, FrameScene } from '../../interactive/morph';
-import { MORPH_TYPES } from './scene-tween';
+import { MORPH_TYPES } from './scene-motion';
 import { INTERACTION_KEY } from './stores';
 
 /** Item fields a renderer keeps on an item it drew; a copy drawn by another renderer starts without them. */

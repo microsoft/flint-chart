@@ -47,12 +47,12 @@ import { wheelZoomFactor } from '../../interactive/gestures/navigation';
 import type { CanvasInteractionEvent, DomainGeometry } from '../../interactive/language/events';
 import type { ChartAnnotation, ChartHiddenValue, ChartStateEntry, DomainValue } from '../../core/interaction-contracts';
 import type { ChartChangeReport, ChartUpdateApplyOptions, ChartUpdateTransition } from '../../interactive/types';
-import { easingCurve, runTween, transitionDuration, transitionEasing, type Tween } from '../../interactive/transition';
+import { easingCurve, runMotion, transitionDuration, transitionEasing, type Motion } from '../../interactive/transition';
 import {
     captureGhosts,
     captureScene,
     domainPath,
-    hasSceneTween,
+    hasSceneMotion,
     identityRepeats,
     legendDomainOf,
     placeOutlineStarts,
@@ -63,7 +63,7 @@ import {
     SCENE_T_SIGNAL,
     sceneSize,
     setSceneExits,
-} from './scene-tween';
+} from './scene-motion';
 
 import {
     INTERACTION_KEY,
@@ -132,7 +132,7 @@ import {
 /** How long a note or overlay takes to fade in once the marks it points at have landed. */
 const REVEAL_MS = 200;
 /** Past this many drawn items a committed change jumps: capturing and mixing every item each frame would stutter. */
-const MAX_TWEENED_ITEMS = 2000;
+const MAX_MOVING_ITEMS = 2000;
 /** An update's content as text, to tell a repeat from a change; undefined when it cannot be written out. */
 function updateKey(update: ChartUpdate): string | undefined {
     try {
@@ -1589,7 +1589,7 @@ export function mountVegaInteractions(
         return redraw;
     };
 
-    const sceneTweenable = hasSceneTween(view);
+    const sceneMovable = hasSceneMotion(view);
     const heldHostUpdates = new Map<string, { key: string; presented: ChartUpdate; result: ChartUpdateResult }>();
     // Notes and overlays an update adds wait for the marks they point at to land, then fade in.
     const REVEAL_ATTRIBUTE = 'data-flint-reveal';
@@ -1621,39 +1621,39 @@ export function mountVegaInteractions(
             element.style.opacity = '';
         }
     };
-    let sceneTween: Tween | undefined;
+    let sceneMotion: Motion | undefined;
     let outlineGeneration = 0;
     /**
      * Renders a committed change. Over a positive duration, what is drawn now moves to what the
      * change draws: the scene is captured, the change renders at progress 0, then the progress
-     * runs to 1. A change during a tween starts from the frame on screen. Resolves with the
+     * runs to 1. A change during a motion starts from the frame on screen. Resolves with the
      * render; `settled` resolves when the motion ends.
      */
     const startTransition = async (duration: number, easing?: ChartUpdateTransition['easing']): Promise<{ settled: Promise<void> }> => {
-        if (!sceneTweenable || duration <= 0) {
+        if (!sceneMovable || duration <= 0) {
             await renderUpdates();
-            if (!sceneTween) revealWaiting();
-            return { settled: sceneTween?.done ?? Promise.resolve() };
+            if (!sceneMotion) revealWaiting();
+            return { settled: sceneMotion?.done ?? Promise.resolve() };
         }
         const from = captureScene(view, plan.identityFields);
-        if (sceneSize(from) > MAX_TWEENED_ITEMS) {
+        if (sceneSize(from) > MAX_MOVING_ITEMS) {
             await renderUpdates();
             revealWaiting();
             return { settled: Promise.resolve() };
         }
         const ghosts = captureGhosts(view, plan.identityFields);
-        const scales = plan.tweenScales ?? [];
+        const scales = plan.movingScales ?? [];
         const domainsBefore = scales.map((scale) => [...(view.scale(scale.name)?.domain() ?? [])]);
-        const sizes = plan.tweenSizes ?? [];
+        const sizes = plan.movingSizes ?? [];
         const sizesBefore = sizes.map((size) => Number(view.signal(size.dimension)));
         const overlaysBefore = new Set([...container.querySelectorAll('[data-flint-overlay]')]
             .map((element) => element.getAttribute('data-flint-overlay')));
         const notesBefore = new Set(container.querySelectorAll('[data-flint-annotation]'));
         const focusFrom = selectedKeys();
         focusFade = { from: focusFrom, progress: 0 };
-        // The tween this one interrupts must not settle the scene back to rest once it is cancelled.
-        const interrupted = sceneTween;
-        sceneTween = undefined;
+        // The motion this one interrupts must not settle the scene back to rest once it is cancelled.
+        const interrupted = sceneMotion;
+        sceneMotion = undefined;
         interrupted?.cancel();
         for (const scale of scales) view.signal(scale.signal, null);
         for (const size of sizes) if (size.signal !== size.dimension) view.signal(size.signal, null);
@@ -1702,7 +1702,7 @@ export function mountVegaInteractions(
         const moveEnd = arriving && staged ? 1 - ARRIVE_SHARE : 1;
         const ease = easingCurve(easing);
         const stage = (t: number, start: number, end: number): number => ease(Math.max(0, Math.min(1, (t - start) / (end - start))));
-        const tween = runTween(duration, async (t) => {
+        const motion = runMotion(duration, async (t) => {
             const move = stage(t, moveStart, moveEnd);
             view.signal(SCENE_EXIT_SIGNAL, leaving ? stage(t, 0, staged ? LEAVE_SHARE : 1) : 1);
             view.signal(SCENE_T_SIGNAL, move);
@@ -1723,10 +1723,10 @@ export function mountVegaInteractions(
             syncOverlays();
             holdWaiting();
         }, (t) => t);
-        sceneTween = tween;
-        void tween.done.then(() => {
-            if (sceneTween !== tween) return;
-            sceneTween = undefined;
+        sceneMotion = motion;
+        void motion.done.then(() => {
+            if (sceneMotion !== motion) return;
+            sceneMotion = undefined;
             revealWaiting();
             if (focusFade) {
                 focusFade = undefined;
@@ -1744,7 +1744,7 @@ export function mountVegaInteractions(
                 void view.runAsync();
             }
         });
-        return { settled: tween.done };
+        return { settled: motion.done };
     };
     // Changes that start together take turns: each waits until the one before has drawn its first
     // frame, then starts from that frame and cancels it, so the chart moves once to where both lead.
@@ -1754,12 +1754,12 @@ export function mountVegaInteractions(
         transitionTurn = turn.catch(() => undefined);
         return turn;
     };
-    /** The duration of a change that moves marks; a viewport alone tweens its domain instead. An empty layer clears what it held. */
+    /** The duration of a change that moves marks; a viewport alone moves its domain instead. An empty layer clears what it held. */
     const sceneDuration = (update: ChartUpdate, transition: ChartUpdateTransition | undefined): number =>
         transition && (update.ops.length === 0 || update.ops.some((op) => op.op !== 'set-viewport')) ? transition.duration : 0;
 
     // A host may ask for one update's viewport to animate. Only that update's
-    // op gets the tween; the render still re-applies every retained viewport.
+    // op gets the motion; the render still re-applies every retained viewport.
     let pendingTransition: { id: string; duration: number } | undefined;
     const transitionOptionsFor = (id: string): NavigationApplyOptions | undefined =>
         pendingTransition && pendingTransition.id === id
@@ -1797,7 +1797,7 @@ export function mountVegaInteractions(
             pendingTransition = undefined;
         }
         // A host's update settles with its last frame, so it can chain on it;
-        // a gesture's tween runs on, so the next gesture is not held behind it.
+        // a gesture's motion runs on, so the next gesture is not held behind it.
         if (waitForTransition) {
             if (pendingTransitionUsed) await navigationController.settled?.();
             await rendered.settled;
@@ -1814,7 +1814,7 @@ export function mountVegaInteractions(
         return undefined;
     };
     // A held viewport flies home the way a navigate reset does: the home
-    // update tweens, then leaves, so nothing stays retained once it lands.
+    // update moves, then leaves, so nothing stays retained once it lands.
     const flyViewportHome = (interaction: CanvasInteractionDef): boolean => {
         const transition = commitTransition(interaction.transition);
         const axes = heldViewportAxes(interaction.id);
@@ -1923,9 +1923,9 @@ export function mountVegaInteractions(
         const domain = currentViewport();
         return domain ? { ...base, geometry: { ...base.geometry, domain } } : base;
     };
-    /** A frame of a host-requested viewport tween reports like a zoom or reset gesture. */
+    /** A frame of a host-requested viewport motion reports like a zoom or reset gesture. */
     const emitTransitionFrame = (phase: 'preview' | 'commit', operation: 'zoom' | 'reset'): void => {
-        // A tween moves the scales without a render pass, so overlays re-project on each frame.
+        // A motion moves the scales without a render pass, so overlays re-project on each frame.
         if (phase === 'commit') syncOverlays();
         else projectOverlays();
         if (!navigationInteraction) return;
@@ -1994,7 +1994,7 @@ export function mountVegaInteractions(
         const run = async (event: NavigationInteractionEvent): Promise<void> => {
             const base = toCanvasInteractionEvent(event, interaction.eventSource);
             const request = interaction.handle?.(base, context(false)) ?? null;
-            // A reset may tween home; its frames then report themselves.
+            // A reset may move home; its frames then report themselves.
             const transition = event.operation === 'reset' && event.phase === 'commit' && request
                 ? commitTransition(interaction.transition)
                 : undefined;

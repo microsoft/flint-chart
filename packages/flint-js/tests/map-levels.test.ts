@@ -411,10 +411,10 @@ describe('region fit and viewport transition', () => {
         view.finalize();
     });
 
-    it('tweens the extent to a target and flips the level only on the last frame', async () => {
+    it('moves the extent to a target and flips the level only on the last frame', async () => {
         const { view, controller } = await mountedAutoChoropleth();
         const box = { op: 'set-viewport' as const, axes: 'xy' as const, value: { x: [-116, -108] as const, y: [35, 41] as const } };
-        // The direct fit is the reference the tween must land on.
+        // The direct fit is the reference the motion must land on.
         expect(controller.apply(box)).toBe(true);
         await view.runAsync();
         const target = view.signal(GEO_EXTENT_SIGNAL).flat() as number[];
@@ -428,7 +428,7 @@ describe('region fit and viewport transition', () => {
         // Nothing moves until the first frame, and the level waits for the last.
         expect(view.signal(GEO_EXTENT_SIGNAL)).toBeNull();
         expect(controller.level!()).toBe('state');
-        // The runtime's baseline reset and the re-applied target keep the tween.
+        // The runtime's baseline reset and the re-applied target keep the motion.
         expect(controller.apply({ op: 'set-viewport', axes: 'xy', value: {} }, { baseline: true })).toBe(true);
         expect(controller.apply(box)).toBe(true);
         expect(controller.level!()).toBe('state');
@@ -443,7 +443,7 @@ describe('region fit and viewport transition', () => {
         view.finalize();
     });
 
-    it('lets a plain viewport change cancel a running tween', async () => {
+    it('lets a plain viewport change cancel a running motion', async () => {
         const { view, controller } = await mountedAutoChoropleth();
         const phases: string[] = [];
         controller.apply(REGION, { transition: { duration: 500, onFrame: (phase) => phases.push(phase) } });
@@ -452,7 +452,7 @@ describe('region fit and viewport transition', () => {
         await view.runAsync();
         expect(view.signal(GEO_EXTENT_SIGNAL)).toBeNull();
         expect(phases).not.toContain('commit');
-        // A tween home reports as a reset, so a host clears its viewport state.
+        // A move home reports as a reset, so a host clears its viewport state.
         const operations: string[] = [];
         controller.apply(REGION);
         await view.runAsync();
@@ -489,7 +489,7 @@ describe('fits read the rendered frame', () => {
         view.finalize();
     });
 
-    it('starts a tween from the frame on screen, not from the base fit', async () => {
+    it('starts a motion from the frame on screen, not from the base fit', async () => {
         const { view, controller } = await mountedAutoChoropleth();
         controller.apply(ELSEWHERE);
         await view.runAsync();

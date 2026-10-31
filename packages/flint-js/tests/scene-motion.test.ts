@@ -6,9 +6,9 @@ import {
     captureScene,
     domainPath,
     identityRepeats,
-    injectScaleTween,
-    injectSceneTween,
-    injectSizeTween,
+    injectScaleMotion,
+    injectSceneMotion,
+    injectSizeMotion,
     placeOutlineStarts,
     SCENE_ENTER_SIGNAL,
     SCENE_EXIT_SIGNAL,
@@ -16,7 +16,7 @@ import {
     SCENE_OUTLINE_SIGNAL,
     SCENE_T_SIGNAL,
     setSceneExits,
-} from '../src/vegalite/interactions/scene-tween';
+} from '../src/vegalite/interactions/scene-motion';
 import { INTERACTION_KEY } from '../src/vegalite/interactions/stores';
 import { easingCurve, transitionEasing, validateTransition } from '../src/interactive/transition';
 
@@ -76,10 +76,10 @@ const bars = (view: View): Record<string, any> => Object.fromEntries(
     (view.scenegraph() as any).root.items[0].items[0].items.map((item: any) => [item.datum.k, item]),
 );
 
-describe('scene tween', () => {
+describe('scene motion', () => {
     it('moves each keyed item from the captured frame to the new one', async () => {
         const spec = barSpec(['a', 'b', 'c']);
-        injectSceneTween(spec);
+        injectSceneMotion(spec);
         const view = new View(parse(spec), { renderer: 'none' });
         await view.runAsync();
         const before = captureScene(view);
@@ -103,7 +103,7 @@ describe('scene tween', () => {
 
     it('fades in an item the captured frame did not draw', async () => {
         const spec = barSpec(['a', 'b', 'c']);
-        injectSceneTween(spec);
+        injectSceneMotion(spec);
         const view = new View(parse(spec), { renderer: 'none' });
         await view.runAsync();
         const before = captureScene(view);
@@ -114,10 +114,10 @@ describe('scene tween', () => {
         expect(bars(view).b.opacity).toBe(1);
     });
 
-    it('names a row by its tween fields, so new values of the same row move rather than swap', async () => {
+    it('names a row by its identity fields, so new values of the same row move rather than swap', async () => {
         const spec = barSpec(['a', 'b', 'c']);
         spec.data[0].transform = [{ type: 'formula', as: INTERACTION_KEY, expr: "datum.k + '|' + datum.v" }];
-        injectSceneTween(spec, ['k']);
+        injectSceneMotion(spec, ['k']);
         const view = new View(parse(spec), { renderer: 'none' });
         await view.runAsync();
         const before = captureScene(view, ['k']);
@@ -131,7 +131,7 @@ describe('scene tween', () => {
 
     it('draws a leaving item where it stood and fades it out', async () => {
         const spec = barSpec(['a', 'b', 'c']);
-        injectSceneTween(spec);
+        injectSceneMotion(spec);
         const view = new View(parse(spec), { renderer: 'none' });
         await view.runAsync();
         const before = captureGhosts(view);
@@ -149,10 +149,10 @@ describe('scene tween', () => {
         expect((view.scenegraph() as any).root.items[0].items.find((mark: any) => mark.role === 'scene-exit').items).toHaveLength(0);
     });
 
-    it('matches by the whole row key when tween keys repeat within a mark', async () => {
+    it('matches by the whole row key when identity keys repeat within a mark', async () => {
         const spec = barSpec(['a', 'b', 'c']);
         spec.data[0].values = [{ k: 'a', v: 10, g: 'x' }, { k: 'b', v: 30, g: 'x' }, { k: 'c', v: 20, g: 'y' }];
-        injectSceneTween(spec, ['g']);
+        injectSceneMotion(spec, ['g']);
         const view = new View(parse(spec), { renderer: 'none' });
         await view.runAsync();
         const before = captureScene(view, ['g']);
@@ -169,7 +169,7 @@ describe('scene tween', () => {
         spec.scales[1].domainRaw = { signal: 'held' };
         spec.marks[0].encode.update.y = { scale: 'y', field: 'v' };
         spec.marks[0].encode.update.y2 = { scale: 'y', value: 0 };
-        injectSceneTween(spec);
+        injectSceneMotion(spec);
         const view = new View(parse(spec), { renderer: 'none' });
         await view.runAsync();
         const before = captureScene(view);
@@ -214,7 +214,7 @@ describe('scene tween', () => {
                 }],
             }],
         };
-        injectSceneTween(spec, ['s', 't']);
+        injectSceneMotion(spec, ['s', 't']);
         const view = new View(parse(spec), { renderer: 'none' });
         await view.runAsync();
         const before = captureGhosts(view, ['s', 't']);
@@ -233,7 +233,7 @@ describe('scene tween', () => {
 
     it('mixes colours channel by channel', async () => {
         const spec = barSpec(['a', 'b', 'c']);
-        injectSceneTween(spec);
+        injectSceneMotion(spec);
         const view = new View(parse(spec), { renderer: 'none' });
         await view.runAsync();
         const before = captureScene(view);
@@ -245,7 +245,7 @@ describe('scene tween', () => {
 
     it('keeps an area\'s size with the ends it mixes, so its edge does not jump', async () => {
         const spec = areaSpec([{ i: 0, v: 40, w: 10 }, { i: 1, v: 60, w: 20 }], 'toString(datum.i)');
-        injectSceneTween(spec);
+        injectSceneMotion(spec);
         const view = new View(parse(spec), { renderer: 'none' });
         await view.runAsync();
         const before = captureScene(view);
@@ -263,7 +263,7 @@ describe('scene tween', () => {
         spec.scales[1].domainRaw = { signal: 'held' };
         spec.marks[0].encode.update.y = { scale: 'y', field: 'v' };
         spec.marks[0].encode.update.y2 = { scale: 'y', value: 0 };
-        injectSceneTween(spec);
+        injectSceneMotion(spec);
         const view = new View(parse(spec), { renderer: 'none' });
         await view.runAsync();
         const before = captureScene(view);
@@ -281,7 +281,7 @@ describe('scene tween', () => {
 
     it('bends an outline whose vertices share one key from the shape drawn before', async () => {
         const spec = areaSpec([{ i: 0, v: 10, w: 0 }, { i: 2, v: 30, w: 0 }, { i: 4, v: 10, w: 0 }], "'A'");
-        injectSceneTween(spec);
+        injectSceneMotion(spec);
         const view = new View(parse(spec), { renderer: 'none' });
         await view.runAsync();
         const before = captureScene(view);
@@ -305,8 +305,8 @@ describe('scene tween', () => {
     it('holds the domain of every continuous scale a mark is placed by, with or without an axis', () => {
         const spec = areaSpec([{ i: 0, v: 40, w: 10 }, { i: 1, v: 60, w: 20 }], 'toString(datum.i)');
         spec.scales.push({ name: 'shade', type: 'linear', domain: [0, 1], range: [0, 1] });
-        injectSceneTween(spec);
-        expect(injectScaleTween(spec).map((scale) => scale.name)).toEqual(['x', 'y']);
+        injectSceneMotion(spec);
+        expect(injectScaleMotion(spec).map((scale) => scale.name)).toEqual(['x', 'y']);
         expect(spec.scales[1].domainRaw).toEqual({ signal: '__flint_domain_y' });
     });
 
@@ -329,7 +329,7 @@ describe('scene tween', () => {
                 encode: { update: { x: { scale: 'x', field: 't' }, y: { scale: 'y', field: 'v' } } },
             }],
         };
-        injectSceneTween(spec, ['t']);
+        injectSceneMotion(spec, ['t']);
         expect(spec.marks[0].clip).toEqual({ signal: `${SCENE_T_SIGNAL} < 1` });
         const view = new View(parse(spec), { renderer: 'none' });
         await view.runAsync();
@@ -347,15 +347,15 @@ describe('scene tween', () => {
         expect(segment()[0].mark.clip).toBe(true);
     });
 
-    it('holds a size worked out from the data, sets a plain size directly, and leaves a chart without the tween alone', async () => {
+    it('holds a size worked out from the data, sets a plain size directly, and leaves a chart without the motion alone', async () => {
         const spec: Record<string, any> = {
             signals: [{ name: 'x_step', value: 40 }, { name: 'width', update: "length(data('rows')) * x_step" }, { name: 'height', value: 100 }],
             data: [{ name: 'rows', values: [{ k: 'a' }, { k: 'b' }] }],
             marks: [{ type: 'rect', name: 'bars', from: { data: 'rows' }, encode: { update: { x: { value: 0 } } } }],
         };
-        expect(injectSizeTween(structuredClone(spec))).toEqual([]);
-        injectSceneTween(spec);
-        expect(injectSizeTween(spec)).toEqual([
+        expect(injectSizeMotion(structuredClone(spec))).toEqual([]);
+        injectSceneMotion(spec);
+        expect(injectSizeMotion(spec)).toEqual([
             { dimension: 'width', signal: '__flint_size_width' },
             { dimension: 'height', signal: 'height' },
         ]);

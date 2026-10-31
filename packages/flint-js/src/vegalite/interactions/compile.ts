@@ -20,7 +20,7 @@ import type {
     SelectionStyle,
     VegaInteractionPlan,
 } from './contracts';
-import { injectSceneTween } from './scene-tween';
+import { injectSceneMotion } from './scene-motion';
 import {
     INTERACTION_KEY,
     INTERACTION_LEGEND_CHANNEL,
@@ -1129,7 +1129,7 @@ export function injectVegaInteractionStore(
     if (!Array.isArray(vegaSpec.marks)) return;
     if (plan?.renderHoverStyles) applyCompiledHoverStyles(vegaSpec.marks, plan.renderHoverStyles, vegaSpec.config);
     applyCompiledStyleChannels(vegaSpec.marks);
-    injectSceneTween(vegaSpec, plan?.identityFields ?? []);
+    injectSceneMotion(vegaSpec, plan?.identityFields ?? []);
     vegaSpec.marks.unshift({
         type: 'rect',
         name: CLEAR_MARK,

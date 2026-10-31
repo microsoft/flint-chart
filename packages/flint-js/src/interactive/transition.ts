@@ -49,7 +49,7 @@ export function transitionDuration(...sources: (ChartUpdateTransition | undefine
     return typeof requestAnimationFrame === 'function' ? DEFAULT_TRANSITION_MS : 0;
 }
 
-export interface Tween {
+export interface Motion {
     readonly done: Promise<void>;
     cancel(): void;
 }
@@ -58,11 +58,11 @@ export interface Tween {
  * Runs `frame` once per animation frame with progress from 0 to 1, eased by `ease`, over `duration` ms,
  * waiting for each frame's work before the next. `frame(1)` always runs last, unless cancelled.
  */
-export function runTween(
+export function runMotion(
     duration: number,
     frame: (t: number) => void | Promise<void>,
     ease: (t: number) => number = easeInOut,
-): Tween {
+): Motion {
     let cancelled = false;
     let finish!: () => void;
     const done = new Promise<void>((resolve) => { finish = resolve; });

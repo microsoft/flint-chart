@@ -2,19 +2,19 @@ import type { MorphItem, MorphScene } from '../../interactive/morph';
 import type { LegendDomain } from './contracts';
 import { INTERACTION_KEY } from './stores';
 
-/** The drawn state a tween starts from: per mark name, per row key, each channel's value. */
+/** The drawn state a motion starts from: per mark name, per row key, each channel's value. */
 export const SCENE_FROM_SIGNAL = '__flint_scene_from';
-/** The move stage's eased progress, 0 to 1; 1 when no tween runs. */
+/** The move stage's eased progress, 0 to 1; 1 when no motion runs. */
 export const SCENE_T_SIGNAL = '__flint_scene_t';
 /** The arrive stage's progress: rows new to the chart fade in over it. */
 export const SCENE_ENTER_SIGNAL = '__flint_scene_enter';
 /** The leave stage's progress: rows gone from the chart fade out over it. */
 export const SCENE_EXIT_SIGNAL = '__flint_scene_exit';
 
-/** The generation of outline starts the current tween placed on its items; null when none. */
+/** The generation of outline starts the current motion placed on its items; null when none. */
 export const SCENE_OUTLINE_SIGNAL = '__flint_scene_outline';
 
-/** Set on a mark's snapshot whose tween keys repeat: its items are matched by their whole row key. */
+/** Set on a mark's snapshot whose identity keys repeat: its items are matched by their whole row key. */
 const WHOLE_KEY_FLAG = '__flint_whole_key';
 /** On an item of an outline: what it starts from, sampled from the outline drawn before. */
 const OUTLINE_FROM = '__flint_outline_from';
@@ -63,7 +63,7 @@ function colourFormula(from: string, channel: string): Record<string, unknown> {
     };
 }
 
-/** An entering item fades in over the tween, from nothing on screen. */
+/** An entering item fades in over the motion, from nothing on screen. */
 function enterFormula(markFrom: string, from: string): Record<string, unknown> {
     return {
         type: 'formula',
@@ -74,7 +74,7 @@ function enterFormula(markFrom: string, from: string): Record<string, unknown> {
 }
 
 /** The row's name across data changes, as an expression over a scene item. */
-function tweenKeyExpression(fields: readonly string[]): string {
+function identityKeyExpression(fields: readonly string[]): string {
     const own = `datum.datum.${INTERACTION_KEY}`;
     if (fields.length === 0) return own;
     const read = (field: string): string => `datum.datum[${JSON.stringify(field)}]`;
@@ -83,7 +83,7 @@ function tweenKeyExpression(fields: readonly string[]): string {
 }
 
 /** The same name, read in code. */
-function tweenKey(datum: Record<string, unknown>, fields: readonly string[]): unknown {
+function identityKey(datum: Record<string, unknown>, fields: readonly string[]): unknown {
     if (fields.length > 0 && fields.every((field) => datum[field] !== null && datum[field] !== undefined && !Number.isNaN(datum[field]))) {
         return fields.map((field) => String(datum[field])).join('|');
     }
@@ -154,7 +154,7 @@ function dataFormulas(mark: Record<string, any>, channels: readonly DataChannel[
     return formulas;
 }
 
-/** An area draws from its start and its size, so its size follows the ends the tween mixed. */
+/** An area draws from its start and its size, so its size follows the ends the motion mixed. */
 function sizeFormulas(markType: string): Record<string, unknown>[] {
     if (markType !== 'area') return [];
     return [['x', 'x2', 'width'], ['y', 'y2', 'height']].map(([start, end, size]) => ({
@@ -196,23 +196,23 @@ function walkMarks(marks: readonly Record<string, any>[] | undefined, visit: (ma
 }
 
 /**
- * Lets every mark drawn from data tween what it draws. Each frame re-runs the mark's encoding (it reads
+ * Lets every mark drawn from data move what it draws. Each frame re-runs the mark's encoding (it reads
  * the progress signal), then post-encoding formulas mix each item's channels from the state
  * captured before the change, matched by mark name and row key. No data transform re-runs.
  */
-export function injectSceneTween(vegaSpec: Record<string, any>, identityFields: readonly string[] = []): void {
-    const key = tweenKeyExpression(identityFields);
+export function injectSceneMotion(vegaSpec: Record<string, any>, identityFields: readonly string[] = []): void {
+    const key = identityKeyExpression(identityFields);
     const continuous = new Set<string>((vegaSpec.scales ?? [])
         .filter((scale: Record<string, any>) => CONTINUOUS_SCALES.has(scale.type ?? 'linear'))
         .map((scale: Record<string, any>) => scale.name));
-    let tweened = false;
+    let injected = false;
     let unnamed = 0;
     const ghostTypes = new Set<string>();
     const pathScales = new Set<string>();
     walkMarks(vegaSpec.marks, (mark) => {
         if (mark.type === 'group' || !mark.from || !mark.encode) return;
         const channels = channelsOf(mark.type);
-        if (!mark.name) mark.name = `__flint_tweened_${unnamed++}`;
+        if (!mark.name) mark.name = `__flint_moving_${unnamed++}`;
         const markFrom = `(${SCENE_FROM_SIGNAL} ? ${SCENE_FROM_SIGNAL}[${JSON.stringify(mark.name)}] : null)`;
         const rowKey = `(${markFrom}.${WHOLE_KEY_FLAG} ? datum.datum.${INTERACTION_KEY} : ${key})`;
         const keyed = `(isValid(${markFrom}) && datum.datum ? ${markFrom}[${rowKey}] : null)`;
@@ -247,9 +247,9 @@ export function injectSceneTween(vegaSpec: Record<string, any>, identityFields: 
             enterFormula(markFrom, from),
         ];
         if (GHOST_CHANNELS[mark.type] || PATH_CHANNELS[mark.type]) ghostTypes.add(mark.type);
-        tweened = true;
+        injected = true;
     });
-    if (!tweened) return;
+    if (!injected) return;
     vegaSpec.signals = [
         ...(Array.isArray(vegaSpec.signals) ? vegaSpec.signals : []),
         { name: SCENE_FROM_SIGNAL, value: null },
@@ -258,7 +258,7 @@ export function injectSceneTween(vegaSpec: Record<string, any>, identityFields: 
         { name: SCENE_EXIT_SIGNAL, value: 1 },
         { name: SCENE_OUTLINE_SIGNAL, value: null },
     ];
-    injectLegendTween(vegaSpec);
+    injectLegendMotion(vegaSpec);
     const fading = { signal: `(isNumber(datum.opacity) ? datum.opacity : 1) * (1 - ${SCENE_EXIT_SIGNAL})` };
     for (const type of ghostTypes) {
         vegaSpec.data = [...(Array.isArray(vegaSpec.data) ? vegaSpec.data : []), { name: exitData(type), values: [] }];
@@ -349,7 +349,7 @@ export function captureGhosts(view: any, identityFields: readonly string[] = [])
             }
             const pathChannels = PATH_CHANNELS[mark?.marktype];
             if (pathChannels && mark?.name) {
-                const key = keyedItem(item, identityFields)?.tween;
+                const key = keyedItem(item, identityFields)?.identity;
                 if (key === undefined) continue;
                 const values: Record<string, unknown> = { opacity: item.opacity };
                 for (const channel of pathChannels) if (item[channel] !== undefined) values[channel] = item[channel];
@@ -490,7 +490,7 @@ function ruleExpression(entry: unknown): string | undefined {
 }
 
 /** Lets a legend entry's symbol and label fade between states, shown, dimmed or hidden, with the marks. */
-function injectLegendTween(vegaSpec: Record<string, any>): void {
+function injectLegendMotion(vegaSpec: Record<string, any>): void {
     walkVegaScopes(vegaSpec, (scope) => {
         for (const legend of scope.legends ?? []) {
             for (const [part, role] of [['symbols', 'legend-symbol'], ['labels', 'legend-label']] as const) {
@@ -513,7 +513,7 @@ const axisEntry = (scale: string, role: string): string => `__axis:${scale}:${ro
  * Lets the labels and ticks of every discrete axis glide with their marks when the order or the
  * categories change: each sits where the captured frame drew it and moves to its band's centre.
  */
-export function injectAxisTween(vegaSpec: Record<string, any>): void {
+export function injectAxisMotion(vegaSpec: Record<string, any>): void {
     if (!(vegaSpec.signals ?? []).some((signal: { name?: string }) => signal.name === SCENE_T_SIGNAL)) return;
     const discrete = new Set<string>((vegaSpec.scales ?? [])
         .filter((scale: Record<string, any>) => scale.type === 'band' || scale.type === 'point')
@@ -543,9 +543,9 @@ export function injectAxisTween(vegaSpec: Record<string, any>): void {
 }
 
 /** The signal that, while set, holds a continuous scale's domain during a transition. */
-export const scaleTweenSignal = (scale: string): string => `__flint_domain_${scale.replace(/\W/g, '_')}`;
+export const scaleMotionSignal = (scale: string): string => `__flint_domain_${scale.replace(/\W/g, '_')}`;
 
-export interface TweenedScale {
+export interface MovingScale {
     readonly name: string;
     readonly signal: string;
     readonly type: string;
@@ -592,7 +592,7 @@ export function legendDomainOf(pin: LegendDomain, rows: readonly Record<string, 
  * what it drew before (a navigated viewport, else its data). A transition moves the domain from the
  * one drawn to the new one, so axes, legends, gridlines and marks read one scale on every frame.
  */
-export function injectScaleTween(vegaSpec: Record<string, any>): TweenedScale[] {
+export function injectScaleMotion(vegaSpec: Record<string, any>): MovingScale[] {
     if (!(vegaSpec.signals ?? []).some((signal: { name?: string }) => signal.name === SCENE_T_SIGNAL)) return [];
     const placing = new Set<string>();
     walkVegaScopes(vegaSpec, (scope) => { for (const axis of scope.axes ?? []) placing.add(axis.scale); });
@@ -608,20 +608,20 @@ export function injectScaleTween(vegaSpec: Record<string, any>): TweenedScale[] 
             if (typeof scale === 'string') placing.add(scale);
         }
     });
-    const tweened: TweenedScale[] = [];
+    const moving: MovingScale[] = [];
     for (const scale of vegaSpec.scales ?? []) {
         const type = scale.type ?? 'linear';
         if (!placing.has(scale.name) || !CONTINUOUS_SCALES.has(type)) continue;
-        const signal = scaleTweenSignal(scale.name);
+        const signal = scaleMotionSignal(scale.name);
         vegaSpec.signals.push({ name: signal, value: null });
         const held = scale.domainRaw?.signal;
         scale.domainRaw = { signal: held ? `${signal} || ${held}` : signal };
-        tweened.push({ name: scale.name, signal, type });
+        moving.push({ name: scale.name, signal, type });
     }
-    return tweened;
+    return moving;
 }
 
-export interface TweenedSize {
+export interface MovingSize {
     readonly dimension: 'width' | 'height';
     /** The signal a transition sets: a hold the size reads first, or the size itself when it is a plain value. */
     readonly signal: string;
@@ -632,10 +632,10 @@ export interface TweenedSize {
  * a size worked out from the data reads a hold first, and a plain size is set directly. A size
  * the host's room sets changes outside transitions, so it still jumps.
  */
-export function injectSizeTween(vegaSpec: Record<string, any>): TweenedSize[] {
+export function injectSizeMotion(vegaSpec: Record<string, any>): MovingSize[] {
     const signals: Record<string, any>[] = vegaSpec.signals ?? [];
     if (!signals.some((signal) => signal.name === SCENE_T_SIGNAL)) return [];
-    const sizes: TweenedSize[] = [];
+    const sizes: MovingSize[] = [];
     for (const dimension of ['width', 'height'] as const) {
         const signal = signals.find((candidate) => candidate.name === dimension);
         if (!signal || signal.on) continue;
@@ -659,13 +659,13 @@ function walkVegaScopes(scope: Record<string, any>, visit: (scope: Record<string
 export type SceneSnapshot = Record<string, Record<string, any>>;
 
 interface KeyedItem {
-    readonly tween: string;
+    readonly identity: string;
     readonly whole: string;
     readonly item: any;
 }
 
 /**
- * Each mark's items under the keys the tween matches them by: the tween key, unless two of the
+ * Each mark's items under the keys the motion matches them by: the identity key, unless two of the
  * mark's items share one (a scatter coloured by group), and then the whole row key.
  */
 /**
@@ -679,7 +679,7 @@ export function identityRepeats(
     if (identityFields.length === 0) return false;
     const seen = new Set<string>();
     for (const { mark, datum } of items) {
-        const key = `${mark ?? ''}\u0000${String(tweenKey(datum, identityFields))}`;
+        const key = `${mark ?? ''}\u0000${String(identityKey(datum, identityFields))}`;
         if (seen.has(key)) return true;
         seen.add(key);
     }
@@ -687,24 +687,24 @@ export function identityRepeats(
 }
 
 function keyItems(items: readonly KeyedItem[]): { whole: boolean; byKey: Map<string, any> } {
-    const byTween = new Map<string, any>();
+    const byIdentity = new Map<string, any>();
     for (const entry of items) {
-        if (byTween.has(entry.tween)) {
+        if (byIdentity.has(entry.identity)) {
             return { whole: true, byKey: new Map(items.map((candidate) => [candidate.whole, candidate.item])) };
         }
-        byTween.set(entry.tween, entry.item);
+        byIdentity.set(entry.identity, entry.item);
     }
-    return { whole: false, byKey: byTween };
+    return { whole: false, byKey: byIdentity };
 }
 
 function keyedItem(item: any, identityFields: readonly string[]): KeyedItem | undefined {
     const whole = item.datum?.[INTERACTION_KEY];
     if (typeof whole !== 'string') return undefined;
-    const tween = tweenKey(item.datum, identityFields);
-    return { tween: typeof tween === 'string' ? tween : whole, whole, item };
+    const identity = identityKey(item.datum, identityFields);
+    return { identity: typeof identity === 'string' ? identity : whole, whole, item };
 }
 
-/** The channels every keyed item draws now, as `injectSceneTween` reads them back. */
+/** The channels every keyed item draws now, as `injectSceneMotion` reads them back. */
 export function captureScene(view: any, identityFields: readonly string[] = []): SceneSnapshot {
     const snapshot: SceneSnapshot = {};
     const outlined = new Set<any>();
@@ -751,7 +751,7 @@ export function captureScene(view: any, identityFields: readonly string[] = []):
     return snapshot;
 }
 
-/** The channels an item draws that the tween mixes. */
+/** The channels an item draws that the motion mixes. */
 function drawnValues(item: any, marktype: string): Record<string, unknown> {
     const values: Record<string, unknown> = {};
     for (const channel of [...channelsOf(marktype), ...COLOUR_CHANNELS]) {
@@ -779,7 +779,7 @@ function eachOutline(view: any, identityFields: readonly string[], visit: (name:
         const place = seen.get(mark.name) ?? 0;
         seen.set(mark.name, place + 1);
         if (items.length < 2) return;
-        const keys = new Set(items.map((item) => keyedItem(item, identityFields)?.tween));
+        const keys = new Set(items.map((item) => keyedItem(item, identityFields)?.identity));
         if (keys.size !== 1) return;
         const [key] = keys;
         visit(mark.name, key ?? `#${place}`, items);
@@ -825,8 +825,8 @@ export function sceneSize(snapshot: SceneSnapshot): number {
     }, 0);
 }
 
-/** Whether the view was compiled with the tween signals. */
-export function hasSceneTween(view: any): boolean {
+/** Whether the view was compiled with the motion signals. */
+export function hasSceneMotion(view: any): boolean {
     try {
         view.signal(SCENE_T_SIGNAL);
         return true;

@@ -33,7 +33,7 @@ import {
     type LiveLayoutPlanner,
 } from './interactions/live-layout';
 import { mountVegaInteractions } from './interactions/runtime';
-import { bindLegendDomains, captureMorphScene, hasSceneTween, injectAxisTween, injectScaleTween, injectSizeTween } from './interactions/scene-tween';
+import { bindLegendDomains, captureMorphScene, hasSceneMotion, injectAxisMotion, injectScaleMotion, injectSizeMotion } from './interactions/scene-motion';
 import { captureFrameScene } from './interactions/frame-scene';
 import { advanceLiveValues, bindLiveValues, LIVE_VALUES_SIGNAL, liveValuesChange } from './live-values';
 import { readDrawnLayout } from './drawn-layout';
@@ -404,10 +404,10 @@ export function createVegaInteractiveRenderer(
                         .map((axis) => injectVegaReorderSignal(vegaSpec, axis))
                         .filter((axis): axis is NonNullable<typeof axis> => !!axis);
                     interactionPlan.reorderAxis = interactionPlan.reorderAxes[0];
-                    injectAxisTween(vegaSpec);
+                    injectAxisMotion(vegaSpec);
                     interactionPlan.legendDomains = bindLegendDomains(vegaSpec, interactionPlan.legendDomains);
-                    interactionPlan.tweenScales = injectScaleTween(vegaSpec);
-                    interactionPlan.tweenSizes = injectSizeTween(vegaSpec);
+                    interactionPlan.movingScales = injectScaleMotion(vegaSpec);
+                    interactionPlan.movingSizes = injectSizeMotion(vegaSpec);
                 }
                 return { interactionPlan, vegaSpec, relaidSignals, livePlanner, morphFields };
             };
@@ -630,7 +630,7 @@ export function createVegaInteractiveRenderer(
                 },
                 morphScene() {
                     const fields = interactionPlan ? interactionPlan.identityFields ?? [] : morphFields;
-                    if (destroyed || fields.length === 0 || (interactionPlan && !hasSceneTween(view))) return undefined;
+                    if (destroyed || fields.length === 0 || (interactionPlan && !hasSceneMotion(view))) return undefined;
                     return captureMorphScene(view, fields, drawnOrigin());
                 },
                 frameScene() {
