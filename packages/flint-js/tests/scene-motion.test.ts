@@ -20,6 +20,7 @@ import {
     setSceneExits,
 } from '../src/vegalite/interactions/scene-motion';
 import { INTERACTION_KEY } from '../src/vegalite/interactions/stores';
+import { mixItem, type MarkMotion } from '../src/vegalite/interactions/motion-transform';
 import { easingCurve, runMotion, transitionEasing, validateTransition } from '../src/interactive/transition';
 
 function barSpec(order: string[]): Record<string, any> {
@@ -291,7 +292,7 @@ describe('scene motion', () => {
         view.data('rows', [0, 1, 2, 3, 4].map((i) => ({ i, v: 50 + i, w: 0 })));
         view.signal(SCENE_FROM_SIGNAL, before).signal(SCENE_T_SIGNAL, 0);
         await view.runAsync();
-        expect(placeOutlineStarts(view, before, [], 7)).toBe(true);
+        expect(placeOutlineStarts(view, before, [])).toBe(true);
         view.signal(SCENE_OUTLINE_SIGNAL, 7);
         await view.runAsync();
         const start = vertices(view).map((item) => [item.x, item.y]);
@@ -448,5 +449,51 @@ describe('runMotion', () => {
         const motion = runMotion(10_000, () => undefined);
         motion.cancel();
         await expect(motion.done).resolves.toBeUndefined();
+    });
+});
+
+describe('motion transform', () => {
+    const motion = (overrides: Partial<MarkMotion> = {}): MarkMotion => ({
+        mark: 'bars', channels: ['x', 'y', 'width', 'height', 'opacity'], colours: ['fill', 'stroke'], data: [], box: true,
+        area: false, arrival: [], identity: [], outline: false, written: [], ...overrides,
+    });
+    const scales = { place: (_: string, value: number) => value * 10, range: (): readonly [number, number] => [0, 100] };
+
+    it('mixes numbers and colours from where the item was', () => {
+        const item: Record<string, any> = { x: 100, opacity: 1, fill: '#ffffff', datum: { [INTERACTION_KEY]: 'a' } };
+        mixItem(item, { x: 0, opacity: 0, fill: '#000000' }, motion(), { t: 0.5, enter: 1 }, scales);
+        expect(item).toMatchObject({ x: 50, opacity: 0.5, fill: 'rgb(128,128,128)' });
+    });
+
+    it('places a data position through the scale as the frame draws it, and reports its data value', () => {
+        const item: Record<string, any> = { x: 0, x2: 0, width: 0, datum: { lo: 2, hi: 6, [INTERACTION_KEY]: 'a' } };
+        const units = mixItem(item, { __d_x: 0, __d_x2: 4 }, motion({
+            data: [{ channel: 'x', scale: 'x', field: 'lo', offset: 0 }, { channel: 'x2', scale: 'x', field: 'hi', offset: 0 }],
+        }), { t: 0.5, enter: 1 }, scales);
+        expect(units).toEqual({ x: 1, x2: 5 });
+        expect(item).toMatchObject({ x: 10, width: 40 });
+    });
+
+    it('holds an arriving item inside the plot and fades it in', () => {
+        const item: Record<string, any> = { y: -40, height: 60, datum: { [INTERACTION_KEY]: 'c' } };
+        mixItem(item, null, motion({ arrival: [{ start: 'y', end: 'y2', size: 'height', scale: 'y' }] }), { t: 0, enter: 0 }, scales);
+        expect(item).toMatchObject({ y: 0, height: 20, opacity: 0 });
+    });
+
+    it('leaves a channel the item does not draw unwritten', () => {
+        const item: Record<string, any> = { x: 5, datum: { [INTERACTION_KEY]: 'a' } };
+        mixItem(item, { x: 0, width: 3 }, motion(), { t: 0.5, enter: 1 }, scales);
+        expect(Object.keys(item).sort()).toEqual(['datum', 'x']);
+    });
+
+    it('adds nothing to the items of a chart at rest but the one field that re-encodes it', async () => {
+        const plain = new View(parse(barSpec(['a', 'b', 'c'])), { renderer: 'none' });
+        await plain.runAsync();
+        const spec = barSpec(['a', 'b', 'c']);
+        injectSceneMotion(spec);
+        const moving = new View(parse(spec), { renderer: 'none' });
+        await moving.runAsync();
+        const keys = (view: View) => Object.keys((view.scenegraph() as any).root.items[0].items[0].items[0]).sort();
+        expect(keys(moving)).toEqual([...keys(plain), '__flint_scene_t'].sort());
     });
 });

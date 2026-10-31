@@ -1,5 +1,15 @@
 import type { MorphItem, MorphScene } from '../../interactive/morph';
 import type { LegendDomain } from './contracts';
+import {
+    drawnDataValue,
+    identityKey,
+    registerMotionTransform,
+    resetOutlineStarts,
+    WHOLE_KEY_FLAG,
+    type ArrivalAxis,
+    type DataPosition,
+    type MarkMotion,
+} from './motion-transform';
 import { INTERACTION_KEY } from './stores';
 
 /** The drawn state a motion starts from: per mark name, per row key, each channel's value. */
@@ -14,15 +24,9 @@ export const SCENE_EXIT_SIGNAL = '__flint_scene_exit';
 /** Whether lines clip to their plot: only while a change moves a scale or adds or drops rows, so a line's ends can slide through the edge. */
 export const SCENE_CLIP_SIGNAL = '__flint_scene_clip';
 
-/** The generation of outline starts the current motion placed on its items; null when none. */
+/** Changes for each motion that placed outline starts on its items; null when none. */
 export const SCENE_OUTLINE_SIGNAL = '__flint_scene_outline';
 
-/** Set on a mark's snapshot whose identity keys repeat: its items are matched by their whole row key. */
-const WHOLE_KEY_FLAG = '__flint_whole_key';
-/** On an item of an outline: what it starts from, sampled from the outline drawn before. */
-const OUTLINE_FROM = '__flint_outline_from';
-/** On an item of an outline: the generation its start belongs to. */
-const OUTLINE_GENERATION = '__flint_outline_generation';
 const outlineEntry = (name: string): string => `__outline:${name}`;
 
 const POSITION_CHANNELS: Record<string, readonly string[]> = {
@@ -43,152 +47,30 @@ function channelsOf(marktype: string): readonly string[] {
     return [...(POSITION_CHANNELS[marktype] ?? []), ...NUMERIC_STYLE_CHANNELS];
 }
 
-function numericFormula(from: string, channel: string): Record<string, unknown> {
-    const was = `${from}.${channel}`;
-    return {
-        type: 'formula',
-        as: channel,
-        expr: `isValid(${from}) && isNumber(${was}) && isNumber(datum.${channel}) `
-            + `? ${was} + (datum.${channel} - ${was}) * ${SCENE_T_SIGNAL} : datum.${channel}`,
-    };
-}
-
-function colourFormula(from: string, channel: string): Record<string, unknown> {
-    const was = `${from}.${channel}`;
-    const mix = (part: string): string =>
-        `round(rgb(${was}).${part} + (rgb(datum.${channel}).${part} - rgb(${was}).${part}) * ${SCENE_T_SIGNAL})`;
-    return {
-        type: 'formula',
-        as: channel,
-        expr: `isValid(${from}) && isString(${was}) && isString(datum.${channel}) && ${was} !== datum.${channel} `
-            + `&& isValid(rgb(${was}).r) && isValid(rgb(datum.${channel}).r) `
-            + `? 'rgb(' + ${mix('r')} + ',' + ${mix('g')} + ',' + ${mix('b')} + ')' : datum.${channel}`,
-    };
-}
-
-/** An entering item fades in over the motion, from nothing on screen. */
-function enterFormula(markFrom: string, from: string): Record<string, unknown> {
-    return {
-        type: 'formula',
-        as: 'opacity',
-        expr: `isValid(${markFrom}) && datum.datum && isString(datum.datum.${INTERACTION_KEY}) && !isValid(${from}) `
-            + `? (isNumber(datum.opacity) ? datum.opacity : 1) * ${SCENE_ENTER_SIGNAL} : datum.opacity`,
-    };
-}
-
-/** The row's name across data changes, as an expression over a scene item. */
-function identityKeyExpression(fields: readonly string[]): string {
-    const own = `datum.datum.${INTERACTION_KEY}`;
-    if (fields.length === 0) return own;
-    const read = (field: string): string => `datum.datum[${JSON.stringify(field)}]`;
-    return `(${fields.map((field) => `isValid(${read(field)})`).join(' && ')} `
-        + `? ${fields.map((field) => `toString(${read(field)})`).join(` + '|' + `)} : ${own})`;
-}
-
-/** The same name, read in code. */
-function identityKey(datum: Record<string, unknown>, fields: readonly string[]): unknown {
-    if (fields.length > 0 && fields.every((field) => datum[field] !== null && datum[field] !== undefined && !Number.isNaN(datum[field]))) {
-        return fields.map((field) => String(datum[field])).join('|');
-    }
-    return datum[INTERACTION_KEY];
-}
-
 const CONTINUOUS_SCALES = new Set(['linear', 'log', 'pow', 'sqrt', 'symlog', 'time', 'utc']);
 const SIMPLE_FIELD = /^[^.[\]\\]+$/;
 
-/** A position channel drawn as a continuous scale of a field or a constant: `scale(field) + offset`. */
-interface DataChannel {
-    readonly channel: 'x' | 'x2' | 'y' | 'y2';
-    readonly scale: string;
-    /** The channel's data value now, as an expression over a scene item. */
-    readonly value: string;
-    readonly offset: number;
-}
-
-function dataChannels(mark: Record<string, any>, continuous: ReadonlySet<string>): DataChannel[] {
+/** The positions a mark draws as a continuous scale of a field or a constant: `scale(value) + offset`. */
+function dataChannels(mark: Record<string, any>, continuous: ReadonlySet<string>): DataPosition[] {
     const encode = { ...(mark.encode?.enter ?? {}), ...(mark.encode?.update ?? {}) };
-    return (['x', 'x2', 'y', 'y2'] as const).flatMap((channel) => {
+    return (['x', 'x2', 'y', 'y2'] as const).flatMap((channel): DataPosition[] => {
         const entry = encode[channel];
         if (!entry || Array.isArray(entry) || typeof entry !== 'object' || !continuous.has(entry.scale)) return [];
         if (Object.keys(entry).some((key) => !['scale', 'field', 'value', 'offset'].includes(key))) return [];
         if (entry.offset !== undefined && typeof entry.offset !== 'number') return [];
-        const value = typeof entry.field === 'string' && SIMPLE_FIELD.test(entry.field)
-            ? `toNumber(datum.datum[${JSON.stringify(entry.field)}])`
-            : typeof entry.value === 'number' && entry.field === undefined ? String(entry.value) : undefined;
-        return value ? [{ channel, scale: entry.scale, value, offset: entry.offset ?? 0 }] : [];
+        const offset = entry.offset ?? 0;
+        if (typeof entry.field === 'string' && SIMPLE_FIELD.test(entry.field)) return [{ channel, scale: entry.scale, field: entry.field, offset }];
+        if (typeof entry.value === 'number' && entry.field === undefined) return [{ channel, scale: entry.scale, value: entry.value, offset }];
+        return [];
     });
 }
 
-/**
- * Positions that move in data units: each frame mixes the row's captured data value toward its
- * new one and places it through the scale as that frame draws it, so a mark stays true to its
- * axis while the axis itself moves. Rects take their box from both ends.
- */
-function dataFormulas(mark: Record<string, any>, channels: readonly DataChannel[], from: string): Record<string, unknown>[] {
-    if (channels.length === 0) return [];
-    const formulas: Record<string, unknown>[] = [];
-    for (const { channel, scale, value, offset } of channels) {
-        const was = `${from}.__d_${channel}`;
-        formulas.push({
-            type: 'formula',
-            as: `__flint_d_${channel}`,
-            expr: `isValid(${from}) && isNumber(${was}) && isNumber(${value}) ? ${was} + (${value} - ${was}) * ${SCENE_T_SIGNAL} : ${value}`,
-        });
-        formulas.push({
-            type: 'formula',
-            as: `__flint_p_${channel}`,
-            expr: `isValid(${from}) && isNumber(${was}) && isNumber(datum.__flint_d_${channel}) `
-                + `? scale(${JSON.stringify(scale)}, datum.__flint_d_${channel}) + ${offset} : null`,
-        });
-    }
-    const has = (channel: string) => channels.some((entry) => entry.channel === channel);
-    const box = mark.type === 'rect' || mark.type === 'image';
-    for (const [start, end, size] of [['x', 'x2', 'width'], ['y', 'y2', 'height']] as const) {
-        const a = `datum.__flint_p_${start}`;
-        const b = `datum.__flint_p_${end}`;
-        if (box && has(start) && has(end)) {
-            formulas.push({ type: 'formula', as: start, expr: `isNumber(${a}) && isNumber(${b}) ? min(${a}, ${b}) : datum.${start}` });
-            formulas.push({ type: 'formula', as: size, expr: `isNumber(${a}) && isNumber(${b}) ? abs(${a} - ${b}) : datum.${size}` });
-            continue;
-        }
-        if (has(start)) formulas.push({ type: 'formula', as: start, expr: `isNumber(${a}) ? ${a} : datum.${start}` });
-        if (has(end) && !box) formulas.push({ type: 'formula', as: end, expr: `isNumber(${b}) ? ${b} : datum.${end}` });
-    }
-    return formulas;
-}
-
-/** An area draws from its start and its size, so its size follows the ends the motion mixed. */
-function sizeFormulas(markType: string): Record<string, unknown>[] {
-    if (markType !== 'area') return [];
-    return [['x', 'x2', 'width'], ['y', 'y2', 'height']].map(([start, end, size]) => ({
-        type: 'formula',
-        as: size,
-        expr: `isNumber(datum.${end}) && isNumber(datum.${size}) ? datum.${end} - datum.${start} : datum.${size}`,
-    }));
-}
-
-/**
- * An item that arrives is placed through the scale as the frame draws it, which can put it outside
- * the plot while the axes still show the old domain. Until it starts to fade in, it waits at the
- * plot's edge, so an item nobody sees takes no room from the title, the axes or the panels.
- */
-function arrivalFormulas(channels: readonly DataChannel[], entering: string): Record<string, unknown>[] {
-    const formulas: Record<string, unknown>[] = [];
-    for (const [start, end, size] of [['x', 'x2', 'width'], ['y', 'y2', 'height']] as const) {
-        const scale = channels.find((entry) => entry.channel === start || entry.channel === end)?.scale;
-        if (!scale) continue;
-        const range = `range(${JSON.stringify(scale)})`;
-        const clamp = (value: string) => `clamp(${value}, min(${range}[0], ${range}[1]), max(${range}[0], ${range}[1]))`;
-        const far = `__flint_far_${start}`;
-        formulas.push(
-            { type: 'formula', as: far, expr: `isNumber(datum.${size}) ? datum.${start} + datum.${size} : isNumber(datum.${end}) ? datum.${end} : null` },
-            { type: 'formula', as: start, expr: `${entering} && isNumber(datum.${start}) ? ${clamp(`datum.${start}`)} : datum.${start}` },
-            { type: 'formula', as: far, expr: `${entering} && isNumber(datum.${far}) ? ${clamp(`datum.${far}`)} : datum.${far}` },
-            { type: 'formula', as: size, expr: `isNumber(datum.${size}) && isNumber(datum.${far}) ? datum.${far} - datum.${start} : datum.${size}` },
-            { type: 'formula', as: end, expr: `isNumber(datum.${end}) && isNumber(datum.${far}) ? datum.${far} : datum.${end}` },
-        );
-    }
-    return formulas;
+/** The axes an arriving item of a mark waits inside: each axis a position of the mark is placed on. */
+function arrivalAxes(positions: readonly DataPosition[]): ArrivalAxis[] {
+    return ([['x', 'x2', 'width'], ['y', 'y2', 'height']] as const).flatMap(([start, end, size]) => {
+        const scale = positions.find((entry) => entry.channel === start || entry.channel === end)?.scale;
+        return scale ? [{ start, end, size, scale }] : [];
+    });
 }
 
 function walkMarks(marks: readonly Record<string, any>[] | undefined, visit: (mark: Record<string, any>) => void): void {
@@ -200,11 +82,12 @@ function walkMarks(marks: readonly Record<string, any>[] | undefined, visit: (ma
 
 /**
  * Lets every mark drawn from data move what it draws. Each frame re-runs the mark's encoding (it reads
- * the progress signal), then post-encoding formulas mix each item's channels from the state
- * captured before the change, matched by mark name and row key. No data transform re-runs.
+ * the motion signals), then a post-encoding transform mixes each item's channels from the state
+ * captured before the change, matched by mark name and row key. No data transform re-runs, and at
+ * rest the transform passes its items through untouched.
  */
 export function injectSceneMotion(vegaSpec: Record<string, any>, identityFields: readonly string[] = []): void {
-    const key = identityKeyExpression(identityFields);
+    registerMotionTransform();
     const continuous = new Set<string>((vegaSpec.scales ?? [])
         .filter((scale: Record<string, any>) => CONTINUOUS_SCALES.has(scale.type ?? 'linear'))
         .map((scale: Record<string, any>) => scale.name));
@@ -214,15 +97,8 @@ export function injectSceneMotion(vegaSpec: Record<string, any>, identityFields:
     const pathScales = new Set<string>();
     walkMarks(vegaSpec.marks, (mark) => {
         if (mark.type === 'group' || !mark.from || !mark.encode) return;
-        const channels = channelsOf(mark.type);
         if (!mark.name) mark.name = `__flint_moving_${unnamed++}`;
-        const markFrom = `(${SCENE_FROM_SIGNAL} ? ${SCENE_FROM_SIGNAL}[${JSON.stringify(mark.name)}] : null)`;
-        const rowKey = `(${markFrom}.${WHOLE_KEY_FLAG} ? datum.datum.${INTERACTION_KEY} : ${key})`;
-        const keyed = `(isValid(${markFrom}) && datum.datum ? ${markFrom}[${rowKey}] : null)`;
         const outline = Boolean(PATH_CHANNELS[mark.type]);
-        const from = outline
-            ? `(${SCENE_OUTLINE_SIGNAL} && datum.${OUTLINE_GENERATION} === ${SCENE_OUTLINE_SIGNAL} ? datum.${OUTLINE_FROM} : ${keyed})`
-            : keyed;
         const positions = dataChannels(mark, continuous);
         if (outline) {
             // While a change moves a scale or rows, a line's ends slide in and out through the plot's edges.
@@ -230,24 +106,46 @@ export function injectSceneMotion(vegaSpec: Record<string, any>, identityFields:
             const scaleOf = (axis: 'x' | 'y') => positions.find((entry) => entry.channel === axis)?.scale ?? '';
             pathScales.add(`${scaleOf('x')}|${scaleOf('y')}`);
         }
-        const entering = `(isValid(${markFrom}) && datum.datum && isString(datum.datum.${INTERACTION_KEY}) && !isValid(${from}) && ${SCENE_ENTER_SIGNAL} <= 0)`;
+        const channels = channelsOf(mark.type);
+        const arrival = arrivalAxes(positions);
+        const motion: MarkMotion = {
+            mark: mark.name,
+            channels,
+            colours: COLOUR_CHANNELS,
+            data: positions,
+            box: mark.type === 'rect' || mark.type === 'image',
+            area: mark.type === 'area',
+            arrival,
+            identity: identityFields,
+            outline,
+            written: [...new Set([
+                ...channels,
+                ...COLOUR_CHANNELS,
+                ...positions.map((entry) => entry.channel),
+                ...arrival.flatMap((axis) => [axis.start, axis.end, axis.size]),
+                ...(mark.type === 'rect' || mark.type === 'image' || mark.type === 'area' ? ['width', 'height'] : []),
+                'opacity',
+            ])],
+        };
+        // One field that reads every motion signal, so a change of any of them re-encodes the mark
+        // and the transform mixes from what the encoding draws now.
         mark.encode = {
             ...mark.encode,
             update: {
                 ...(mark.encode.update ?? {}),
-                __flint_scene_t: { signal: SCENE_T_SIGNAL },
-                __flint_scene_enter: { signal: SCENE_ENTER_SIGNAL },
-                ...(outline ? { __flint_scene_outline: { signal: SCENE_OUTLINE_SIGNAL } } : {}),
+                __flint_scene_t: { signal: `${SCENE_T_SIGNAL} + ${SCENE_ENTER_SIGNAL} + (${SCENE_OUTLINE_SIGNAL} ? 0 : 0)` },
             },
         };
         mark.transform = [
             ...(Array.isArray(mark.transform) ? mark.transform : []),
-            ...channels.map((channel) => numericFormula(from, channel)),
-            ...dataFormulas(mark, positions, from),
-            ...sizeFormulas(mark.type),
-            ...arrivalFormulas(positions, entering),
-            ...COLOUR_CHANNELS.map((channel) => colourFormula(from, channel)),
-            enterFormula(markFrom, from),
+            {
+                type: 'flintmotion',
+                motion,
+                from: { signal: SCENE_FROM_SIGNAL },
+                t: { signal: SCENE_T_SIGNAL },
+                enter: { signal: SCENE_ENTER_SIGNAL },
+                outline: { signal: SCENE_OUTLINE_SIGNAL },
+            },
         ];
         if (GHOST_CHANNELS[mark.type] || PATH_CHANNELS[mark.type]) ghostTypes.add(mark.type);
         injected = true;
@@ -361,8 +259,8 @@ export function captureGhosts(view: any, identityFields: readonly string[] = [])
                 if (typeof values.y === 'number') values.y += offsetY;
                 if (typeof values.y2 === 'number') values.y2 += offsetY;
                 if (offsetX === 0 && offsetY === 0) {
-                    for (const channel of ['x', 'y', 'y2']) {
-                        const value = item[`__flint_d_${channel}`];
+                    for (const channel of ['x', 'y', 'y2'] as const) {
+                        const value = drawnDataValue(view, item, channel);
                         if (typeof value === 'number' && Number.isFinite(value)) values[`__d_${channel}`] = value;
                     }
                 }
@@ -747,8 +645,8 @@ export function captureScene(view: any, identityFields: readonly string[] = []):
         const entries: Record<string, unknown> = whole ? { [WHOLE_KEY_FLAG]: true } : {};
         for (const [key, item] of byKey) {
             const values = drawnValues(item, marktype);
-            for (const channel of ['x', 'x2', 'y', 'y2']) {
-                const value = item[`__flint_d_${channel}`];
+            for (const channel of ['x', 'x2', 'y', 'y2'] as const) {
+                const value = drawnDataValue(view, item, channel);
                 if (typeof value === 'number' && Number.isFinite(value)) values[`__d_${channel}`] = value;
             }
             entries[key] = values;
@@ -799,7 +697,8 @@ function eachOutline(view: any, identityFields: readonly string[], visit: (name:
  * before, so the shape bends from one to the other whatever number of vertices each has. Returns
  * whether any outline has a start.
  */
-export function placeOutlineStarts(view: any, snapshot: SceneSnapshot, identityFields: readonly string[] = [], generation = 1): boolean {
+export function placeOutlineStarts(view: any, snapshot: SceneSnapshot, identityFields: readonly string[] = []): boolean {
+    const starts = resetOutlineStarts(view);
     let placed = false;
     eachOutline(view, identityFields, (name, series, items) => {
         const before = snapshot[outlineEntry(name)]?.[series] as Record<string, unknown>[] | undefined;
@@ -815,15 +714,13 @@ export function placeOutlineStarts(view: any, snapshot: SceneSnapshot, identityF
                 const b = before[high]![channel];
                 values[channel] = typeof a === 'number' && typeof b === 'number' ? a + (b - a) * share : share < 0.5 ? a : b;
             }
-            item[OUTLINE_FROM] = values;
-            item[OUTLINE_GENERATION] = generation;
+            starts.set(item, values);
         });
         placed = true;
     });
     return placed;
 }
 
-/** How many keyed items a snapshot holds. */
 /** How many keyed items the chart draws, the items a capture would hold, counted without capturing them. */
 export function drawnItemCount(view: any): number {
     let count = 0;

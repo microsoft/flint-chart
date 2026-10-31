@@ -172,9 +172,10 @@ category) moves to its new size with the change, and while it moves a line clips
 stretch it lost slides out through the edge with the scale, and a stretch it gained slides in. Legend entries fade between shown, dimmed and hidden.
 The stages run in order and share the duration: rows that leave fade out where they stood (a
 quarter), what stays moves, rows that arrive fade in (a quarter); a note or an overlay the update
-adds waits for the marks to land. Post-encoding formulas do the mixing from a frame captured
-before the render, so no data transform re-runs per frame, SVG and canvas move alike, and a
-change mid-flight starts from the frame on screen. `set-viewport` moves the same scales through
+adds waits for the marks to land. A post-encoding transform on each mark does the mixing from a
+frame captured before the render, so no data transform re-runs per frame, SVG and canvas move
+alike, and a change mid-flight starts from the frame on screen. At rest it passes the marks
+through untouched, so a chart that is not moving costs what it would without motion. `set-viewport` moves the same scales through
 its own domain path. `getState()` reports where an update goes, never a frame, and a host's call
 resolves when the motion ends. Past 2,000 drawn items a committed change jumps. Scales in
 the chart's top scope move; a faceted or concatenated chart's own scales do not yet, and its

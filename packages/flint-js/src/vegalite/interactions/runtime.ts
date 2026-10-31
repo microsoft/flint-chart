@@ -1673,7 +1673,7 @@ export function mountVegaInteractions(
         const focusNow = selectedKeys();
         if (focusNow.size === focusFrom.size && [...focusNow].every((key) => focusFrom.has(key))) focusFade = undefined;
         outlineGeneration += 1;
-        view.signal(SCENE_OUTLINE_SIGNAL, placeOutlineStarts(view, from, plan.identityFields ?? [], outlineGeneration) ? outlineGeneration : null);
+        view.signal(SCENE_OUTLINE_SIGNAL, placeOutlineStarts(view, from, plan.identityFields ?? []) ? outlineGeneration : null);
         const ghostsAfter = captureGhosts(view, plan.identityFields);
         const leaving = setSceneExits(view, ghosts, ghostsAfter) > 0;
         const drawnBefore = new Set(ghosts.paths.flatMap((path) => path.keys.map((key) => `${path.name}\u0000${key}`)));
