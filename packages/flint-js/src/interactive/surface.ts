@@ -521,32 +521,52 @@ export function mountInteractiveChartSurface(
         for (const interaction of interactions) if (!isExternalInteraction(interaction)) interaction.onReset?.();
         const jump: ChartUpdateTransition = { duration: 0 };
         const carried = new Map(hostLayers);
-        if (carried.size > 0) await mounted.setUpdates?.([...carried.values()], { transition: jump });
-        for (const definition of filterDefs) {
-            definition.filterControls.bindRows(next.data.values ?? []);
-            const filters = definition.filterControls.getFilters();
-            if (Object.keys(filters).length > 0) await applyFilter(definition, { filters }, 'host', mounted, jump);
-        }
         const layer = document.createElement('div');
         applyStyles(layer, { gridColumn: '1', gridRow: '1', position: 'relative', pointerEvents: 'none', zIndex: '5' });
-        body.append(layer);
         const previous = renderer;
-        release();
-        chart.style.display = 'none';
-        const toSize = measure();
-        chart.style.display = '';
-        hold(fromSize.width, fromSize.height);
-        await transitionBetween({
-            from: { element: chart, source: previous, chartType: currentInput.chart_spec.chartType },
-            to: { element: stage, source: mounted, chartType: next.chart_spec.chartType },
-            stage: layer,
-            duration: transitionDuration(setOptions.transition, options.transition),
-            easing: transitionEasing(setOptions.transition, options.transition),
-            onFrame: (t) => hold(
-                fromSize.width + (toSize.width - fromSize.width) * t,
-                fromSize.height + (toSize.height - fromSize.height) * t,
-            ),
-        });
+        // A chart unmounted mid-swap, or a swap that fails, takes the chart it was mounting with it.
+        const discard = (): void => {
+            mounted.destroy();
+            stage.remove();
+            layer.remove();
+            release();
+        };
+        try {
+            if (carried.size > 0) await mounted.setUpdates?.([...carried.values()], { transition: jump });
+            for (const definition of filterDefs) {
+                definition.filterControls.bindRows(next.data.values ?? []);
+                const filters = definition.filterControls.getFilters();
+                if (Object.keys(filters).length > 0) await applyFilter(definition, { filters }, 'host', mounted, jump);
+            }
+            if (destroyed) {
+                discard();
+                return;
+            }
+            body.append(layer);
+            release();
+            chart.style.display = 'none';
+            const toSize = measure();
+            chart.style.display = '';
+            hold(fromSize.width, fromSize.height);
+            await transitionBetween({
+                from: { element: chart, source: previous, chartType: currentInput.chart_spec.chartType },
+                to: { element: stage, source: mounted, chartType: next.chart_spec.chartType },
+                stage: layer,
+                duration: transitionDuration(setOptions.transition, options.transition),
+                easing: transitionEasing(setOptions.transition, options.transition),
+                onFrame: (t) => hold(
+                    fromSize.width + (toSize.width - fromSize.width) * t,
+                    fromSize.height + (toSize.height - fromSize.height) * t,
+                ),
+            });
+        } catch (error) {
+            discard();
+            throw error;
+        }
+        if (destroyed) {
+            discard();
+            return;
+        }
         layer.remove();
         release();
         stage.style.opacity = '';

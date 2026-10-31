@@ -332,13 +332,16 @@ export async function transitionBetween({ from, to, stage, duration, easing, onF
     drawFrame(0);
     if (morph) stage.append(morph.element);
     from.source?.setDrawnHidden?.(true);
-    await runMotion(duration, (t) => {
-        onFrame?.(t);
-        drawFrame(t);
-    }, easingCurve(easing)).done;
-    from.source?.setDrawnHidden?.(false);
-    to.element.style.opacity = '';
-    fromLayer.destroy();
-    toLayer.destroy();
-    morph?.element.remove();
+    try {
+        await runMotion(duration, (t) => {
+            onFrame?.(t);
+            drawFrame(t);
+        }, easingCurve(easing)).done;
+        to.element.style.opacity = '';
+    } finally {
+        from.source?.setDrawnHidden?.(false);
+        fromLayer.destroy();
+        toLayer.destroy();
+        morph?.element.remove();
+    }
 }

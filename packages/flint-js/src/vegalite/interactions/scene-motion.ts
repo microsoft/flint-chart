@@ -824,12 +824,16 @@ export function placeOutlineStarts(view: any, snapshot: SceneSnapshot, identityF
 }
 
 /** How many keyed items a snapshot holds. */
-export function sceneSize(snapshot: SceneSnapshot): number {
-    return Object.entries(snapshot).reduce((count, [name, entries]) => {
-        if (name.startsWith('__axis:') || name.startsWith('__legend:')) return count;
-        if (name.startsWith('__outline:')) return count + Object.values(entries).reduce((sum, vertices) => sum + (vertices as unknown[]).length, 0);
-        return count + Object.keys(entries).filter((key) => key !== WHOLE_KEY_FLAG).length;
-    }, 0);
+/** How many keyed items the chart draws, the items a capture would hold, counted without capturing them. */
+export function drawnItemCount(view: any): number {
+    let count = 0;
+    const visit = (node: any): void => {
+        if (!node) return;
+        if (node.mark?.name && node.mark.marktype !== 'group' && typeof node.datum?.[INTERACTION_KEY] === 'string') count += 1;
+        for (const child of node.items ?? []) visit(child);
+    };
+    visit(view.scenegraph?.()?.root);
+    return count;
 }
 
 /** Whether the view was compiled with the motion signals. */

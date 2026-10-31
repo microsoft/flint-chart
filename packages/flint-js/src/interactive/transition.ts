@@ -56,7 +56,8 @@ export interface Motion {
 
 /**
  * Runs `frame` once per animation frame with progress from 0 to 1, eased by `ease`, over `duration` ms,
- * waiting for each frame's work before the next. `frame(1)` always runs last, unless cancelled.
+ * waiting for each frame's work before the next. `frame(1)` always runs last, unless cancelled. A frame
+ * that throws ends the motion where it stands, and `done` rejects with the error.
  */
 export function runMotion(
     duration: number,
@@ -65,18 +66,27 @@ export function runMotion(
 ): Motion {
     let cancelled = false;
     let finish!: () => void;
-    const done = new Promise<void>((resolve) => { finish = resolve; });
+    let fail!: (error: unknown) => void;
+    const done = new Promise<void>((resolve, reject) => { finish = resolve; fail = reject; });
+    const stop = (error: unknown): void => { cancelled = true; fail(error); };
     // The clock starts at the first frame, so a render that delays it never eats into the motion.
     let startedAt: number | undefined;
     const step = (): void => {
         if (cancelled) return;
         startedAt ??= now();
         const t = duration > 0 ? Math.min(1, (now() - startedAt) / duration) : 1;
-        void Promise.resolve(frame(t >= 1 ? 1 : ease(t))).then(() => {
+        let drawn: void | Promise<void>;
+        try {
+            drawn = frame(t >= 1 ? 1 : ease(t));
+        } catch (error) {
+            stop(error);
+            return;
+        }
+        void Promise.resolve(drawn).then(() => {
             if (cancelled) return;
             if (t >= 1) finish();
             else nextFrame(step);
-        });
+        }, stop);
     };
     nextFrame(step);
     return { done, cancel: () => { cancelled = true; finish(); } };

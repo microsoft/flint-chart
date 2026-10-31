@@ -5,6 +5,7 @@ import {
     captureMorphScene,
     captureScene,
     domainPath,
+    drawnItemCount,
     identityRepeats,
     injectScaleMotion,
     injectSceneMotion,
@@ -19,7 +20,7 @@ import {
     setSceneExits,
 } from '../src/vegalite/interactions/scene-motion';
 import { INTERACTION_KEY } from '../src/vegalite/interactions/stores';
-import { easingCurve, transitionEasing, validateTransition } from '../src/interactive/transition';
+import { easingCurve, runMotion, transitionEasing, validateTransition } from '../src/interactive/transition';
 
 function barSpec(order: string[]): Record<string, any> {
     return {
@@ -408,5 +409,44 @@ describe('identityRepeats', () => {
         expect(identityRepeats([{ mark: 'bars', datum: row('1', 'a') }, { mark: 'labels', datum: row('1', 'a') }], ['group'])).toBe(false);
         expect(identityRepeats([{ mark: 'points', datum: row('1', 'a') }, { mark: 'points', datum: row('2', 'b') }], ['group'])).toBe(false);
         expect(identityRepeats([{ mark: 'points', datum: row('1', 'a') }, { mark: 'points', datum: row('2', 'a') }], [])).toBe(false);
+    });
+});
+
+describe('drawnItemCount', () => {
+    it('counts the keyed items a capture would hold, not a mark without rows', async () => {
+        const spec = barSpec(['a', 'b', 'c']);
+        spec.data.push({ name: 'backdrop', values: [{}] });
+        spec.marks.push({ type: 'rect', name: 'clear', from: { data: 'backdrop' }, encode: { update: { width: { value: 10 }, height: { value: 10 } } } });
+        injectSceneMotion(spec);
+        const view = new View(parse(spec), { renderer: 'none' });
+        await view.runAsync();
+        expect(drawnItemCount(view)).toBe(3);
+    });
+});
+
+describe('runMotion', () => {
+    it('ends with the last frame', async () => {
+        const seen: number[] = [];
+        await runMotion(20, (t) => { seen.push(t); }).done;
+        expect(seen.at(-1)).toBe(1);
+    });
+
+    it('rejects when a frame throws, and draws no more frames', async () => {
+        let frames = 0;
+        const motion = runMotion(200, () => { frames += 1; throw new Error('frame failed'); });
+        await expect(motion.done).rejects.toThrow('frame failed');
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        expect(frames).toBe(1);
+    });
+
+    it('rejects when the work a frame starts fails', async () => {
+        const motion = runMotion(200, async () => { throw new Error('render failed'); });
+        await expect(motion.done).rejects.toThrow('render failed');
+    });
+
+    it('resolves when cancelled', async () => {
+        const motion = runMotion(10_000, () => undefined);
+        motion.cancel();
+        await expect(motion.done).resolves.toBeUndefined();
     });
 });

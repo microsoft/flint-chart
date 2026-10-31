@@ -51,6 +51,7 @@ import { easingCurve, runMotion, transitionDuration, transitionEasing, type Moti
 import {
     captureGhosts,
     captureScene,
+    drawnItemCount,
     domainPath,
     hasSceneMotion,
     identityRepeats,
@@ -62,7 +63,6 @@ import {
     SCENE_FROM_SIGNAL,
     SCENE_OUTLINE_SIGNAL,
     SCENE_T_SIGNAL,
-    sceneSize,
     setSceneExits,
 } from './scene-motion';
 
@@ -919,12 +919,16 @@ export function mountVegaInteractions(
     const allHits = (): RenderHit[] => sceneItems(view)
         .map(renderHit)
         .filter((hit): hit is RenderHit => hit !== null);
-    /** The fields that name one drawn element: the chart's identity, unless it names several rows within a mark. */
-    const elementIdentity = (): readonly string[] => {
+    /**
+     * The fields that name one drawn element: the chart's identity, unless it names several rows
+     * within a mark. It changes only with the rows, so it is kept until they change.
+     */
+    let identityCache: readonly string[] | undefined;
+    const elementIdentity = (): readonly string[] => identityCache ??= (() => {
         const fields = plan.identityFields ?? [];
         const marks = allHits().filter((hit) => hit.source === 'mark').map((hit) => ({ mark: hit.markName, datum: hit.datum }));
         return identityRepeats(marks, fields) ? [] : fields;
-    };
+    })();
     const resolveContext = (hits: readonly RenderHit[]) => ({
         allHits: hits,
         keyField: INTERACTION_KEY,
@@ -1101,11 +1105,12 @@ export function mountVegaInteractions(
                 return again ?? null;
             }
             const renderedKeys = drawnKeys();
-            const hits = allHits();
-            const identity = elementIdentity();
+            let drawnHits: RenderHit[] | undefined;
             const elements = target.elements.flatMap((element) => {
                 const held = semanticElementRenderKeys(element);
                 if (held.some((key) => renderedKeys.has(key))) return [element];
+                const hits = drawnHits ??= allHits();
+                const identity = elementIdentity();
                 // An element is what its identity says; a measure that changed does not make it another one.
                 const value = element.value as Record<string, unknown>;
                 const named = identity.filter((field) => field in value);
@@ -1351,6 +1356,7 @@ export function mountVegaInteractions(
             // Held targets name elements, not marks: they find their elements among the new rows.
             await view.runAsync();
             drawnKeyCache = undefined;
+            identityCache = undefined;
             refreshHeldTargets();
             displayUpdates = shownUpdates();
         }
@@ -1636,12 +1642,12 @@ export function mountVegaInteractions(
             if (!sceneMotion) revealWaiting();
             return { settled: sceneMotion?.done ?? Promise.resolve() };
         }
-        const from = captureScene(view, plan.identityFields);
-        if (sceneSize(from) > MAX_MOVING_ITEMS) {
+        if (drawnItemCount(view) > MAX_MOVING_ITEMS) {
             await renderUpdates();
             revealWaiting();
             return { settled: Promise.resolve() };
         }
+        const from = captureScene(view, plan.identityFields);
         const ghosts = captureGhosts(view, plan.identityFields);
         const scales = plan.movingScales ?? [];
         const domainsBefore = scales.map((scale) => [...(view.scale(scale.name)?.domain() ?? [])]);
@@ -3542,6 +3548,8 @@ export function mountVegaInteractions(
         reorderResetControls.destroy();
         viewportResetControl.destroy();
         resizeObserver?.disconnect();
+        sceneMotion?.cancel();
+        sceneMotion = undefined;
         observedRenderer = undefined;
         if (syncFrame !== undefined && typeof cancelAnimationFrame !== 'undefined') {
             cancelAnimationFrame(syncFrame);
