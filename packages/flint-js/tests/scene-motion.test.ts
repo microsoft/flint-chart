@@ -10,6 +10,7 @@ import {
     injectSceneMotion,
     injectSizeMotion,
     placeOutlineStarts,
+    SCENE_CLIP_SIGNAL,
     SCENE_ENTER_SIGNAL,
     SCENE_EXIT_SIGNAL,
     SCENE_FROM_SIGNAL,
@@ -330,7 +331,7 @@ describe('scene motion', () => {
             }],
         };
         injectSceneMotion(spec, ['t']);
-        expect(spec.marks[0].clip).toEqual({ signal: `${SCENE_T_SIGNAL} < 1` });
+        expect(spec.marks[0].clip).toEqual({ signal: SCENE_CLIP_SIGNAL });
         const view = new View(parse(spec), { renderer: 'none' });
         await view.runAsync();
         const before = captureGhosts(view, ['t']);

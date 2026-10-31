@@ -11,6 +11,9 @@ export const SCENE_ENTER_SIGNAL = '__flint_scene_enter';
 /** The leave stage's progress: rows gone from the chart fade out over it. */
 export const SCENE_EXIT_SIGNAL = '__flint_scene_exit';
 
+/** Whether lines clip to their plot: only while a change moves a scale or adds or drops rows, so a line's ends can slide through the edge. */
+export const SCENE_CLIP_SIGNAL = '__flint_scene_clip';
+
 /** The generation of outline starts the current motion placed on its items; null when none. */
 export const SCENE_OUTLINE_SIGNAL = '__flint_scene_outline';
 
@@ -222,8 +225,8 @@ export function injectSceneMotion(vegaSpec: Record<string, any>, identityFields:
             : keyed;
         const positions = dataChannels(mark, continuous);
         if (outline) {
-            // While a change runs, a line's ends slide in and out through the plot's edges.
-            if (!mark.clip) mark.clip = { signal: `${SCENE_T_SIGNAL} < 1` };
+            // While a change moves a scale or rows, a line's ends slide in and out through the plot's edges.
+            if (!mark.clip) mark.clip = { signal: SCENE_CLIP_SIGNAL };
             const scaleOf = (axis: 'x' | 'y') => positions.find((entry) => entry.channel === axis)?.scale ?? '';
             pathScales.add(`${scaleOf('x')}|${scaleOf('y')}`);
         }
@@ -257,6 +260,7 @@ export function injectSceneMotion(vegaSpec: Record<string, any>, identityFields:
         { name: SCENE_ENTER_SIGNAL, value: 1 },
         { name: SCENE_EXIT_SIGNAL, value: 1 },
         { name: SCENE_OUTLINE_SIGNAL, value: null },
+        { name: SCENE_CLIP_SIGNAL, value: false },
     ];
     injectLegendMotion(vegaSpec);
     const fading = { signal: `(isNumber(datum.opacity) ? datum.opacity : 1) * (1 - ${SCENE_EXIT_SIGNAL})` };

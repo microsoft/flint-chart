@@ -56,6 +56,7 @@ import {
     identityRepeats,
     legendDomainOf,
     placeOutlineStarts,
+    SCENE_CLIP_SIGNAL,
     SCENE_ENTER_SIGNAL,
     SCENE_EXIT_SIGNAL,
     SCENE_FROM_SIGNAL,
@@ -1679,6 +1680,7 @@ export function mountVegaInteractions(
             return same || before.length < 2 ? [] : [{ scale, path: domainPath(scale.type, before, after) }];
         });
         for (const { scale, path } of moving) view.signal(scale.signal, path(0));
+        view.signal(SCENE_CLIP_SIGNAL, moving.length > 0 || leaving || arriving);
         const resizing = sizes.flatMap((size, index) => {
             const before = sizesBefore[index]!;
             const after = Number(view.signal(size.dimension));
@@ -1716,6 +1718,7 @@ export function mountVegaInteractions(
             if (t >= 1) {
                 view.signal(SCENE_FROM_SIGNAL, null);
                 view.signal(SCENE_OUTLINE_SIGNAL, null);
+                view.signal(SCENE_CLIP_SIGNAL, false);
                 setSceneExits(view, null);
             }
             if (focusFade) focusFade = t >= 1 ? undefined : { ...focusFade, progress: move };
