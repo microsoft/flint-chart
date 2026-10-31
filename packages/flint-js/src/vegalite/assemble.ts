@@ -693,6 +693,7 @@ function emitVegaLite(input: ChartAssemblyInput, prepared: VegaLitePreparation, 
             : [];
     const templateSemantics = chartTemplate.semanticInteractions?.({ resolvedEncodings, encodings, channelSemantics }) ?? {
         fields: [],
+        identityFields: undefined,
         provenanceFields: undefined,
         temporalProvenanceFields: undefined,
         rangeProvenance: undefined,
@@ -770,6 +771,12 @@ function emitVegaLite(input: ChartAssemblyInput, prepared: VegaLitePreparation, 
                 : [];
         })),
         sourceRecords: values.map((record) => ({ ...record })),
+        // The panel an element is drawn in is part of what it is about, whatever the template keys on.
+        identityFields: [...new Set([
+            ...(templateSemantics.identityFields ?? templateSemantics.fields.filter((field) => !Object.values(resolvedEncodings)
+                .some((encoding: any) => encoding?.field === field && encoding.type === 'quantitative'))),
+            ...(['column', 'row', 'facet'] as const).map((channel) => resolvedEncodings[channel]?.field).filter((field): field is string => typeof field === 'string'),
+        ])],
         provenanceFields: templateSemantics.provenanceFields ?? provenanceFields,
         temporalProvenanceFields: templateSemantics.temporalProvenanceFields ?? temporalProvenanceFields,
         rangeLegendChannels,

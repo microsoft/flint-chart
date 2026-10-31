@@ -94,6 +94,15 @@ function createTooltip(container: HTMLElement) {
     return { call, destroy() { panel.destroy(); style.remove(); } };
 }
 
+/** Whether two lists hold the same records, row by row and field by field. */
+function sameRecords(a: readonly Record<string, unknown>[], b: readonly Record<string, unknown>[]): boolean {
+    return a.length === b.length && a.every((row, index) => {
+        const other = b[index]!;
+        const keys = Object.keys(row);
+        return keys.length === Object.keys(other).length && keys.every((key) => Object.is(row[key], other[key]));
+    });
+}
+
 export interface VegaInteractiveRendererOptions {
     renderer?: 'canvas' | 'svg';
     interactions?: readonly InteractionDef[];
@@ -404,9 +413,13 @@ export function createVegaInteractiveRenderer(
             let liveValues = options.liveValues && viewports.length === 0 && !interactionPlan?.geoNavigation
                 ? bindLiveValues(vegaSpec)
                 : undefined;
-            const source = vegaSpec.data
-                ?.find((entry: any) => Array.isArray(entry.values) && !INTERACTION_STORES.includes(entry.name))
-                ?.name as string | undefined;
+            const inlineData = ((vegaSpec.data ?? []) as any[])
+                .filter((entry) => Array.isArray(entry.values) && !INTERACTION_STORES.includes(entry.name));
+            // The dataset the input's own rows land in; a template that shapes its rows at assembly has none.
+            const rowsSource = interactionPlan?.rowIndexed
+                ? inlineData.find((entry) => sameRecords(entry.values, interactionPlan.sourceRecords))?.name as string | undefined
+                : undefined;
+            const source = rowsSource ?? (viewports.length > 0 ? inlineData[0]?.name as string | undefined : undefined);
             if (viewports.length > 0 && !source) {
                 throw new Error('Compiled chart has no mutable inline data source.');
             }
@@ -422,6 +435,20 @@ export function createVegaInteractiveRenderer(
                         })(),
                 };
                 interactionPlan.mutableDataSource = source;
+                if (!source) {
+                    const reshaped = new WeakMap<readonly Record<string, unknown>[], Record<string, readonly Record<string, unknown>[]>>();
+                    interactionPlan.reshapeRows = (rows) => {
+                        const current = rows ?? inputRows;
+                        const cached = reshaped.get(current);
+                        if (cached) return cached;
+                        const next = shape(session.replan({ rows: current })).vegaSpec;
+                        const datasets: Record<string, readonly Record<string, unknown>[]> = Object.fromEntries(((next.data ?? []) as any[])
+                            .filter((entry) => Array.isArray(entry.values) && !INTERACTION_STORES.includes(entry.name))
+                            .map((entry) => [entry.name, entry.values]));
+                        reshaped.set(current, datasets);
+                        return datasets;
+                    };
+                }
                 interactionPlan.prepareDataRows = (rows) => convertTemporalData([...rows], firstInput.semantic_types ?? {});
                 interactionPlan.initialDataRows = interactionPlan.prepareDataRows(firstInput.data.values ?? []);
                 interactionPlan.temporalValue = (field, value) => temporalFieldValue(field, value, firstInput.semantic_types ?? {});
@@ -577,7 +604,7 @@ export function createVegaInteractiveRenderer(
                     return interactionController?.getInteractionContext() ?? fallbackContext();
                 },
                 morphScene() {
-                    const fields = interactionPlan?.tweenFields ?? [];
+                    const fields = interactionPlan?.identityFields ?? [];
                     if (destroyed || fields.length === 0 || !hasSceneTween(view)) return undefined;
                     const drawnElement = container.querySelector<HTMLElement>('canvas, svg');
                     const [originX, originY] = view.origin();

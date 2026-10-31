@@ -163,6 +163,47 @@ describe('scene tween', () => {
         expect(start).toEqual(new Date(50));
     });
 
+    it('draws a leaving series as a path where it stood, and keeps a series that still has rows', async () => {
+        const spec: Record<string, any> = {
+            width: 200,
+            height: 100,
+            data: [{
+                name: 'rows',
+                values: [{ s: 'a', t: 0, v: 1 }, { s: 'a', t: 1, v: 2 }, { s: 'b', t: 0, v: 3 }, { s: 'b', t: 1, v: 1 }],
+                transform: [{ type: 'formula', as: INTERACTION_KEY, expr: "datum.s + '|' + datum.t" }],
+            }],
+            scales: [
+                { name: 'x', type: 'linear', domain: [0, 1], range: 'width' },
+                { name: 'y', type: 'linear', domain: [0, 4], range: 'height' },
+            ],
+            marks: [{
+                type: 'group',
+                from: { facet: { data: 'rows', name: 'series', groupby: 's' } },
+                marks: [{
+                    type: 'line',
+                    name: 'lines',
+                    from: { data: 'series' },
+                    encode: { update: { x: { scale: 'x', field: 't' }, y: { scale: 'y', field: 'v' }, stroke: { value: '#123456' } } },
+                }],
+            }],
+        };
+        injectSceneTween(spec, ['s', 't']);
+        const view = new View(parse(spec), { renderer: 'none' });
+        await view.runAsync();
+        const before = captureGhosts(view, ['s', 't']);
+        expect(before.paths).toHaveLength(2);
+        view.data('rows', [{ s: 'a', t: 0, v: 1 }, { s: 'a', t: 1, v: 2 }]);
+        await view.runAsync();
+        expect(setSceneExits(view, before, captureGhosts(view, ['s', 't']))).toBe(1);
+        view.signal(SCENE_EXIT_SIGNAL, 0.5);
+        await view.runAsync();
+        const exit = (view.scenegraph() as any).root.items[0].items.find((mark: any) => mark.name === '__flint_scene_exit_line_series');
+        const vertices = exit.items[0].items[0].items;
+        expect(vertices.map((item: any) => item.y)).toEqual([25, 75]);
+        expect(vertices[0].opacity).toBeCloseTo(0.5);
+        expect(vertices[0].stroke).toBe('#123456');
+    });
+
     it('mixes colours channel by channel', async () => {
         const spec = barSpec(['a', 'b', 'c']);
         injectSceneTween(spec);

@@ -390,6 +390,8 @@ export interface InteractionContext extends ChartState {
     ) => NavigationUpdate | null;
     readonly categoryField?: string;
     readonly seriesField?: string;
+    /** The fields that say what an element is about, which hold when its values change. */
+    readonly identityFields?: readonly string[];
     /**
      * How a hovered group best stands out in this chart: 'highlight' where its own cue carries it
      * (a line drawn wider), 'spotlight' where the rest must recede (points, bars, slices).

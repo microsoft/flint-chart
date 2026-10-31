@@ -12,6 +12,8 @@ export const LEGEND_HOVER_STORE = '__flint_legend_hover_store';
 export const AXIS_HOVER_STORE = '__flint_axis_hover_store';
 export const LEGEND_SELECTION_STORE = '__flint_legend_selection_store';
 export const STYLE_SIGNAL = '__flint_style_by_key';
+/** The opacity the marks an emphasis leaves out recede to: the last emphasizing update's, else the chart's. */
+export const DIM_SIGNAL = '__flint_dim_opacity';
 
 export const INTERACTION_STORES: readonly string[] = [
     INTERACTION_STORE,

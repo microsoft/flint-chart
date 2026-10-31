@@ -1,6 +1,7 @@
 import { changeset } from 'vega';
 import {
     associateSemanticElementRenderKeys,
+    withoutRenderIdentity,
     type AxisTargetValue,
     semanticElementRenderKeys,
     semanticElementSourceRows,
@@ -121,6 +122,7 @@ import {
     AXIS_HOVER_STORE,
     LEGEND_SELECTION_STORE,
     STYLE_SIGNAL,
+    DIM_SIGNAL,
 } from './stores';
 
 /** How long a note or overlay takes to fade in once the marks it points at have landed. */
@@ -137,6 +139,15 @@ function updateKey(update: ChartUpdate): string | undefined {
 }
 
 /** Whether two lists of rows hold the same values, row by row; dates compare by time. */
+/** Whether two field values are the same value; a date and its time in ms are. */
+function sameValue(a: unknown, b: unknown): boolean {
+    if (Object.is(a, b)) return true;
+    const time = (value: unknown): number | undefined =>
+        value instanceof Date ? value.getTime() : typeof value === 'number' ? value : undefined;
+    const left = time(a);
+    return left !== undefined && left === time(b);
+}
+
 function sameRows(a: readonly Record<string, unknown>[], b: readonly Record<string, unknown>[]): boolean {
     if (a.length !== b.length) return false;
     const same = (x: unknown, y: unknown): boolean => Object.is(x, y)
@@ -1017,6 +1028,7 @@ export function mountVegaInteractions(
             resolveNavigation: navigationController.resolve,
             categoryField: plan.categoryField,
             seriesField: plan.seriesField,
+            identityFields: plan.identityFields,
             groupHoverEmphasis: plan.groupHoverEmphasis,
             legendDomains,
             categoryAxis: reorderAxis?.axis,
@@ -1045,6 +1057,8 @@ export function mountVegaInteractions(
     };
     /** Targets resolved through a line's last point, which a note marks at its point. */
     const lastPointTargets = new WeakSet<SemanticTargetRef>();
+    // The selector a resolved target came from, so it can run again over new rows.
+    const selectorOf = new WeakMap<object, UpdateTarget>();
     const resolveUpdateTarget = (target: UpdateTarget): SemanticTargetRef | null => {
         if (!('select' in target)) {
             if (target.visual.kind === 'axis') {
@@ -1069,19 +1083,33 @@ export function mountVegaInteractions(
                     elements: [...resolved.elements, ...target.elements],
                 } : null;
             }
-            const renderedKeys = new Set(allHits()
-                .map((hit) => hit.datum[INTERACTION_KEY])
-                .filter((key): key is string => typeof key === 'string'));
+            const selector = selectorOf.get(target);
+            if (selector) {
+                const again = resolveUpdateTarget(selector);
+                return again ?? null;
+            }
+            const renderedKeys = drawnKeys();
             const hits = allHits();
+            const identity = plan.identityFields ?? [];
             const elements = target.elements.flatMap((element) => {
-                const associated = semanticElementRenderKeys(element).filter((key) => renderedKeys.has(key));
-                if (associated.length > 0) return [element];
-                const semanticRecords = element.records?.length ? element.records : [element.value];
-                const matched = hits.flatMap((hit) => semanticRecords.some((record) =>
-                    Object.entries(record).every(([field, value]) => Object.is(hit.datum[field], value)))
-                    ? [hit.datum[INTERACTION_KEY]] : []);
-                const keys = matched.filter((key): key is string => typeof key === 'string');
-                return keys.length > 0 ? [associateSemanticElementRenderKeys(element, keys)] : [];
+                const held = semanticElementRenderKeys(element);
+                if (held.some((key) => renderedKeys.has(key))) return [element];
+                // An element is what its identity says; a measure that changed does not make it another one.
+                const value = element.value as Record<string, unknown>;
+                const named = identity.filter((field) => field in value);
+                const byIdentity = named.length > 0
+                    ? hits.filter((hit) => named.every((field) => sameValue(hit.datum[field], value[field])))
+                    : [];
+                const identityKeys = new Set(byIdentity.map((hit) => hit.datum[INTERACTION_KEY]));
+                // An identity that names more elements than the target held (points sharing a colour) is not one.
+                const matched = identityKeys.size > 0 && identityKeys.size <= Math.max(1, new Set(held.map((key) => key.replace(PATH_KEY_SUFFIX, ''))).size)
+                    ? byIdentity
+                    : hits.filter((hit) => (element.records?.length ? element.records : [value]).some((record) =>
+                        Object.entries(record).every(([field, recorded]) => sameValue(hit.datum[field], recorded))));
+                const keys = matched.map((hit) => hit.datum[INTERACTION_KEY]).filter((key): key is string => typeof key === 'string');
+                return keys.length > 0
+                    ? [associateSemanticElementRenderKeys({ ...element, value: withoutRenderIdentity(matched[0]!.datum, INTERACTION_KEY) }, keys)]
+                    : [];
             });
             return elements.length > 0 ? { ...target, elements } : null;
         }
@@ -1112,7 +1140,33 @@ export function mountVegaInteractions(
         if (target.select.visual?.kind && target.select.visual.kind !== resolved.visual.kind) return null;
         if (target.select.visual?.role && target.select.visual.role !== resolved.visual.role) return null;
         if (lastPoint) lastPointTargets.add(resolved);
+        selectorOf.set(resolved, target);
         return resolved;
+    };
+    // The render keys the chart draws now; they change only with the rows.
+    let drawnKeyCache: Set<string> | undefined;
+    const drawnKeys = (): Set<string> => drawnKeyCache ??= new Set(allHits()
+        .map((hit) => hit.datum[INTERACTION_KEY])
+        .filter((key): key is string => typeof key === 'string'));
+    /**
+     * After new rows, every held target finds its elements again: a selector re-runs as the
+     * predicate it is, and a target made from marks finds the marks with the same identity. A
+     * target that finds nothing is kept, so its elements light again when they return.
+     */
+    const refreshHeldTargets = (): void => {
+        const refresh = (target: UpdateTarget): UpdateTarget => ('select' in target ? target : resolveUpdateTarget(target) ?? target);
+        for (const layer of [retainedUpdates, previewUpdates]) {
+            for (const [id, update] of layer) {
+                layer.set(id, {
+                    ...update,
+                    ops: update.ops.map((op) => {
+                        if (op.op === 'set-style') return { ...op, targets: op.targets.map(refresh) };
+                        if (op.op === 'set-annotation') return { ...op, target: refresh(op.target) };
+                        return op;
+                    }),
+                });
+            }
+        }
     };
 
     const overlayProjects = (spec: ChartOverlaySpec | null): boolean => {
@@ -1198,7 +1252,7 @@ export function mountVegaInteractions(
             } else if (op.op === 'set-freeform-overlay') {
                 ops.push(op);
             } else if (op.op === 'set-data') {
-                if (!plan.mutableDataSource || op.source !== 'main') unsupportedOps.push(op.op);
+                if ((!plan.mutableDataSource && !plan.reshapeRows) || op.source !== 'main') unsupportedOps.push(op.op);
                 else ops.push(op);
             } else {
                 ops.push(op);
@@ -1227,13 +1281,14 @@ export function mountVegaInteractions(
         // A preview overlays the same interaction's retained state. It replaces
         // only operation identities that it supplies, so a transient drag ghost
         // does not discard the category order committed by an earlier drag.
-        const displayUpdates = [
+        const shownUpdates = (): ChartUpdate[] => [
             ...[...retainedUpdates]
                 .map(([id, update]) => mergeRetainedPreview(update, previewUpdates.get(id))!),
             ...[...previewUpdates]
                 .filter(([id]) => !retainedUpdates.has(id))
                 .map(([, update]) => update),
         ];
+        let displayUpdates = shownUpdates();
         hiddenLegendDomains.clear();
         const activeHiddenLegendDomains = new Set<string>();
         const stylesByKey: Record<string, Pick<import('../../core/interaction-contracts').StyleSpec,
@@ -1243,6 +1298,7 @@ export function mountVegaInteractions(
         let dataRows = initialDataRows;
         let hostRows: readonly Record<string, unknown>[] | undefined;
         let emptyEmphasisActive = false;
+        let dimOpacity = plan.dimOpacity;
         const freeformOverlays = new Map<string, import('../../core/interaction-contracts').FreeformOverlaySpec>();
         selectedElements.clear();
         emphasizedRenderKeys.clear();
@@ -1251,6 +1307,36 @@ export function mountVegaInteractions(
         for (const axis of reorderAxes) view.signal(axis.signal, null);
         for (const axis of Object.keys(plan.navigationAxes ?? {}) as ('x' | 'y')[]) {
             navigationController.apply({ op: 'set-viewport', axes: axis, value: {} }, { baseline: true });
+        }
+        for (const update of displayUpdates) {
+            for (const op of update.ops) {
+                if (op.op !== 'set-data') continue;
+                hostRows = op.value.rows;
+                dataRows = preparedRows(op.value.rows);
+            }
+        }
+        // A windowed chart shows only the rows inside its category window, cut from whatever rows are current.
+        if (plan.windowDataRows) dataRows = preparedRows(plan.windowDataRows(hostRows));
+        const rowsChange = dataRows !== renderedDataRows && !sameRows(dataRows, renderedDataRows);
+        if (plan.mutableDataSource && rowsChange) {
+            for (const [name, value] of Object.entries(plan.dataSignals?.(hostRows) ?? {})) view.signal(name, value);
+            view.change(
+                plan.mutableDataSource,
+                changeset().remove(() => true).insert([...dataRows]),
+            );
+            plan.sourceRecords = dataRows;
+        } else if (plan.reshapeRows && rowsChange) {
+            for (const [name, values] of Object.entries(plan.reshapeRows(hostRows))) {
+                view.change(name, changeset().remove(() => true).insert([...values]));
+            }
+        }
+        if (rowsChange && (plan.mutableDataSource || plan.reshapeRows)) {
+            renderedDataRows = dataRows;
+            // Held targets name elements, not marks: they find their elements among the new rows.
+            await view.runAsync();
+            drawnKeyCache = undefined;
+            refreshHeldTargets();
+            displayUpdates = shownUpdates();
         }
         for (const update of displayUpdates) {
             for (const op of update.ops) {
@@ -1264,11 +1350,7 @@ export function mountVegaInteractions(
                     else freeformOverlays.set(op.name, op.value);
                     continue;
                 }
-                if (op.op === 'set-data') {
-                    hostRows = op.value.rows;
-                    dataRows = preparedRows(op.value.rows);
-                    continue;
-                }
+                if (op.op === 'set-data') continue;
                 if (op.op === 'set-style' && op.value.visible === false) {
                     for (const target of op.targets) {
                         if ('select' in target) continue;
@@ -1295,9 +1377,14 @@ export function mountVegaInteractions(
                     }
                 }
                 if (op.op === 'set-style') {
-                    if (op.targets.length === 0
-                        && (op.value.state === 'emphasized' || op.value.state === 'focused')) {
+                    const emphasis = op.value.state === 'emphasized' || op.value.state === 'focused';
+                    // An emphasis whose elements are absent from the rows recedes the rest until they return.
+                    if (emphasis && op.targets.every((target) => 'select' in target
+                        || target.elements.every((element) => !semanticElementRenderKeys(element).some((key) => drawnKeys().has(key))))) {
                         emptyEmphasisActive = true;
+                    }
+                    if ((op.value.state === 'emphasized' || op.value.state === 'focused') && op.value.mutedOpacity !== undefined) {
+                        dimOpacity = op.value.mutedOpacity;
                     }
                     for (const target of op.targets) {
                         if ('select' in target) continue;
@@ -1377,17 +1464,6 @@ export function mountVegaInteractions(
         const layoutChanged = shownLayout !== undefined
             && (shownLayout.rows !== layout.rows || shownLayout.order !== layout.order);
         shownLayout = layout;
-        // A windowed chart shows only the rows inside its category window, cut from whatever rows are current.
-        if (plan.windowDataRows) dataRows = preparedRows(plan.windowDataRows(hostRows));
-        if (plan.mutableDataSource && dataRows !== renderedDataRows && !sameRows(dataRows, renderedDataRows)) {
-            for (const [name, value] of Object.entries(plan.dataSignals?.(hostRows) ?? {})) view.signal(name, value);
-            view.change(
-                plan.mutableDataSource,
-                changeset().remove(() => true).insert([...dataRows]),
-            );
-            renderedDataRows = dataRows;
-            plan.sourceRecords = dataRows;
-        }
         for (const identity of retainedLegendTargets.keys()) {
             if (!activeHiddenLegendDomains.has(identity)) retainedLegendTargets.delete(identity);
         }
@@ -1395,6 +1471,7 @@ export function mountVegaInteractions(
         // A navigation-only chart compiles without the selection stores.
         if (plan.semanticStores !== false) {
             view.signal(STYLE_SIGNAL, stylesByKey);
+            view.signal(DIM_SIGNAL, dimOpacity);
             view.change(
                 INTERACTION_STORE,
                 changeset().remove(() => true).insert(emptyEmphasisActive && keys.length === 0
@@ -1512,13 +1589,13 @@ export function mountVegaInteractions(
             if (!sceneTween) revealWaiting();
             return { settled: sceneTween?.done ?? Promise.resolve() };
         }
-        const from = captureScene(view, plan.tweenFields);
+        const from = captureScene(view, plan.identityFields);
         if (sceneSize(from) > MAX_TWEENED_ITEMS) {
             await renderUpdates();
             revealWaiting();
             return { settled: Promise.resolve() };
         }
-        const ghosts = captureGhosts(view, plan.tweenFields);
+        const ghosts = captureGhosts(view, plan.identityFields);
         const scales = plan.tweenScales ?? [];
         const domainsBefore = scales.map((scale) => [...(view.scale(scale.name)?.domain() ?? [])]);
         const overlaysBefore = new Set([...container.querySelectorAll('[data-flint-overlay]')]
@@ -1534,9 +1611,11 @@ export function mountVegaInteractions(
         view.signal(SCENE_ENTER_SIGNAL, 0);
         view.signal(SCENE_EXIT_SIGNAL, 0);
         await renderUpdates();
-        const ghostsAfter = captureGhosts(view, plan.tweenFields);
+        const ghostsAfter = captureGhosts(view, plan.identityFields);
         const leaving = setSceneExits(view, ghosts, ghostsAfter) > 0;
-        const arriving = [...ghostsAfter.items.keys()].some((id) => !ghosts.items.has(id));
+        const drawnBefore = new Set(ghosts.paths.flatMap((path) => path.keys.map((key) => `${path.name}\u0000${key}`)));
+        const arriving = [...ghostsAfter.items.keys()].some((id) => !ghosts.items.has(id))
+            || ghostsAfter.paths.some((path) => !path.keys.some((key) => drawnBefore.has(`${path.name}\u0000${key}`)));
         const moving = scales.flatMap((scale, index) => {
             const before = domainsBefore[index]!;
             const after = [...(view.scale(scale.name)?.domain() ?? [])];

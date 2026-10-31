@@ -142,10 +142,22 @@ it, and a static render has none.
 What moves follows from why it moves: so the reader can follow what changed. Two rules decide
 the scope. Every frame is a chart that reads true, so a mark and the axis it is read against
 move through the same scale; what is animated is the mapping. And only what exists on both
-sides of a change can move, matched by meaning: a row by the key fields no mark draws as a
-measure, a scale by its name, an axis label by its value, a legend entry by its value, a note
-by its target. What has no counterpart arrives or leaves; text with no meaningful in-between
-(a title) does not move.
+sides of a change can move, matched by meaning: an element by its identity, a scale by its
+name, an axis label by its value, a legend entry by its value, a note by its target. What has no
+counterpart arrives or leaves; text with no meaningful in-between (a title) does not move.
+
+An element's identity is what it is about, not what it says: a bar's category and series, a line
+vertex's x and series, a radar vertex's axis and series, a Gantt bar's task. Its values (a bar's
+height, a vertex's position along its spoke, a task's dates) are what change. The chart type
+declares it: by default the fields it keys on, less those a channel draws as a quantity; a type
+whose roles differ (a Gantt's dates are values, a line's dates are its index) states its own.
+Everything that must follow an element through a change reads the same identity. A held
+selection, a hidden series and a note re-find their elements among the new rows: a `where` or a
+`key` runs again as the predicate it is, and an element a reader picked is found by its identity,
+so a changed value never makes it another element. One that is absent recedes the rest until it
+returns. The animation matches marks by it, so a value moves rather than fading out and in. Where
+a chart has no identity (anonymous points, or several sharing a colour), each row is its own
+element, and a change of data starts it afresh.
 
 So a committed change moves each continuous scale an axis reads from the domain drawn to the
 new one, linearly or, on a log scale, geometrically, and axes, ticks and gridlines ride it. Marks

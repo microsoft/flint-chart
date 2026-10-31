@@ -57,8 +57,14 @@ export interface VegaAxisTarget {
 
 export interface VegaInteractionPlan {
     fields: readonly string[];
-    /** The key fields that name a row across data changes: those no mark draws as a measure. Empty names rows by their whole key. */
-    tweenFields?: readonly string[];
+    /** The fields that say what an element is about, which hold across changes of data. Empty names rows by their whole key. */
+    identityFields?: readonly string[];
+    /**
+     * For a chart whose template shapes its rows at assembly (a radar's positions, spokes and rings):
+     * every inline dataset the chart draws for these rows, by name, compiled again. Absent when the
+     * input's rows land in a dataset of their own, which `set-data` replaces directly.
+     */
+    reshapeRows?: (rows: readonly Record<string, unknown>[] | undefined) => Readonly<Record<string, readonly Record<string, unknown>[]>>;
     /** The continuous scales a transition moves the domain of. */
     tweenScales?: readonly import('./scene-tween').TweenedScale[];
     sourceRecords: readonly Record<string, unknown>[];

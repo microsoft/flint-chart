@@ -70,7 +70,7 @@ export function associateSemanticElementRenderKeys(
     return element;
 }
 
-function withoutRenderIdentity(
+export function withoutRenderIdentity(
     datum: Record<string, unknown>,
     keyField: string,
 ): Record<string, unknown> {

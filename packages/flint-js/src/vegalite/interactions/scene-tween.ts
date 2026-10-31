@@ -159,8 +159,8 @@ function walkMarks(marks: readonly Record<string, any>[] | undefined, visit: (ma
  * the progress signal), then post-encoding formulas mix each item's channels from the state
  * captured before the change, matched by mark name and row key. No data transform re-runs.
  */
-export function injectSceneTween(vegaSpec: Record<string, any>, tweenFields: readonly string[] = []): void {
-    const key = tweenKeyExpression(tweenFields);
+export function injectSceneTween(vegaSpec: Record<string, any>, identityFields: readonly string[] = []): void {
+    const key = tweenKeyExpression(identityFields);
     const continuous = new Set<string>((vegaSpec.scales ?? [])
         .filter((scale: Record<string, any>) => CONTINUOUS_SCALES.has(scale.type ?? 'linear'))
         .map((scale: Record<string, any>) => scale.name));
@@ -191,7 +191,7 @@ export function injectSceneTween(vegaSpec: Record<string, any>, tweenFields: rea
             enterFormula(markFrom, from),
             { type: 'formula', as: 'opacity', expr: `${SCENE_HIDDEN_SIGNAL} ? 0 : datum.opacity` },
         ];
-        if (GHOST_CHANNELS[mark.type]) ghostTypes.add(mark.type);
+        if (GHOST_CHANNELS[mark.type] || PATH_CHANNELS[mark.type]) ghostTypes.add(mark.type);
         tweened = true;
     });
     if (!tweened) return;
@@ -204,8 +204,34 @@ export function injectSceneTween(vegaSpec: Record<string, any>, tweenFields: rea
         { name: SCENE_HIDDEN_SIGNAL, value: false },
     ];
     injectLegendTween(vegaSpec);
+    const fading = { signal: `(isNumber(datum.opacity) ? datum.opacity : 1) * (1 - ${SCENE_EXIT_SIGNAL})` };
     for (const type of ghostTypes) {
         vegaSpec.data = [...(Array.isArray(vegaSpec.data) ? vegaSpec.data : []), { name: exitData(type), values: [] }];
+        const pathChannels = PATH_CHANNELS[type];
+        if (pathChannels) {
+            // A leaving series is one path drawn through its rows: one group per series draws it.
+            vegaSpec.marks = [...(vegaSpec.marks ?? []), {
+                type: 'group',
+                name: `${exitData(type)}_series`,
+                role: 'scene-exit',
+                from: { facet: { data: exitData(type), name: `${exitData(type)}_rows`, groupby: '__series' } },
+                marks: [{
+                    type,
+                    name: `${exitData(type)}_marks`,
+                    role: 'scene-exit',
+                    from: { data: `${exitData(type)}_rows` },
+                    sort: { field: 'datum.__order' },
+                    interactive: false,
+                    encode: {
+                        update: {
+                            ...Object.fromEntries(pathChannels.map((channel) => [channel, { field: channel }])),
+                            opacity: fading,
+                        },
+                    },
+                }],
+            }];
+            continue;
+        }
         vegaSpec.marks = [...(vegaSpec.marks ?? []), {
             type,
             name: `${exitData(type)}_marks`,
@@ -229,17 +255,25 @@ const GHOST_CHANNELS: Record<string, readonly string[]> = {
     arc: ['x', 'y', 'startAngle', 'endAngle', 'innerRadius', 'outerRadius', 'padAngle', 'cornerRadius', 'fill', 'stroke', 'strokeWidth', 'fillOpacity'],
     text: ['x', 'y', 'text', 'font', 'fontSize', 'fontWeight', 'align', 'baseline', 'angle', 'dx', 'dy', 'fill', 'fillOpacity'],
 };
+/** What a leaving series' path draws, vertex by vertex. */
+const PATH_CHANNELS: Record<string, readonly string[]> = {
+    line: ['x', 'y', 'stroke', 'strokeWidth', 'strokeDash', 'strokeOpacity', 'interpolate'],
+    area: ['x', 'y', 'y2', 'fill', 'fillOpacity', 'stroke', 'strokeWidth', 'interpolate'],
+};
 const exitData = (type: string): string => `__flint_scene_exit_${type}`;
 
 export interface SceneGhosts {
     /** Per mark name and row key, the item's type and channels in the root group's coordinates. */
     readonly items: ReadonlyMap<string, { type: string; values: Record<string, unknown> }>;
+    /** Every path drawn: its mark, its rows' keys, and its vertices in the root group's coordinates. */
+    readonly paths: readonly { name: string; type: string; keys: readonly string[]; vertices: readonly Record<string, unknown>[] }[];
 }
 
 /** Every keyed item the chart draws now, placed in the root group's coordinates. */
-export function captureGhosts(view: any, tweenFields: readonly string[] = []): SceneGhosts {
+export function captureGhosts(view: any, identityFields: readonly string[] = []): SceneGhosts {
     const byMark = new Map<string, { marktype: string; items: KeyedItem[] }>();
     const offsets = new Map<any, [number, number]>();
+    const pathOf = new Map<any, { name: string; type: string; keys: string[]; vertices: Record<string, unknown>[] }>();
     const visit = (node: any, offsetX: number, offsetY: number): void => {
         for (const item of node?.items ?? []) {
             const mark = item.mark;
@@ -247,8 +281,23 @@ export function captureGhosts(view: any, tweenFields: readonly string[] = []): S
                 for (const child of item.items ?? []) visit(child, offsetX + (item.x ?? 0), offsetY + (item.y ?? 0));
                 continue;
             }
+            const pathChannels = PATH_CHANNELS[mark?.marktype];
+            if (pathChannels && mark?.name) {
+                const key = keyedItem(item, identityFields)?.tween;
+                if (key === undefined) continue;
+                const values: Record<string, unknown> = { opacity: item.opacity };
+                for (const channel of pathChannels) if (item[channel] !== undefined) values[channel] = item[channel];
+                if (typeof values.x === 'number') values.x += offsetX;
+                if (typeof values.y === 'number') values.y += offsetY;
+                if (typeof values.y2 === 'number') values.y2 += offsetY;
+                const path = pathOf.get(mark) ?? { name: mark.name as string, type: mark.marktype as string, keys: [] as string[], vertices: [] as Record<string, unknown>[] };
+                path.keys.push(key);
+                path.vertices.push(values);
+                pathOf.set(mark, path);
+                continue;
+            }
             if (!GHOST_CHANNELS[mark?.marktype] || !mark?.name) continue;
-            const keyed = keyedItem(item, tweenFields);
+            const keyed = keyedItem(item, identityFields);
             if (!keyed) continue;
             offsets.set(item, [offsetX, offsetY]);
             const entry = byMark.get(mark.name) ?? { marktype: mark.marktype as string, items: [] as KeyedItem[] };
@@ -269,7 +318,7 @@ export function captureGhosts(view: any, tweenFields: readonly string[] = []): S
             items.set(`${name}\u0000${key}`, { type: marktype, values });
         }
     }
-    return { items };
+    return { items, paths: [...pathOf.values()] };
 }
 
 /** A domain's path from one end to the other: geometric on a log scale, linear otherwise; dates stay dates. */
@@ -287,6 +336,25 @@ export function domainPath(type: string, from: readonly unknown[], to: readonly 
 /** Draws the items of `before` that `after` no longer has, to fade out over the leave stage; null clears them. Returns how many leave. */
 export function setSceneExits(view: any, before: SceneGhosts | null, after?: SceneGhosts): number {
     let leaving = 0;
+    const drawnAfter = new Map<string, Set<string>>();
+    for (const path of after?.paths ?? []) {
+        const keys = drawnAfter.get(path.name) ?? new Set<string>();
+        for (const key of path.keys) keys.add(key);
+        drawnAfter.set(path.name, keys);
+    }
+    for (const type of Object.keys(PATH_CHANNELS)) {
+        // A series leaves when none of its rows is drawn by its mark any more.
+        const gone = before && after
+            ? before.paths.filter((path) => path.type === type && !path.keys.some((key) => drawnAfter.get(path.name)?.has(key)))
+            : [];
+        const rows = gone.flatMap((path, series) => path.vertices.map((vertex, order) => ({ ...vertex, __series: series, __order: order })));
+        try {
+            view.data(exitData(type), rows);
+            leaving += gone.length;
+        } catch {
+            // This chart draws no mark of this type.
+        }
+    }
     for (const type of Object.keys(GHOST_CHANNELS)) {
         let rows: Record<string, unknown>[] = [];
         if (before && after) {
@@ -430,15 +498,15 @@ function keyItems(items: readonly KeyedItem[]): { whole: boolean; byKey: Map<str
     return { whole: false, byKey: byTween };
 }
 
-function keyedItem(item: any, tweenFields: readonly string[]): KeyedItem | undefined {
+function keyedItem(item: any, identityFields: readonly string[]): KeyedItem | undefined {
     const whole = item.datum?.[INTERACTION_KEY];
     if (typeof whole !== 'string') return undefined;
-    const tween = tweenKey(item.datum, tweenFields);
+    const tween = tweenKey(item.datum, identityFields);
     return { tween: typeof tween === 'string' ? tween : whole, whole, item };
 }
 
 /** The channels every keyed item draws now, as `injectSceneTween` reads them back. */
-export function captureScene(view: any, tweenFields: readonly string[] = []): SceneSnapshot {
+export function captureScene(view: any, identityFields: readonly string[] = []): SceneSnapshot {
     const snapshot: SceneSnapshot = {};
     const byMark = new Map<string, { marktype: string; items: KeyedItem[] }>();
     const visit = (node: any, axisScale?: string): void => {
@@ -452,7 +520,7 @@ export function captureScene(view: any, tweenFields: readonly string[] = []): Sc
             const byValue = snapshot[axisEntry(axisScale, mark.role)] ?? (snapshot[axisEntry(axisScale, mark.role)] = {});
             byValue[String(node.datum.value)] = { x: node.x, y: node.y };
         }
-        const keyed = mark?.name && mark.marktype !== 'group' ? keyedItem(node, tweenFields) : undefined;
+        const keyed = mark?.name && mark.marktype !== 'group' ? keyedItem(node, identityFields) : undefined;
         if (keyed) {
             const entry = byMark.get(mark.name) ?? { marktype: mark.marktype as string, items: [] as KeyedItem[] };
             entry.items.push(keyed);
