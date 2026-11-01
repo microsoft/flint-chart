@@ -7,7 +7,7 @@ import {
   type ChartUpdate,
   type InteractiveChartSurface,
 } from 'flint-chart/interactive';
-import { Case, CaseChart, chart, where, type Renderer } from './update-animation-case';
+import { Case, CaseChart, chart, where, type Renderer } from './animation-case';
 
 type Row = Record<string, unknown>;
 
@@ -36,8 +36,8 @@ const nationChart = (chartType = 'Bar Chart', rows = nationRows(2000), width = 3
   chart(chartType, 'Output by country (illustrative)', rows, NATION_TYPES, { x: 'Country', y: VALUE, color: 'Region' }, width, 210);
 
 const register = (id: string, surface: InteractiveChartSurface | null) => {
-  const registry = window as unknown as { flintUpdateAnimation?: Record<string, InteractiveChartSurface | null> };
-  registry.flintUpdateAnimation = { ...registry.flintUpdateAnimation, [id]: surface };
+  const registry = window as unknown as { flintAnimation?: Record<string, InteractiveChartSurface | null> };
+  registry.flintAnimation = { ...registry.flintAnimation, [id]: surface };
 };
 const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
@@ -270,34 +270,6 @@ export function LinkedPair({ duration, renderer }: Shared) {
       <CaseChart input={bars} interactions={barInteractions} duration={duration} renderer={renderer} onSurface={onBars} onChange={ignore} />
       <CaseChart input={lines} interactions={lineInteractions} duration={duration} renderer={renderer} onSurface={onLines} onChange={ignore} />
     </PairCard>
-  );
-}
-
-/** Who decides how long a change takes: the call, then the interaction, then the chart. */
-export function DurationPrecedence({ duration, renderer }: Shared) {
-  const input = useMemo(() => nationChart('Bar Chart', nationRows(2024), 300), []);
-  const interactions = useMemo(() => [clickHighlight({ transition: { duration: 1200 } }), dragReorder()], []);
-  const sorted = byValue(nationRows(2024));
-  const sort = (surface: InteractiveChartSurface, values: readonly unknown[], transition?: { duration: number }) =>
-    void surface.applyUpdate({ id: 'order', ops: [{ op: 'set-order', scope: 'category', field: 'Country', values }] }, transition ? { transition } : undefined);
-  return (
-    <Case
-      id="durations"
-      title="Who sets the duration"
-      op="transition: call › interaction › chart › 300 ms"
-      note="The chart takes the page's setting. Its click highlight asks for 1.2 s, so a click eases slowly. A call can set its own: the last two sort in 1.2 s and at once. Reduced motion turns all of it off."
-      input={input}
-      interactions={interactions}
-      duration={duration}
-      renderer={renderer}
-      controls={(surface) => (
-        <>
-          <button type="button" onClick={() => sort(surface, sorted)}>Sort (chart)</button>
-          <button type="button" onClick={() => sort(surface, [...sorted].reverse(), { duration: 1200 })}>Reverse in 1.2 s (call)</button>
-          <button type="button" onClick={() => sort(surface, sorted, { duration: 0 })}>Sort at once (call)</button>
-        </>
-      )}
-    />
   );
 }
 

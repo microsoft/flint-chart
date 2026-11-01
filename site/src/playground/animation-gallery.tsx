@@ -7,7 +7,7 @@ import {
   type InteractionDef,
   type InteractiveChartSurface,
 } from 'flint-chart/interactive';
-import { Case, chart, versionPicker, versions, where, type Renderer } from './update-animation-case';
+import { Case, chart, versionPicker, versions, where, type Renderer } from './animation-case';
 
 type Row = Record<string, unknown>;
 
@@ -39,6 +39,8 @@ interface TypeCaseSpec {
   /** The field that names each version of the data; a dropdown under the chart picks one. */
   version: string;
   chartType: string;
+  /** The card's heading, when the chart type alone does not say what the case shows. */
+  label?: string;
   title: string;
   types: Record<string, string>;
   encodings: Record<string, string>;
@@ -46,6 +48,10 @@ interface TypeCaseSpec {
   emphasis?: { label: string; field: string; values: readonly unknown[] };
   width?: number;
   height?: number;
+  /** The gallery's chart width, for a chart whose legend or labels need room beside it. */
+  compactWidth?: number;
+  /** Spans both grid columns, for a chart wider than one card. */
+  wide?: boolean;
   chartProperties?: Record<string, unknown>;
 }
 
@@ -74,7 +80,206 @@ const SKILLS = ['Speed', 'Power', 'Stamina', 'Skill', 'Defence', 'Vision'];
 const DIRECTIONS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
 const AGES = ['0–14', '15–29', '30–44', '45–59', '60–74', '75+'];
 
+const PRODUCTS = ['Laptops', 'Phones', 'Tablets', 'Monitors', 'Desks'];
+const REGIONS = ['North', 'South', 'East'];
+const QUARTERS = ['Q1', 'Q2', 'Q3', 'Q4'];
+const byPick = <T,>(names: readonly string[], values: readonly T[], field: string, measure: string): Row[] =>
+  names.map((name, at) => ({ [field]: name, [measure]: values[at] }));
+const quarterly = (seed: number): Row[] => {
+  const random = seeded(seed);
+  return QUARTERS.flatMap((Quarter) => REGIONS.map((Region, at) => ({ Quarter, Region, Sales: round(30 + at * 8 + random() * 30) })));
+};
+const NATIONS = [
+  ['Aland', 'Europe', 21, 72, 8], ['Borea', 'Europe', 43, 80, 30], ['Corvia', 'Africa', 7, 62, 55],
+  ['Dunmar', 'Asia', 25, 74, 90], ['Estiva', 'Americas', 31, 73, 40], ['Folia', 'Asia', 30, 76, 120],
+  ['Galt', 'Africa', 4, 58, 25], ['Halden', 'Americas', 18, 70, 65],
+] as const;
+const nations = (seed: number, drift: number): Row[] => {
+  const random = seeded(seed);
+  return NATIONS.map(([Country, Region, gdp, life, people]) => ({
+    Country, Region,
+    'GDP per person ($k)': round(gdp * (1 + drift * random()), 1),
+    'Life expectancy': round(life + drift * 6 * random(), 1),
+    Population: round(people * (1 + drift * 0.3 * random())),
+  }));
+};
+const NATION_TYPES = { Country: 'Country', Region: 'Category', 'GDP per person ($k)': 'Amount', 'Life expectancy': 'Quantity', Population: 'Count' };
+const path = (seed: number, scale: number): Row[] => ['Aland', 'Borea'].flatMap((Country, at) => {
+  const random = seeded(seed + at);
+  let gdp = 10 + at * 15;
+  let life = 64 + at * 6;
+  return [2000, 2005, 2010, 2015, 2020].map((Year) => {
+    gdp = round(gdp + scale * (2 + random() * 5), 1);
+    life = round(life + scale * (0.5 + random() * 2), 1);
+    return { Country, Year, GDP: gdp, Life: life };
+  });
+});
+const TEAMS = ['Owls', 'Foxes', 'Bears', 'Hawks'];
+const ranks = (seed: number): Row[] => {
+  const random = seeded(seed);
+  return Array.from({ length: 6 }, (_, week) => {
+    const order = [...TEAMS].sort(() => random() - 0.5);
+    return order.map((Team, at) => ({ Week: `W${week + 1}`, Team, Rank: at + 1 }));
+  }).flat();
+};
+const days = (seed: number, base: number): Row[] => {
+  const random = seeded(seed);
+  return Array.from({ length: 91 }, (_, at) => {
+    const date = new Date(Date.UTC(2025, 0, 1 + at));
+    const weekend = date.getUTCDay() === 0 || date.getUTCDay() === 6;
+    return { Day: date.toISOString().slice(0, 10), Steps: round(base + (weekend ? 3000 : 0) + random() * 5000) };
+  });
+};
+const cloud = (seed: number, shift: number): Row[] => {
+  const random = seeded(seed);
+  return Array.from({ length: 120 }, () => {
+    const x = normal(random, 50 + shift, 14);
+    return { Hours: round(x, 1), Score: round(30 + x * 0.6 + normal(random, 0, 9) - shift * 0.3, 1) };
+  });
+};
+
 const TYPE_CASES: readonly TypeCaseSpec[] = [
+  {
+    id: 'bar', version: 'Year', chartType: 'Bar Chart', title: 'Units by product',
+    types: { Product: 'Category', Units: 'Count' }, encodings: { x: 'Product', y: 'Units' },
+    variants: [['2024', byPick(PRODUCTS, [84, 120, 58, 63, 46], 'Product', 'Units')], ['2025', byPick(PRODUCTS, [96, 104, 77, 52, 61], 'Product', 'Units')]],
+  },
+  {
+    id: 'grouped', version: 'Year', chartType: 'Grouped Bar Chart', title: 'Sales by quarter and region',
+    types: { Quarter: 'Category', Region: 'Category', Sales: 'Amount' }, encodings: { x: 'Quarter', y: 'Sales', group: 'Region' },
+    variants: [['2024', quarterly(1)], ['2025', quarterly(2)]],
+  },
+  {
+    id: 'stacked', version: 'Year', chartType: 'Stacked Bar Chart', title: 'Sales by quarter and region',
+    types: { Quarter: 'Category', Region: 'Category', Sales: 'Amount' }, encodings: { x: 'Quarter', y: 'Sales', color: 'Region' },
+    variants: [['2024', quarterly(3)], ['2025', quarterly(4)]],
+  },
+  {
+    id: 'bar-table', version: 'Year', chartType: 'Bar Table', title: 'Units by product',
+    types: { Product: 'Category', Units: 'Count' }, encodings: { y: 'Product', x: 'Units' },
+    variants: [['2024', byPick(PRODUCTS, [84, 120, 58, 63, 46], 'Product', 'Units')], ['2025', byPick(PRODUCTS, [96, 104, 77, 52, 61], 'Product', 'Units')]],
+  },
+  {
+    id: 'lollipop', version: 'Year', chartType: 'Lollipop Chart', title: 'Units by product',
+    types: { Product: 'Category', Units: 'Count' }, encodings: { x: 'Product', y: 'Units' },
+    variants: [['2024', byPick(PRODUCTS, [84, 120, 58, 63, 46], 'Product', 'Units')], ['2025', byPick(PRODUCTS, [96, 104, 77, 52, 61], 'Product', 'Units')]],
+  },
+  {
+    id: 'ranged-dot', version: 'Year', chartType: 'Ranged Dot Plot', title: 'Life expectancy, women and men',
+    types: { Country: 'Country', Sex: 'Category', Years: 'Quantity' }, encodings: { x: 'Years', y: 'Country', color: 'Sex' },
+    variants: [
+      ['2000', COUNTRIES.flatMap((Country, at) => [{ Country, Sex: 'Women', Years: [81, 79, 55, 85, 73][at] }, { Country, Sex: 'Men', Years: [76, 73, 51, 78, 68][at] }])],
+      ['2020', COUNTRIES.flatMap((Country, at) => [{ Country, Sex: 'Women', Years: [84, 83, 64, 87, 79][at] }, { Country, Sex: 'Men', Years: [81, 78, 59, 81, 74][at] }])],
+    ],
+  },
+  {
+    id: 'line', version: 'Year', chartType: 'Line Chart', title: 'Orders by channel',
+    types: { Month: 'Date', Channel: 'Category', Value: 'Quantity' }, encodings: { x: 'Month', y: 'Value', color: 'Channel' },
+    variants: [['2024', series(4, ['Online', 'In store', 'Wholesale'], 'Channel', 60, 16)], ['2025', series(8, ['Online', 'In store', 'Wholesale'], 'Channel', 80, 24)]],
+  },
+  {
+    id: 'area', version: 'Year', chartType: 'Area Chart', title: 'Orders by channel, stacked',
+    types: { Month: 'Date', Channel: 'Category', Value: 'Quantity' }, encodings: { x: 'Month', y: 'Value', color: 'Channel' },
+    variants: [['2024', series(6, ['Online', 'In store', 'Wholesale'], 'Channel', 40, 10)], ['2025', series(12, ['Online', 'In store', 'Wholesale'], 'Channel', 50, 16)]],
+  },
+  {
+    id: 'sparkline', version: 'Year', chartType: 'Sparkline', title: 'Three metrics, one row each',
+    types: { Month: 'Date', Metric: 'Category', Value: 'Quantity' }, encodings: { x: 'Month', y: 'Value', row: 'Metric' },
+    variants: [['2024', series(14, ['Visits', 'Signups', 'Churn'], 'Metric', 40, 12)], ['2025', series(15, ['Visits', 'Signups', 'Churn'], 'Metric', 50, 18)]],
+  },
+  {
+    id: 'bump', version: 'Season', chartType: 'Bump Chart', title: 'League table by week',
+    types: { Week: 'Category', Team: 'Name', Rank: 'Rank' }, encodings: { x: 'Week', y: 'Rank', color: 'Team' },
+    variants: [['Season 1', ranks(3)], ['Season 2', ranks(7)]],
+    compactWidth: 150,
+  },
+  {
+    id: 'scatter', version: 'Year', chartType: 'Scatter Plot', label: 'Bubble chart', title: 'Income, lifespan and population',
+    types: NATION_TYPES, encodings: { x: 'GDP per person ($k)', y: 'Life expectancy', size: 'Population', color: 'Region' },
+    variants: [['2000', nations(1, 0)], ['2020', nations(2, 0.6)]],
+    compactWidth: 175,
+  },
+  {
+    id: 'connected', version: 'Scenario', chartType: 'Connected Scatter Plot', title: 'Two countries over twenty years',
+    types: { Country: 'Country', Year: 'Year', GDP: 'Amount', Life: 'Quantity' }, encodings: { x: 'GDP', y: 'Life', order: 'Year', color: 'Country' },
+    variants: [['Baseline', path(5, 1)], ['Fast growth', path(5, 1.8)]],
+  },
+  {
+    id: 'pie', version: 'Version', chartType: 'Pie Chart', title: 'Budget by department',
+    types: { Department: 'Category', Budget: 'Amount' }, encodings: { color: 'Department', size: 'Budget' },
+    variants: [
+      ['Plan', ['Research', 'Sales', 'Ops', 'Support'].map((Department, at) => ({ Department, Budget: [40, 25, 20, 15][at] }))],
+      ['Actual', ['Research', 'Sales', 'Ops', 'Support'].map((Department, at) => ({ Department, Budget: [28, 34, 26, 12][at] }))],
+    ],
+    width: 240,
+  },
+  {
+    id: 'calendar', version: 'Person', chartType: 'Calendar Heatmap', title: 'Daily steps, January to March',
+    types: { Day: 'Date', Steps: 'Count' }, encodings: { x: 'Day', color: 'Steps' },
+    variants: [['Ana', days(51, 4000)], ['Ben', days(52, 7000)]],
+    wide: true,
+  },
+  {
+    id: 'rose', version: 'Month', chartType: 'Rose Chart', title: 'Wind by direction',
+    types: { Direction: 'Direction', Hours: 'Count' }, encodings: { x: 'Direction', y: 'Hours' },
+    variants: [['January', byPick(DIRECTIONS, [30, 22, 12, 8, 14, 26, 44, 38], 'Direction', 'Hours')], ['July', byPick(DIRECTIONS, [12, 18, 28, 34, 22, 14, 10, 9], 'Direction', 'Hours')]],
+    width: 240,
+  },
+  {
+    id: 'strip', version: 'Month', chartType: 'Strip Plot', title: 'Response time by team',
+    types: { Group: 'Category', Value: 'Duration' }, encodings: { x: 'Group', y: 'Value' },
+    variants: [['March', raw(33, ['North', 'South', 'East'], 30, [30, 42, 36], 9)], ['April', raw(34, ['North', 'South', 'East'], 30, [26, 35, 44], 12)]],
+  },
+  {
+    id: 'density', version: 'Term', chartType: 'Density Plot', title: 'Scores by class',
+    types: { Group: 'Category', Value: 'Score' }, encodings: { x: 'Value', color: 'Group' },
+    variants: [['Term 1', raw(43, ['A', 'B', 'C'], 80, [55, 68, 75], 9)], ['Term 2', raw(44, ['A', 'B', 'C'], 80, [66, 62, 80], 7)]],
+  },
+  {
+    id: 'ridgeline', version: 'Term', chartType: 'Ridgeline Plot', title: 'Scores by class',
+    types: { Group: 'Category', Value: 'Score' }, encodings: { x: 'Value', y: 'Group' },
+    variants: [['Term 1', raw(45, ['A', 'B', 'C', 'D', 'E'], 70, [50, 58, 64, 70, 78], 8)], ['Term 2', raw(46, ['A', 'B', 'C', 'D', 'E'], 70, [62, 55, 72, 66, 74], 10)]],
+  },
+  {
+    id: 'ecdf', version: 'Term', chartType: 'ECDF Plot', title: 'Scores by class, cumulative',
+    types: { Group: 'Category', Value: 'Score' }, encodings: { x: 'Value', color: 'Group' },
+    variants: [['Term 1', raw(47, ['A', 'B', 'C'], 60, [55, 68, 75], 9)], ['Term 2', raw(48, ['A', 'B', 'C'], 60, [66, 62, 80], 7)]],
+  },
+  {
+    id: 'marginal', version: 'Cohort', chartType: 'Marginal Plot', title: 'Study hours and score',
+    types: { Hours: 'Duration', Score: 'Score' }, encodings: { x: 'Hours', y: 'Score' },
+    variants: [['2024', cloud(61, 0)], ['2025', cloud(62, 12)]],
+  },
+  {
+    id: 'kpi', version: 'Quarter', chartType: 'KPI Card', title: 'Quarter at a glance',
+    types: { Metric: 'Category', Value: 'Quantity', Goal: 'Quantity' }, encodings: { metric: 'Metric', value: 'Value', goal: 'Goal' },
+    variants: [
+      ['Q1', [['Revenue', 72, 80], ['Signups', 54, 50], ['Retention', 61, 70]].map(([Metric, Value, Goal]) => ({ Metric, Value, Goal }))],
+      ['Q2', [['Revenue', 88, 85], ['Signups', 47, 55], ['Retention', 69, 70]].map(([Metric, Value, Goal]) => ({ Metric, Value, Goal }))],
+    ],
+    wide: true,
+  },
+  {
+    id: 'facet-bar', version: 'Year', chartType: 'Bar Chart', label: 'Faceted bar chart', title: 'Sales by quarter, one panel per region',
+    types: { Quarter: 'Category', Region: 'Category', Sales: 'Amount' }, encodings: { x: 'Quarter', y: 'Sales', column: 'Region' },
+    variants: [['2024', quarterly(21)], ['2025', quarterly(22)]],
+    width: 360,
+    wide: true,
+  },
+  {
+    id: 'facet-line', version: 'Year', chartType: 'Line Chart', label: 'Faceted line chart', title: 'Orders by channel, one panel per store',
+    types: { Month: 'Date', Store: 'Category', Channel: 'Category', Value: 'Quantity' }, encodings: { x: 'Month', y: 'Value', color: 'Channel', column: 'Store' },
+    variants: (['2024', '2025'] as const).map((label, version) => [label, ['Main street', 'Airport'].flatMap((Store, at) => series(30 + version * 2 + at, ['Online', 'In store'], 'Channel', 50 + at * 20, 14 + version * 6).map((row) => ({ ...row, Store })))] as const),
+    width: 300,
+    wide: true,
+  },
+  {
+    id: 'facet-scatter', version: 'Year', chartType: 'Scatter Plot', label: 'Faceted scatter plot', title: 'Income and lifespan, one panel per region',
+    types: NATION_TYPES, encodings: { x: 'GDP per person ($k)', y: 'Life expectancy', column: 'Region' },
+    variants: [['2000', nations(3, 0)], ['2020', nations(4, 0.6)]],
+    width: 420,
+    wide: true,
+  },
   {
     id: 'stream', version: 'Year', chartType: 'Streamgraph', title: 'Listening by genre',
     types: { Month: 'Date', Genre: 'Category', Value: 'Quantity' }, encodings: { x: 'Month', y: 'Value', color: 'Genre' },
@@ -117,7 +322,7 @@ const TYPE_CASES: readonly TypeCaseSpec[] = [
     width: 240,
   },
   {
-    id: 'waterfall', version: 'Quarter', chartType: 'Waterfall Chart', title: 'From revenue to profit',
+    id: 'waterfall', version: 'Quarter', chartType: 'Waterfall Chart', title: 'From revenue to profit', compactWidth: 175,
     types: { Step: 'Category', Change: 'Amount' }, encodings: { x: 'Step', y: 'Change' },
     variants: [
       ['Q1', [['Revenue', 120], ['Returns', -12], ['Costs', -64], ['Marketing', -18], ['Tax', -7]].map(([Step, Change]) => ({ Step, Change }))],
@@ -154,7 +359,7 @@ const TYPE_CASES: readonly TypeCaseSpec[] = [
     emphasis: { label: 'Build', field: 'Task', values: ['Build'] },
   },
   {
-    id: 'bullet', version: 'Quarter', chartType: 'Bullet Chart', title: 'Quarter against target',
+    id: 'bullet', version: 'Quarter', chartType: 'Bullet Chart', title: 'Quarter against target', compactWidth: 160,
     types: { Metric: 'Category', Value: 'Quantity', Target: 'Quantity' }, encodings: { y: 'Metric', x: 'Value', goal: 'Target' },
     variants: [
       ['Q1', [['Revenue', 72, 80], ['Signups', 54, 50], ['Retention', 61, 70]].map(([Metric, Value, Target]) => ({ Metric, Value, Target }))],
@@ -205,29 +410,35 @@ const TYPE_CASES: readonly TypeCaseSpec[] = [
   },
 ];
 
-function TypeCase({ spec, duration, renderer, note = '', title, emphasize = false }: { spec: TypeCaseSpec; note?: string; title?: string; emphasize?: boolean } & Shared) {
-  const input = useMemo(() => chart(
+/** A gallery card's chart: narrow enough for four cards a row, unless the card spans two. */
+const COMPACT_WIDTH = 200;
+const COMPACT_HEIGHT = 150;
+
+function TypeCase({ spec, duration, renderer, note = '', title, emphasize = false, compact = false, themeId }: { spec: TypeCaseSpec; note?: string; title?: string; emphasize?: boolean; compact?: boolean; themeId?: string } & Shared) {
+  const drawn = useMemo(() => chart(
     spec.chartType,
     spec.title,
     versions(spec.version, spec.variants),
     { [spec.version]: 'Category', ...spec.types },
     spec.encodings,
-    spec.width,
-    spec.height,
+    compact && !spec.wide ? spec.compactWidth ?? Math.min(spec.width ?? COMPACT_WIDTH, COMPACT_WIDTH) : spec.width,
+    compact ? spec.height ?? COMPACT_HEIGHT : spec.height,
     spec.chartProperties,
-  ), [spec]);
+  ), [spec, compact]);
+  const input = useMemo(() => (themeId ? { ...drawn, theme_spec: themeId } as ChartAssemblyInput : drawn), [drawn, themeId]);
   const interactions = useMemo(() => [versionPicker(spec.version), clickHighlight()], [spec.version]);
   const emphasis = emphasize ? spec.emphasis : undefined;
   return (
     <Case
       id={`type-${spec.id}`}
-      title={title ?? spec.chartType}
+      title={title ?? spec.label ?? spec.chartType}
       op={emphasis ? 'set-style · set-data' : 'set-data'}
       note={note}
       input={input}
       interactions={interactions}
       duration={duration}
       renderer={renderer}
+      wide={spec.wide}
       controls={emphasis && ((surface) => (
         <>
           <button type="button" onClick={() => send(surface, { id: 'emphasis', ops: [{ op: 'set-style', targets: [where(emphasis.field, emphasis.values)], value: { state: 'emphasized', mutedOpacity: 0.2 } }] })}>Emphasize {emphasis.label}</button>
@@ -315,10 +526,21 @@ function SharedColourCase(shared: Shared) {
   );
 }
 
-export function ChartTypeGallery(shared: Shared) {
+/** Comparison, then time, parts of a whole, relationships, distributions, single figures and facets. Radar and Gantt sit with identity. */
+const GALLERY_ORDER = [
+  'bar', 'grouped', 'stacked', 'bar-table', 'lollipop', 'ranged-dot', 'slope', 'bump', 'waterfall', 'bullet', 'pyramid',
+  'line', 'area', 'stream', 'sparkline', 'range-area', 'candle',
+  'pie', 'donut', 'rose', 'heatmap', 'calendar',
+  'scatter', 'connected', 'regression', 'marginal',
+  'histogram', 'strip', 'boxplot', 'violin', 'density', 'ridgeline', 'ecdf',
+  'kpi',
+  'facet-bar', 'facet-line', 'facet-scatter',
+];
+
+export function ChartTypeGallery({ themeId, ...shared }: Shared & { themeId?: string }) {
   return (
     <>
-      {TYPE_CASES.filter((spec) => !(spec.id in IDENTITY_NOTES)).map((spec) => <TypeCase key={spec.id} spec={spec} {...shared} />)}
+      {GALLERY_ORDER.map((id) => <TypeCase key={id} spec={TYPE_CASES.find((spec) => spec.id === id)!} compact themeId={themeId} {...shared} />)}
     </>
   );
 }

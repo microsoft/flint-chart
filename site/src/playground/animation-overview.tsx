@@ -1,4 +1,4 @@
-/** The design of update animation, as the playground's opening: why, what moves, how, and what does not. */
+/** The design of chart animation, as the playground's opening: why, what moves, how, and what does not. */
 export function AnimationOverview() {
   return (
     <section className="ua-overview" aria-labelledby="ua-overview-title">
@@ -31,8 +31,11 @@ export function AnimationOverview() {
       <h3 className="ua-sub">An element is its identity plus its values</h3>
       <p className="ua-note">
         Identity is what an element is about; values are what it says, and they change. The chart type declares
-        identity: the fields it keys on less those a channel draws as a quantity, unless its roles differ. Held
-        selections, hidden series, notes and the animation all follow the same identity. Where the identity names
+        identity: the fields it keys on less those a channel draws as a quantity, unless its roles differ. A field
+        whose semantic type names a thing (an ID, a name, a category, a place) joins it, drawn or not, where it tells
+        the drawn rows apart: type a column <code>Country</code> and each country's point follows it. Held
+        selections, the emphasis drawn over a line or area, hidden series, notes and the animation all follow the
+        same identity. The panel a faceted element is drawn in always joins it. Where the identity names
         several drawn rows in one mark (points that share only a colour), it names none, and each row is its own
         element. An emphasized element the new rows lack recedes the rest until it returns.
       </p>
@@ -45,9 +48,12 @@ export function AnimationOverview() {
             <tr><td>Bar, lollipop</td><td>category, series</td><td>value</td><td>grows or shrinks the same bar</td></tr>
             <tr><td>Line, area</td><td>x (the time point), series</td><td>y</td><td>bends the same line</td></tr>
             <tr><td>Radar</td><td>axis, series</td><td>value along the spoke</td><td>slides each vertex along its spoke</td></tr>
-            <tr><td>Gantt</td><td>task, series</td><td>start, end</td><td>slides and stretches the same task</td></tr>
+            <tr><td>Gantt</td><td>task</td><td>start, end</td><td>slides and stretches the same task</td></tr>
+            <tr><td>Density, violin</td><td>the series: one outline</td><td>the curve's shape</td><td>bends the outline from the old shape to the new</td></tr>
+            <tr><td>Any faceted chart</td><td>the panel, plus the type's identity</td><td>as the type</td><td>moves the element within its panel</td></tr>
             <tr><td>Heatmap</td><td>row, column</td><td>colour</td><td>recolours the same cell</td></tr>
-            <tr><td>Scatter of countries</td><td>country</td><td>x, y, size</td><td>moves the same point</td></tr>
+            <tr><td>Bump</td><td>week, team</td><td>rank</td><td>moves a team up or down the table</td></tr>
+            <tr><td>Scatter of countries</td><td>country, typed <code>Country</code>, drawn or not</td><td>x, y, size</td><td>moves the same point</td></tr>
             <tr><td>Points that share a colour</td><td>the row</td><td>everything</td><td>fades the old points out and the new ones in</td></tr>
           </tbody>
         </table>
@@ -60,13 +66,14 @@ export function AnimationOverview() {
           <tbody>
             <tr><td>Number and date scales</td><td>Domain from old to new, geometric on a log scale; axes, ticks and gridlines ride it</td></tr>
             <tr><td>Marks: positions</td><td>In data units through the moving scale; a new order or a re-formed stack in screen units</td></tr>
-            <tr><td>Marks: colour, opacity, size, angles</td><td>Mixed from the captured frame to the new one</td></tr>
+            <tr><td>Marks: colour, opacity, size, angles</td><td>Mixed from the frame captured before the change to the new one</td></tr>
             <tr><td>Category axis labels</td><td>Glide with their bands</td></tr>
-            <tr><td>Chart size, when it follows the data</td><td>Moves to the new size with the marks</td></tr>
-            <tr><td>A line's ends</td><td>Slide out and in through the plot's edge; the line clips to its plot while it moves</td></tr>
+            <tr><td>Chart size, when made of bands</td><td>Moves to the new size with the marks</td></tr>
+            <tr><td>A line's ends</td><td>Slide out and in through the plot's edge; the line clips to its plot only while rows or a scale move</td></tr>
             <tr><td>Legend entries</td><td>Fade between shown, dimmed and hidden</td></tr>
             <tr><td>Notes and overlays an update adds</td><td>Wait until their marks land, then fade in</td></tr>
             <tr><td>Title, frame furniture</td><td>Do not move in an update; through a new spec they move and resize, matched by their text</td></tr>
+            <tr><td>Faceted and concatenated charts</td><td>Their own scales do not move yet; their marks move in screen units</td></tr>
           </tbody>
         </table>
       </div>
@@ -79,11 +86,17 @@ export function AnimationOverview() {
         <div className="ua-step ua-step-reveal"><strong>Reveal</strong><span>notes and overlays</span></div>
       </div>
       <p className="ua-note">
-        A stage that has nothing to do gives its share to the move. A <code>linear</code> transition runs the three
+        A stage that has nothing to do gives its share to the others: when nothing stays and no scale moves, the old
+        rows fade out over the first half and the new ones fade in over the second. A <code>linear</code> transition runs the three
         together at one speed, for data that streams in at a steady interval. The default duration is 300 ms; a call's{' '}
         <code>transition</code> wins, then the interaction's, then the chart's. <code>{'{ duration: 0 }'}</code> and{' '}
         <code>prefers-reduced-motion</code> turn it off. A change mid-flight starts from the frame on screen; an update
-        the chart already holds changes nothing.
+        the chart already holds changes nothing. <code>getState()</code> reports where a change goes, never a frame,
+        and a host's call resolves when the motion ends.
+      </p>
+      <p className="ua-note">
+        One transform after each mark's encoding mixes its items from a frame captured before the render, so no data
+        transform runs per frame and SVG and canvas move alike. At rest it passes the marks through untouched.
       </p>
 
       <div className="ua-rules ua-rules-3">
@@ -97,9 +110,11 @@ export function AnimationOverview() {
         <article>
           <h3>A new spec lands too</h3>
           <p>
-            A chart type is <code>chart_spec</code>, not state, so it arrives through <code>setInput</code>. Shared parts
-            (axis labels, ticks, titles) move and resize; marks morph along a chart transition Flint lists, else the
-            charts cross-fade. The host's updates and filters carry over; the reader's own selections start afresh.
+            A chart type is <code>chart_spec</code>, not state, so it arrives through <code>setInput</code>. While the
+            two charts hand over, one layer draws both: shared parts (axis labels, ticks, titles, legend entries) move
+            and resize; marks morph along a chart transition Flint lists, else cross-fade over the whole duration. The
+            host's updates and filters carry over; the reader's own selections start afresh. An equal input changes
+            nothing; a new <code>interaction_spec</code> needs a new mount.
           </p>
         </article>
         <article>

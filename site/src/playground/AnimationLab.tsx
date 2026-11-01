@@ -9,15 +9,16 @@ import {
   type InteractionDef,
   type InteractiveChartSurface,
 } from 'flint-chart/interactive';
-import { Case, chart, versionPicker, versions, where, type Renderer } from './update-animation-case';
-import { BespokeCases, ChartTypeGallery, IdentityCases } from './update-animation-gallery';
-import { AnimationOverview } from './update-animation-overview';
-import { CrossFade, DurationPrecedence, InterruptAndRepeat, LinkedPair, OpeningTour, WithAndWithout } from './update-animation-showcase';
+import { Case, chart, versionPicker, versions, where, type Renderer } from './animation-case';
+import { BespokeCases, ChartTypeGallery, IdentityCases } from './animation-gallery';
+import { AnimationOverview } from './animation-overview';
+import { CrossFade, InterruptAndRepeat, LinkedPair, OpeningTour, WithAndWithout } from './animation-showcase';
 import './click-focus-lab.css';
 import './interaction-candidates.css';
 import './overflow-viewport-lab.css';
 import './layout-plan-lab.css';
-import './update-animation-lab.css';
+import './animation-lab.css';
+import { ThemePicker } from './ThemePicker';
 
 const REGIONS = [
   { Region: 'West', Sales: 186 }, { Region: 'East', Sales: 171 }, { Region: 'Central', Sales: 132 },
@@ -61,16 +62,12 @@ const lineRows = (shift: number) => MONTHS.flatMap((Month, index) => [
 const SKUS = ['Laptops', 'Phones', 'Tablets', 'Monitors', 'Desks', 'Chairs', 'Lamps', 'Shelves', 'Paper', 'Pens', 'Ink', 'Folders'];
 const skuRows = (count: number) => SKUS.slice(0, count).map((Product, at) => ({ Product, Units: [84, 120, 58, 63, 46, 71, 39, 27, 132, 98, 44, 52][at] }));
 
-const DENSE = Array.from({ length: 3000 }, (_, index) => {
-  const angle = index * 2.399963;
-  const radius = Math.sqrt(index) * 1.7;
-  return { Group: ['A', 'B', 'C'][index % 3], x: Math.cos(angle) * radius, y: Math.sin(angle) * radius };
-});
 
 
-export function UpdateAnimationLab() {
+export function AnimationLab() {
   const [duration, setDuration] = useState(300);
   const [renderer, setRenderer] = useState<Renderer>('svg');
+  const [galleryTheme, setGalleryTheme] = useState<string | undefined>(undefined);
 
   const inputs = useMemo(() => ({
     stack: chart('Stacked Bar Chart', 'Sales by quarter and region', versions('Year', [['2024', stackRows(2024)], ['2025', stackRows(2025)]]), { Year: 'Category', Quarter: 'Category', Region: 'Category', Sales: 'Quantity' }, { x: 'Quarter', y: 'Sales', color: 'Region' }),
@@ -78,7 +75,6 @@ export function UpdateAnimationLab() {
     scatter: chart('Scatter Plot', 'Income and lifespan (illustrative)', countryRows(2000), { Country: 'Category', 'GDP per person ($k)': 'Quantity', 'Life expectancy': 'Quantity' }, { x: 'GDP per person ($k)', y: 'Life expectancy', color: 'Country' }),
     grouped: chart('Grouped Bar Chart', 'Sales by quarter and region', stackRows(2024), { Quarter: 'Category', Region: 'Category', Sales: 'Quantity' }, { x: 'Quarter', y: 'Sales', group: 'Region' }),
     monthly: chart('Bar Chart', 'Online orders by month', lineRows(0).filter((row) => row.Series === 'Online'), { Month: 'Date', Series: 'Category', Orders: 'Quantity' }, { x: 'Month', y: 'Orders' }),
-    dense: chart('Scatter Plot', '3,000 points', DENSE, { Group: 'Category', x: 'Quantity', y: 'Quantity' }, { x: 'x', y: 'y', color: 'Group' }),
     zoom: chart('Line Chart', 'Orders by channel', lineRows(0), { Month: 'Date', Series: 'Category', Orders: 'Quantity' }, { x: 'Month', y: 'Orders', color: 'Series' }),
     story: chart('Bar Chart', 'Sales by region', REGIONS, { Region: 'Category', Sales: 'Quantity' }, { x: 'Region', y: 'Sales' }),
   }), []);
@@ -88,7 +84,6 @@ export function UpdateAnimationLab() {
     scatter: [clickHighlight()],
     zoom: [brushZoom({ axes: 'x' })],
     story: [dragReorder()],
-    dense: [clickHighlight()],
     grouped: [clickHighlight()],
     monthly: [clickHighlight()],
   }), []);
@@ -219,32 +214,16 @@ export function UpdateAnimationLab() {
       )}
     />
     ),
-    'dense': (
-    <Case
-      id="dense"
-      title="Past the item cap"
-      op="set-style"
-      note="Past 2,000 drawn items a committed change jumps rather than moving every mark each frame."
-      input={inputs.dense}
-      interactions={interactions.dense}
-      {...shared}
-      controls={(surface) => (
-        <>
-          <button type="button" onClick={() => apply(surface, { id: 'group', ops: [{ op: 'set-style', targets: [where('Group', ['B'])], value: { state: 'emphasized', mutedOpacity: 0.15 } }] })}>Emphasize B</button>
-          <button type="button" onClick={() => { void surface.clearUpdate('group'); }}>Clear</button>
-        </>
-      )}
-    />
-    ),
   };
   return (
     <div className="dev-page ov-page ua-page">
       <header className="dev-page-heading ov-heading">
-        <h1>Update animation</h1>
+        <h1>Animation</h1>
         <p>
-          Every committed change eases from what is drawn to what the update says; previews that follow the
-          pointer jump. Click marks and legend items, or use each card's buttons. Press one again mid-flight
-          and the chart turns back from the frame on screen.
+          A committed change eases from what the chart draws to what the update says, and a new spec hands over
+          from the chart on screen; a preview that follows the pointer shows at once. Nothing on this page asks
+          for motion: it is on by default. Click marks and legend items, or use each card's buttons. Press one
+          again mid-flight and the chart turns from the frame on screen.
         </p>
         <div className="ua-settings">
           <label>
@@ -273,12 +252,12 @@ export function UpdateAnimationLab() {
         <WithAndWithout {...shared} />
       </Section>
 
-      <Section title="Rule 1 · Every frame reads true" note="Scales move from the domain drawn to the new one, and axes, gridlines and marks read the same moving scale. A chart whose size follows its data moves to its new size, and a line clips to its plot while it slides.">
+      <Section title="Rule 1 · Every frame reads true" note="Scales move from the domain drawn to the new one, and axes, gridlines and marks read the same moving scale. A chart sized by its bands moves to its new size, and while rows or a scale move a line clips to its plot.">
         {pick(cases, 'stack', 'size')}
         <BespokeCases only={['feed']} {...shared} />
       </Section>
 
-      <Section title="Rule 2 · Only what exists on both sides moves" note="An element is what it is about: its identity. New values move it, held selections and notes stay on it, and what has no counterpart arrives or leaves.">
+      <Section title="Rule 2 · Only what exists on both sides moves" note="An element is what it is about: its identity. New values move it; held selections, the emphasis drawn over a line, hidden series and notes stay on it; what has no counterpart arrives or leaves.">
         <IdentityCases {...shared} />
       </Section>
 
@@ -296,18 +275,14 @@ export function UpdateAnimationLab() {
         <LinkedPair {...shared} />
       </Section>
 
-      <Section title="A new spec lands too" note="A new chart type is a new spec, not an update: setInput mounts it beside the chart on screen and the two hand over. Marks morph along a chart transition Flint lists; otherwise, and for a new theme, the charts cross-fade.">
+      <Section title="A new spec lands too" note="A new chart type is a new spec, not an update: setInput mounts it beside the chart on screen and one layer draws both while they hand over. Shared axes, ticks, titles and legend entries move and resize; marks morph along a chart transition Flint lists, and otherwise cross-fade. A new theme cross-fades.">
         {pick(cases, 'retype-stack', 'retype-line')}
         <CrossFade {...shared} />
       </Section>
 
-      <Section title="Duration and limits" note="The call wins, then the interaction, then the chart, then the 300 ms default; reduced motion turns every change into a jump. Past 2,000 drawn items a change jumps, and past 1,000 a change of chart cross-fades.">
-        <DurationPrecedence {...shared} />
-        {pick(cases, 'dense')}
-      </Section>
 
-      <Section title="Every chart type" note="Pick the other version under each chart; click a mark to emphasize it.">
-        <ChartTypeGallery {...shared} />
+      <Section className="ua-gallery-grid" title="Every chart type" actions={<ThemePicker themeId={galleryTheme} onTheme={setGalleryTheme} />} note="Each chart holds two versions of its data; pick the other one under the chart, and click a mark to emphasize it. Faceted charts move their marks in screen units, since only the top scope's scales move. Maps and plain tables are left out.">
+        <ChartTypeGallery themeId={galleryTheme} {...shared} />
       </Section>
     </div>
   );
@@ -364,14 +339,15 @@ function ScatterCase({ input, interactions, duration, renderer }: { input: Chart
   );
 }
 
-function Section({ title, note, children }: { title: string; note: string; children: ReactNode }) {
+function Section({ title, note, className, actions, children }: { title: string; note: string; className?: string; actions?: ReactNode; children: ReactNode }) {
   return (
     <>
       <div className="ov-section-heading lp-group-heading ua-section-heading">
         <span>{title}</span>
       </div>
       <p className="ua-section-note">{note}</p>
-      <div className="cf-grid">{children}</div>
+      {actions && <div className="ua-section-actions">{actions}</div>}
+      <div className={className ? `cf-grid ${className}` : 'cf-grid'}>{children}</div>
     </>
   );
 }

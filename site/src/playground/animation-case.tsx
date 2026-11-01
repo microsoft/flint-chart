@@ -62,8 +62,8 @@ export function Case({ id, title, op, note, input, interactions, duration, rende
   const [surface, setSurface] = useState<InteractiveChartSurface | null>(null);
   const onSurface = useCallback((next: InteractiveChartSurface | null) => {
     setSurface(next);
-    const registry = window as unknown as { flintUpdateAnimation?: Record<string, InteractiveChartSurface | null> };
-    registry.flintUpdateAnimation = { ...registry.flintUpdateAnimation, [id]: next };
+    const registry = window as unknown as { flintAnimation?: Record<string, InteractiveChartSurface | null> };
+    registry.flintAnimation = { ...registry.flintAnimation, [id]: next };
   }, [id]);
   const [log, setLog] = useState<string[]>([]);
   const record = (change: ChartChange) => { onChange?.(change); setLog((lines) => [

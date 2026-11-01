@@ -41,7 +41,7 @@ import { TestExamples } from './playground/release-examples/test-examples';
 import { OverflowViewportLab } from './playground/OverflowViewportLab';
 import { ZoomClippingLab } from './playground/ZoomClippingLab';
 import { LayoutInspector } from './playground/LayoutInspector';
-import { UpdateAnimationLab } from './playground/UpdateAnimationLab';
+import { AnimationLab } from './playground/AnimationLab';
 import { LayoutPlanLab } from './playground/LayoutPlanLab';
 import { FlintInteractive, InteractionGallery } from './routes/InteractionGallery';
 import { AdvancedInteractions } from './routes/AdvancedInteractions';
@@ -145,7 +145,8 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="interaction-test-cases" element={<ClickFocusLab />} />
           <Route path="click-focus" element={<Navigate to="../interaction-test-cases" replace />} />
           <Route path="annotation-lab" element={<AnnotationLab />} />
-          <Route path="update-animation" element={<UpdateAnimationLab />} />
+          <Route path="animation" element={<AnimationLab />} />
+          <Route path="update-animation" element={<Navigate to="../animation" replace />} />
           <Route path="interaction-coverage" element={<InteractionCoverageLab />} />
           <Route path="interaction-conflicts" element={<InteractionConflictsLab />} />
           <Route path="chart-api-design" element={<ChartApiDesign />} />
