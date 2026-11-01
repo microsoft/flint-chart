@@ -6,6 +6,7 @@ import { compile } from 'vega-lite';
 import { parse, View } from 'vega';
 import { assembleVegaLite } from '../src/vegalite/assemble';
 import { alignBandOrders } from '../src/vegalite/theme';
+import { THEME_PRESETS } from '../src/core/theme/presets';
 
 /**
  * Bars sorted by their value stand in that order under every house. A house's value labels and
@@ -122,3 +123,70 @@ describe('bars sorted by value under a house', () => {
         }
     });
 });
+
+/**
+ * Whether a house layers names or values on the band depends on the box: datawrapper sets row names
+ * above the bars only where they do not fit beside them (240 × 420 and 320 × 420 for these names),
+ * and a channel sort (`-x`) on a layer without that channel threw inside Vega-Lite. Every chart is
+ * compiled at every size, under every house, and Vega-Lite neither throws nor drops a sort.
+ */
+describe('bars sorted by value compile at every size under every house', () => {
+    const NAMES = ['Agriculture', 'Business services', 'Construction', 'Education and Health', 'Finance', 'Government',
+        'Information', 'Leisure and hospitality', 'Manufacturing', 'Mining and Extraction', 'Other', 'Self-employed',
+        'Transportation and Utilities', 'Wholesale and Retail Trade'];
+    const rows = NAMES.map((series, index) => ({ series, rate: 1 + index * 0.7, group: index % 3 ? 'Private' : 'Public' }));
+    const VARIANTS: Record<string, Record<string, unknown>> = {
+        'sorted by x, descending': { x: { field: 'rate' }, y: { field: 'series', sortBy: 'x', sortOrder: 'descending' } },
+        'sorted by x, ascending': { x: { field: 'rate' }, y: { field: 'series', sortBy: 'x', sortOrder: 'ascending' } },
+        'columns sorted by y': { y: { field: 'rate' }, x: { field: 'series', sortBy: 'y', sortOrder: 'descending' } },
+        'sorted by its field': { x: { field: 'rate' }, y: { field: 'series', sortBy: 'rate', sortOrder: 'descending' } },
+        'stacked, sorted by x': { x: { field: 'rate' }, y: { field: 'series', sortBy: 'x', sortOrder: 'descending' }, color: { field: 'group' } },
+    };
+    const WIDTHS = [160, 240, 320, 400, 560, 800];
+    const HEIGHTS = [180, 300, 420, 640];
+
+    const compileAt = (theme: string | undefined, encodings: Record<string, unknown>, width: number, height: number) => {
+        const spec: any = assembleVegaLite({
+            data: { values: rows },
+            semantic_types: { rate: 'Number', series: 'Category', group: 'Category' },
+            chart_spec: {
+                chartType: 'color' in encodings ? 'Stacked Bar Chart' : 'Bar Chart', encodings,
+                baseSize: { width, height }, canvasSize: { width, height },
+            },
+            options: { bandStepFit: 1, addTooltips: true },
+            ...(theme ? { theme_spec: theme } : {}),
+        } as any);
+        const warnings: string[] = [];
+        const logger: any = {
+            level: () => logger, info: () => logger, debug: () => logger, error: () => logger,
+            warn: (...args: unknown[]) => { warnings.push(args.join(' ')); return logger; },
+        };
+        compile(JSON.parse(JSON.stringify(spec, (key, value) => (key.startsWith('_') ? undefined : value))), { logger });
+        return { spec, sortWarnings: warnings.filter((warning) => /sort/i.test(warning)) };
+    };
+
+    it.each([undefined, ...Object.keys(THEME_PRESETS)])('under %s', (theme) => {
+        const failures: string[] = [];
+        for (const [variant, encodings] of Object.entries(VARIANTS)) {
+            for (const width of WIDTHS) {
+                for (const height of HEIGHTS) {
+                    try {
+                        const { sortWarnings } = compileAt(theme, encodings, width, height);
+                        if (sortWarnings.length) failures.push(`${variant} ${width}×${height}: ${sortWarnings[0]}`);
+                    } catch (error) {
+                        failures.push(`${variant} ${width}×${height}: ${String(error).slice(0, 120)}`);
+                    }
+                }
+            }
+        }
+        expect(failures).toEqual([]);
+    }, 60_000);
+
+    it('reaches the layout that threw: names above the bars in a narrow, tall box', () => {
+        for (const width of [240, 320]) {
+            const { spec } = compileAt('datawrapper', VARIANTS['sorted by x, descending']!, width, 420);
+            expect(spec.layer?.some((layer: any) => layer.name === 'row-names'), `${width}×420`).toBe(true);
+        }
+    });
+});
+
