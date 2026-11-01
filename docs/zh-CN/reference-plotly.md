@@ -227,6 +227,7 @@ _无模板专用参数。_
 |---|---|---|---|---|---|
 | `sortSlices` | choice | `none` (Data order), `descending` (Largest first), `ascending` (Smallest first) | `none` | always | 扇区排序方式。 |
 | `labelType` | choice | `categoryPercent` (Name + %), `category` (Name), `value` (Value), `percent` (Percent), `none` (None) | `categoryPercent` | always | 标签内容。 |
+| `sliceNames` | choice | `auto` (Auto), `onSlices` (On slices), `key` (In a key) | `auto` | always | Slice names |
 
 ### ![](chart-icon-doughnut.svg) Donut Chart
 
@@ -237,6 +238,7 @@ _无模板专用参数。_
 | `innerRadius` | number | 20 – 80 (step 5) | `55` | always | 内半径占外半径的百分比。 |
 | `sortSlices` | choice | `none` (Data order), `descending` (Largest first), `ascending` (Smallest first) | `none` | always | 扇区排序方式。 |
 | `labelType` | choice | `categoryPercent` (Name + %), `category` (Name), `value` (Value), `percent` (Percent), `none` (None) | `categoryPercent` | always | 标签内容。 |
+| `sliceNames` | choice | `auto` (Auto), `onSlices` (On slices), `key` (In a key) | `auto` | always | Slice names |
 
 ### ![](chart-icon-radar.svg) Radar Chart
 

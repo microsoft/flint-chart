@@ -243,7 +243,10 @@ export const ecScatterPlotDef: ChartTemplateDef = {
             // Enforce a minimum spread so circles are visibly different (ECharts maps data linearly to [min, max]).
             const SIZE_SPREAD_MIN = 20;
             const sizeMaxForMap = Math.max(rangeMaxClamped, rangeMin + SIZE_SPREAD_MIN);
-            const fmtSize = (v: number) => v.toLocaleString('en-US', { maximumFractionDigits: 1 });
+            // One decimal from 1 up; below it two significant digits, so 0.0374 reads "0.037", not "0".
+            const fmtSize = (v: number) => v.toLocaleString('en-US', {
+                maximumFractionDigits: v === 0 ? 1 : Math.min(20, Math.max(1, 1 - Math.floor(Math.log10(Math.abs(v))))),
+            });
             const sizeVisualMap: any = {
                 type: 'continuous' as const,
                 show: true,

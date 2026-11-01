@@ -18,6 +18,7 @@ import { cutToWidth, valueTickLabels } from '../core/backend-frame';
 import { planSource } from '../core/source-plan';
 import { planHeader } from '../core/header-plan';
 import { roundSample, sizeKeySwatches, SIZE_KEY_SWATCHES } from '../core/legend-plan';
+import { exactFormat, printFormatted } from '../core/sample-format';
 import { keyBlock, keyPlanStyle, type KeyBlock } from '../core/backend-profile';
 import type { DesignDecisions } from '../core/theme/types';
 
@@ -557,7 +558,8 @@ export function plSizeKey(figure: any, title: string | undefined): void {
     const widthOf = tableTextMeasurer(fontSize, family, 'normal', 'normal');
     const titleOf = tableTextMeasurer(fontSize, family, 'bold', 'normal');
     const name = title ?? field;
-    const format = (v: number) => v.toLocaleString('en-US');
+    // Each round value printed as it is: 0.0005 stays "0.0005", not "0.001" or "0".
+    const format = (v: number) => printFormatted(v, exactFormat([v]));
     const ink = traces[0].marker?.line;
     const outline = ink && Number(ink.width) >= 1 && String(ink.color).toLowerCase() !== '#ffffff' ? { color: ink.color, width: ink.width } : { width: 0 };
     const swatch = { fillcolor: 'rgba(128,128,128,0.5)', line: outline };

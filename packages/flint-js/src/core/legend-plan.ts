@@ -6,6 +6,7 @@ import type { DesignDecisions } from './theme/types';
 import type { ChannelSemantics, LayoutResult } from './types';
 import { format as formatNumber } from 'd3-format';
 import { niceTicks } from './ruler';
+import { exactFormat, printFormatted } from './sample-format';
 
 /** A key the chart may draw, and what the plan decides about it. */
 export interface PlannedKey {
@@ -23,6 +24,8 @@ export interface PlannedKey {
     untitled: boolean;
     /** The values a key to values is sampled at. */
     samples?: number[];
+    /** The samples as the key prints them: in the field's format, precise enough for each. */
+    sampleLabels?: string[];
     /** The categories a colour key keeps by name, largest share first, and the entry the rest share. */
     fold?: { kept: unknown[]; others: string };
     /** The labels a key that names categories lists, in order. */
@@ -109,6 +112,12 @@ export function roundSample(rows: any[], field: string, count: number): number[]
     }
     out.reverse();
     return out.length > 1 ? out : undefined;
+}
+
+/** Each sampled value as its key prints it: the field's format, raised to the precision the samples need. */
+function sampleLabels(samples: number[], fmt: ChannelSemantics['format']): string[] {
+    const exact = exactFormat(samples, fmt);
+    return samples.map((value) => printFormatted(value, exact));
 }
 
 /** The ticks a key to a field's values lists where none are sampled: a scale's five or so, from zero for a size. */
@@ -248,7 +257,7 @@ export function planLegend(inputs: LegendInputs): LegendPlan {
             ...(key.via ? { via: key.via } : {}),
             ...(key.type ? { type: key.type } : {}),
             valueKey, show, untitled,
-            ...(samples ? { samples } : {}),
+            ...(samples ? { samples, sampleLabels: sampleLabels(samples, inputs.channelSemantics[key.channel]?.format) } : {}),
             ...(fold ? { fold } : {}),
         };
         const entries = show ? keyEntries(planned, key.entries, inputs) : undefined;
@@ -374,7 +383,7 @@ export function keysToLayout(plan: LegendPlan, inputs: KeyLayoutInputs): Array<K
             gradient,
             ...(key.entries ? { labels: key.entries } : {}),
             ...(!key.entries && (key.samples || key.field)
-                ? { valueLabels: key.samples?.map(String) ?? drawnTicks ?? [...new Set(inputs.rows.map((row) => String(row?.[key.field!])))] } : {}),
+                ? { valueLabels: key.sampleLabels ?? key.samples?.map(String) ?? drawnTicks ?? [...new Set(inputs.rows.map((row) => String(row?.[key.field!])))] } : {}),
             count: key.samples?.length ?? key.entries?.length ?? drawnTicks?.length ?? 5,
             title,
             style,

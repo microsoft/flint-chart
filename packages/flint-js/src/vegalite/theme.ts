@@ -583,23 +583,32 @@ const BAND_ORDER_OPS: Record<string, (values: number[]) => number> = {
     },
 };
 
+/** The marks Vega-Lite stacks on their measure unless told not to. */
+const STACKED_BY_DEFAULT = new Set(['bar', 'area', 'arc']);
+/** The channels besides position that split a stack into segments, as far as a band's order needs them. */
+const STACK_BY_CHANNELS = ['color', 'fill', 'stroke', 'opacity', 'size', 'shape', 'strokeDash', 'detail'] as const;
+
 /**
- * A band's order that the names' layer can share. The names draw from a table of their own, so the
- * band's domain is a union, and a union can neither sort by a channel the names do not encode nor by
- * a sum. A sort by another channel or field becomes the list of names in the order the bars stand,
- * computed as Vega-Lite would; any other sort is already one every layer can state.
+ * A band's order that every layer on the band can share. Layers on one band union their domains,
+ * and a union can neither sort by a channel a layer does not encode, nor by a sum, nor by sorts
+ * that differ (a stacked bar sorts by its sum, its labels by their minimum). A sort by another
+ * channel or field becomes the list of names in the order the bars stand, computed as Vega-Lite
+ * would for the mark that sorts; any other sort is already one every layer can state.
  */
-function bandOrder(sort: any, field: string, enc: any, table: any[]): any {
+function bandOrder(sort: any, field: string, enc: any, table: any[], mark?: string): any {
     let by: { field?: string; op: string; descending: boolean } | undefined;
-    const stacked = (['color', 'opacity', 'detail'] as const)
-        .some((channel) => enc[channel]?.field && enc[channel].field !== field);
     const encodingSort = typeof sort === 'string' && /^-?[a-zA-Z]+$/.test(sort) && sort !== 'ascending' && sort !== 'descending'
         ? { encoding: sort.replace(/^-/, ''), order: sort.startsWith('-') ? 'descending' : 'ascending' }
         : sort && typeof sort === 'object' && !Array.isArray(sort) && sort.encoding ? sort : undefined;
     if (encodingSort) {
         const def = enc[encodingSort.encoding];
         if (!def?.field && def?.aggregate !== 'count') return undefined;
-        const measureStacked = stacked && def.stack !== null && def.stack !== false && def.type === 'quantitative';
+        // Vega-Lite sums a stacked measure: a bar or an area stacks by default, split or not, unless
+        // its rows are aggregated with nothing to split them; another mark only where it says so.
+        const splitBy = STACK_BY_CHANNELS.some((channel) => enc[channel]?.field && enc[channel].field !== field && !enc[channel].aggregate);
+        const aggregated = Object.values<any>(enc).some((channelDef) => channelDef?.aggregate);
+        const stacks = def.stack !== undefined ? def.stack !== null && def.stack !== false : mark ? STACKED_BY_DEFAULT.has(mark) : splitBy;
+        const measureStacked = stacks && def.type === 'quantitative' && enc[`${encodingSort.encoding}2`] === undefined && !(aggregated && !splitBy);
         by = { field: def.field, op: def.aggregate ?? (measureStacked ? 'sum' : 'min'), descending: encodingSort.order === 'descending' };
     } else if (sort && typeof sort === 'object' && !Array.isArray(sort) && (sort.field || sort.op === 'count')) {
         by = { field: sort.field, op: sort.op ?? 'min', descending: sort.order === 'descending' };
@@ -616,6 +625,8 @@ function bandOrder(sort: any, field: string, enc: any, table: any[]): any {
         if (by.op === 'count' || (row?.[by.field!] != null && Number.isFinite(value))) groups.get(name)!.push(value);
     }
     const keyed = [...groups].map(([name, values]) => ({ name, key: values.length ? aggregate(values) : undefined }));
+    // A field the rows do not hold — one a transform computes — is Vega-Lite's to sort by.
+    if (!keyed.some(({ key }) => key !== undefined)) return sort;
     const direction = by.descending ? -1 : 1;
     // Stable, so ties keep the order the rows first meet them; names with nothing to sort by go last.
     keyed.sort((a, b) => a.key === undefined ? (b.key === undefined ? 0 : 1) : b.key === undefined ? -1 : direction * (a.key - b.key));
@@ -641,7 +652,7 @@ function placeRowNamesAbove(spec: any, d: DesignDecisions, table: any[], plan: N
     const y = mergedEncoding(bar, spec.encoding).y;
     const field: string = y.field;
     const stated = y.sort;
-    const sort = bandOrder(stated, field, mergedEncoding(bar, spec.encoding), table);
+    const sort = bandOrder(stated, field, mergedEncoding(bar, spec.encoding), table, markTypeOf(bar.mark));
     const centre = plan.step / 2;
     // From the band's middle, where Vega-Lite stands what it draws on a band.
     const barShift = Math.round(plan.top + plan.line + plan.gap + plan.bar / 2 - centre);
@@ -667,6 +678,8 @@ function placeRowNamesAbove(spec: any, d: DesignDecisions, table: any[], plan: N
     const label = d.axes.y?.label;
     const names = [...new Set(table.map((row) => row?.[field]).filter((value) => value != null))];
     const textCase = label?.textCase;
+    // The names have no channel or measure of their own to sort by: they take an order they can state.
+    const namesSort = sort === null || Array.isArray(sort) || sort === 'ascending' || sort === 'descending' ? sort : undefined;
     spec.layer.push({
         __themeSynthetic: true,
         name: 'row-names',
@@ -682,11 +695,49 @@ function placeRowNamesAbove(spec: any, d: DesignDecisions, table: any[], plan: N
             limit: plan.width,
         },
         encoding: {
-            y: { field, type: y.type, ...(sort !== undefined ? { sort } : {}), axis: { title: null, labels: false, ticks: false, domain: false } },
+            y: { field, type: y.type, ...(namesSort !== undefined ? { sort: namesSort } : {}), axis: { title: null, labels: false, ticks: false, domain: false } },
             x: { value: 0 },
             text: { field: '__rowName', type: 'nominal' },
         },
     });
+}
+
+/**
+ * Bars sorted by their value stay sorted however many layers draw on their band. A label layer
+ * shares the bars' band, and Vega-Lite unions the layers' domains: the bars sort by their sum,
+ * the labels by their minimum, and a union keeps neither — or a filtered layer's data drops a sum
+ * outright — so the bars came out in name order. Where several layers share a band sorted by a
+ * channel or a field, each states the names in the order the bars stand. A band each panel of a
+ * facet sorts for itself, and a sort the rows cannot reproduce, stay Vega-Lite's.
+ */
+export function alignBandOrders(spec: any, table: any[]): void {
+    const visit = (node: any, transformed: boolean): void => {
+        if (!node || typeof node !== 'object') return;
+        // Rows a transform reshapes are not the table's: their order is Vega-Lite's to compute.
+        const reshaped = transformed || Boolean(node.transform?.length) || Boolean(node.data && node !== spec);
+        if (node.spec) visit(node.spec, reshaped);
+        if (!Array.isArray(node.layer) || reshaped) return;
+        for (const channel of ['x', 'y'] as const) {
+            if (node.resolve?.scale?.[channel] === 'independent') continue;
+            const units = node.layer.map((unit: any) => ({ unit, enc: mergedEncoding(unit, node.encoding) }))
+                .filter(({ enc }: any) => enc[channel]?.field && (enc[channel].type === 'nominal' || enc[channel].type === 'ordinal'));
+            if (units.length < 2) continue;
+            const field = units[0].enc[channel].field;
+            if (units.some(({ enc }: any) => enc[channel].field !== field)) continue;
+            const ordered = (sort: any) => sort != null && !Array.isArray(sort) && sort !== 'ascending' && sort !== 'descending';
+            // The order is the drawn marks', not a label's: the first layer the theme did not add.
+            const source = units.find(({ unit, enc }: any) => !unit.__themeSynthetic && ordered(enc[channel].sort))
+                ?? units.find(({ enc }: any) => ordered(enc[channel].sort));
+            if (!source || source.unit.data || source.unit.transform?.length) continue;
+            const order = bandOrder(source.enc[channel].sort, field, source.enc, table, markTypeOf(source.unit.mark));
+            if (!Array.isArray(order)) continue;
+            for (const { unit } of units) {
+                const target = unit.encoding?.[channel] ?? node.encoding?.[channel];
+                if (target) target.sort = order;
+            }
+        }
+    };
+    visit(spec, false);
 }
 
 /**

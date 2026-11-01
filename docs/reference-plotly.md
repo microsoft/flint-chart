@@ -231,6 +231,7 @@ _No template-specific parameters._
 |---|---|---|---|---|---|
 | `sortSlices` | choice | `none` (Data order), `descending` (Largest first), `ascending` (Smallest first) | `none` | always | Sort slices |
 | `labelType` | choice | `categoryPercent` (Name + %), `category` (Name), `value` (Value), `percent` (Percent), `none` (None) | `categoryPercent` | always | Labels |
+| `sliceNames` | choice | `auto` (Auto), `onSlices` (On slices), `key` (In a key) | `auto` | always | Slice names |
 
 ### ![](chart-icon-doughnut.svg) Donut Chart
 
@@ -241,6 +242,7 @@ _No template-specific parameters._
 | `innerRadius` | number | 20 – 80 (step 5) | `55` | always | Inner radius as a percentage of the outer radius. |
 | `sortSlices` | choice | `none` (Data order), `descending` (Largest first), `ascending` (Smallest first) | `none` | always | Sort slices |
 | `labelType` | choice | `categoryPercent` (Name + %), `category` (Name), `value` (Value), `percent` (Percent), `none` (None) | `categoryPercent` | always | Labels |
+| `sliceNames` | choice | `auto` (Auto), `onSlices` (On slices), `key` (In a key) | `auto` | always | Slice names |
 
 ### ![](chart-icon-radar.svg) Radar Chart
 

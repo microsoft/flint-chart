@@ -9,7 +9,7 @@ import { isCanvasInteraction, type ChartState, type InteractionContext, type Int
 import type { InteractiveRendererAdapter, TargetFeedbackOptions, ViewportState } from '../interactive/types';
 import { openVegaLiteSession, type Replanned } from './assemble';
 import { canvasFurnitureMarkup, readCanvasFurniture, readCanvasPatterns, type CanvasPattern } from './canvas-furniture';
-import { enableGuideLabelTooltips, planTemporalTickValues } from './instantiate-spec';
+import { enableGuideLabelTooltips, planTemporalTickValues, vlListTooltipFields } from './instantiate-spec';
 import {
     addVegaLiteInteractions,
     collectVegaAxisTargets,
@@ -345,7 +345,11 @@ export function createVegaInteractiveRenderer(
                     interactions,
                     options.enableSemanticUpdates,
                 );
-                if (viewports.length === 0 && filtersRows) pinColorDomains(shapedSpec);
+                if (viewports.length === 0 && filtersRows) {
+                    pinColorDomains(shapedSpec);
+                    // A pinned domain orders a stack by a sort index Vega-Lite would list in the tooltip.
+                    vlListTooltipFields(shapedSpec);
+                }
                 const vegaSpec = enableGuideLabelTooltips(compile(shapedSpec).spec as any);
                 const relaidSignals = filtersRows ? layoutSignals(vegaSpec) : [];
                 let livePlanner: LiveLayoutPlanner | undefined;

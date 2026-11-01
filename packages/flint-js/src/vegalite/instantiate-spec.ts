@@ -1114,13 +1114,29 @@ const isWorkingColumn = (field: unknown): boolean => typeof field === 'string' &
 const NOT_LISTED = new Set(['tooltip', 'href', 'url', 'description', 'key']);
 const TOOLTIP_FIELD_KEYS = ['field', 'type', 'title', 'aggregate', 'timeUnit', 'bin', 'format', 'formatType'] as const;
 const COMPOSITE_MARKS = new Set(['boxplot', 'errorbar', 'errorband']);
+const STACKED_MARKS = new Set(['bar', 'area', 'arc']);
+
+/**
+ * Whether Vega-Lite will stack a mark in the order of its colour domain: a discrete colour with a
+ * stated domain and no `order` makes it compute `_<field>_sort_index` and list it as the order.
+ */
+function ordersStackByColorDomain(mark: unknown, encoding: Record<string, any>): boolean {
+    const color = encoding.fill ?? encoding.color;
+    if (!color?.field || color.type !== 'nominal' || !Array.isArray(color.scale?.domain)) return false;
+    if (encoding.order !== undefined || encoding.xOffset !== undefined || encoding.yOffset !== undefined) return false;
+    const type = typeof mark === 'object' && mark !== null ? (mark as any).type : mark;
+    const stacks = ['x', 'y', 'theta'].map((channel) => encoding[channel]).filter((def) => def && 'stack' in def).map((def) => def.stack);
+    if (stacks.some((stack) => stack === null || stack === false)) return false;
+    return STACKED_MARKS.has(type) || stacks.length > 0;
+}
 
 /**
  * Keeps Flint's working columns out of the tooltips Vega-Lite builds from each mark's encoding.
  * A column that repacks the author's field — a folded colour key, a waterfall's step kind — carries
  * that field's name as its title and stays, under the name. One with no name of its own — a radar's
  * positions, a pie's order, a strip's jitter — names nothing a reader asked about, and is left out;
- * a mark with nothing else to list shows no tooltip. A mark whose tooltip lists no working column
+ * a mark with nothing else to list shows no tooltip. A stack ordered by its colour's stated domain
+ * counts too: Vega-Lite would list the sort index it computes for it. A mark whose tooltip lists no working column
  * is left as it is, and so is a composite mark (a boxplot), whose summary a stated list would drop.
  */
 export function vlListTooltipFields(spec: any): void {
@@ -1138,7 +1154,7 @@ export function vlListTooltipFields(spec: any): void {
         if (node.mark && encoding.tooltip === null && markTooltip !== false && markTooltip !== null) silence();
         else if (node.mark && !composite && markTooltip !== false && markTooltip !== null && encoding.tooltip === undefined) {
             const listed: any[] = [];
-            let working = false;
+            let working = ordersStackByColorDomain(node.mark, encoding);
             for (const [channel, def] of Object.entries<any>(encoding)) {
                 if (NOT_LISTED.has(channel) || !def || typeof def !== 'object' || Array.isArray(def)) continue;
                 if (def.field === undefined && def.aggregate !== 'count') continue;

@@ -4,6 +4,7 @@ import type { LegendPlan } from '../core/legend-plan';
 import { KEY_CHANNELS } from '../core/structure';
 import { rendererTextMeasurer } from '../core/text-width';
 import { caseLabelExpr } from '../core/text-case';
+import { exactPattern } from '../core/sample-format';
 import { plannedKeyFor } from './theme';
 
 
@@ -70,6 +71,28 @@ function keyLegend(legend: any, layout: KeyLayout, labels: string[] | undefined,
     return out;
 }
 
+const FORMAT_CALL = /format\(datum\.value,\s*(['"])([^'"]*)\1\)/g;
+
+/**
+ * The format a key's sampled values print in, precise enough for each. Vega otherwise labels
+ * `legend.values` with the scale's tick format, which rounds 0.5 and 2.5 to "1" and "3". The
+ * field's own format — a percentage, a currency's sign — is kept, its precision raised where needed.
+ */
+function exactSampleLabels(legend: any, samples: number[]): { format?: string; labelExpr?: string } {
+    if (legend.formatType !== undefined) return {};
+    const out: { format?: string; labelExpr?: string } = {};
+    const labelExpr = legend.labelExpr;
+    if (typeof labelExpr === 'string') {
+        out.labelExpr = labelExpr.replace(FORMAT_CALL, (_, quote: string, pattern: string) =>
+            `format(datum.value, ${quote}${exactPattern(samples, pattern)}${quote})`);
+    }
+    // A label expression that reads the label Vega formatted needs that format exact too.
+    if (labelExpr === undefined || /datum\.label\b/.test(labelExpr)) {
+        out.format = exactPattern(samples, typeof legend.format === 'string' ? legend.format : undefined);
+    }
+    return out;
+}
+
 /** Stack keys that share an edge as the plan says: one row each, or side by side. */
 function writeEdges(spec: any, edges: LegendLayoutPlan['edges']): void {
     if (!edges.length) return;
@@ -124,7 +147,9 @@ export function vlWriteKeyLayout(
             if (!key || !keyLayout) continue;
             encoding.legend = keyLegend(encoding.legend, keyLayout, key.entries, layout.offsets?.[keyLayout.orient as 'top']);
             // A key to values lists the round values the plan sampled, with or without a theme.
-            if (key.samples && encoding.legend.values === undefined) encoding.legend = { ...encoding.legend, values: key.samples };
+            if (key.samples && encoding.legend.values === undefined) {
+                encoding.legend = { ...encoding.legend, values: key.samples, ...exactSampleLabels(encoding.legend, key.samples) };
+            }
         }
     });
     writeEdges(spec, layout.edges);

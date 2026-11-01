@@ -113,6 +113,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A size key prints the values it lists. Vega-Lite labelled the round values it sampled with the
+  scale's tick format, so a key for 0.5, 1 and 2.5 read "1, 1, 3" (a Map's "0, 1, 1, 3"); each key
+  now carries a format precise enough for its values, keeping the field's own (a share, a currency)
+  with its precision raised, and the key's width is measured from those labels. Plotly's size key
+  no longer rounds values below 0.001 to "0", nor ECharts' size map its ends below 1.
+- A tooltip on an interactively filtered stacked chart (a bar coloured by its own category) no
+  longer lists Vega-Lite's `_<field>_sort_index`: the colour domain the filter pins made Vega-Lite
+  order the stack by that index, which a tooltip on every encoding listed.
+- Bars sorted by value (`sortBy: "x"`) stay in value order under every house. A house's value
+  labels and row names draw on the bars' band, and Vega-Lite drops a sort the layers cannot share,
+  so nyt, economist, powerbi, powerbi-light, pop and de-stijl drew the bars in name order (and
+  datawrapper's names above the bars failed to compile in 1.0.1). Every layer on such a band now
+  states the same order, computed as Vega-Lite sorts the bars.
 - An app no longer fails to build for want of a backend it does not draw with (#155):
   `flint-chart` now depends on every backend it draws with (`vega`, `vega-lite`, `vega-tooltip`,
   `echarts`, `chart.js`, `plotly.js-dist-min`), so `npm install flint-chart` is the whole install

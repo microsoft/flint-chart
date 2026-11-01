@@ -68,4 +68,34 @@ describe('tooltips and Flint\'s working columns', () => {
         vlListTooltipFields(on);
         expect((on as any).encoding.tooltip).toEqual([{ field: 'Value', type: 'quantitative' }]);
     });
+
+    it('lists no sort index Vega-Lite computes to stack in a colour domain\'s order', () => {
+        // Interactive filtering pins the colour domain after assembly, then lists the tooltip again.
+        const spec: any = assembleVegaLite({
+            data: { values: ['Drama', 'Comedy', 'Action'].map((Genre, index) => ({ Genre, Movies: 100 - index })) },
+            semantic_types: { Genre: 'Category', Movies: 'Count' },
+            chart_spec: { chartType: 'Bar Chart', encodings: { y: 'Genre', x: 'Movies', color: 'Genre' } },
+            options: { addTooltips: true },
+        } as any);
+        const { _theme, _canvasFit, _legendLayout, ...vl } = spec;
+        vl.encoding.color.scale = { ...vl.encoding.color.scale, domain: ['Action', 'Comedy', 'Drama'] };
+        vlListTooltipFields(vl);
+        const signals: string[] = [];
+        JSON.stringify(compile(vl).spec, (key, value) => {
+            if (key === 'tooltip' && typeof value?.signal === 'string' && value.signal.startsWith('{')) signals.push(value.signal);
+            return value;
+        });
+        expect(signals.length).toBeGreaterThan(0);
+        for (const signal of signals) {
+            expect(signal).not.toContain('sort_index');
+            expect(signal).toContain('"Genre"');
+            expect(signal).toContain('"Movies"');
+        }
+        // A stack its author unstacked computes no index, and its tooltip is left to Vega-Lite.
+        const unstacked = { mark: 'bar', config: { mark: { tooltip: true } }, encoding: {
+            x: { field: 'Movies', type: 'quantitative', stack: null }, y: { field: 'Genre', type: 'nominal' },
+            color: { field: 'Genre', type: 'nominal', scale: { domain: ['Action'] } } } };
+        vlListTooltipFields(unstacked);
+        expect((unstacked.encoding as any).tooltip).toBeUndefined();
+    });
 });

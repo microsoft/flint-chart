@@ -78,7 +78,7 @@ import { normalizeChartProperties } from '../core/normalize-properties';
 import { resolveChartDefaults, resolveCompileDefaults, resolveGeometry, resolveValueLabelChoice } from '../core/theme/ground';
 import { resolveThemeSpec } from '../core/theme/presets';
 import { withChrome } from '../core/theme/chrome';
-import { applyHeaderFurniture, applySourceLine, realizeThemeVegaLite, realizeValueLabelsVegaLite, vegaLiteBuiltFacts } from './theme';
+import { alignBandOrders, applyHeaderFurniture, applySourceLine, realizeThemeVegaLite, realizeValueLabelsVegaLite, vegaLiteBuiltFacts } from './theme';
 import { applyChartValueColors } from './value-colors';
 import { vlCaseKeyLabels, vlWriteKeyLayout } from './key-layout';
 import { familyMeasure, rendererTextMeasurer } from '../core/text-width';
@@ -614,6 +614,8 @@ function emitVegaLite(input: ChartAssemblyInput, prepared: VegaLitePreparation, 
             vgObj.config = { ...vgObj.config, line: { ...vgObj.config?.line, strokeWidth: plan.lineWidth } };
         }
     }
+    // Value labels and row names share the bars' band: a sort by value is stated once for every layer.
+    alignBandOrders(vgObj, values);
     // The header — a figure label, a rule on the canvas edge, a logo beside the headline — is the
     // chart's as much as the theme's: drawn with or without one.
     applyHeaderFurniture(vgObj, plan.header);
