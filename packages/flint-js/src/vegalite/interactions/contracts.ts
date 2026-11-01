@@ -97,7 +97,7 @@ export interface VegaInteractionPlan {
     /** Mutable compiled inline source used by `set-data`. */
     mutableDataSource?: string;
     initialDataRows?: readonly Record<string, unknown>[];
-    /** Brings host rows into the compiled data's form (temporal values as the compiler writes them). */
+    /** Brings host rows into the compiled data's form: folded and aggregated as the encodings ask, temporal values as the compiler writes them. */
     prepareDataRows?: (rows: readonly Record<string, unknown>[]) => readonly Record<string, unknown>[];
     /** A value of a temporal field as the compiled data holds it, read the way the input rows are. */
     temporalValue?: (field: string, value: unknown) => unknown;

@@ -149,6 +149,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `canvas-contain`). The plot keeps at least half of each side, and no value is cut or label turned
   for the room; what cannot be brought within is left nearer, for the host to scale. Charts without
   a `canvasSize`, composite charts, the other backends and `canvasFit: 'off'` are unchanged.
+- `filterControls` filters a Vega-Lite chart with an `aggregate` encoding (an average, a count, a
+  sum) or several y fields. The rows a filter left were swapped in raw, while the chart's data had
+  been folded and aggregated when it was built, so the bars found no value and the plot emptied
+  (clearing the filter emptied it too). Swapped-in rows (`set-data`) are now shaped as the chart's
+  own rows were; rows the host aggregated already pass through as before.
 - A note (`set-annotation`) keyed to an interior point of a line drawn with points attaches to that
   point. The key matched both the point and the segment that starts there, so every point but a
   series' last reported `unsupported_update: … matched nothing`.

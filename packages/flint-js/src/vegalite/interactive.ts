@@ -1,7 +1,7 @@
 import type { ViewNode } from '../core/views';
 import { applyCategoryViewports, resolveCategoryViewport } from '../core/filter-overflow';
 import type { CategoryViewport, ChartAssemblyInput } from '../core/types';
-import { convertTemporalData, temporalFieldValue } from '../core/resolve-semantics';
+import { temporalFieldValue } from '../core/resolve-semantics';
 import { createChangeFilter } from '../interactive/chart-state';
 import { currentFilters, isFilterControls } from '../interactive/filter-controls';
 import { createFloatingPanel } from '../interactive/floating-panel';
@@ -424,7 +424,8 @@ export function createVegaInteractiveRenderer(
                         })(),
                 };
                 interactionPlan.mutableDataSource = source;
-                interactionPlan.prepareDataRows = (rows) => convertTemporalData([...rows], firstInput.semantic_types ?? {});
+                // The compiled data holds the rows as Flint shaped them (an aggregate collapses them), so swapped-in rows are shaped alike.
+                interactionPlan.prepareDataRows = (rows) => drawn.shapeRows(rows);
                 interactionPlan.initialDataRows = interactionPlan.prepareDataRows(firstInput.data.values ?? []);
                 interactionPlan.temporalValue = (field, value) => temporalFieldValue(field, value, firstInput.semantic_types ?? {});
                 if (viewports.length > 0) interactionPlan.windowDataRows = (rows) => windowRows(rows ?? inputRows);

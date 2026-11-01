@@ -978,6 +978,11 @@ export interface VegaLiteSession {
      * the new room, title and furniture room included, and later changes of rows plan into that.
      */
     replan(change: ReplanChange): Replanned;
+    /**
+     * Rows brought into the form the compiled data holds them: static series folded, aggregated as
+     * the encodings ask, temporal values converted. A change of rows swaps these into the chart.
+     */
+    shapeRows(rows: readonly Record<string, unknown>[]): Record<string, unknown>[];
 }
 
 /**
@@ -1100,6 +1105,7 @@ export function openVegaLiteSession(
             }
             return planRows(change);
         },
+        shapeRows: (rows) => analysis.shapeRows(rows),
     };
 }
 
