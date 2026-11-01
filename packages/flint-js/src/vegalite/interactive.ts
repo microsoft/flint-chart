@@ -289,7 +289,10 @@ export function createVegaInteractiveRenderer(
     return {
         async mount(container, input) {
             // Tooltips are presentation, so the spec decides: off unless `options.addTooltips` is set.
-            const interactiveInput: ChartAssemblyInput = input;
+            // The host's background is the chart's where no house sets a canvas of its own.
+            const interactiveInput: ChartAssemblyInput = options.background !== undefined && input.options?.background === undefined
+                ? { ...input, options: { ...input.options, background: options.background } }
+                : input;
             // A viewport on x changes the rows in view, so the compile leaves room for a live layout.
             const navigatesX = (options.interactions ?? []).some((interaction) => isCanvasInteraction(interaction)
                 && interaction.eventSource.type === 'navigation' && interaction.eventSource.axes !== 'y');

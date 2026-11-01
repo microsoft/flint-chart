@@ -44,7 +44,7 @@
  * This module has NO React, Redux, or UI framework dependencies.
  */
 
-import { authoredColorScale, schemeName, withEncodingColorAnnotations } from '../core/color-controls';
+import { authoredColorScale, schemeName, withEncodingColorAnnotations, colorNeutralBand } from '../core/color-controls';
 import { applyAuthoredColorScaleVL, restoreColorScales, snapshotColorScales } from './color-controls';
 import {
     ChartEncoding,
@@ -596,7 +596,7 @@ function emitVegaLite(input: ChartAssemblyInput, prepared: VegaLitePreparation, 
     const authoredColor = authoredColorScale(input.chart_spec.encodings as Record<string, unknown>);
     if (themeSpec) {
         const authoredScales = authoredColor ? snapshotColorScales(vgObj, authoredColor) : undefined;
-        const realizeReport = realizeThemeVegaLite(vgObj, design, values, plan);
+        const realizeReport = realizeThemeVegaLite(vgObj, design, values, plan, colorNeutralBand(channelSemantics));
         // A scheme the author named outranks the theme's ramp.
         if (authoredScales) restoreColorScales(authoredScales);
         themeDecisions = {
@@ -612,6 +612,10 @@ function emitVegaLite(input: ChartAssemblyInput, prepared: VegaLitePreparation, 
         // Many series thin Vega-Lite's 2 px lines, as they thin a house's (`plan.lineWidth`).
         if (plan.lineWidth !== undefined) {
             vgObj.config = { ...vgObj.config, line: { ...vgObj.config?.line, strokeWidth: plan.lineWidth } };
+        }
+        // With no house to set a canvas, the chart draws on the host's: Vega-Lite would state white.
+        if (typeof plan.options.background === 'string' && vgObj.background === undefined) {
+            vgObj.background = plan.options.background;
         }
     }
     // Value labels and row names share the bars' band: a sort by value is stated once for every layer.
@@ -645,7 +649,7 @@ function emitVegaLite(input: ChartAssemblyInput, prepared: VegaLitePreparation, 
     }
     chartTemplate.postProcess?.(vgObj, instantiateContext);
     // The author's colour controls win over every default and the theme's ramp.
-    if (authoredColor) applyAuthoredColorScaleVL(vgObj, authoredColor, values);
+    if (authoredColor) applyAuthoredColorScaleVL(vgObj, authoredColor, values, colorNeutralBand(channelSemantics, authoredColor.field));
     vlFinalizeTemporalAxes(vgObj, instantiateContext);
     vlWriteKeyLayout(vgObj, plan.legend, plan.plot, plan.layout, VEGA_LITE_LAYOUT.measureText!);
     vlWriteAxisTitles(vgObj, plan.axisTitleFit);

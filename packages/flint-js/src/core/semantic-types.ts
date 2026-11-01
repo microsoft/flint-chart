@@ -612,6 +612,11 @@ export interface ColorSchemeRecommendation {
     reason: string;
     /** For diverging schemes, the recommended midpoint value */
     domainMid?: number;
+    /**
+     * For diverging schemes stepped into classes, how the midpoint sits among them: a neutral class
+     * `'auto'` (a step wide) or this far either side of it; unset, the midpoint is a break.
+     */
+    neutral?: number | 'auto';
 }
 
 // getDivergingMidpoint: REMOVED — superseded by resolveDivergingInfo() in field-semantics.ts

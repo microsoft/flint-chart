@@ -562,7 +562,12 @@ export function assembleECharts(input: ChartAssemblyInput): any {
 
     // The author's colour controls win over every default.
     const authoredColor = authoredColorScale(input.chart_spec.encodings as Record<string, unknown>);
-    if (authoredColor) applyAuthoredColorScaleEC(ecOption, authoredColor);
+    if (authoredColor) {
+        // A diverging field's stepped classes break at its pivot, as the heatmap centres its ramp there.
+        const colorSemantics = Object.values(channelSemantics).find((cs) => cs?.field === authoredColor.field && cs.colorScheme);
+        const pivot = colorSemantics?.colorScheme?.type === 'diverging' ? colorSemantics.colorScheme.domainMid ?? 0 : undefined;
+        applyAuthoredColorScaleEC(ecOption, authoredColor, values, pivot, colorSemantics?.colorScheme?.neutral);
+    }
 
     // Names are printed as the reader sees them before the frame measures them.
     applyFieldDisplayNames(ecOption, input.field_display_names);

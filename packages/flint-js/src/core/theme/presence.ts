@@ -90,6 +90,12 @@ export function luminance(c: RGB): number {
     return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b);
 }
 
+/** CIE L* lightness, 0 (black) to 100 (white): where equal steps look equally lighter. */
+export function lightness(c: RGB): number {
+    const y = luminance(c);
+    return y > 216 / 24389 ? 116 * Math.cbrt(y) - 16 : (24389 / 27) * y;
+}
+
 export function isDarkSurface(surface: string): boolean {
     const c = parseColor(surface);
     return c ? luminance(c) < 0.45 : false;

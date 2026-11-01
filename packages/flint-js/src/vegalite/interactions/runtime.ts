@@ -68,6 +68,7 @@ import {
     tolerantInspectHits,
     indexInspectAcquisition,
     legendSemanticTarget,
+    oneMarkHits,
     renderHit,
     rendererElement,
     rendererPlotOrigin,
@@ -995,7 +996,7 @@ export function mountVegaInteractions(
     };
     /** Targets resolved through a line's last point, which a note marks at its point. */
     const lastPointTargets = new WeakSet<SemanticTargetRef>();
-    const resolveUpdateTarget = (target: UpdateTarget): SemanticTargetRef | null => {
+    const resolveUpdateTarget = (target: UpdateTarget, oneMark = false): SemanticTargetRef | null => {
         if (!('select' in target)) {
             if (target.visual.kind === 'axis') {
                 const elements = target.elements.filter((element) => {
@@ -1040,6 +1041,8 @@ export function mountVegaInteractions(
         if (!matches) return null;
         const all = allHits();
         let hits = all.filter((hit) => matches(hit.datum));
+        // A note anchors to one mark: on a line drawn with points, the point, not the segment from it.
+        if (oneMark) hits = oneMarkHits(hits, target.select.visual?.kind === 'path');
         // The final point of a line or area starts no segment, so it is found as the end of the segment before it.
         const startKeys = new Set(all.map((hit) => hit.datum[INTERACTION_KEY]));
         const lastPoints = (): RenderHit[] => all.flatMap((hit): RenderHit[] => {
@@ -1100,7 +1103,7 @@ export function mountVegaInteractions(
                 if (targets.length > 0 || op.targets.length === 0) ops.push({ ...op, targets });
             } else if (op.op === 'set-annotation' && op.value !== null) {
                 // A note anchors to one mark, which a set does not name.
-                const target = 'select' in op.target && isWhereSelector(op.target) ? null : resolveUpdateTarget(op.target);
+                const target = 'select' in op.target && isWhereSelector(op.target) ? null : resolveUpdateTarget(op.target, true);
                 if (!target || target.elements.length !== 1) unresolvedTargets.push(op.target);
                 else {
                     resolvedTargets += 1;

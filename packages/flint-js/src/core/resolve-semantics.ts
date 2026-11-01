@@ -715,6 +715,11 @@ export function resolveChannelSemantics(
                     const divInfo = resolveDivergingInfo(semanticType, annotation, nums);
                     if (divInfo) {
                         cs.colorScheme.domainMid = divInfo.midpoint;
+                        // A pivot the field always has reads as a neutral zone; one its values cross is a break.
+                        const neutral = typeof annotation.divergingNeutral === 'number' && annotation.divergingNeutral >= 0
+                            ? annotation.divergingNeutral
+                            : annotation.divergingNeutral === undefined && divInfo.inherent ? 'auto' : undefined;
+                        if (neutral !== undefined) cs.colorScheme.neutral = neutral;
                     }
                     // A declared polarity says which end is the bad one: warm (red) goes there.
                     // Themes turn their own ramps to match the scheme named here.

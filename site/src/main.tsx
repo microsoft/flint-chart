@@ -60,6 +60,7 @@ import { AgentComparison } from './playground/AgentComparison';
 import { DenseMarks } from './playground/DenseMarks';
 import { DensityLab } from './playground/DensityLab';
 import { LegendLab } from './playground/LegendLab';
+import { BinningLab } from './playground/binning/BinningLab';
 import { BackendLayoutLab } from './playground/backend-layout/BackendLayoutLab';
 import { EChartsFixesLab } from './playground/backend-layout/EChartsFixesLab';
 import { LocaleProvider, useLocale } from './i18n/LocaleContext';
@@ -159,6 +160,7 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="dense-marks" element={<DenseMarks />} />
           <Route path="density" element={<DensityLab />} />
           <Route path="legend" element={<LegendLab />} />
+          <Route path="binning" element={<BinningLab />} />
           <Route path="backend-layout" element={<Navigate to="echarts" replace />} />
           <Route path="backend-layout-echarts-fixes" element={<EChartsFixesLab />} />
           <Route path="backend-layout/:backend" element={<BackendLayoutLab />} />

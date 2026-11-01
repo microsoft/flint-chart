@@ -798,6 +798,22 @@ export function normalizeVegaAngularRegionEvent(
     };
 }
 
+/**
+ * The hits one mark is chosen from. A line or area drawn with points draws each row twice, as the
+ * point and as the segment that starts at it, so a key naming one row hits both. This keeps the
+ * point, or the segment when `preferPath`; hits on different rows are left for the caller to judge.
+ */
+export function oneMarkHits(hits: readonly RenderHit[], preferPath = false): RenderHit[] {
+    const isPath = (hit: RenderHit): boolean => hit.markType === 'line' || hit.markType === 'area';
+    const rowKey = (hit: RenderHit): string => {
+        const key = String(hit.datum[INTERACTION_KEY]);
+        return isPath(hit) && key.endsWith(PATH_KEY_SUFFIX) ? key.slice(0, -PATH_KEY_SUFFIX.length) : key;
+    };
+    const pathRows = new Set(hits.filter(isPath).map(rowKey));
+    const drawnTwice = new Set(hits.filter((hit) => !isPath(hit)).map(rowKey).filter((key) => pathRows.has(key)));
+    return hits.filter((hit) => !drawnTwice.has(rowKey(hit)) || isPath(hit) === preferPath);
+}
+
 export function renderHit(item: any): RenderHit | null {
     const markType = item?.mark?.marktype;
     const taggedText = markType !== 'text' || item?.datum?.[INTERACTION_ROLE] === 'text-label';

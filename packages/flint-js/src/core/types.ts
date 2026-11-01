@@ -1484,6 +1484,12 @@ export interface AssembleOptions {
     /** Whether to add tooltips to the chart (default: false) */
     addTooltips?: boolean;
     /**
+     * The host page's background, as a CSS colour. A chart with no theme draws on it, and so does a
+     * theme whose surface defers to the host (`ink.surface.source: 'host'`); a theme with its own
+     * canvas keeps it.
+     */
+    background?: string;
+    /**
      * Set by the interactive renderer when a viewport will change the rows in view:
      * value labels are built for any window that could print them, and this signal
      * decides whether they show.

@@ -6,6 +6,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { compile } from 'vega-lite';
+import { format } from 'd3-format';
 import { assembleECharts, assembleVegaLite } from '../src';
 import { OMNI_VIZ_GAME_ORDER, OMNI_VIZ_ROWS } from '../src/test-data';
 
@@ -98,10 +99,13 @@ describe('calendar dates read as UTC', () => {
 describe('quantized key under a theme', () => {
   it('runs long enough to print every bin edge', () => {
     const vl = assembleVegaLite(heatmap({ theme: 'economist' })) as any;
-    expect(vl.encoding.color.scale.type).toBe('quantize');
-    const bins = vl.encoding.color.scale.range.length;
-    // Each of the edges needs room for a label like "−32,341" at the key's font.
-    const perLabel = 7 * 0.55 * vl.config.legend.labelFontSize;
+    const scale = vl.encoding.color.scale;
+    expect(scale.type).toBe('threshold');
+    const bins = scale.range.length;
+    // Each class needs room for its edge's label, as the key prints it (compacted where full ones would not fit).
+    const print = format(vl.encoding.color.legend.format ?? ',');
+    const widest = Math.max(...scale.domain.map((edge: number) => print(edge).length));
+    const perLabel = widest * 0.55 * vl.config.legend.labelFontSize;
     expect(vl.config.legend.gradientLength).toBeGreaterThanOrEqual(bins * perLabel);
   });
 });

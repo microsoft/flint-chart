@@ -39,7 +39,10 @@ export async function renderSvg(input: ChartAssemblyInput, options: RenderSvgOpt
         }
     }
     if (backend !== 'vegalite') throw new Error(`renderSvg does not support backend "${backend as string}".`);
-    const vlSpec = assembleVegaLite(input);
+    // The host's background is the chart's where no house sets a canvas of its own.
+    const vlSpec = assembleVegaLite(options.background !== undefined && input.options?.background === undefined
+        ? { ...input, options: { ...input.options, background: options.background } }
+        : input);
     const [{ compile }, vega] = await Promise.all([import('vega-lite'), import('vega')]);
     const interpreter = options.expressionInterpreter;
     const runtime = vega.parse(

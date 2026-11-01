@@ -577,6 +577,12 @@ understates what you know:
 - `divergingMidpoint` — where the middle colour of a diverging scale sits.
   Set it if you can tell what the reader is comparing against; leave it out if
   you can't.
+- `divergingNeutral` — for a colour stepped into classes, how far either side
+  of the midpoint still reads as neither side: `0.1` makes correlations within
+  ±0.1 one neutral class; `false` makes the midpoint a break, so a small gain
+  never looks like a small loss. Leave it out and the type decides
+  (`Correlation`, `Sentiment`: a neutral class; `Profit`, `PercentageChange`:
+  a break).
 - `sortOrder` — the order the categories should appear in, when the order in
   the data is not the one you want and it isn't alphabetical either:
   `["Low", "Medium", "High"]`. For a handful of categories, not a long list.

@@ -53,4 +53,23 @@ describe('percentage representation', () => {
         const kpi = kpiNumberFormat({ field: 'growth', semanticAnnotation: { semanticType: 'PercentageChange', percentScale: 'fraction' } } as any, [1.8, 2.4]);
         expect(kpi.print(2.4)).toBe('240%');
     });
+
+    it('reads fractions from the values where nothing is stated, as the domain does', async () => {
+        const { compile } = await import('vega-lite');
+        const { parse, View } = await import('vega');
+        const shares = [0.164, 0.42, 0.087, 0.3];
+        expect(resolveFormat('Percentage', { semanticType: 'Percentage' }, shares).format?.pattern).toMatch(/%$/);
+        const rows = ['A', 'B', 'C', 'D'].map((k, i) => ({ k, m: shares[i] }));
+        const vl = assembleVegaLite({
+            data: { values: rows }, semantic_types: { k: 'Category', m: 'Percentage' },
+            chart_spec: { chartType: 'Bar Chart', encodings: { x: 'k', y: 'm' } },
+        } as any) as any;
+        const svg = await new View(parse(compile(vl).spec), { renderer: 'none' }).toSVG();
+        const ticks = [...svg.matchAll(/<text[^>]*>([^<]*)<\/text>/g)].map((m) => m[1]).filter((t) => /\d/.test(t));
+        expect(ticks.length).toBeGreaterThan(0);
+        expect(ticks.every((t) => t.endsWith('%')), ticks.join(', ')).toBe(true);
+        // Percent points with nothing stated are left as they print.
+        const points = resolveFormat('Percentage', { semanticType: 'Percentage' }, [16.4, 42, 8.7]);
+        expect(points.format).toBeUndefined();
+    });
 });

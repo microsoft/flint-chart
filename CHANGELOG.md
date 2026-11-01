@@ -110,6 +110,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   context gives the fields (`theme_spec`, `grid`, `chart_spec`) that keep them in
   the next `show`. A card the host draws again without its result calls `show`
   with the spec it was given.
+- A stepped colour scale — a house that bins its ramp (`consumption: 'quantize'`: pop, swiss,
+  cartoon, de-stijl) or an author's `bins` — is cut at round values (`roundColorClasses`). The
+  step is round (1, 2, 2.5 or 5 of a power of ten), chosen by Talbot, Lin & Hanrahan's extended
+  labeling score; a diverging field's pivot is a break, and each side takes only the classes its
+  data reaches, the short arm the pale end of the ramp. A heatmap of −6.7 … 33.5 °C reads 0, 10,
+  20, 30, where equal cuts of a domain made symmetric at ±33.5 read "−20, −7, 7, 20" for breaks at
+  ±20.1 and ±6.7 and left two cold classes empty. A house's count is a target (about 5); an
+  author's `bins` is held where a round step closes that many classes, else the outer two open.
+  Neither side of the pivot takes more than four classes where a coarser step holds it, and each
+  class takes the colour at its far edge, so the classes beside a break show their sign. A pivot
+  the type always has (`Correlation`, `Sentiment`, a stated `divergingMidpoint`) centres a neutral
+  class instead; the new `divergingNeutral` annotation sets its half-width, or `false` for a break.
+  Vega-Lite draws a threshold scale whose key prints each break in full; ECharts' author bins break
+  at the pivot too. Grounding reports a diverging ramp whose arms differ by more than 3 L* at
+  mirrored points (`diverging-ramp-unbalanced`): pop, de-stijl, swiss and cartoon do today.
 
 ### Fixed
 
@@ -126,6 +141,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   so nyt, economist, powerbi, powerbi-light, pop and de-stijl drew the bars in name order (and
   datawrapper's names above the bars failed to compile in 1.0.1). Every layer on such a band now
   states the same order, computed as Vega-Lite sorts the bars.
+- A note (`set-annotation`) keyed to an interior point of a line drawn with points attaches to that
+  point. The key matched both the point and the segment that starts there, so every point but a
+  series' last reported `unsupported_update: … matched nothing`.
+- A chart with no theme draws on the host's background: `options.background`, and the
+  `background` the React view, the interactive renderer and `renderSvg` take, now reach the spec,
+  where Vega-Lite's default white outranked them. A theme whose surface defers to the host
+  (`ink.surface.source: 'host'`) follows it too; a theme with its own canvas keeps it.
+- A `Percentage` stored as fractions prints as percentages (`16.4%`, not `0.164`) with no
+  `intrinsicDomain` stated, read from the values as its domain and a KPI already were.
 - An app no longer fails to build for want of a backend it does not draw with (#155):
   `flint-chart` now depends on every backend it draws with (`vega`, `vega-lite`, `vega-tooltip`,
   `echarts`, `chart.js`, `plotly.js-dist-min`), so `npm install flint-chart` is the whole install

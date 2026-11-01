@@ -44,6 +44,8 @@ import { coupledPointOpacity, MIN_HALO_DOT, pointHaloWidth, pointOutlineWidth, t
 import type { FurniturePlan } from '../core/furniture-plan';
 import type { SeriesEndLayout } from '../core/series-end';
 import type { LegendPlan, PlannedKey } from '../core/legend-plan';
+import { stepColorScale } from './color-classes';
+import type { NeutralBand } from '../core/color-controls';
 
 /** Mark families that carry data values (as opposed to chrome). */
 const DATA_MARKS = new Set([
@@ -358,6 +360,7 @@ function titleOf(enc: any): string | undefined {
 export function realizeThemeVegaLite(
     spec: any, d: DesignDecisions, table: any[] = [],
     planned: Partial<Pick<LayoutPlan, 'axisLabels' | 'title' | 'valueLabels' | 'furniture' | 'legend' | 'points' | 'pointSize' | 'lineWidth' | 'rules' | 'rowNames'>> = {},
+    colorNeutral?: NeutralBand,
 ): ThemeReport[] {
     const { axisLabels, title, valueLabels, furniture, legend, points, pointSize, lineWidth, rules, rowNames } = planned;
     const report: ThemeReport[] = [];
@@ -372,7 +375,7 @@ export function realizeThemeVegaLite(
     moveAxisTitlesToSubtitle(spec, d, title?.deck);
     applyZeroRule(spec, d, table);
     applyMarks(spec, d, table, say, points, pointSize, lineWidth);
-    applySeriesInk(spec, d, table, say, legend);
+    applySeriesInk(spec, d, table, say, legend, colorNeutral);
     harmonizeLinePoints(spec, d, table, say, lineWidth);
     applyConnectors(spec, d);
     applyRedundantChannels(spec, d, say);
@@ -3740,7 +3743,7 @@ function boundPalette(values: unknown[], s: DesignDecisions['series']): string[]
         ?? s.categorical[next++] ?? s.overflow ?? s.categorical[(next - 1) % Math.max(1, s.categorical.length)] ?? s.single);
 }
 
-function applySeriesInk(spec: any, d: DesignDecisions, table: any[], say: ReportDeparture, legend?: LegendPlan): void {
+function applySeriesInk(spec: any, d: DesignDecisions, table: any[], say: ReportDeparture, legend?: LegendPlan, colorNeutral?: NeutralBand): void {
     const s = d.series;
     let sawColorField = false;
     let saidCollapse = false;
@@ -3817,6 +3820,8 @@ function applySeriesInk(spec: any, d: DesignDecisions, table: any[], say: Report
                 // on a one-way ramp that half-empty domain paints the data in the dark half only, so the
                 // ramp spans the data's own range instead.
                 const symmetric = s.mode === 'sequential' && isContinuousColor(enc) && enc.scale?.domainMid !== undefined;
+                // A diverging field's pivot, before the range clears it: the stepped classes break there.
+                const pivot = s.mode === 'diverging' && typeof enc.scale?.domainMid === 'number' ? enc.scale.domainMid : undefined;
                 setColorRange(enc, range, quantize ? { type: 'quantize' } : undefined);
                 if (symmetric) {
                     delete enc.scale.domain;
@@ -3826,6 +3831,8 @@ function applySeriesInk(spec: any, d: DesignDecisions, table: any[], say: Report
                         saidSequentialDomain = true;
                     }
                 }
+                // The house's bins are about as many classes at round values, not its count of equal cuts.
+                if (quantize) stepColorScale(enc, range, s.quantize!, table, pivot, { neutral: s.mode === 'diverging' ? colorNeutral : undefined });
                 continue;
             }
             // Categorical: an ordered set consumed by index, with the overflow
@@ -6824,28 +6831,32 @@ export function fitBinnedKeyLength(spec: any, config: any, table: any[], block?:
     walk(spec, (node) => {
         const enc = node.encoding?.color;
         const scale = enc?.scale;
-        if (!enc || enc.legend === null || scale?.type !== 'quantize') return;
+        if (!enc || enc.legend === null || (scale?.type !== 'quantize' && scale?.type !== 'threshold')) return;
         if ((enc.legend?.direction ?? config.legend.direction ?? 'horizontal') !== 'horizontal') return;
         const domain = scale.domain;
         const bins = Array.isArray(scale.range) ? scale.range.length : scale.scheme?.count ?? 0;
-        if (!Array.isArray(domain) || domain.length !== 2 || typeof domain[0] !== 'number' || typeof domain[1] !== 'number' || bins < 2) return;
+        if (!Array.isArray(domain) || !domain.every((edge: unknown) => typeof edge === 'number') || bins < 2) return;
+        if (scale.type === 'quantize' && domain.length !== 2) return;
+        // A quantize ramp's edges cut its domain evenly; a threshold ramp's are its domain.
+        const edges: number[] = scale.type === 'threshold'
+            ? domain
+            : Array.from({ length: bins - 1 }, (_, i) => domain[0] + (domain[1] - domain[0]) * (i + 1) / bins);
         const fontSize = enc.legend?.labelFontSize ?? config.legend.labelFontSize ?? 10;
         const font = enc.legend?.labelFont ?? config.legend.labelFont;
         const need = (pattern: string): number => {
             let print: (n: number) => string;
             try { print = formatNumber(pattern); } catch { print = formatNumber(','); }
             let widest = 0;
-            for (let i = 1; i < bins; i++) {
-                const edge = domain[0] + (domain[1] - domain[0]) * i / bins;
-                widest = Math.max(widest, textWidth(print(edge).replace('-', '−'), fontSize, font));
-            }
+            for (const edge of edges) widest = Math.max(widest, textWidth(print(edge).replace('-', '−'), fontSize, font));
             return Math.ceil(bins * (widest + fontSize));
         };
         const current = config.legend.gradientLength ?? 200;
         // A key is a caption: it runs no further than a share of the block it keys.
         const room = block ?? blockWidth(spec, table);
         const cap = Math.max(current, room ? Math.round(room * 0.6) : current);
-        const stated = typeof enc.legend?.format === 'string' || enc.legend?.labelExpr !== undefined;
+        // A plain format that only prints the breaks in full says nothing a compact label cannot.
+        const plain = typeof enc.legend?.format === 'string' && /^,\.\d+~f$/.test(enc.legend.format);
+        const stated = (typeof enc.legend?.format === 'string' && !plain) || enc.legend?.labelExpr !== undefined;
         let wanted = need(stated ? enc.legend.format ?? ',' : ',');
         // Edges that do not fit at full precision print compactly: −38,501 becomes −39k.
         if (wanted > cap && !stated) {

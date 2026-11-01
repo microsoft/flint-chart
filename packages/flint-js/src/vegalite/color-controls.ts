@@ -1,4 +1,5 @@
-import { resampleStops, type AuthoredColorScale } from '../core/color-controls';
+import { resampleStops, type AuthoredColorScale, type NeutralBand } from '../core/color-controls';
+import { stepColorScale } from './color-classes';
 import { fitBinnedKeyLength } from './theme';
 
 const COLOR_CHANNELS = ['color', 'fill', 'stroke'] as const;
@@ -57,23 +58,31 @@ export function restoreColorScales(snapshot: Map<any, any>): void {
 /**
  * The author's colour controls, laid over whatever the defaults and the theme chose: they win.
  * A named scheme is the templates' to read (see {@link snapshotColorScales}); stops, bins,
- * reverse and domain are laid here. Value-label text keeps its own ink scale, which reads the
- * ramp rather than paints it.
+ * reverse and domain are laid here; bins break at a diverging field's pivot, or centre a `neutral`
+ * class on it. Value-label text keeps its own ink scale, which reads the ramp rather than paints it.
  */
-export function applyAuthoredColorScaleVL(spec: any, ctl: AuthoredColorScale, table: any[]): void {
+export function applyAuthoredColorScaleVL(spec: any, ctl: AuthoredColorScale, table: any[], neutral?: NeutralBand): void {
     let binned = false;
     for (const enc of colorEncodings(spec, ctl.field)) {
         const scale: Record<string, any> = { ...(enc.scale ?? {}) };
+        // A diverging field's pivot, read before the bins clear it: stepped classes break there.
+        const pivot = typeof scale.domainMid === 'number' ? scale.domainMid : undefined;
+        // A threshold scale's domain is its breaks; a scale that is not stepped any more spans the data.
+        const unstep = () => {
+            if (scale.type === 'threshold') delete scale.domain;
+            delete scale.type;
+        };
         if (ctl.stops) {
             delete scale.scheme;
             scale.range = ctl.stops;
         }
         if (ctl.bins === undefined) {
             // A ramp the author named runs continuously unless they asked for bins.
-            if (ctl.stops && BINNED.includes(scale.type)) delete scale.type;
+            if (ctl.stops && BINNED.includes(scale.type)) unstep();
         } else if (ctl.bins === 0) {
-            if (BINNED.includes(scale.type)) delete scale.type;
+            if (BINNED.includes(scale.type)) unstep();
         } else {
+            if (scale.type === 'threshold') delete scale.domain;
             scale.type = 'quantize';
             delete scale.domainMid;
             if (!ctl.stops) {
@@ -85,7 +94,12 @@ export function applyAuthoredColorScaleVL(spec: any, ctl: AuthoredColorScale, ta
         if (ctl.reverse !== undefined) scale.reverse = ctl.reverse;
         if (ctl.domain) scale.domain = ctl.domain;
         enc.scale = scale;
-        if (scale.type === 'quantize') binned = true;
+        // Bins over the data step at round values; over a domain the author stated, they cut it evenly.
+        if (ctl.bins && !ctl.domain) {
+            const ramp = Array.isArray(scale.range) ? scale.range : { scheme: scale.scheme?.name ?? 'viridis' };
+            stepColorScale(enc, ramp, ctl.bins, table, pivot, { exact: true, neutral });
+        }
+        if (BINNED.includes(enc.scale.type)) binned = true;
     }
     if (binned) {
         spec.config = spec.config ?? {};

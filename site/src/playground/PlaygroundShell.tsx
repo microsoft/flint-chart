@@ -31,6 +31,7 @@ const pages: NavEntry[] = [
       { to: 'canvas-squeeze', label: 'Canvas squeeze' },
       { to: 'density', label: 'Density' },
       { to: 'legend', label: 'Legend' },
+      { to: 'binning', label: 'Binned colour' },
       { to: 'color', label: 'Color' },
     ],
   },

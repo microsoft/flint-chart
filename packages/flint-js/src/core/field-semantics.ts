@@ -81,6 +81,16 @@ export interface SemanticAnnotation {
      */
     divergingMidpoint?: number;
 
+    /**
+     * How far either side of the diverging midpoint still reads as neither side, for a stepped
+     * colour scale: `0.1` makes correlations within ±0.1 one neutral class; `false` makes the
+     * midpoint a break, so every class is one side or the other and a small gain never looks like
+     * a small loss. Unset ⇒ the semantic type decides: a type that always diverges (Correlation,
+     * Sentiment) or a stated midpoint gets a neutral class a step wide; one that diverges where its
+     * values cross a sign (Profit, PercentageChange, Temperature) breaks at it.
+     */
+    divergingNeutral?: number | false;
+
     /** Explicit ordinal ordering. E.g., ["Low", "Medium", "High"] */
     sortOrder?: string[];
 
@@ -446,12 +456,13 @@ export function resolveFormat(
         }
 
         case 'percent': {
-            // Without intrinsicDomain or a stated scale we can't reliably
-            // distinguish 0–1 from 0–100, so defer to VL.
-            if (!annotation.intrinsicDomain && !annotation.percentScale) {
+            // Unstated, the values say how they are stored — as the measure's domain and a KPI
+            // read them — so 0.164 prints "16.4%" on the axis its [0, 1] domain draws. Values
+            // read as percent points are left to VL, as they were.
+            const rep = percentRepresentation(annotation, nums);
+            if (!annotation.intrinsicDomain && !annotation.percentScale && rep !== '0-1') {
                 return { tooltipFormat: { pattern: precisionFormat(nums) } };
             }
-            const rep = percentRepresentation(annotation, nums);
             if (rep === '0-1') {
                 // 0–1 fractional → axis must transform (0.45 → "45%")
                 const p = detectPrecision(nums);

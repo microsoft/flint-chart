@@ -73,16 +73,21 @@ describe('colour controls on the encoding (Vega-Lite)', () => {
     expect(scale.domain[0]).toBe(-scale.domain[1]);
   });
 
-  it('quantizes into the requested bins', () => {
+  it('steps into the requested bins at round values, breaking at the pivot', () => {
     const vl = assembleVegaLite(heatmap({ scheme: ['#c0392b', '#f2f2f2', '#2e75b6'], bins: 4 })) as any;
-    expect(vl.encoding.color.scale.type).toBe('quantize');
+    expect(vl.encoding.color.scale.type).toBe('threshold');
     expect(vl.encoding.color.scale.range).toHaveLength(4);
+    // Net runs −1,400 … 1,200 about 0: four classes a round 1,000 wide, closed at ±2,000.
+    expect(vl.encoding.color.scale.domain).toEqual([-1000, 0, 1000]);
+    expect(vl.encoding.color.legend.format).toBe(',.0~f');
   });
 
   it('keeps a theme ramp but binned or continuous on request', () => {
     const binned = cellScale(assembleVegaLite(heatmap({ bins: 7 }, { theme: 'economist' })));
-    expect(binned.type).toBe('quantize');
+    expect(binned.type).toBe('threshold');
     expect(binned.range).toHaveLength(7);
+    // No round step closes seven classes over this field, so the outer two are open; every edge is round.
+    for (const edge of binned.domain) expect(Math.abs(edge % 250)).toBe(0);
     const smooth = cellScale(assembleVegaLite(heatmap({ bins: 0 }, { theme: 'economist' })));
     expect(smooth.type).toBeUndefined();
   });
