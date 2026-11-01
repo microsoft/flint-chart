@@ -58,6 +58,7 @@ import type { ThemeReport } from '../core/theme/types';
 import { declaredInteractionCapabilities, type InteractionCapability } from '../core/interaction-spec';
 import { analysisReadsProperty, analyzeChart, type ChartAnalysis } from '../core/analyze';
 import { planLayout, type BackendLayoutProfile, type LayoutPlan, type PlanContext } from '../core/plan';
+import { namesElement } from '../core/type-registry';
 import { chartTable, type ChartTable } from '../core/chart-table';
 import { groupDodge } from '../core/band-dodge';
 import { applyPivot, type PivotSurface, type TransformSurface } from '../core/pivot';
@@ -78,7 +79,7 @@ import { normalizeChartProperties } from '../core/normalize-properties';
 import { resolveChartDefaults, resolveCompileDefaults, resolveGeometry, resolveValueLabelChoice } from '../core/theme/ground';
 import { resolveThemeSpec } from '../core/theme/presets';
 import { withChrome } from '../core/theme/chrome';
-import { applyHeaderFurniture, applySourceLine, realizeThemeVegaLite, realizeValueLabelsVegaLite, vegaLiteBuiltFacts } from './theme';
+import { applyHeaderFurniture, applySourceLine, padScaleForDots, realizeThemeVegaLite, realizeValueLabelsVegaLite, vegaLiteBuiltFacts } from './theme';
 import { applyChartValueColors } from './value-colors';
 import { vlCaseKeyLabels, vlWriteKeyLayout } from './key-layout';
 import { familyMeasure, rendererTextMeasurer } from '../core/text-width';
@@ -444,7 +445,7 @@ function instantiateVegaLite(
         plot: plan.plot,
         ...(plan.laidOutViews ? { views: plan.laidOutViews } : {}),
         table: values,
-        fullTable: convertedData,
+        fullTable: plan.rowsInView,
         resolvedEncodings,
         encodings,
         chartProperties,
@@ -645,6 +646,8 @@ function emitVegaLite(input: ChartAssemblyInput, prepared: VegaLitePreparation, 
     // The author's colour controls win over every default and the theme's ramp.
     if (authoredColor) applyAuthoredColorScaleVL(vgObj, authoredColor, values);
     vlFinalizeTemporalAxes(vgObj, instantiateContext);
+    // A dot has a radius whatever the house; a themed chart padded its dot scales as it realized.
+    if (!themeSpec) padScaleForDots(vgObj, plan.points, values);
     vlWriteKeyLayout(vgObj, plan.legend, plan.plot, plan.layout, VEGA_LITE_LAYOUT.measureText!);
     vlWriteAxisTitles(vgObj, plan.axisTitleFit);
     vlCaseKeyLabels(vgObj, plan.legend);
@@ -777,6 +780,10 @@ function emitVegaLite(input: ChartAssemblyInput, prepared: VegaLitePreparation, 
                 .some((encoding: any) => encoding?.field === field && encoding.type === 'quantitative'))),
             ...(['column', 'row', 'facet'] as const).map((channel) => resolvedEncodings[channel]?.field).filter((field): field is string => typeof field === 'string'),
         ])],
+        // Fields typed as names of things; one joins the identity where it tells the drawn rows apart.
+        identityCandidates: Object.entries(input.semantic_types ?? {})
+            .filter(([, annotation]) => namesElement(typeof annotation === 'string' ? annotation : (annotation as { semanticType?: string })?.semanticType ?? ''))
+            .map(([field]) => field),
         provenanceFields: templateSemantics.provenanceFields ?? provenanceFields,
         temporalProvenanceFields: templateSemantics.temporalProvenanceFields ?? temporalProvenanceFields,
         rangeLegendChannels,

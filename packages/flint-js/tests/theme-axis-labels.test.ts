@@ -422,8 +422,8 @@ describe('stacked measure endpoints', () => {
             },
         } as any);
         const spec = out.spec ?? out;
-        expect(spec.encoding.y.scale.domainMax).toBeUndefined();
-        expect(spec.encoding.y.scale.nice).not.toBe(false);
+        // The stack tops 100.3, so the axis rounds outward past it rather than stopping at 100.
+        expect(spec.encoding.y.scale.domainMax ?? 0).toBeGreaterThan(100.3);
     });
 
 });

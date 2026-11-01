@@ -43,6 +43,7 @@ import { groupPadding } from '../core/group-gaps';
 import { coupledPointOpacity, MIN_HALO_DOT, pointHaloWidth, pointOutlineWidth, type LayoutPlan } from '../core/plan';
 import type { FurniturePlan } from '../core/furniture-plan';
 import type { SeriesEndLayout } from '../core/series-end';
+import { MARK_IDENTITY } from './interactions/stores';
 import type { LegendPlan, PlannedKey } from '../core/legend-plan';
 
 /** Mark families that carry data values (as opposed to chrome). */
@@ -3297,7 +3298,7 @@ function domainClearsDots(domain: [number, number] | undefined, data: [number, n
  * colour, so the encoding to pad is found by walking down to each dot remembering where each
  * channel was last declared.
  */
-function padScaleForDots(spec: any, points: LayoutPlan['points'], table: any[]): void {
+export function padScaleForDots(spec: any, points: LayoutPlan['points'], table: any[]): void {
     if (!points) return;
     const { radius } = points;
     const dots: Record<string, any>[] = [];
@@ -3355,12 +3356,16 @@ function padScaleForDots(spec: any, points: LayoutPlan['points'], table: any[]):
                 ?? (typeof enc.scale?.domainMin === 'number' && typeof enc.scale?.domainMax === 'number'
                     ? [enc.scale.domainMin, enc.scale.domainMax] : undefined);
             const roomy = domainClearsDots(ends, plainFieldExtent(enc, table), points.lengths?.[ch], radius);
+            // Planned ends are stated as domainMin and domainMax, as the ruler states them, so rows sent later re-plan the same form.
+            const pinnedEnds = rounded ?? ends;
             enc.scale = {
                 ...(enc.scale ?? {}),
-                ...(roomy ? {} : { padding: radius }),
-                ...(rounded ? { domainMin: rounded[0], domainMax: rounded[1] } : {}),
+                // Stated even when the ends leave room, so the rows a chart is sent later can need it.
+                padding: roomy ? 0 : radius,
+                ...(pinnedEnds ? { domainMin: pinnedEnds[0], domainMax: pinnedEnds[1] } : {}),
                 nice: false,
             };
+            if (pinnedEnds) pinned[ch] = pinnedEnds;
             padded = true;
         }
     }
@@ -6378,6 +6383,12 @@ function applyPointEmphasis(spec: any, d: DesignDecisions, say: ReportDeparture)
                 { filter: 'datum.__peFirst === 1 || datum.__peLast === 1' },
             ];
     }
+    // Each marker is its series' low or high, or first or last point: that, not the row, is what it
+    // is across a change of data, so it moves with its series' new end.
+    const series = seriesField ? `datum[${JSON.stringify(seriesField)}] + '|'` : `''`;
+    const end = policy.where === 'extremes' ? `(${v} === datum.__peLow ? 'low' : 'high')`
+        : policy.where === 'latest' ? `'last'` : `(datum.__peFirst === 1 ? 'first' : 'last')`;
+    transform = [...transform, { calculate: `${series} + ${end}`, as: MARK_IDENTITY }];
 
     // The colour encoding is repeated, not re-declared: in a layered spec the
     // scales are shared, and a `legend: null` on any one layer takes the key

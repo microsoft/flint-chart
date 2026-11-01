@@ -249,6 +249,95 @@ function facetColumns(node: ViewNode | undefined): number | undefined {
 }
 
 /** The signals of a compiled Vega spec that hold a plain number: the sizes and steps of its views. */
+const PLANNED_ENDS = '__flint_ends_';
+const CONTINUOUS_TYPES = new Set(['linear', 'log', 'pow', 'sqrt', 'symlog', 'time', 'utc']);
+const numbers = (value: unknown): value is number[] => Array.isArray(value) && value.length > 0 && value.every((item) => typeof item === 'number');
+
+/**
+ * The axis ends and ticks a plan decided from the rows (a ruler's rounded domain, a dot axis's
+ * padded one, and that padding), held in root signals rather than written as constants, so rows the chart is sent
+ * later re-plan them and the scale moves to them. Scales of their own in a nested scope keep theirs.
+ */
+export function bindPlannedEnds(vegaSpec: any): void {
+    const signals: any[] = vegaSpec.signals ?? (vegaSpec.signals = []);
+    const bind = (name: string, value: unknown): { signal: string } => {
+        signals.push({ name, value });
+        return { signal: name };
+    };
+    // Only scales an axis reads: a colour or size key's domain follows the rows through its legend binding.
+    const axisScales = new Set<string>();
+    const collect = (scope: any): void => {
+        for (const axis of scope.axes ?? []) axisScales.add(axis.scale);
+        for (const mark of scope.marks ?? []) if (mark.type === 'group') collect(mark);
+    };
+    collect(vegaSpec);
+    // The fields each scale places: a margin's density or binning runs over the domain of the scale that places its field.
+    const fieldsOf = new Map<string, Set<string>>();
+    const place = (entry: any): void => {
+        if (!entry || typeof entry !== 'object') return;
+        if (Array.isArray(entry)) { entry.forEach(place); return; }
+        if (typeof entry.scale === 'string' && typeof entry.field === 'string') {
+            const fields = fieldsOf.get(entry.scale) ?? new Set<string>();
+            fields.add(entry.field);
+            fieldsOf.set(entry.scale, fields);
+        }
+        for (const value of Object.values(entry)) place(value);
+    };
+    const encodings = (scope: any): void => {
+        for (const mark of scope.marks ?? []) {
+            place(mark.encode);
+            if (mark.type === 'group') encodings(mark);
+        }
+    };
+    encodings(vegaSpec);
+    const planned = new Set<string>();
+    const domains: { value: string; fields: ReadonlySet<string>; signal: { signal: string } }[] = [];
+    for (const scale of vegaSpec.scales ?? []) {
+        if (!CONTINUOUS_TYPES.has(scale.type ?? 'linear') || !axisScales.has(scale.name)) continue;
+        const key = String(scale.name).replace(/\W/g, '_');
+        if (numbers(scale.domain)) {
+            const value = JSON.stringify(scale.domain);
+            scale.domain = bind(`${PLANNED_ENDS}${key}_domain`, scale.domain);
+            domains.push({ value, fields: fieldsOf.get(scale.name) ?? new Set(), signal: scale.domain });
+        }
+        if (typeof scale.domainMin === 'number') scale.domainMin = bind(`${PLANNED_ENDS}${key}_min`, scale.domainMin);
+        if (typeof scale.domainMax === 'number') scale.domainMax = bind(`${PLANNED_ENDS}${key}_max`, scale.domainMax);
+        if (typeof scale.padding === 'number') scale.padding = bind(`${PLANNED_ENDS}${key}_padding`, scale.padding);
+        planned.add(scale.name);
+    }
+    const ticks = new Map<string, number[]>();
+    const visit = (scope: any): void => {
+        for (const axis of scope.axes ?? []) {
+            if (!planned.has(axis.scale) || !numbers(axis.values)) continue;
+            const name = `${PLANNED_ENDS}${String(axis.scale).replace(/\W/g, '_')}_ticks`;
+            if (!ticks.has(name)) {
+                ticks.set(name, axis.values);
+                signals.push({ name, value: axis.values });
+            }
+            axis.values = { signal: name };
+        }
+        for (const mark of scope.marks ?? []) if (mark.type === 'group') visit(mark);
+    };
+    visit(vegaSpec);
+    // A density or a binning drawn over the whole axis (a margin's) runs over the axis's planned domain.
+    for (const data of vegaSpec.data ?? []) {
+        for (const step of data.transform ?? []) {
+            if ((step.type === 'kde' || step.type === 'bin') && numbers(step.extent)) {
+                const value = JSON.stringify(step.extent);
+                const field = typeof step.field === 'string' ? step.field : step.field?.field;
+                step.extent = domains.find((entry) => entry.value === value && entry.fields.has(field))?.signal ?? step.extent;
+            }
+        }
+    }
+}
+
+/** The planned ends a spec holds, by signal name. */
+function plannedEnds(vegaSpec: any): Record<string, unknown> {
+    return Object.fromEntries((vegaSpec.signals ?? [])
+        .filter((signal: any) => typeof signal.name === 'string' && signal.name.startsWith(PLANNED_ENDS))
+        .map((signal: any) => [signal.name, signal.value]));
+}
+
 function plainSignals(vegaSpec: any): Map<string, number> {
     return new Map((vegaSpec.signals ?? [])
         .filter((signal: any) => typeof signal.value === 'number' && signal.update === undefined && signal.on === undefined)
@@ -324,6 +413,8 @@ export function createVegaInteractiveRenderer(
             let stepsFor = new WeakMap<readonly Record<string, unknown>[], Record<string, number>>();
             let plotFor = new WeakMap<readonly Record<string, unknown>[], { width: number; height: number } | undefined>();
             let filteredRows: readonly Record<string, unknown>[] | undefined;
+            /** The rows the axis ends were last planned for, so a new room plans them again. */
+            let endsRows: readonly Record<string, unknown>[] | undefined;
             // The plain signals a re-plan or a new size has set apart from the mounted chart, such as a
             // view's width or a rule's; a filter sets each of them on every later change of rows.
             const relaidNames = new Set<string>();
@@ -362,6 +453,7 @@ export function createVegaInteractiveRenderer(
                 );
                 if (viewports.length === 0 && filtersRows) pinColorDomains(shapedSpec);
                 const vegaSpec = enableGuideLabelTooltips(compile(shapedSpec).spec as any);
+                bindPlannedEnds(vegaSpec);
                 const relaidSignals = filtersRows ? layoutSignals(vegaSpec) : [];
                 let livePlanner: LiveLayoutPlanner | undefined;
                 if (interactionPlan) {
@@ -412,8 +504,27 @@ export function createVegaInteractiveRenderer(
                 return { interactionPlan, vegaSpec, relaidSignals, livePlanner, morphFields };
             };
             const shaped = shape(drawn);
+            type Replan = { readonly replanned: ReturnType<typeof session.replan>; readonly vegaSpec: any };
+            // Rows the chart is sent are planned and compiled once, and every part that follows them reads that plan.
+            let replans = new WeakMap<readonly Record<string, unknown>[], Replan>();
+            const replanFor = (rows: readonly Record<string, unknown>[]): Replan => {
+                let entry = replans.get(rows);
+                if (!entry) {
+                    const replanned = session.replan({ rows });
+                    let compiled: any;
+                    entry = { replanned, get vegaSpec() { return compiled ??= shape(replanned).vegaSpec; } };
+                    replans.set(rows, entry);
+                }
+                return entry;
+            };
             const { interactionPlan, vegaSpec, relaidSignals, morphFields } = shaped;
             let livePlanner = shaped.livePlanner;
+            // What the chart is built of: its datasets by name and its marks, read before live values bind them.
+            // Rows that change either cannot be swapped in.
+            const builtOf = (spec: any): string => `${((spec.data ?? []) as any[])
+                .filter((entry) => Array.isArray(entry.values) && !INTERACTION_STORES.includes(entry.name))
+                .map((entry) => entry.name as string).sort().join('\u0000')}\u0001${JSON.stringify(spec.marks ?? [])}`;
+            const drawnShape = builtOf(vegaSpec);
             // A chart laid out for its room binds its layout values, so a new room is pushed in place.
             let liveValues = options.liveValues && viewports.length === 0 && !interactionPlan?.geoNavigation
                 ? bindLiveValues(vegaSpec)
@@ -441,20 +552,32 @@ export function createVegaInteractiveRenderer(
                 };
                 interactionPlan.mutableDataSource = source;
                 if (!source) {
-                    const reshaped = new WeakMap<readonly Record<string, unknown>[], Record<string, readonly Record<string, unknown>[]>>();
+                    const reshaped = new WeakMap<readonly Record<string, unknown>[], Record<string, readonly Record<string, unknown>[]> | null>();
                     interactionPlan.reshapeRows = (rows) => {
                         const current = rows ?? inputRows;
                         const cached = reshaped.get(current);
-                        if (cached) return cached;
-                        const next = shape(session.replan({ rows: current })).vegaSpec;
-                        const datasets: Record<string, readonly Record<string, unknown>[]> = Object.fromEntries(((next.data ?? []) as any[])
-                            .filter((entry) => Array.isArray(entry.values) && !INTERACTION_STORES.includes(entry.name))
-                            .map((entry) => [entry.name, entry.values]));
+                        if (cached !== undefined) return cached;
+                        const next = replanFor(current).vegaSpec;
+                        const datasets = builtOf(next) === drawnShape
+                            ? Object.fromEntries(((next.data ?? []) as any[])
+                                .filter((entry) => Array.isArray(entry.values) && !INTERACTION_STORES.includes(entry.name))
+                                .map((entry) => [entry.name, entry.values]))
+                            : null;
                         reshaped.set(current, datasets);
                         return datasets;
                     };
                 }
                 interactionPlan.prepareDataRows = (rows) => drawn.shapeRows(rows);
+                // Axis ends planned from the rows are planned again for rows the chart is sent.
+                const mountedEnds = plannedEnds(vegaSpec);
+                if (Object.keys(mountedEnds).length > 0) {
+                    interactionPlan.plannedEnds = (rows) => {
+                        endsRows = rows ?? inputRows;
+                        // An end the new rows plan no value for is cleared, so the backend reads it from the rows.
+                        const next = plannedEnds(replanFor(endsRows).vegaSpec);
+                        return Object.fromEntries(Object.keys(mountedEnds).map((name) => [name, next[name] ?? null]));
+                    };
+                }
                 interactionPlan.initialDataRows = interactionPlan.prepareDataRows(firstInput.data.values ?? []);
                 interactionPlan.temporalValue = (field, value) => temporalFieldValue(field, value, firstInput.semantic_types ?? {});
                 if (viewports.length > 0) interactionPlan.windowDataRows = (rows) => windowRows(rows ?? inputRows);
@@ -466,7 +589,7 @@ export function createVegaInteractiveRenderer(
                         filteredRows = current;
                         let signals = stepsFor.get(current);
                         if (!signals) {
-                            const replanned = session.replan({ rows: current });
+                            const { replanned } = replanFor(current);
                             const relaid = replanned.spec;
                             // A step comes from the spec; a plain size is the planned plot's, which the
                             // spec states in its view config rather than as a top-level size.
@@ -480,7 +603,7 @@ export function createVegaInteractiveRenderer(
                             const mountedColumns = facetColumns(drawn.plan.views);
                             const sameGrid = panels === undefined || mountedColumns === undefined
                                 || Math.min(panels, mountedColumns) === Math.min(panels, facetColumns(replanned.plan.views) ?? mountedColumns);
-                            if (sameGrid) for (const [name, value] of plainSignals(shape(replanned).vegaSpec)) {
+                            if (sameGrid) for (const [name, value] of plainSignals(replanFor(current).vegaSpec)) {
                                 if (!mountedSignals.has(name) || relaidSignals.some((entry) => entry.signal === name)) continue;
                                 if (mountedSignals.get(name) !== value) relaidNames.add(name);
                                 signals[name] = value;
@@ -633,10 +756,10 @@ export function createVegaInteractiveRenderer(
                     if (destroyed || fields.length === 0 || (interactionPlan && !hasSceneMotion(view))) return undefined;
                     return captureMorphScene(view, fields, drawnOrigin());
                 },
-                frameScene() {
+                frameScene(options) {
                     if (destroyed) return undefined;
                     const { right, bottom } = drawnBox();
-                    return captureFrameScene(view, drawnOrigin(), { width: right, height: bottom });
+                    return captureFrameScene(view, drawnOrigin(), { width: right, height: bottom }, options?.byPlace);
                 },
                 setDrawnHidden(hidden) {
                     const drawnElement = container.querySelector<HTMLElement | SVGElement>('canvas, svg');
@@ -716,8 +839,12 @@ export function createVegaInteractiveRenderer(
                     currentPlot = framePlot;
                     stepsFor = new WeakMap();
                     plotFor = new WeakMap();
+                    replans = new WeakMap();
                     if (filteredRows && interactionPlan?.dataSignals) {
                         for (const [name, value] of Object.entries(interactionPlan.dataSignals(filteredRows))) view.signal(name, value);
+                    }
+                    if (endsRows && interactionPlan?.plannedEnds) {
+                        for (const [name, value] of Object.entries(interactionPlan.plannedEnds(endsRows))) view.signal(name, value);
                     }
                     if (next.livePlanner) {
                         livePlanner = next.livePlanner;

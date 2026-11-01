@@ -145,6 +145,8 @@ export function vlApplyLayoutToSpec(
     for (const [ch, ruler] of Object.entries(rulers) as Array<['x' | 'y', AxisRuler]>) {
         for (const enc of collectEncodingTargets(ch)) {
             if ((enc.type && enc.type !== 'quantitative') || enc.bin) continue;
+            // A template that states its own ticks (a ridgeline marking its rounds) lines other marks up with them.
+            if (Array.isArray(enc.axis?.values)) continue;
             const scale = { ...(enc.scale ?? {}), nice: false };
             if (scale.domain != null) scale.domain = ruler.domain;
             else Object.assign(scale, { domainMin: ruler.domain[0], domainMax: ruler.domain[1] });

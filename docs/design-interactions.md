@@ -153,8 +153,15 @@ An element's identity is what it is about, not what it says: a bar's category an
 vertex's x and series, a radar vertex's axis and series, a Gantt bar's task. Its values (a bar's
 height, a vertex's position along its spoke, a task's dates) are what change. The chart type
 declares it: by default the fields it keys on, less those a channel draws as a quantity; a type
-whose roles differ (a Gantt's dates are values, a line's dates are its index) states its own.
-Everything that must follow an element through a change reads the same identity. A held
+whose roles differ (a Gantt's dates are values, a line's dates are its index, a bump chart's
+rank is its value, a density's curve is its group) states its own. The data's own types add to
+it: a field typed as a name of things (an ID, a place, a person or product, by the type's family
+in the type registry) joins the identity, drawn or not, where it tells apart the drawn rows of
+every mark, so a scatter of countries coloured by region follows each country. The check runs on
+the drawn rows, and both frames of a change are keyed by the identity the old rows were drawn
+with. A mark whose items one identity field tells apart on its own (a label at each series' end)
+is matched by that field, and a mark derived by a rule (a theme's first and last point of each
+series) states what each of its items is, so both move with their series. Everything that must follow an element through a change reads the same identity. A held
 selection, a hidden series and a note re-find their elements among the new rows: a `where` or a
 `key` runs again as the predicate it is, and an element a reader picked is found by its identity,
 so a changed value never makes it another element. One that is absent recedes the rest until it
@@ -172,14 +179,22 @@ category) moves to its new size with the change, and while it moves a line clips
 stretch it lost slides out through the edge with the scale, and a stretch it gained slides in. Legend entries fade between shown, dimmed and hidden.
 The stages run in order and share the duration: rows that leave fade out where they stood (a
 quarter), what stays moves, rows that arrive fade in (a quarter); a note or an overlay the update
-adds waits for the marks to land. A post-encoding transform on each mark does the mixing from a
+adds waits for the marks to land. A stage with nothing to do gives its share to the others: when
+nothing stays and no scale or size moves, the old rows fade out over the first half and the new
+ones fade in over the second, so the plot never stands idle. Rows a chart cannot take in place,
+because they change what it is built of (a KPI card per row), draw it again with them, each part
+handing over to the one in its place. A text that says the same but for its numbers counts from
+one to the other ("72" to "88", "90% of 80" to "104% of 85"), in place or across a handover. A post-encoding transform on each mark does the mixing from a
 frame captured before the render, so no data transform re-runs per frame, SVG and canvas move
 alike, and a change mid-flight starts from the frame on screen. At rest it passes the marks
 through untouched, so a chart that is not moving costs what it would without motion. `set-viewport` moves the same scales through
 its own domain path. `getState()` reports where an update goes, never a frame, and a host's call
 resolves when the motion ends. Past 2,000 drawn items a committed change jumps. Scales in
 the chart's top scope move; a faceted or concatenated chart's own scales do not yet, and its
-marks move in screen units.
+marks move in screen units. A line in a facet cell clips to its panel at rest too, since a clip
+changes the bounds the panels are laid out by. Axis ends the layout plan decides from the rows (a
+ruler's rounded domain and ticks, a dot axis's padded domain) are planned again for the rows a
+chart is sent, so the scale moves to them rather than keeping the ends of the rows it mounted with.
 
 Out of scope by the same rules: a preview, which follows the hand; a resize of the room the
 host gives the chart, which changes room, not meaning; a theme, which changes style, not meaning,

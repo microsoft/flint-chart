@@ -1669,8 +1669,8 @@ describe('plot edges', () => {
                     // Either padding for the radius of the dot the house draws, or a rounded domain
                     // whose ends already stand clear of the data (and then no padding moves them).
                     const padded = typeof scale.padding === 'number' && scale.padding > 0;
-                    const clear = typeof scale.domainMin === 'number' && typeof scale.domainMax === 'number'
-                        && scale.domainMin < lo && scale.domainMax > hi;
+                    const [min, max] = Array.isArray(scale.domain) ? scale.domain : [scale.domainMin, scale.domainMax];
+                    const clear = typeof min === 'number' && typeof max === 'number' && min < lo && max > hi;
                     room.push(padded || clear);
                 }
                 for (const k of Object.keys(n)) if (k !== 'data') visit(n[k]);

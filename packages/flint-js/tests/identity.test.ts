@@ -1,10 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { assembleVegaLite } from '../src/vegalite/assemble';
 import { semanticElementIdentity } from '../src/interactive/presets/utils';
+import { namesElement } from '../src/core/type-registry';
+
+function semanticsOf(chartType: string, encodings: Record<string, string>, values: Record<string, unknown>[], types: Record<string, string>): any {
+    const spec = assembleVegaLite({ data: { values }, semantic_types: types, chart_spec: { chartType, encodings } } as any) as any;
+    return spec._interactionSemantics;
+}
 
 function identityOf(chartType: string, encodings: Record<string, string>, values: Record<string, unknown>[], types: Record<string, string>): readonly string[] {
-    const spec = assembleVegaLite({ data: { values }, semantic_types: types, chart_spec: { chartType, encodings } } as any) as any;
-    return spec._interactionSemantics.identityFields;
+    return semanticsOf(chartType, encodings, values, types).identityFields;
 }
 
 describe('element identity', () => {
@@ -32,5 +37,30 @@ describe('element identity', () => {
         const after = { value: { Platform: 'Web', Downloads: 380 }, records: [{ Platform: 'Web', Downloads: 380 }] };
         expect(semanticElementIdentity(before, ['Platform'])).toBe(semanticElementIdentity(after, ['Platform']));
         expect(semanticElementIdentity(before)).not.toBe(semanticElementIdentity(after));
+    });
+
+    it('names a curve by its group, so the outline bends rather than its sample points fading', () => {
+        const scores = ['A', 'B'].flatMap((Group, at) => [50, 55, 60, 65].map((Value) => ({ Group, Value: Value + at })));
+        const types = { Group: 'Category', Value: 'Score' };
+        expect(identityOf('Density Plot', { x: 'Value', color: 'Group' }, scores, types)).toEqual(['Group']);
+        expect(identityOf('Ridgeline Plot', { x: 'Value', y: 'Group' }, scores, types)).toEqual(['Group']);
+    });
+
+    it('takes a bump chart\'s rank as its value, so a team that climbs moves', () => {
+        const ranks = ['W1', 'W2'].flatMap((Week, at) => ['Owls', 'Foxes'].map((Team, place) => ({ Week, Team, Rank: (place + at) % 2 + 1 })));
+        expect(identityOf('Bump Chart', { x: 'Week', y: 'Rank', color: 'Team' }, ranks, { Week: 'Category', Team: 'Name', Rank: 'Rank' })).toEqual(['Week', 'Team']);
+    });
+
+    it('offers the fields typed as names of things, drawn or not, to join the identity', () => {
+        const rows = [{ Country: 'Chile', Region: 'Americas', GDP: 30, Life: 80, Rank: 1 }, { Country: 'Peru', Region: 'Americas', GDP: 20, Life: 75, Rank: 2 }];
+        const semantics = semanticsOf('Scatter Plot', { x: 'GDP', y: 'Life', color: 'Region' }, rows,
+            { Country: 'Country', Region: 'Region', GDP: 'Amount', Life: 'Quantity', Rank: 'Rank' });
+        expect(semantics.identityFields).toEqual(['Region']);
+        expect(semantics.identityCandidates).toEqual(['Country', 'Region']);
+    });
+
+    it('reads which types name things from the type registry', () => {
+        expect(['ID', 'Name', 'Category', 'Country', 'City', 'ZipCode'].every(namesElement)).toBe(true);
+        expect(['Rank', 'Score', 'Amount', 'Date', 'Status', 'Direction'].some(namesElement)).toBe(false);
     });
 });

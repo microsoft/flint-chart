@@ -130,6 +130,8 @@ export interface LayoutPlan {
     facetGrid: ReturnType<typeof computeChannelBudgets>['facetGrid'];
     /** The rows that fit, after overflow truncation. */
     rows: any[];
+    /** The rows the plan was made for, before overflow truncation. */
+    rowsInView: any[];
     nominalCounts: OverflowResult['nominalCounts'];
     viewports: OverflowResult['viewports'];
     warnings: ChartWarning[];
@@ -460,6 +462,18 @@ interface RulerContext {
  * and a half where the theme flushes the end labels too), and the step is never finer than the
  * axis can name.
  */
+/** Vega-Lite's own label spacing on a measure axis: `ceil(length / 40)` ticks. */
+const BACKEND_TICK_SPACING = 40;
+
+/** The axes an unthemed chart draws, as the backend draws them: measure axes gridded, a label every 40 px. */
+function backendAxisDefaults(design: DesignDecisions): DesignDecisions {
+    const axes = Object.fromEntries((['x', 'y'] as const).flatMap((channel) => {
+        const axis = design.axes[channel];
+        return axis ? [[channel, axis.role === 'measure' ? { ...axis, tickSpacing: BACKEND_TICK_SPACING, grid: { ...axis.grid, show: true } } : axis]] : [];
+    }));
+    return { ...design, axes: { ...design.axes, ...axes } };
+}
+
 function measureRulers(context: RulerContext): Partial<Record<'x' | 'y', AxisRuler>> {
     const { structure, design, domains, channelSemantics, encodings, axisLabels, valueLabels, length, measure, points } = context;
     const out: Partial<Record<'x' | 'y', AxisRuler>> = {};
@@ -1511,6 +1525,7 @@ function planAroundPlot(prepared: PreparedPlan, reserve: FurnitureReserve): Layo
             : {}),
     };
     const values = overflowResult.filteredData;
+    const rowsInView = context.rows ?? convertedData;
     const nominalCounts = overflowResult.nominalCounts;
     const treatment = prepared.options.canvasTreatment;
 
@@ -1582,7 +1597,7 @@ function planAroundPlot(prepared: PreparedPlan, reserve: FurnitureReserve): Layo
         assembleOptions: effectiveOptions,
         channelSemantics,
         table: values,
-        fullTable: convertedData,
+        fullTable: rowsInView,
         semanticTypes: context.semanticTypes,
         chartProperties,
         measureText: familyMeasure(measureText, theme ? themeBodyFamily(theme) ?? 'sans-serif' : 'sans-serif'),
@@ -1634,7 +1649,7 @@ function planAroundPlot(prepared: PreparedPlan, reserve: FurnitureReserve): Layo
         resolvedTypes: declaration.resolvedTypes as Record<string, string> | undefined,
         table: values,
         data,
-        fullTable: convertedData,
+        fullTable: rowsInView,
         chartProperties,
         templateMarkType,
         channels: template.channels,
@@ -1853,7 +1868,7 @@ function planAroundPlot(prepared: PreparedPlan, reserve: FurnitureReserve): Layo
     const fadedByHouse = theme && (design.marks.point?.opacity ?? 1) < 1;
     const crowding = fadedByHouse ? undefined : planCrowding(structure, values, plot, pointSize ?? VEGA_DOT_SIZE, channelSemantics, typeOf, chartProperties);
     const lineWidth = planLineWidth(theme ? design : undefined, structure, values, plot, channelSemantics, report);
-    const points = theme ? pointPadding(structure, design, values, pointSize, domains, bandSpans, typeOf, channelSemantics, plot) : undefined;
+    const points = pointPadding(structure, design, values, pointSize, domains, bandSpans, typeOf, channelSemantics, plot);
     const furniture = planFurniture({
         structure, design: theme ? design : undefined, channelSemantics, declaration, layout: layoutResult,
         options: effectiveOptions, rows: values, data, canvas: size.baseSize, chartProperties,
@@ -1861,8 +1876,11 @@ function planAroundPlot(prepared: PreparedPlan, reserve: FurnitureReserve): Layo
     });
     // Facet panels share their scales, so each panel draws the ruler a single plot of its size would;
     // a template's own composite, and a y each wrapped panel scales for itself, keep theirs.
-    const measured = theme && !template.composite && !options.liveLayoutSignal ? measureRulers({
-        structure, design, domains, channelSemantics, encodings, axisLabels, valueLabels,
+    // Every chart's measure axes take a ruler. Without a theme the plan's ground is neutral, but the
+    // backend draws its own defaults, so the ruler reads those: a grid, and a label every 40 px.
+    const rulerDesign = theme ? design : backendAxisDefaults(design);
+    const measured = !template.composite && !options.liveLayoutSignal ? measureRulers({
+        structure, design: rulerDesign, domains, channelSemantics, encodings, axisLabels, valueLabels,
         length: drawnLengths(plot, titlePlan, valueLabels), measure: measureText, points,
     }) : {};
     const rulers: typeof measured = furniture.facets.independentY ? { ...(measured.x ? { x: measured.x } : {}) } : measured;
@@ -2077,6 +2095,7 @@ function planAroundPlot(prepared: PreparedPlan, reserve: FurnitureReserve): Layo
         options: effectiveOptions,
         facetGrid: facetGridResult,
         rows: values,
+        rowsInView,
         nominalCounts,
         viewports: overflowResult.viewports,
         warnings: overflowResult.warnings,

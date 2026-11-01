@@ -99,8 +99,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `surface.setInput(input)` draws a new input in place, morphing between chart types Flint
   lists a transition for; `FlintChart` routes a new `spec` through it and takes `transition`.
 - Templates may declare `identityFields`, the fields that name an element across data changes.
+  A field whose semantic type names a thing (`ID`, `Name`, `Category`, a place) joins an
+  element's identity, drawn or not, where it tells the drawn rows apart, so a scatter of
+  countries coloured by region moves each country. Density, ridgeline and bump charts name
+  their elements by group (and week) rather than by sample point or rank.
+- When nothing stays and no scale moves, leaving rows fade out over the first half of a change
+  and arriving rows over the second, instead of leaving the plot idle in between. Rows a chart
+  cannot take in place (a KPI card per row) draw it again, each part handing over to the one in
+  its place. A text that differs only in its numbers counts from one to the other.
 
 ### Changed
+
+- Axis ends a layout plan decides from the rows (a themed ruler's rounded domain and ticks, a dot
+  axis's padded domain) are planned again for the rows a chart is sent, so a filter's version or
+  a host's `set-data` moves the axis to its own ends. They were pinned from every row the chart
+  mounted with: a themed bar chart with a year filter drew both years against the sum of the two.
+- Dots at an axis's end sit inside the plot in charts without a theme too.
+- Planned axis ends are always written as `domainMin`/`domainMax`, so the ends planned for later
+  rows land in the signals the chart mounted with. An end the later rows plan no value for is
+  cleared and left to the backend, and a resize plans the ends again for the rows on screen.
+
+- A measure axis in a Vega-Lite chart without a theme takes the planner's ruler, as a themed one
+  does, read against the backend's own drawing: gridded, a label about every 40 px. Its ends land
+  on labeled grid lines (a short or faceted axis used to round to ten intervals and label every
+  other step, leaving an end unlabeled), its ticks are spaced by measured label widths, and its
+  ends re-plan with the rows. An axis whose template states its ticks keeps them.
+- A continuous colour key follows the rows in every theme: where a layer read the same field through
+  a scale of its own (cell labels choosing their ink), the key kept the mounted domain.
+- A mark whose items one identity field tells apart (a label at each series' end) is matched by that
+  field, and a mark derived by a rule states what its items are (a theme's first and last point per
+  series), so both move with their series instead of fading out and in.
 
 - A heatmap side over a whole run of months or quarters (every period from the first to the last,
   up to 50) is drawn as equal cells named by the calendar (`Jan` over `2025`, `Feb`, …) in

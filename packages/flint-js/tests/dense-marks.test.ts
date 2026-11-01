@@ -207,9 +207,20 @@ describe('a dot scale pads only where the dots need it', () => {
         // both ends, and padding would only push the baseline below the lowest tick.
         const rows = Array.from({ length: 40 }, (_, i) => ({ id: `p${i}`, x: 50 + i * 4, y: 9 + (i * 0.94) }));
         const scale = yScale(rows);
-        expect(scale.domainMin).toBeLessThan(9);
-        expect(scale.domainMax).toBeGreaterThan(9 + 39 * 0.94);
-        expect(scale.padding).toBeUndefined();
+        const [min, max] = scale.domain ?? [scale.domainMin, scale.domainMax];
+        expect(min).toBeLessThan(9);
+        expect(max).toBeGreaterThan(9 + 39 * 0.94);
+        expect(scale.padding ?? 0).toBe(0);
+    });
+
+    it('states its planned ends as domainMin and domainMax, padded or not, so rows sent later re-plan the same form', () => {
+        const roomy = yScale(Array.from({ length: 40 }, (_, i) => ({ id: `p${i}`, x: 50 + i * 4, y: 9 + (i * 0.94) })));
+        const tight = yScale(Array.from({ length: 41 }, (_, i) => ({ id: `p${i}`, x: 50 + i * 4, y: 10 + i })));
+        for (const scale of [roomy, tight]) {
+            expect(scale.domain).toBeUndefined();
+            expect([typeof scale.domainMin, typeof scale.domainMax]).toEqual(['number', 'number']);
+            expect(typeof scale.padding).toBe('number');
+        }
     });
 
     it('still pads where a reading sits on the domain\'s end', () => {

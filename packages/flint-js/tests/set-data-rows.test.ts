@@ -3,6 +3,7 @@ import { applyAggregation, resolveImplicitAggregation } from '../src/core/aggreg
 import { filterControls, versionFieldsOf } from '../src/interactive/filter-controls';
 import { openVegaLiteSession } from '../src/vegalite/assemble';
 import { orderWithin } from '../src/vegalite/interactions/runtime';
+import { bindPlannedEnds } from '../src/vegalite/interactive';
 import { bindLegendDomains, legendDomainOf } from '../src/vegalite/interactions/scene-motion';
 
 const week = (name: string, base: number) => ['Mon', 'Tue'].flatMap((Day, i) => ['9am', '10am'].map((Slot, j) => ({
@@ -51,6 +52,30 @@ describe('a continuous legend', () => {
     });
 });
 
+describe('planned axis ends', () => {
+    it('bind in one form, so ends planned for other rows land in the signals the chart mounted with', () => {
+        const scope = (scale: Record<string, unknown>): any => ({ scales: [{ name: 'y', type: 'linear', ...scale }], axes: [{ scale: 'y' }] });
+        const mounted = scope({ domain: { data: 'rows', field: 'v' }, domainMin: 55, domainMax: 85, padding: 0 });
+        const replanned = scope({ domain: { data: 'rows', field: 'v' }, domainMin: 55, domainMax: 80, padding: 4 });
+        bindPlannedEnds(mounted);
+        bindPlannedEnds(replanned);
+        expect(replanned.scales[0]).toEqual(mounted.scales[0]);
+        expect(mounted.signals.map((signal: any) => signal.name)).toEqual(['__flint_ends_y_min', '__flint_ends_y_max', '__flint_ends_y_padding']);
+        expect(replanned.signals.map((signal: any) => signal.value)).toEqual([55, 80, 4]);
+    });
+
+    it('run a margin\'s density over the domain of the scale that places its field, even when two axes share the numbers', () => {
+        const spec: any = {
+            data: [{ name: 'right', transform: [{ type: 'kde', field: 'b', extent: [0, 100] }] }],
+            scales: [{ name: 'x', type: 'linear', domain: [0, 100] }, { name: 'y', type: 'linear', domain: [0, 100] }],
+            axes: [{ scale: 'x' }, { scale: 'y' }],
+            marks: [{ type: 'symbol', encode: { update: { x: { scale: 'x', field: 'a' }, y: { scale: 'y', field: 'b' } } } }],
+        };
+        bindPlannedEnds(spec);
+        expect(spec.data[0].transform[0].extent).toEqual({ signal: '__flint_ends_y_domain' });
+    });
+});
+
 describe('rows a chart is sent', () => {
     it('are shaped as the compile shaped the first rows, so an aggregated measure keeps its column', () => {
         const session = openVegaLiteSession({
@@ -78,3 +103,21 @@ describe('a held order', () => {
         expect(orderWithin(['b', 'a'], [undefined, undefined])).toEqual(['b', 'a']);
     });
 });
+
+describe('a template that reads the full table', () => {
+    it('is given the rows a replan is for, not every row the chart was mounted with', () => {
+        const products = ['Laptops', 'Phones', 'Tablets'];
+        const rows = ['2024', '2025'].flatMap((Year, at) => products.map((Product, i) => ({ Year, Product, Units: 10 + i + at * 100 })));
+        const session = openVegaLiteSession({
+            data: { values: rows },
+            semantic_types: { Year: 'Category', Product: 'Category', Units: 'Count' },
+            chart_spec: { chartType: 'Bar Table', encodings: { y: 'Product', x: 'Units' }, baseSize: { width: 300, height: 200 } },
+            options: { versionFields: ['Year'] },
+        } as any);
+        expect(session.spec.datasets.__bt_displayTable).toHaveLength(6);
+        const replanned = session.replan({ rows: rows.filter((row) => row.Year === '2025') }).spec;
+        expect(replanned.datasets.__bt_displayTable).toHaveLength(3);
+        expect(replanned.datasets.__bt_displayTable.every((row: any) => row.Year === '2025')).toBe(true);
+    });
+});
+

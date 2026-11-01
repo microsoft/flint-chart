@@ -36,9 +36,13 @@ describe('measure ruler', () => {
         view.finalize();
     });
 
-    it('leaves an unthemed axis to the backend', () => {
+    it('rules an unthemed axis as the backend draws it: gridded, a label about every 40 px', () => {
         const { plan } = vegaLiteStages(input());
-        expect(plan.rulers).toEqual({});
+        expect(Object.keys(plan.rulers).length).toBeGreaterThan(0);
+        for (const ruler of Object.values(plan.rulers)) {
+            expect(ruler!.values[0]).toBe(ruler!.domain[0]);
+            expect(ruler!.values.at(-1)).toBe(ruler!.domain[1]);
+        }
     });
 
     // A zoomable axis shows the planned ticks until zoomed; a zoomed window needs ticks of its own.
