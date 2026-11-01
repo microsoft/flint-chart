@@ -1,8 +1,11 @@
+import { mixNumbersInText } from '../../interactive/transition';
 import * as vega from 'vega';
-import { INTERACTION_KEY } from './stores';
+import { INTERACTION_KEY, MARK_IDENTITY } from './stores';
 
 /** Set on a mark's snapshot whose identity keys repeat: its items are matched by their whole row key. */
 export const WHOLE_KEY_FLAG = '__flint_whole_key';
+/** Set on a mark's snapshot: the identity fields its items were keyed by, which the new items are matched by. */
+export const IDENTITY_FIELDS = '__flint_identity';
 
 /** A position drawn through a continuous scale of a field or a constant: `scale(value) + offset`. */
 export interface DataPosition {
@@ -148,6 +151,10 @@ export function mixItem(
         if (isNumber(item[size]) && isNumber(reach)) item[size] = reach - item[start];
         if (isNumber(item[end]) && isNumber(reach)) item[end] = reach;
     }
+    if (known && typeof from.text === 'string' && typeof item.text === 'string') {
+        const counted = mixNumbersInText(from.text, item.text, frame.t);
+        if (counted !== undefined) item.text = counted;
+    }
     if (known) {
         for (const channel of motion.colours) {
             const was = from[channel];
@@ -252,11 +259,13 @@ class FlintMotion extends Transform {
         const frame: MotionFrame = { t: params.t, enter: params.enter };
         const scales = scalesOf(view);
         const whole = Boolean(markFrom?.[WHOLE_KEY_FLAG]);
+        const identity = (markFrom?.[IDENTITY_FIELDS] as readonly string[] | undefined) ?? motion.identity;
         const units = state.units;
         return out.visit(modified ? out.SOURCE : out.ADD_MOD, (item: Record<string, any>) => {
             const start = starts?.get(item);
             if (!start && !markFrom) return;
-            const key = whole ? item.datum?.[INTERACTION_KEY] : item.datum ? identityKey(item.datum, motion.identity) : undefined;
+            const stated = item.datum?.[MARK_IDENTITY];
+            const key = typeof stated === 'string' ? stated : whole ? item.datum?.[INTERACTION_KEY] : item.datum ? identityKey(item.datum, identity) : undefined;
             const from = start ?? (item.datum ? markFrom![key as string] : null);
             const mixed = mixItem(item, from, motion, frame, scales);
             if (mixed) units.set(item, mixed);

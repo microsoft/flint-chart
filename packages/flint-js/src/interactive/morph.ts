@@ -1,5 +1,5 @@
 import { CHART_TRANSITIONS } from '../core/chart-transitions';
-import { easingCurve, runMotion } from './transition';
+import { easingCurve, mixNumbersInText, runMotion } from './transition';
 import type { TransitionEasing } from './types';
 
 /** One drawn item of a chart, in the coordinates of the element the chart renders into. */
@@ -36,6 +36,8 @@ export interface FrameText {
     readonly y: number;
     readonly angle: number;
     readonly fontSize: number;
+    /** What the text says. */
+    readonly content?: string;
 }
 
 /** Where a part is drawn in one frame: moved by `dx`, `dy`, sized `width` by `height`, and faded by `opacity`. */
@@ -65,7 +67,7 @@ export interface FrameScene {
 /** What a renderer offers a morph: its drawn items and parts, and a way to stop drawing them while a layer does. */
 export interface MorphSource {
     morphScene?(): MorphScene | undefined;
-    frameScene?(): FrameScene | undefined;
+    frameScene?(options?: { byPlace?: boolean }): FrameScene | undefined;
     setDrawnHidden?(hidden: boolean): void;
 }
 
@@ -218,6 +220,8 @@ function textBetween(a: FrameText, b: FrameText, t: number): FrameText {
         y: a.y + (b.y - a.y) * t,
         angle: a.angle + turn * t,
         fontSize: a.fontSize + (b.fontSize - a.fontSize) * t,
+        // Text that says the same but for its numbers counts from one to the other.
+        ...(a.content !== undefined && b.content !== undefined ? { content: mixNumbersInText(a.content, b.content, t) ?? (t < 0.5 ? a.content : b.content) } : {}),
     };
 }
 
@@ -288,6 +292,8 @@ export interface ChartSwap {
     readonly easing?: TransitionEasing;
     /** Runs with each frame's progress, from 0 to 1. */
     readonly onFrame?: (t: number) => void;
+    /** The same chart drawn from new rows: each part hands over to the one in its place. */
+    readonly byPlace?: boolean;
 }
 
 /**
@@ -297,14 +303,14 @@ export interface ChartSwap {
  * transition whose two scenes share row fields, the marks morph into each other. A chart that
  * cannot hand over its parts, or has too many, cross-fades. Resolves once the next chart shows alone.
  */
-export async function transitionBetween({ from, to, stage, duration, easing, onFrame }: ChartSwap): Promise<void> {
+export async function transitionBetween({ from, to, stage, duration, easing, onFrame, byPlace }: ChartSwap): Promise<void> {
     const show = (element: HTMLElement, opacity: number) => { element.style.opacity = String(opacity); };
     if (duration <= 0) {
         to.element.style.opacity = '';
         return;
     }
-    const fromFrame = from.source?.frameScene?.();
-    const toFrame = to.source?.frameScene?.();
+    const fromFrame = from.source?.frameScene?.({ byPlace });
+    const toFrame = to.source?.frameScene?.({ byPlace });
     if (!fromFrame || !toFrame || fromFrame.parts.length > MAX_MORPHED_ITEMS || toFrame.parts.length > MAX_MORPHED_ITEMS) {
         await runMotion(duration, (t) => {
             onFrame?.(t);
@@ -316,7 +322,7 @@ export async function transitionBetween({ from, to, stage, duration, easing, onF
     }
     const fromScene = from.source?.morphScene?.();
     const toScene = to.source?.morphScene?.();
-    const morph = isChartTransition(from.chartType, to.chartType) && fromScene && toScene
+    const morph = !byPlace && isChartTransition(from.chartType, to.chartType) && fromScene && toScene
         ? buildMorph(fromScene, toScene)
         : undefined;
     const poses = planFrames(fromFrame.parts, toFrame.parts, Boolean(morph));

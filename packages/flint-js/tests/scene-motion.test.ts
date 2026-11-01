@@ -124,7 +124,8 @@ describe('scene motion', () => {
         const view = new View(parse(spec), { renderer: 'none' });
         await view.runAsync();
         const before = captureScene(view, ['k']);
-        expect(Object.keys(before.bars)).toEqual(['a', 'b', 'c']);
+        expect(before.bars.__flint_identity).toEqual(['k']);
+        expect(Object.keys(before.bars).filter((key) => !key.startsWith('__flint'))).toEqual(['a', 'b', 'c']);
         view.signal(SCENE_FROM_SIGNAL, before).signal(SCENE_T_SIGNAL, 0.5);
         view.data('rows', [{ k: 'a', v: 30 }, { k: 'b', v: 30 }, { k: 'c', v: 20 }]);
         await view.runAsync();
@@ -244,6 +245,21 @@ describe('scene motion', () => {
         view.signal(SCENE_FROM_SIGNAL, before).signal(SCENE_T_SIGNAL, 0.5);
         await view.runAsync();
         expect(bars(view).a.fill).toBe('rgb(18,43,92)');
+    });
+
+    it('matches the new items by the identity the old frame was captured with', async () => {
+        const spec = barSpec(['a', 'b', 'c']);
+        // A row key that changes with the value, as one built from every field does.
+        spec.data[0].transform = [{ type: 'formula', as: INTERACTION_KEY, expr: "datum.k + '|' + datum.v" }];
+        injectSceneMotion(spec, []);
+        const view = new View(parse(spec), { renderer: 'none' });
+        await view.runAsync();
+        const before = captureScene(view, ['k']);
+        const heights = Object.fromEntries(Object.entries(bars(view)).map(([key, item]) => [key, item.height]));
+        view.data('rows', [{ k: 'a', v: 30 }, { k: 'b', v: 30 }, { k: 'c', v: 30 }]);
+        view.signal(SCENE_FROM_SIGNAL, before).signal(SCENE_T_SIGNAL, 0);
+        await view.runAsync();
+        expect(Object.fromEntries(Object.entries(bars(view)).map(([key, item]) => [key, item.height]))).toEqual(heights);
     });
 
     it('keeps an area\'s size with the ends it mixes, so its edge does not jump', async () => {

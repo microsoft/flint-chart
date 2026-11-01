@@ -59,12 +59,17 @@ export interface VegaInteractionPlan {
     fields: readonly string[];
     /** The fields that say what an element is about, which hold across changes of data. Empty names rows by their whole key. */
     identityFields?: readonly string[];
+    /** Fields typed as names of things, which join the identity where each tells the drawn rows apart. */
+    identityCandidates?: readonly string[];
     /**
      * For a chart whose template shapes its rows at assembly (a radar's positions, spokes and rings):
      * every inline dataset the chart draws for these rows, by name, compiled again. Absent when the
-     * input's rows land in a dataset of their own, which `set-data` replaces directly.
+     * input's rows land in a dataset of their own, which `set-data` replaces directly. Null when the
+     * rows change which datasets the chart draws, so they cannot be swapped into the mounted chart.
      */
-    reshapeRows?: (rows: readonly Record<string, unknown>[] | undefined) => Readonly<Record<string, readonly Record<string, unknown>[]>>;
+    reshapeRows?: (rows: readonly Record<string, unknown>[] | undefined) => Readonly<Record<string, readonly Record<string, unknown>[]>> | null;
+    /** For rows the chart is sent: the axis ends and ticks planned again for them, by signal name. */
+    plannedEnds?: (rows: readonly Record<string, unknown>[] | undefined) => Readonly<Record<string, unknown>>;
     /** The continuous scales a transition moves the domain of. */
     movingScales?: readonly import('./scene-motion').MovingScale[];
     /** The chart's sizes a transition moves when its data changes them. */

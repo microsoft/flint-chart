@@ -5,12 +5,13 @@ import {
     identityKey,
     registerMotionTransform,
     resetOutlineStarts,
+    IDENTITY_FIELDS,
     WHOLE_KEY_FLAG,
     type ArrivalAxis,
     type DataPosition,
     type MarkMotion,
 } from './motion-transform';
-import { INTERACTION_KEY } from './stores';
+import { INTERACTION_KEY, MARK_IDENTITY } from './stores';
 
 /** The drawn state a motion starts from: per mark name, per row key, each channel's value. */
 export const SCENE_FROM_SIGNAL = '__flint_scene_from';
@@ -95,6 +96,10 @@ export function injectSceneMotion(vegaSpec: Record<string, any>, identityFields:
     let unnamed = 0;
     const ghostTypes = new Set<string>();
     const pathScales = new Set<string>();
+    const faceted = new Set<Record<string, any>>();
+    walkMarks(vegaSpec.marks, (mark) => {
+        if (mark.type === 'group' && mark.from?.facet) walkMarks(mark.marks, (inner) => faceted.add(inner));
+    });
     walkMarks(vegaSpec.marks, (mark) => {
         if (mark.type === 'group' || !mark.from || !mark.encode) return;
         if (!mark.name) mark.name = `__flint_moving_${unnamed++}`;
@@ -102,7 +107,8 @@ export function injectSceneMotion(vegaSpec: Record<string, any>, identityFields:
         const positions = dataChannels(mark, continuous);
         if (outline) {
             // While a change moves a scale or rows, a line's ends slide in and out through the plot's edges.
-            if (!mark.clip) mark.clip = { signal: SCENE_CLIP_SIGNAL };
+            // In a facet cell a clip changes the bounds the panels are laid out by, so it clips always.
+            if (!mark.clip) mark.clip = faceted.has(mark) ? true : { signal: SCENE_CLIP_SIGNAL };
             const scaleOf = (axis: 'x' | 'y') => positions.find((entry) => entry.channel === axis)?.scale ?? '';
             pathScales.add(`${scaleOf('x')}|${scaleOf('y')}`);
         }
@@ -124,6 +130,7 @@ export function injectSceneMotion(vegaSpec: Record<string, any>, identityFields:
                 ...positions.map((entry) => entry.channel),
                 ...arrival.flatMap((axis) => [axis.start, axis.end, axis.size]),
                 ...(mark.type === 'rect' || mark.type === 'image' || mark.type === 'area' ? ['width', 'height'] : []),
+                ...(mark.type === 'text' ? ['text'] : []),
                 'opacity',
             ])],
         };
@@ -464,11 +471,15 @@ export function bindLegendDomains(vegaSpec: Record<string, any>, pins: readonly 
     for (const pin of pins) {
         const candidates = (vegaSpec.scales ?? []).filter((scale: Record<string, any>) =>
             (scale.name === pin.channel || String(scale.name).endsWith(`_${pin.channel}`)) && Array.isArray(scale.domain));
-        if (candidates.length !== 1) continue;
-        const scale = candidates[0];
-        const signal = `__flint_legend_domain_${String(scale.name).replace(/\W/g, '_')}`;
-        vegaSpec.signals = [...(vegaSpec.signals ?? []), { name: signal, value: scale.domain }];
-        scale.domain = { signal };
+        if (candidates.length === 0) continue;
+        // A layer may read the same field through a scale of its own (cell labels choosing their ink
+        // by the colour behind them): every scale pinned to the field's domain follows the rows together.
+        const domain = JSON.stringify(candidates[0].domain);
+        const shared = candidates.filter((scale: Record<string, any>) => JSON.stringify(scale.domain) === domain);
+        if (shared.length !== candidates.length) continue;
+        const signal = `__flint_legend_domain_${String(candidates[0].name).replace(/\W/g, '_')}`;
+        vegaSpec.signals = [...(vegaSpec.signals ?? []), { name: signal, value: candidates[0].domain }];
+        for (const scale of shared) scale.domain = { signal };
         bound.push({ ...pin, signal });
     }
     return bound;
@@ -595,17 +606,36 @@ export function identityRepeats(
 
 /**
  * Each mark's items under the keys the motion matches them by: the identity key, unless two of the
- * mark's items share one (a scatter coloured by group), and then the whole row key.
+ * mark's items share one (a scatter coloured by group), and then the whole row key. A mark whose
+ * items one identity field tells apart on its own (a dot at each series' end) is about that field,
+ * so its items are keyed by it: the series' end moves with its new value.
  */
-function keyItems(items: readonly KeyedItem[], identityFields: readonly string[]): { whole: boolean; byKey: Map<string, any> } {
-    const whole = identityRepeats(items.map((entry) => ({ datum: entry.item.datum })), identityFields);
-    return { whole, byKey: new Map(items.map((entry) => [whole ? entry.whole : entry.identity, entry.item])) };
+function keyItems(items: readonly KeyedItem[], identityFields: readonly string[]): { whole: boolean; fields: readonly string[]; byKey: Map<string, any> } {
+    // A mark that states what its items are is keyed by that.
+    if (items.length > 0 && items.every((entry) => typeof entry.item.datum?.[MARK_IDENTITY] === 'string')) {
+        return { whole: false, fields: identityFields, byKey: new Map(items.map((entry) => [entry.item.datum[MARK_IDENTITY] as string, entry.item])) };
+    }
+    const rows = items.map((entry) => ({ datum: entry.item.datum }));
+    const whole = identityRepeats(rows, identityFields);
+    const own = !whole && identityFields.length > 1 && items.length > 1
+        ? identityFields.find((field) => rows.every((row) => row.datum?.[field] !== null && row.datum?.[field] !== undefined)
+            && !identityRepeats(rows, [field]))
+        : undefined;
+    const fields = own ? [own] : identityFields;
+    const keyOf = (entry: KeyedItem): string => {
+        if (whole) return entry.whole;
+        if (!own) return entry.identity;
+        const key = identityKey(entry.item.datum, fields);
+        return typeof key === 'string' ? key : entry.whole;
+    };
+    return { whole, fields, byKey: new Map(items.map((entry) => [keyOf(entry), entry.item])) };
 }
 
 function keyedItem(item: any, identityFields: readonly string[]): KeyedItem | undefined {
     const whole = item.datum?.[INTERACTION_KEY];
     if (typeof whole !== 'string') return undefined;
-    const identity = identityKey(item.datum, identityFields);
+    const stated = item.datum?.[MARK_IDENTITY];
+    const identity = typeof stated === 'string' ? stated : identityKey(item.datum, identityFields);
     return { identity: typeof identity === 'string' ? identity : whole, whole, item };
 }
 
@@ -641,8 +671,8 @@ export function captureScene(view: any, identityFields: readonly string[] = []):
     };
     visit(view.scenegraph?.()?.root);
     for (const [name, { marktype, items }] of byMark) {
-        const { whole, byKey } = keyItems(items, identityFields);
-        const entries: Record<string, unknown> = whole ? { [WHOLE_KEY_FLAG]: true } : {};
+        const { whole, fields, byKey } = keyItems(items, identityFields);
+        const entries: Record<string, unknown> = whole ? { [WHOLE_KEY_FLAG]: true } : { [IDENTITY_FIELDS]: fields };
         for (const [key, item] of byKey) {
             const values = drawnValues(item, marktype);
             for (const channel of ['x', 'x2', 'y', 'y2'] as const) {
@@ -663,6 +693,7 @@ function drawnValues(item: any, marktype: string): Record<string, unknown> {
         const value = item[channel];
         if (typeof value === 'number' || typeof value === 'string') values[channel] = value;
     }
+    if (marktype === 'text' && typeof item.text === 'string') values.text = item.text;
     return values;
 }
 

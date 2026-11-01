@@ -172,6 +172,12 @@ export function getRegistryEntry(semanticType: string): TypeRegistryEntry {
     return TYPE_REGISTRY[semanticType] ?? UNKNOWN_ENTRY;
 }
 
+/** Whether a type's values name a thing (an ID, a place, a person or product), so a field of it can say which element a row is. */
+export function namesElement(semanticType: string): boolean {
+    const entry = getRegistryEntry(semanticType);
+    return entry.t0 === 'Identifier' || entry.t1 === 'GeoPlace' || entry.t1 === 'Entity';
+}
+
 /** Check whether a semantic type string is explicitly registered. */
 export function isRegistered(semanticType: string): boolean {
     return semanticType in TYPE_REGISTRY;

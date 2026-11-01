@@ -120,8 +120,11 @@ export interface InteractiveRenderer {
     clearUpdate?(id: string): Promise<void>;
     /** What the chart draws, for a morph to another chart. */
     morphScene?(): MorphScene | undefined;
-    /** Everything the chart draws, as parts another layer can draw, for a change of chart. */
-    frameScene?(): FrameScene | undefined;
+    /**
+     * Everything the chart draws, as parts another layer can draw, for a change of chart. `byPlace`
+     * names each part by where it stands in the chart, for the same chart drawn from new rows.
+     */
+    frameScene?(options?: { byPlace?: boolean }): FrameScene | undefined;
     /** Stops drawing while another layer draws the chart's parts. */
     setDrawnHidden?(hidden: boolean): void;
     destroy(): void;

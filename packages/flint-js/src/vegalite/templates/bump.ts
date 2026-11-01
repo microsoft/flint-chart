@@ -41,6 +41,8 @@ export const bumpChartDef: ChartTemplateDef = {
         const colorField = resolvedEncodings.color?.field;
         return {
             fields: fieldsFromEncodingChannels(resolvedEncodings, ['x', 'y', 'color', 'detail']),
+            // A team's rank is what changes week to week, so a rank is a value, not part of what a point is.
+            identityFields: fieldsFromEncodingChannels(resolvedEncodings, ['x', 'color', 'detail']),
             categoryField: firstDiscreteEncodingField(resolvedEncodings, ['x']),
             seriesField,
             legendFields: colorField ? { color: colorField } : undefined,

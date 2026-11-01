@@ -393,7 +393,7 @@ export function mountInteractiveChartSurface(
             ...(transition ? { transition } : {}),
         });
         syncRails();
-        return result;
+        return target === renderer ? redrawForRows(update, result, transition) : result;
     };
     async function mountFilters(mounted: InteractiveRenderer): Promise<void> {
         if (filterDefs.length === 0) return;
@@ -421,7 +421,8 @@ export function mountInteractiveChartSurface(
                 .filter((descriptor) => descriptor.required && descriptor.values.length > 0)
                 .map((descriptor) => [descriptor.field, authored[descriptor.field] ?? { in: [descriptor.values[0]] }])));
             const initial = definition.filterControls.getFilters();
-            if (Object.keys(initial).length > 0) await applyFilter(definition, { filters: initial }, 'host');
+            // The rows a filter starts with are how the chart first shows, so they draw at once.
+            if (Object.keys(initial).length > 0) await applyFilter(definition, { filters: initial }, 'host', mounted, { duration: 0 });
         }
         const plotBox = (): { left: number; top: number; width: number; height: number } | undefined => {
             const x = renderer?.getViewportGeometry?.('x');
@@ -462,7 +463,31 @@ export function mountInteractiveChartSurface(
     };
 
     let latestInput = 0;
+    let latestRows = 0;
     let inputQueue: Promise<void> = Promise.resolve();
+    let settled = false;
+    void ready.then(() => { settled = true; }, () => undefined);
+    /**
+     * Rows the chart cannot swap in, because they change what it is built of (a KPI card per row),
+     * draw it again with those rows, handed over as a new input is. The input, its filters and
+     * their rows stay as they were. Waits for the redraw, except while the chart is still mounting.
+     */
+    async function redrawForRows(update: ChartUpdate, result: ChartUpdateResult, transition?: ChartUpdateTransition): Promise<ChartUpdateResult> {
+        const op = update.ops.find((entry) => entry.op === 'set-data' && entry.source === 'main');
+        if (!op || op.op !== 'set-data' || !result.unsupportedOps.includes('set-data')) return result;
+        const ticket = ++latestRows;
+        const drawn: ChartAssemblyInput = { ...currentInput, data: { values: [...op.value.rows] } };
+        // While the chart is still mounting, the rows are how it first shows, so they draw at once.
+        const swap = settled ? transition : { duration: 0 };
+        const run = inputQueue.then(() => (ticket === latestRows
+            ? drawInput(drawn, swap ? { transition: swap } : {}, () => ticket !== latestRows, true)
+            : undefined));
+        inputQueue = run.catch(() => undefined);
+        if (settled) await run;
+        const unsupportedOps = result.unsupportedOps.filter((entry) => entry !== 'set-data');
+        const missing = unsupportedOps.length > 0 || result.unresolvedTargets.length > 0;
+        return { ...result, unsupportedOps, status: missing ? 'partially-applied' : 'applied' };
+    }
     /**
      * Draws a new input in place. The chart mounts beside the one on screen, takes the host's
      * layers and the filters, and the two trade places through `transitionBetween`: a morph along
@@ -480,10 +505,11 @@ export function mountInteractiveChartSurface(
         next: ChartAssemblyInput,
         setOptions: Pick<ChartUpdateApplyOptions, 'transition'>,
         superseded: () => boolean,
+        rowsOnly = false,
     ): Promise<void> {
         await ready;
         if (destroyed || !renderer) return;
-        if (next === currentInput || JSON.stringify(next) === JSON.stringify(currentInput)) return;
+        if (!rowsOnly && (next === currentInput || JSON.stringify(next) === JSON.stringify(currentInput))) return;
         if (JSON.stringify(next.interaction_spec ?? null) !== JSON.stringify(currentInput.interaction_spec ?? null)) {
             throw new Error('setInput keeps the interactions the chart mounted with; mount the chart again to change interaction_spec.');
         }
@@ -533,7 +559,7 @@ export function mountInteractiveChartSurface(
         };
         try {
             if (carried.size > 0) await mounted.setUpdates?.([...carried.values()], { transition: jump });
-            for (const definition of filterDefs) {
+            for (const definition of rowsOnly ? [] : filterDefs) {
                 definition.filterControls.bindRows(next.data.values ?? []);
                 const filters = definition.filterControls.getFilters();
                 if (Object.keys(filters).length > 0) await applyFilter(definition, { filters }, 'host', mounted, jump);
@@ -554,6 +580,8 @@ export function mountInteractiveChartSurface(
                 stage: layer,
                 duration: transitionDuration(setOptions.transition, options.transition),
                 easing: transitionEasing(setOptions.transition, options.transition),
+                // Rows drawn again are the same chart built anew: each part hands over to the one in its place.
+                byPlace: rowsOnly,
                 onFrame: (t) => hold(
                     fromSize.width + (toSize.width - fromSize.width) * t,
                     fromSize.height + (toSize.height - fromSize.height) * t,
@@ -574,7 +602,7 @@ export function mountInteractiveChartSurface(
         chart.remove();
         chart = stage;
         renderer = mounted;
-        currentInput = next;
+        if (!rowsOnly) currentInput = next;
         listenTo(mounted);
         // The warnings are the drawn chart's: a new chart type may admit other interactions.
         warnings.splice(0, warnings.length, ...(options.warnings ?? []), ...(mounted.warnings ?? []));
@@ -627,7 +655,8 @@ export function mountInteractiveChartSurface(
             await ready;
             if (destroyed || !renderer?.applyUpdate) return unsupportedUpdate(update);
             trackHostLayer(update, applyOptions?.phase);
-            return renderer.applyUpdate(update, applyOptions);
+            const result = await renderer.applyUpdate(update, applyOptions);
+            return applyOptions?.phase === 'preview' ? result : redrawForRows(update, result, applyOptions?.transition);
         },
         setUpdates: async (updates) => {
             await ready;

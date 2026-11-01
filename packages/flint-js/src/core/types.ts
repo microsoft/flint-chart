@@ -1046,6 +1046,8 @@ export interface ChartTemplateDef {
          * channel draws as a quantity; a template whose roles differ (a Gantt's dates) states them.
          */
         identityFields?: readonly string[];
+        /** Fields typed as names of things, which join the identity where each tells the drawn rows apart. */
+        identityCandidates?: readonly string[];
         provenanceFields?: readonly string[];
         temporalProvenanceFields?: readonly string[];
         rangeProvenance?: readonly { field: string; startField: string; endField: string }[];

@@ -91,3 +91,30 @@ export function runMotion(
     nextFrame(step);
     return { done, cancel: () => { cancelled = true; finish(); } };
 }
+
+const NUMBER_IN_TEXT = /[-\u2212]?\d[\d,]*(?:\.\d+)?/g;
+
+/**
+ * A text part-way between two that say the same but for their numbers ("72" and "88", "90% of 80"
+ * and "104% of 85"): each number counts from one to the other, shown with as many decimals as
+ * either end has. Undefined when the words around the numbers differ, so the text does not count.
+ */
+export function mixNumbersInText(from: string, to: string, t: number): string | undefined {
+    if (from === to) return undefined;
+    const words = (text: string) => text.split(NUMBER_IN_TEXT);
+    const a = from.match(NUMBER_IN_TEXT) ?? [];
+    const b = to.match(NUMBER_IN_TEXT) ?? [];
+    if (a.length === 0 || a.length !== b.length || words(from).join('\u0000') !== words(to).join('\u0000')) return undefined;
+    const parse = (text: string) => Number(text.replace(/,/g, '').replace('\u2212', '-'));
+    const decimals = (text: string) => text.split('.')[1]?.length ?? 0;
+    const numbers = a.map((start, index) => {
+        const end = b[index]!;
+        const value = parse(start) + (parse(end) - parse(start)) * t;
+        const shown = value.toFixed(Math.max(decimals(start), decimals(end)));
+        const grouped = start.includes(',') || end.includes(',')
+            ? shown.replace(/^(-?)(\d+)/, (_, sign: string, whole: string) => sign + whole.replace(/\B(?=(\d{3})+(?!\d))/g, ','))
+            : shown;
+        return /\u2212/.test(start + end) ? grouped.replace('-', '\u2212') : grouped;
+    });
+    return words(to).map((word, index) => word + (numbers[index] ?? '')).join('');
+}

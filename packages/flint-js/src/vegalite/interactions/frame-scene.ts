@@ -48,6 +48,7 @@ export function captureFrameScene(
     view: any,
     origin: { x: number; y: number },
     extent: { width: number; height: number },
+    byPlace = false,
 ): FrameScene | undefined {
     const root = view.scenegraph?.()?.root;
     if (!root) return undefined;
@@ -84,13 +85,14 @@ export function captureFrameScene(
             return;
         }
         const morphed = Boolean(MORPH_TYPES[mark.marktype]) && items.some((item) => typeof item.datum?.[INTERACTION_KEY] === 'string');
-        for (const item of items) {
+        items.forEach((item, index) => {
             const drawn = box(item.bounds, item.x ?? 0, item.y ?? 0);
             const text = mark.marktype === 'text'
-                ? { x: gx + (item.x ?? 0), y: gy + (item.y ?? 0), angle: item.angle ?? 0, fontSize: item.fontSize ?? 11 }
+                ? { x: gx + (item.x ?? 0), y: gy + (item.y ?? 0), angle: item.angle ?? 0, fontSize: item.fontSize ?? 11, content: textOf(item) }
                 : undefined;
-            parts.push({ key: partKey(mark.role, item, orient), morphed, ...drawn, x: gx + drawn.x, y: gy + drawn.y, ...(text ? { text } : {}), mark, items: [item], gx, gy });
-        }
+            const key = byPlace ? `place|${path}/${mark.name ?? mark.marktype}#${index}` : partKey(mark.role, item, orient);
+            parts.push({ key, morphed: !byPlace && morphed, ...drawn, x: gx + drawn.x, y: gy + drawn.y, ...(text ? { text } : {}), mark, items: [item], gx, gy });
+        });
     };
     visit(root, origin.x, origin.y, '', '');
     return {
@@ -124,6 +126,10 @@ function poseItem(copy: any, item: any, part: SourcePart, pose: FramePose): void
         copy.y = pose.text.y - part.gy - pose.dy;
         copy.angle = pose.text.angle;
         copy.fontSize = pose.text.fontSize;
+        if (pose.text.content !== undefined) copy.text = pose.text.content;
+    } else if (copy.mark.marktype === 'rect') {
+        copy.width = (item.width ?? 0) * sx;
+        copy.height = (item.height ?? 0) * sy;
     } else if (copy.mark.marktype === 'rule') {
         const x = item.x ?? 0;
         const y = item.y ?? 0;

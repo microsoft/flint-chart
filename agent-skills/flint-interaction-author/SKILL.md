@@ -137,7 +137,12 @@ it to the list it returns. The data confirms a few at mount, in Step 3. A
 viewport a gesture commits, and a reset, fly over 300 ms. Every preset takes
 `"transition": { "duration": ms }`, and `interaction_spec.transition` sets the
 chart's default; `{ "duration": 0 }` jumps. Panning and wheel zooming follow
-the pointer.
+the pointer. A committed change of rows moves each element that is the same
+thing on both sides and fades the rest. The chart type names what an element
+is; a column whose semantic type names a thing (`ID`, `Name`, `Category`,
+`Country`, …) joins it where it tells the rows apart, drawn or not. So when
+points should follow their row across versions (a scatter of countries by
+year), type that column as what it names, not as a plain string.
 
 **`filter-controls`.** It draws real controls beside the chart and changes the
 rows the chart shows, so it answers a request that names a field to filter by

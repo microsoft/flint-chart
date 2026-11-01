@@ -1,5 +1,7 @@
 /** The fields a compiled mark's rows carry for interaction: identity, role, and a legend entry's channel and field. */
 export const INTERACTION_KEY = '__flint_interaction_key';
+/** Set on the rows of a mark derived by a rule (each series' first and last point): what each of its items is, across changes of data. */
+export const MARK_IDENTITY = '__flint_interaction_identity';
 export const INTERACTION_ROLE = '__flint_interaction_role';
 export const INTERACTION_LEGEND_CHANNEL = '__flint_legend_channel';
 export const INTERACTION_LEGEND_FIELD = '__flint_legend_field';

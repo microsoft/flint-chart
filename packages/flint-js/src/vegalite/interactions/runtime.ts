@@ -921,15 +921,23 @@ export function mountVegaInteractions(
         .map(renderHit)
         .filter((hit): hit is RenderHit => hit !== null);
     /**
-     * The fields that name one drawn element: the chart's identity, unless it names several rows
-     * within a mark. It changes only with the rows, so it is kept until they change.
+     * The fields that say which element a drawn row is: the chart type's identity, joined by each
+     * field typed as a name of things that tells the drawn rows of every mark apart. `element` is
+     * that identity unless it still names several rows within a mark. Both change only with the
+     * rows, so they are kept until the rows change.
      */
-    let identityCache: readonly string[] | undefined;
-    const elementIdentity = (): readonly string[] => identityCache ??= (() => {
-        const fields = plan.identityFields ?? [];
+    let identityCache: { drawn: readonly string[]; element: readonly string[] } | undefined;
+    const identities = () => identityCache ??= (() => {
+        const base = plan.identityFields ?? [];
         const marks = allHits().filter((hit) => hit.source === 'mark').map((hit) => ({ mark: hit.markName, datum: hit.datum }));
-        return identityRepeats(marks, fields) ? [] : fields;
+        const named = (plan.identityCandidates ?? []).filter((field) => !base.includes(field)
+            && marks.length > 0
+            && marks.every((entry) => entry.datum[field] !== null && entry.datum[field] !== undefined)
+            && !identityRepeats(marks, [field]));
+        const drawn = [...base, ...named];
+        return { drawn, element: identityRepeats(marks, drawn) ? [] : drawn };
     })();
+    const elementIdentity = (): readonly string[] => identities().element;
     const focusIdentityOf = (datum: Record<string, unknown>): string => String(identityKey(datum, elementIdentity()));
     /** The identities of the elements emphasized now, so a selection is followed across a change of rows. */
     const focusedIdentities = (): Set<string> => new Set(allHits()
@@ -1273,7 +1281,8 @@ export function mountVegaInteractions(
             } else if (op.op === 'set-freeform-overlay') {
                 ops.push(op);
             } else if (op.op === 'set-data') {
-                if ((!plan.mutableDataSource && !plan.reshapeRows) || op.source !== 'main') unsupportedOps.push(op.op);
+                if ((!plan.mutableDataSource && !plan.reshapeRows) || op.source !== 'main'
+                    || (!plan.mutableDataSource && plan.reshapeRows?.(op.value.rows) === null)) unsupportedOps.push(op.op);
                 else ops.push(op);
             } else {
                 ops.push(op);
@@ -1353,11 +1362,12 @@ export function mountVegaInteractions(
             );
             plan.sourceRecords = dataRows;
         } else if (plan.reshapeRows && rowsChange) {
-            for (const [name, values] of Object.entries(plan.reshapeRows(hostRows))) {
+            for (const [name, values] of Object.entries(plan.reshapeRows(hostRows) ?? {})) {
                 view.change(name, changeset().remove(() => true).insert([...values]));
             }
         }
         if (rowsChange && (plan.mutableDataSource || plan.reshapeRows)) {
+            for (const [name, value] of Object.entries(plan.plannedEnds?.(hostRows) ?? {})) view.signal(name, value);
             renderedDataRows = dataRows;
             // Held targets name elements, not marks: they find their elements among the new rows.
             await view.runAsync();
@@ -1653,8 +1663,10 @@ export function mountVegaInteractions(
             revealWaiting();
             return { settled: Promise.resolve() };
         }
-        const from = captureScene(view, plan.identityFields);
-        const ghosts = captureGhosts(view, plan.identityFields);
+        // The old frame and the new one are keyed alike, by the identity the old rows were drawn with.
+        const identity = identities().drawn;
+        const from = captureScene(view, identity);
+        const ghosts = captureGhosts(view, identity);
         const scales = plan.movingScales ?? [];
         const domainsBefore = scales.map((scale) => [...(view.scale(scale.name)?.domain() ?? [])]);
         const sizes = plan.movingSizes ?? [];
@@ -1679,12 +1691,15 @@ export function mountVegaInteractions(
         const focusNow = focusedIdentities();
         if (focusNow.size === focusFrom.size && [...focusNow].every((key) => focusFrom.has(key))) focusFade = undefined;
         outlineGeneration += 1;
-        view.signal(SCENE_OUTLINE_SIGNAL, placeOutlineStarts(view, from, plan.identityFields ?? []) ? outlineGeneration : null);
-        const ghostsAfter = captureGhosts(view, plan.identityFields);
+        const outlinesStay = placeOutlineStarts(view, from, identity);
+        view.signal(SCENE_OUTLINE_SIGNAL, outlinesStay ? outlineGeneration : null);
+        const ghostsAfter = captureGhosts(view, identity);
         const leaving = setSceneExits(view, ghosts, ghostsAfter) > 0;
         const drawnBefore = new Set(ghosts.paths.flatMap((path) => path.keys.map((key) => `${path.name}\u0000${key}`)));
         const arriving = [...ghostsAfter.items.keys()].some((id) => !ghosts.items.has(id))
             || ghostsAfter.paths.some((path) => !path.keys.some((key) => drawnBefore.has(`${path.name}\u0000${key}`)));
+        const staying = outlinesStay || [...ghostsAfter.items.keys()].some((id) => ghosts.items.has(id))
+            || ghostsAfter.paths.some((path) => path.keys.some((key) => drawnBefore.has(`${path.name}\u0000${key}`)));
         const moving = scales.flatMap((scale, index) => {
             const before = domainsBefore[index]!;
             const after = [...(view.scale(scale.name)?.domain() ?? [])];
@@ -1713,13 +1728,17 @@ export function mountVegaInteractions(
         // Leave, move, arrive: the stages a change has share its duration, in that order. A linear
         // change is a stream, so they run together over the whole duration and nothing pauses.
         const staged = easing !== 'linear';
-        const moveStart = leaving && staged ? LEAVE_SHARE : 0;
-        const moveEnd = arriving && staged ? 1 - ARRIVE_SHARE : 1;
+        // A move stage with nothing to move gives its share to leave and arrive.
+        const idle = !staying && moving.length === 0 && resizing.length === 0;
+        const leaveShare = idle && arriving ? 0.5 : LEAVE_SHARE;
+        const arriveShare = idle && leaving ? 0.5 : ARRIVE_SHARE;
+        const moveStart = leaving && staged ? leaveShare : 0;
+        const moveEnd = arriving && staged ? 1 - arriveShare : 1;
         const ease = easingCurve(easing);
         const stage = (t: number, start: number, end: number): number => ease(Math.max(0, Math.min(1, (t - start) / (end - start))));
         const motion = runMotion(duration, async (t) => {
             const move = stage(t, moveStart, moveEnd);
-            view.signal(SCENE_EXIT_SIGNAL, leaving ? stage(t, 0, staged ? LEAVE_SHARE : 1) : 1);
+            view.signal(SCENE_EXIT_SIGNAL, leaving ? stage(t, 0, staged ? leaveShare : 1) : 1);
             view.signal(SCENE_T_SIGNAL, move);
             view.signal(SCENE_ENTER_SIGNAL, arriving ? stage(t, staged ? moveEnd : 0, 1) : 1);
             for (const { scale, path } of moving) view.signal(scale.signal, t >= 1 ? null : path(move));
@@ -1790,6 +1809,8 @@ export function mountVegaInteractions(
         waitForTransition = true,
     ): Promise<ChartUpdateResult> => {
         const resolved = resolveUpdate(update);
+        // Nothing in it the chart can take: it holds what it drew, and there is nothing to move.
+        if (resolved.result.status === 'unsupported' && resolved.result.unsupportedOps.length > 0) return resolved.result;
         // A viewport-only update presents nothing that needs the scene's
         // available elements; skipping that scan keeps navigation frames cheap
         // on dense charts (a county map has thousands of shapes).

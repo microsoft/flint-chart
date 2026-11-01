@@ -61,6 +61,7 @@ interface TemplateInteractionSemantics {
     capabilities: readonly InteractionCapability[];
     fields: string[];
     identityFields?: readonly string[];
+    identityCandidates?: readonly string[];
     sourceRecords?: readonly Record<string, unknown>[];
     provenanceFields?: readonly string[];
     temporalProvenanceFields?: readonly string[];
@@ -583,6 +584,7 @@ export function addVegaLiteInteractions(
     return {
         fields,
         identityFields: templateSemantics.identityFields,
+        identityCandidates: templateSemantics.identityCandidates,
         sourceRecords,
         rowIndexed,
         provenanceFields: templateSemantics.provenanceFields ?? fields,
