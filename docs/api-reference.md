@@ -317,6 +317,14 @@ reads better (`canvasRefit: false` leaves this step out). The
 pass never lays a chart out larger for the host to shrink: a chart nothing mends is drawn at its own
 size, for the reader to scroll or the host to scale.
 
+Given a `canvasSize`, a drawing the pass leaves running past it is then **contained**: the chart is
+laid out again for a smaller room — the edits kept, the keys at the edge they stood at — so the plot
+gives up the room and the keys, labels and title stand inside the canvas. The room is searched for a
+few rounds; a round is kept only where the plot keeps at least half of each side, no value is cut
+and no label is turned that stood flat, so what cannot be brought within is left nearer, for the
+host to scale. This applies to single Vega-Lite views (`treatment.contain` in `_canvasFit`, reported
+as `canvas-contain`); a chart without a `canvasSize` is unchanged.
+
 Nothing is cut, no edit shrinks text past legibility — nor makes text already too small smaller still — and the chart's own shape is never changed. `'off'` lays every chart out as planned. What the pass judged and did is attached
 to a Vega-Lite spec as `_canvasFit`, and reported in `_theme.report` (`canvas-fit`).
 

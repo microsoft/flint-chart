@@ -1367,9 +1367,13 @@ export interface ChartAssemblyInput {
          * to `baseSize`: `βx = canvasSize.width / baseSize.width`,
          * `βy = canvasSize.height / baseSize.height` (each clamped to ≥ 1).
          * The title, keys and axes stand in the same box: the canvas fit
-         * (`options.canvasFit`) lays the chart out to read well in it, and a
-         * drawing it leaves a little larger is the host's to scale down into
-         * the box — never past 70%, where the fit brings the plot down instead.
+         * (`options.canvasFit`) lays the chart out to read well in it, then,
+         * where the drawing still runs past the box, lays it out again for a
+         * smaller room so the plot gives up the room and the keys, labels and
+         * title stand inside it (Vega-Lite; a single view, not a composite).
+         * What it cannot bring within — the plot kept at least half each side,
+         * no value cut, no label turned — is the host's to scale down into
+         * the box, never past 70%, where the fit brings the plot down instead.
          *
          * When omitted, the box defaults to `baseSize × options.maxStretch`
          * (default 1.5×) in each dimension.
@@ -1478,6 +1482,13 @@ export interface CanvasTreatment {
      * whole drawing would take it.
      */
     plotScale?: number;
+    /**
+     * The canvas the chart is laid out for, in px, smaller than the one the host states by what the
+     * drawing ran past it: the chart is planned again for this room so its keys, labels and title
+     * stand inside the stated canvas (see `canvasSize`). `keys` holds the keys at the edge they stood
+     * at, where the fit set no edge of its own, so a smaller plot does not send them to another.
+     */
+    contain?: { width: number; height: number; keys?: 'side' | 'top' | 'bottom' };
 }
 
 export interface AssembleOptions {

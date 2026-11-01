@@ -124,10 +124,13 @@ describe('names above their bars', () => {
                 baseSize: { width: 400, height: 300 }, canvasSize: canvas,
             },
         }) as any;
-        // In a 600 × 450 canvas the bands fit the stretch, but the header leaves them no room.
+        // In a 600 × 450 canvas the bands fit the stretch, but the header leaves them no room. The
+        // drawing still runs past it, so it is laid out for a smaller room within the canvas: the
+        // names are judged by that room.
         const tight = vegaLiteStages(titled({ width: 600, height: 450 })).plan;
         expect(tight.rowNames).toBeUndefined();
-        expect(tight.report.some((note) => note.code === 'row-names-beside' && /larger than its 600 × 450 canvas/.test(note.message))).toBe(true);
+        expect(tight.report.some((note) => note.code === 'row-names-beside' && /larger than its 600 × \d+ canvas/.test(note.message))).toBe(true);
+        expect(tight.report.some((note) => note.code === 'canvas-contain')).toBe(true);
         // In 800 × 600 the whole drawing fits: the names stand above.
         expect(vegaLiteStages(titled({ width: 800, height: 600 })).plan.rowNames).toBeDefined();
     });

@@ -141,6 +141,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   so nyt, economist, powerbi, powerbi-light, pop and de-stijl drew the bars in name order (and
   datawrapper's names above the bars failed to compile in 1.0.1). Every layer on such a band now
   states the same order, computed as Vega-Lite sorts the bars.
+- A Vega-Lite chart given a `canvasSize` is drawn within it. The canvas fit left a chart that read
+  well drawn larger than its box — keys beside a plot that filled the width, a title over one that
+  filled the height — for the host to scale; a host that drew the SVG at its own size cut them off.
+  The chart is now laid out again for a smaller room, so the plot gives up the room and the keys,
+  labels and title stand inside the canvas (`_canvasFit.treatment.contain`, reported as
+  `canvas-contain`). The plot keeps at least half of each side, and no value is cut or label turned
+  for the room; what cannot be brought within is left nearer, for the host to scale. Charts without
+  a `canvasSize`, composite charts, the other backends and `canvasFit: 'off'` are unchanged.
 - A note (`set-annotation`) keyed to an interior point of a line drawn with points attaches to that
   point. The key matched both the point and the segment that starts there, so every point but a
   series' last reported `unsupported_update: … matched nothing`.

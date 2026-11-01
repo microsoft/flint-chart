@@ -246,6 +246,7 @@ export function describeTreatment(treatment: CanvasTreatment | undefined): strin
     if (treatment.names) parts.push('narrower key names');
     if (treatment.keyScale) parts.push(`key text at ${Math.round(treatment.keyScale * 100)}%`);
     if (treatment.plotScale) parts.push(`plot at ${Math.round(treatment.plotScale * 100)}%`);
+    if (treatment.contain) parts.push(`laid out for ${Math.round(treatment.contain.width)} × ${Math.round(treatment.contain.height)} to stay within the canvas`);
     return parts.join(', ') || 'as planned';
 }
 

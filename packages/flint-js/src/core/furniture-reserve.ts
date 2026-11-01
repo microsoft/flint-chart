@@ -57,6 +57,11 @@ export interface ReserveInputs {
     /** The headline and deck the chart prints, and how they were fitted where the plan fitted them. */
     title?: { text: string; subtitle?: string[] };
     titlePlan?: TitlePlan;
+    /**
+     * Whether a deck printed with no headline — axis titles a theme moves above the plot — counts its
+     * line. The plot is sized without it; what the drawing measures against a stated canvas counts it.
+     */
+    deckAlone?: boolean;
     rows: any[];
     spacing: FurnitureSpacing;
     measure: TextMeasurer;
@@ -164,11 +169,11 @@ function seriesEndWidth(inputs: ReserveInputs): number {
  */
 function titleHeight(inputs: ReserveInputs): number {
     const { title, titlePlan, design, themed, layout, spacing } = inputs;
-    if (!title?.text) return 0;
-    const headline = titlePlan?.headline?.fontSize ?? (themed ? design.title.headline.fontSize : undefined) ?? layout.titleFontSize;
-    const deck = titlePlan?.deck ?? title.subtitle?.join(' ');
+    const deck = titlePlan?.deck ?? title?.subtitle?.join(' ');
+    if (!title?.text && !(inputs.deckAlone && deck)) return 0;
+    const headline = !title?.text ? 0 : titlePlan?.headline?.fontSize ?? (themed ? design.title.headline.fontSize : undefined) ?? layout.titleFontSize;
     const deckSize = (themed ? design.title.deck.fontSize : undefined) ?? Math.round(layout.titleFontSize * 0.85);
-    const deckRoom = deck ? (themed ? design.title.deckPadding : spacing.deckPadding) + deckSize : 0;
+    const deckRoom = deck ? (headline ? (themed ? design.title.deckPadding : spacing.deckPadding) : 0) + deckSize : 0;
     // Over keys above the plot the title stands at the header's inner gap; its own gap is the keys'.
     return headline + deckRoom + (inputs.legend.layout?.headerGap ?? (themed ? design.title.offset : spacing.titleOffset));
 }

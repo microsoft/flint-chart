@@ -153,10 +153,19 @@ is never changed. A title spans the whole drawing, keys beside the plot included
 width (a lone last word evened out), unless a size down saves a line. Set `options.canvasFit` to
 `'off'` to lay a chart out exactly as planned.
 
-**Scale the drawing into its slot.** The fit judges a chart as the host shows it: a drawing a little
-larger than its box — down to 70% — reads well once the host scales it into the box, and is left so.
-A host that draws charts at their own size should scale the SVG or canvas to `min(1, box ÷ drawn)`
-on each side (contain), or the chart will run past its slot.
+**The drawing stands within its canvas.** Where a `canvasSize` is given and the drawing still runs
+past it — keys beside a plot that fills the width, a title over a plot that fills the height — the
+chart is laid out once more for a smaller room, the edits above kept, so the plot gives up the room
+and the keys, labels and title stand inside the canvas. The plot never gives up more than half of a
+side, and the room is never bought by cutting values or turning labels the chart kept flat. This
+applies to single Vega-Lite views; it is reported as `canvas-contain` and skipped with
+`canvasFit: 'off'`. A chart without a `canvasSize` is laid out as before.
+
+**Scale what is left into the slot.** A drawing that still runs a little past its box — a dense
+banded axis, a facet grid, a chart from another backend — reads well once the host scales it into
+the box (down to 70%). A host that draws charts at their own size should scale the SVG or canvas to
+`min(1, box ÷ drawn)` on each side (contain), and, rendering on a server, measure text as its
+renderer does (`setTextMeasurer`), so the plan's estimate matches the drawing.
 
 ## Font size
 
