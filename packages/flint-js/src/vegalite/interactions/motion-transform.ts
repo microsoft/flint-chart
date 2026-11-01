@@ -6,6 +6,12 @@ import { INTERACTION_KEY, MARK_IDENTITY } from './stores';
 export const WHOLE_KEY_FLAG = '__flint_whole_key';
 /** Set on a mark's snapshot: the identity fields its items were keyed by, which the new items are matched by. */
 export const IDENTITY_FIELDS = '__flint_identity';
+/**
+ * Set on a mark's snapshot keyed by one of its identity fields, because that field alone told its
+ * items apart: its items by their whole identity, which the new items are matched by when that one
+ * field no longer tells them apart.
+ */
+export const WHOLE_IDENTITY = '__flint_whole_identity';
 
 /** A position drawn through a continuous scale of a field or a constant: `scale(value) + offset`. */
 export interface DataPosition {
@@ -24,6 +30,14 @@ export interface ArrivalAxis {
     readonly scale: string;
 }
 
+/** One axis of a stack group's box: the scale it is placed through and the stacked fields its ends are the least and greatest of. */
+export interface StackExtent {
+    readonly start: 'x' | 'y';
+    readonly size: 'width' | 'height';
+    readonly scale: string;
+    readonly fields: readonly string[];
+}
+
 /** What one mark mixes, fixed when the chart is compiled. */
 export interface MarkMotion {
     readonly mark: string;
@@ -39,6 +53,12 @@ export interface MarkMotion {
     readonly arrival: readonly ArrivalAxis[];
     readonly identity: readonly string[];
     readonly outline: boolean;
+    /** A group drawn once per stack (a rounded bar's clip and outline): its items are keyed by these fields. */
+    readonly groupby?: readonly string[];
+    /** The fields of the facets a stack group is drawn in, read from its enclosing groups, so each panel's stacks keep apart. */
+    readonly scope?: readonly string[];
+    /** The axes a stack group spans from its rows' least to greatest stacked value, mixed in data units. */
+    readonly extents?: readonly StackExtent[];
     /** Every channel the motion can write. */
     readonly written: readonly string[];
 }
@@ -69,6 +89,18 @@ export function identityKey(datum: Record<string, unknown>, fields: readonly str
     return datum[INTERACTION_KEY];
 }
 
+/**
+ * What names a drawn item as an element a change can follow: its row's key, or for a row an
+ * aggregate drew (which keeps no row key), the identity fields it kept. Nothing for an item that
+ * names no element.
+ */
+export function trackedKey(datum: Record<string, unknown> | undefined, fields: readonly string[]): string | undefined {
+    const own = datum?.[INTERACTION_KEY];
+    if (typeof own === 'string') return own;
+    const named = datum && fields.length > 0 ? identityKey(datum, fields) : undefined;
+    return typeof named === 'string' ? named : undefined;
+}
+
 /** The data value a position draws for a row. */
 export function dataValue(datum: Record<string, unknown> | undefined, position: DataPosition): number | null {
     if (position.field === undefined) return position.value ?? null;
@@ -77,10 +109,16 @@ export function dataValue(datum: Record<string, unknown> | undefined, position: 
 }
 
 let parseColour: ((value: string) => Colour) | undefined;
+// A chart draws few colours, so each is parsed once rather than on every frame for every item.
+const parsedColours = new Map<string, Colour | undefined>();
 const colourOf = (value: string): Colour | undefined => {
+    if (parsedColours.has(value)) return parsedColours.get(value);
     parseColour ??= vega.expressionFunction('rgb') as unknown as (value: string) => Colour;
-    const colour = parseColour(value);
-    return Number.isNaN(colour?.r) ? undefined : colour;
+    const parsed = parseColour(value);
+    const colour = Number.isNaN(parsed?.r) ? undefined : { r: parsed.r, g: parsed.g, b: parsed.b } as Colour;
+    if (parsedColours.size >= 1024) parsedColours.clear();
+    parsedColours.set(value, colour);
+    return colour;
 };
 
 function mixColour(from: string, to: string, t: number): string | undefined {
@@ -102,6 +140,7 @@ export function mixItem(
     motion: MarkMotion,
     frame: MotionFrame,
     scales: MotionScales,
+    tracked: boolean = trackedKey(item.datum, motion.identity) !== undefined,
 ): Record<string, number> | undefined {
     const known = from !== null && from !== undefined;
     if (known) {
@@ -119,6 +158,22 @@ export function mixItem(
         const mixed = isNumber(was) && isNumber(value) ? was + (value - was) * frame.t : value;
         if (isNumber(mixed)) (units ??= {})[position.channel] = mixed;
         placed[position.channel] = isNumber(was) && isNumber(mixed) ? scales.place(position.scale, mixed) + position.offset : null;
+    }
+    for (const extent of motion.extents ?? []) {
+        if (!known) continue;
+        const ends: number[] = [];
+        for (const field of extent.fields) {
+            const raw = item.datum?.[field];
+            const value = raw === null || raw === undefined || raw === '' ? null : Number(raw);
+            const was = from[`__d_${field}`];
+            if (!isNumber(value) || !isNumber(was)) continue;
+            const mixed = was + (value - was) * frame.t;
+            (units ??= {})[field] = mixed;
+            ends.push(scales.place(extent.scale, mixed));
+        }
+        if (ends.length === 0) continue;
+        item[extent.start] = Math.min(...ends);
+        item[extent.size] = Math.max(...ends) - Math.min(...ends);
     }
     for (const [start, end, size] of PAIRS) {
         const a = placed[start];
@@ -138,7 +193,7 @@ export function mixItem(
             if (isNumber(item[end]) && isNumber(item[size])) item[size] = item[end] - item[start];
         }
     }
-    const entering = !known && typeof item.datum?.[INTERACTION_KEY] === 'string';
+    const entering = !known && (motion.groupby !== undefined || tracked);
     // An item that arrives waits at the plot's edge until it fades in, so it takes no room from the
     // title, the axes or the panels. Every item's far end follows its start and size.
     const waiting = entering && frame.enter <= 0;
@@ -164,7 +219,13 @@ export function mixItem(
             if (mixed) item[channel] = mixed;
         }
     }
-    if (entering) item.opacity = (isNumber(item.opacity) ? item.opacity : 1) * frame.enter;
+    if (entering && motion.groupby) {
+        // A stack group fades its own fill and outline, not the bars inside it.
+        item.fillOpacity = (isNumber(item.fillOpacity) ? item.fillOpacity : 1) * frame.enter;
+        item.strokeOpacity = (isNumber(item.strokeOpacity) ? item.strokeOpacity : 1) * frame.enter;
+    } else if (entering) {
+        item.opacity = (isNumber(item.opacity) ? item.opacity : 1) * frame.enter;
+    }
     return units;
 }
 
@@ -173,6 +234,10 @@ interface ViewMotion {
     readonly marks: Map<string, MarkMotion>;
     /** Per item, the data values its positions stand at in the frame on screen; empty at rest. */
     units: WeakMap<object, Record<string, number>>;
+    /** Whether `units` holds anything since it was last emptied. */
+    mixed: boolean;
+    /** Per mark snapshot keyed by one field, whether the new items repeat that field and so are matched whole. */
+    narrowing: WeakMap<object, boolean>;
     /** Per item of an outline, the point it starts from in the current motion. */
     outlineStarts: WeakMap<object, Record<string, unknown>>;
 }
@@ -182,7 +247,7 @@ const viewMotions = new WeakMap<object, ViewMotion>();
 function viewMotion(view: object): ViewMotion {
     let state = viewMotions.get(view);
     if (!state) {
-        state = { marks: new Map(), units: new WeakMap(), outlineStarts: new WeakMap() };
+        state = { marks: new Map(), units: new WeakMap(), mixed: false, narrowing: new WeakMap(), outlineStarts: new WeakMap() };
         viewMotions.set(view, state);
     }
     return state;
@@ -196,6 +261,35 @@ export function drawnDataValue(view: object, item: Record<string, any>, channel:
     const position = state?.marks.get(item.mark?.name)?.data.find((entry) => entry.channel === channel);
     const value = position ? dataValue(item.datum, position) : null;
     return isNumber(value) ? value : undefined;
+}
+
+/** A stack group's key: its stack's fields, then the fields of the panel it is drawn in. */
+export function stackKey(item: Record<string, any>, motion: MarkMotion): string | undefined {
+    const own = item.datum ? identityKey(item.datum, motion.groupby ?? []) : undefined;
+    if (typeof own !== 'string') return undefined;
+    const scope = (motion.scope ?? []).map((field) => {
+        for (let group = item.mark?.group; group; group = group.mark?.group) {
+            const value = group.datum?.[field];
+            if (value !== undefined && value !== null) return String(value);
+        }
+        return '';
+    });
+    return scope.length > 0 ? `${own}\u0000${scope.join('|')}` : own;
+}
+
+/** The motion of a stack group, once it has run; undefined for any other mark. */
+export function stackGroupMotion(view: object, mark: string): MarkMotion | undefined {
+    const motion = viewMotions.get(view)?.marks.get(mark);
+    return motion?.groupby ? motion : undefined;
+}
+
+/** The value a stack group's field stands at on screen: mid-motion, the mixed one; at rest, its row's. */
+export function drawnFieldValue(view: object, item: Record<string, any>, field: string): number | undefined {
+    const mixed = viewMotions.get(view)?.units.get(item)?.[field];
+    if (isNumber(mixed)) return mixed;
+    const raw = item.datum?.[field];
+    const value = raw === null || raw === undefined || raw === '' ? NaN : Number(raw);
+    return Number.isFinite(value) ? value : undefined;
 }
 
 /** Starts a motion's outline starts afresh, so a start placed by an earlier motion never applies. */
@@ -246,7 +340,11 @@ class FlintMotion extends Transform {
         state.marks.set(motion.mark, motion);
         const snapshot = params.from as Record<string, any> | null;
         if (!snapshot) {
-            state.units = new WeakMap();
+            // At rest the mixed values are dropped once, not on every pulse.
+            if (state.mixed) {
+                state.units = new WeakMap();
+                state.mixed = false;
+            }
             return pulse;
         }
         const markFrom = snapshot[motion.mark] as Record<string, any> | null | undefined;
@@ -259,16 +357,40 @@ class FlintMotion extends Transform {
         const frame: MotionFrame = { t: params.t, enter: params.enter };
         const scales = scalesOf(view);
         const whole = Boolean(markFrom?.[WHOLE_KEY_FLAG]);
-        const identity = (markFrom?.[IDENTITY_FIELDS] as readonly string[] | undefined) ?? motion.identity;
+        let identity = (markFrom?.[IDENTITY_FIELDS] as readonly string[] | undefined) ?? motion.identity;
+        let entries = markFrom;
+        const wider = markFrom?.[WHOLE_IDENTITY] as { fields: readonly string[]; entries: Record<string, any> } | undefined;
+        if (wider) {
+            let repeats = state.narrowing.get(markFrom!);
+            if (repeats === undefined) {
+                const seen = new Set<unknown>();
+                repeats = ((pulse.source ?? []) as any[]).some((item: any) => {
+                    const key = item.datum ? identityKey(item.datum, identity) : undefined;
+                    if (seen.has(key)) return true;
+                    seen.add(key);
+                    return false;
+                });
+                state.narrowing.set(markFrom!, repeats!);
+            }
+            if (repeats) {
+                identity = wider.fields;
+                entries = wider.entries;
+            }
+        }
         const units = state.units;
         return out.visit(modified ? out.SOURCE : out.ADD_MOD, (item: Record<string, any>) => {
             const start = starts?.get(item);
             if (!start && !markFrom) return;
             const stated = item.datum?.[MARK_IDENTITY];
-            const key = typeof stated === 'string' ? stated : whole ? item.datum?.[INTERACTION_KEY] : item.datum ? identityKey(item.datum, identity) : undefined;
-            const from = start ?? (item.datum ? markFrom![key as string] : null);
-            const mixed = mixItem(item, from, motion, frame, scales);
-            if (mixed) units.set(item, mixed);
+            const tracked = trackedKey(item.datum, identity);
+            const key = motion.groupby ? stackKey(item, motion)
+                : typeof stated === 'string' ? stated : whole ? tracked : item.datum ? identityKey(item.datum, identity) : undefined;
+            const from = start ?? (item.datum ? entries![key as string] : null);
+            const mixed = mixItem(item, from, motion, frame, scales, tracked !== undefined);
+            if (mixed) {
+                units.set(item, mixed);
+                state.mixed = true;
+            }
         });
     }
 }

@@ -33,7 +33,7 @@ import {
     type LiveLayoutPlanner,
 } from './interactions/live-layout';
 import { mountVegaInteractions } from './interactions/runtime';
-import { bindLegendDomains, captureMorphScene, hasSceneMotion, injectAxisMotion, injectScaleMotion, injectSizeMotion } from './interactions/scene-motion';
+import { bindLegendDomains, captureMorphScene, scaleFields, hasSceneMotion, injectAxisExtentMotion, injectAxisMotion, injectAxisTickMotion, injectTitleMotion, injectScaleMotion, injectSizeMotion } from './interactions/scene-motion';
 import { captureFrameScene } from './interactions/frame-scene';
 import { advanceLiveValues, bindLiveValues, LIVE_VALUES_SIGNAL, liveValuesChange } from './live-values';
 import { readDrawnLayout } from './drawn-layout';
@@ -271,25 +271,8 @@ export function bindPlannedEnds(vegaSpec: any): void {
         for (const mark of scope.marks ?? []) if (mark.type === 'group') collect(mark);
     };
     collect(vegaSpec);
-    // The fields each scale places: a margin's density or binning runs over the domain of the scale that places its field.
-    const fieldsOf = new Map<string, Set<string>>();
-    const place = (entry: any): void => {
-        if (!entry || typeof entry !== 'object') return;
-        if (Array.isArray(entry)) { entry.forEach(place); return; }
-        if (typeof entry.scale === 'string' && typeof entry.field === 'string') {
-            const fields = fieldsOf.get(entry.scale) ?? new Set<string>();
-            fields.add(entry.field);
-            fieldsOf.set(entry.scale, fields);
-        }
-        for (const value of Object.values(entry)) place(value);
-    };
-    const encodings = (scope: any): void => {
-        for (const mark of scope.marks ?? []) {
-            place(mark.encode);
-            if (mark.type === 'group') encodings(mark);
-        }
-    };
-    encodings(vegaSpec);
+    // A margin's density or binning runs over the domain of the scale that places its field.
+    const fieldsOf = scaleFields(vegaSpec);
     const planned = new Set<string>();
     const domains: { value: string; fields: ReadonlySet<string>; signal: { signal: string } }[] = [];
     for (const scale of vegaSpec.scales ?? []) {
@@ -497,6 +480,10 @@ export function createVegaInteractiveRenderer(
                         .filter((axis): axis is NonNullable<typeof axis> => !!axis);
                     interactionPlan.reorderAxis = interactionPlan.reorderAxes[0];
                     injectAxisMotion(vegaSpec);
+                    interactionPlan.titleMotion = injectTitleMotion(vegaSpec);
+                    interactionPlan.plotRoom = !vegaSpec.layout;
+                    interactionPlan.axisExtents = injectAxisExtentMotion(vegaSpec);
+                    interactionPlan.tickAxes = injectAxisTickMotion(vegaSpec);
                     interactionPlan.legendDomains = bindLegendDomains(vegaSpec, interactionPlan.legendDomains);
                     interactionPlan.movingScales = injectScaleMotion(vegaSpec);
                     interactionPlan.movingSizes = injectSizeMotion(vegaSpec);

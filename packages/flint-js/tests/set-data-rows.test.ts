@@ -42,9 +42,22 @@ describe('versions of the same marks', () => {
 
 describe('a continuous legend', () => {
     it('holds its domain in a signal the runtime moves to the rows the chart is given', () => {
-        const spec: any = { signals: [], scales: [{ name: 'color', type: 'linear', domain: [10, 40] }, { name: 'x', type: 'band', domain: ['a'] }] };
+        const spec: any = {
+            signals: [],
+            scales: [
+                { name: 'color', type: 'linear', domain: [10, 40] },
+                { name: 'ink', type: 'linear', domain: [10, 40] },
+                { name: 'other', type: 'linear', domain: [10, 40] },
+                { name: 'x', type: 'band', domain: ['a'] },
+            ],
+            legends: [{ fill: 'color' }],
+            marks: [
+                { type: 'rect', encode: { update: { fill: { scale: 'color', field: 'Visits' } } } },
+                { type: 'text', encode: { update: { fill: { scale: 'ink', field: 'Visits' }, opacity: { scale: 'other', field: 'Share' } } } },
+            ],
+        };
         const [pin] = bindLegendDomains(spec, [{ channel: 'color', field: 'Visits', descending: false }]);
-        expect(spec.scales[0].domain).toEqual({ signal: pin!.signal });
+        expect(spec.scales.slice(0, 3).map((scale: any) => scale.domain)).toEqual([{ signal: pin!.signal }, { signal: pin!.signal }, [10, 40]]);
         expect(spec.signals).toEqual([{ name: pin!.signal, value: [10, 40] }]);
         expect(legendDomainOf(pin!, [{ Visits: 30 }, { Visits: 90 }, { Visits: null }])).toEqual([30, 90]);
         expect(legendDomainOf({ ...pin!, descending: true }, [{ Visits: 30 }, { Visits: 90 }])).toEqual([90, 30]);

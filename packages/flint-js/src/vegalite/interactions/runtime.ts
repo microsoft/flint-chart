@@ -64,6 +64,16 @@ import {
     SCENE_OUTLINE_SIGNAL,
     SCENE_T_SIGNAL,
     setSceneExits,
+    SUBTITLE_DY_SIGNAL,
+    TITLE_ORIENT_SIGNAL,
+    TITLE_X_SIGNAL,
+    TITLE_Y_SIGNAL,
+    titlePosition,
+    axisExtentsAtRest,
+    axisTicksShown,
+    axisTicksSignal,
+    viewRoom,
+    type ViewRoom,
 } from './scene-motion';
 import { identityKey } from './motion-transform';
 
@@ -129,6 +139,7 @@ import {
     LEGEND_SELECTION_STORE,
     STYLE_SIGNAL,
     DIM_SIGNAL,
+    MARK_IDENTITY,
 } from './stores';
 
 /** How long a note or overlay takes to fade in once the marks it points at have landed. */
@@ -938,7 +949,11 @@ export function mountVegaInteractions(
         return { drawn, element: identityRepeats(marks, drawn) ? [] : drawn };
     })();
     const elementIdentity = (): readonly string[] => identities().element;
-    const focusIdentityOf = (datum: Record<string, unknown>): string => String(identityKey(datum, elementIdentity()));
+    // A mark that states what its items are (a series' end dot) is named by that, as the motion names it.
+    const focusIdentityOf = (datum: Record<string, unknown>): string => {
+        const stated = datum[MARK_IDENTITY];
+        return typeof stated === 'string' ? stated : String(identityKey(datum, elementIdentity()));
+    };
     /** The identities of the elements emphasized now, so a selection is followed across a change of rows. */
     const focusedIdentities = (): Set<string> => new Set(allHits()
         .filter((hit) => emphasizedRenderKeys.has(String(hit.datum[INTERACTION_KEY])))
@@ -1307,6 +1322,7 @@ export function mountVegaInteractions(
     // Assigned once the surface is built, below; `renderUpdates` may run before then, so it cannot be a const.
     // eslint-disable-next-line prefer-const
     let onLayoutChange: (() => void) | undefined;
+    let renderedHidden = '[[],[]]';
     const drawUpdates = async (): Promise<void> => {
         // A preview overlays the same interaction's retained state. It replaces
         // only operation identities that it supplies, so a transient drag ghost
@@ -1369,6 +1385,7 @@ export function mountVegaInteractions(
         if (rowsChange && (plan.mutableDataSource || plan.reshapeRows)) {
             for (const [name, value] of Object.entries(plan.plannedEnds?.(hostRows) ?? {})) view.signal(name, value);
             renderedDataRows = dataRows;
+            layoutMayMove = true;
             // Held targets name elements, not marks: they find their elements among the new rows.
             await view.runAsync();
             drawnKeyCache = undefined;
@@ -1520,6 +1537,14 @@ export function mountVegaInteractions(
                 HIDDEN_STORE,
                 changeset().remove(() => true).insert([...hiddenKeys].map((key) => ({ key }))),
             );
+            // Hidden items leave what is drawn: the drawn keys and identities are found again, and the room may move.
+            const hidden = JSON.stringify([[...hiddenKeys].sort(), [...hiddenLegendDomains.keys()].sort()]);
+            if (hidden !== renderedHidden) {
+                renderedHidden = hidden;
+                drawnKeyCache = undefined;
+                identityCache = undefined;
+                layoutMayMove = true;
+            }
             view.change(
                 LEGEND_HIDDEN_STORE,
                 changeset().remove(() => true).insert([...hiddenLegendDomains]
@@ -1645,23 +1670,147 @@ export function mountVegaInteractions(
         }
     };
     let sceneMotion: Motion | undefined;
+    /** Ends the running motion where it was heading, once a change can no longer move from it. */
+    let settleRunning: (() => void) | undefined;
+    /** When the running motion ends, and how it eases, so a change that would jump during it is carried there instead. */
+    let motionEnd: { at: number; easing?: ChartUpdateTransition['easing'] } | undefined;
+    /** Rows or hidden items changed since the resting layout was last read, so the room around them may move. */
+    let layoutMayMove = false;
+    const axisExtents = plan.axisExtents ?? [];
+    const tickAxes = plan.tickAxes ?? [];
+    type TicksShown = ReturnType<typeof axisTicksShown>;
+    /** The frame a resting layout draws: where its title stands, the room each axis and the plot take, and the ticks it shows. */
+    interface FramePlace {
+        readonly title?: { x: number; y: number; subtitle: number };
+        readonly extents?: ReadonlyMap<string, number>;
+        readonly room?: ViewRoom;
+        readonly ticks?: TicksShown;
+    }
+    /** The frame of the last resting layout, which a change moves from. */
+    let rest: FramePlace = {};
+    /** The frame a running motion holds now and the one it heads to; a change during it starts from the first. */
+    let held: FramePlace | undefined;
+    let heading: FramePlace | undefined;
+    const autosizeOf = (value: any): Record<string, any> => (typeof value === 'string' ? { type: value } : value ?? {});
+    let restSizing: { autosize: any; padding: { left: number; top: number; right: number; bottom: number } } | undefined;
+    const roomMovable = (): boolean => {
+        const autosize = autosizeOf(restSizing?.autosize ?? view.autosize());
+        return Boolean(plan.plotRoom) && (autosize.type ?? 'pad') === 'pad' && !autosize.resize && autosize.contains !== 'padding';
+    };
+    const readFrame = (): FramePlace => ({
+        title: plan.titleMotion ? titlePosition(view) : undefined,
+        extents: axisExtents.length > 0 ? axisExtentsAtRest(view, axisExtents) : undefined,
+        room: roomMovable() ? viewRoom(view) : undefined,
+        ticks: tickAxes.length > 0 ? axisTicksShown(view, tickAxes) : undefined,
+    });
+    const mixFrame = (from: FramePlace, to: FramePlace, move: number): FramePlace => {
+        const mix = (a: number, b: number) => a + (b - a) * move;
+        return {
+            title: from.title && to.title
+                ? { x: mix(from.title.x, to.title.x), y: mix(from.title.y, to.title.y), subtitle: mix(from.title.subtitle, to.title.subtitle) }
+                : to.title,
+            extents: from.extents && to.extents
+                ? new Map([...from.extents].map(([key, value]) => [key, mix(value, to.extents!.get(key) ?? value)]))
+                : undefined,
+            room: from.room && to.room
+                ? { left: mix(from.room.left, to.room.left), top: mix(from.room.top, to.room.top), right: mix(from.room.right, to.room.right), bottom: mix(from.room.bottom, to.room.bottom) }
+                : undefined,
+        };
+    };
+    /**
+     * Holds the frame at a place while a motion runs; with nothing to hold, the title stands at the
+     * resting layout's place and Vega lays out the axes' room and the room around the plot again.
+     */
+    const holdFrame = (frame: FramePlace | undefined): void => {
+        held = frame;
+        const title = frame?.title ?? rest.title;
+        if (plan.titleMotion && title) {
+            view.signal(TITLE_ORIENT_SIGNAL, 'none').signal(TITLE_X_SIGNAL, title.x).signal(TITLE_Y_SIGNAL, title.y).signal(SUBTITLE_DY_SIGNAL, title.subtitle);
+        }
+        for (const entry of axisExtents) {
+            const extent = frame?.extents?.get(entry.key);
+            view.signal(entry.min, extent ?? entry.restMin).signal(entry.max, extent ?? entry.restMax);
+        }
+        const room = frame?.room;
+        if (room) {
+            restSizing ??= { autosize: view.autosize(), padding: view.padding() };
+            const pad = restSizing.padding;
+            view.autosize({ ...autosizeOf(restSizing.autosize), type: 'none' }).padding({
+                left: pad.left + room.left,
+                top: pad.top + room.top,
+                right: pad.right + room.right,
+                bottom: pad.bottom + room.bottom,
+            });
+        } else {
+            if (restSizing) view.autosize(restSizing.autosize).padding(restSizing.padding);
+            restSizing = undefined;
+            view.resize();
+        }
+    };
+    /** The ticks a motion carries across, both sides of it, while one does. */
+    let ticksSides: [TicksShown, TicksShown] | undefined;
+    const holdTicks = (from?: TicksShown, to?: TicksShown): void => {
+        ticksSides = from && to ? [from, to] : undefined;
+        for (const scale of tickAxes) {
+            const before = from?.get(scale);
+            const after = to?.get(scale);
+            if (!before || !after) {
+                view.signal(axisTicksSignal(scale), null);
+                continue;
+            }
+            const values = new Map([...before.values, ...after.values]);
+            view.signal(axisTicksSignal(scale), {
+                values: [...values.values()].sort((a, b) => +(a as number) - +(b as number)),
+                text: { ...before.text, ...after.text },
+                from: Object.fromEntries([...before.values.keys()].map((key) => [key, true])),
+                to: Object.fromEntries([...after.values.keys()].map((key) => [key, true])),
+            });
+        }
+    };
     let outlineGeneration = 0;
+    /**
+     * Settles the resting layout drawn now: Vega lays out the title and the room around the plot
+     * once, the frame is read, and the title stands at that place until the next committed layout.
+     * A preview never moves the frame.
+     */
+    const settleLayout = async (): Promise<void> => {
+        if (sceneMotion) return;
+        holdFrame(undefined);
+        if (plan.titleMotion) view.signal(TITLE_ORIENT_SIGNAL, 'top').signal(SUBTITLE_DY_SIGNAL, 0);
+        await view.runAsync();
+        rest = readFrame();
+        layoutMayMove = false;
+        // The title now stands by place where Vega drew it, so the next run draws it unmoved.
+        holdFrame(undefined);
+    };
+    /** Ends the running motion at the frame it was heading to. */
+    const endMotion = (): void => {
+        const running = sceneMotion;
+        const settle = settleRunning;
+        sceneMotion = undefined;
+        settleRunning = undefined;
+        motionEnd = undefined;
+        running?.cancel();
+        settle?.();
+    };
     /**
      * Renders a committed change. Over a positive duration, what is drawn now moves to what the
      * change draws: the scene is captured, the change renders at progress 0, then the progress
-     * runs to 1. A change during a motion starts from the frame on screen. Resolves with the
+     * runs to 1. A change during a motion starts from the frame on screen, and one that would jump
+     * is carried to where the motion was heading over the time it had left. Resolves with the
      * render; `settled` resolves when the motion ends.
      */
-    const startTransition = async (duration: number, easing?: ChartUpdateTransition['easing']): Promise<{ settled: Promise<void> }> => {
-        if (!sceneMovable || duration <= 0) {
+    const startTransition = async (duration: number, easing?: ChartUpdateTransition['easing'], committed = true): Promise<{ settled: Promise<void> }> => {
+        if (committed && duration <= 0 && sceneMotion && motionEnd) {
+            duration = Math.max(0, motionEnd.at - performance.now());
+            easing ??= motionEnd.easing;
+        }
+        if (!sceneMovable || duration <= 0 || drawnItemCount(view, identities().drawn) > MAX_MOVING_ITEMS) {
+            if (committed) endMotion();
             await renderUpdates();
+            if (committed) await settleLayout();
             if (!sceneMotion) revealWaiting();
             return { settled: sceneMotion?.done ?? Promise.resolve() };
-        }
-        if (drawnItemCount(view) > MAX_MOVING_ITEMS) {
-            await renderUpdates();
-            revealWaiting();
-            return { settled: Promise.resolve() };
         }
         // The old frame and the new one are keyed alike, by the identity the old rows were drawn with.
         const identity = identities().drawn;
@@ -1676,9 +1825,13 @@ export function mountVegaInteractions(
         const notesBefore = new Set(container.querySelectorAll('[data-flint-annotation]'));
         const focusFrom = focusedIdentities();
         focusFade = { from: focusFrom, identityOf: focusIdentityOf, progress: 0 };
-        // The motion this one interrupts must not settle the scene back to rest once it is cancelled.
+        // The motion this one interrupts hands over the frame it holds and where it was heading.
         const interrupted = sceneMotion;
+        const frameFrom = held ?? rest;
+        const headingBefore = interrupted ? heading : undefined;
+        const ticksBefore = ticksSides ? ticksSides[Number(view.signal(SCENE_T_SIGNAL)) < 0.5 ? 0 : 1] : rest.ticks;
         sceneMotion = undefined;
+        settleRunning = undefined;
         interrupted?.cancel();
         for (const scale of scales) view.signal(scale.signal, null);
         for (const size of sizes) view.signal(size.signal, null);
@@ -1693,6 +1846,34 @@ export function mountVegaInteractions(
         outlineGeneration += 1;
         const outlinesStay = placeOutlineStarts(view, from, identity);
         view.signal(SCENE_OUTLINE_SIGNAL, outlinesStay ? outlineGeneration : null);
+        const moving = scales.flatMap((scale, index) => {
+            const before = domainsBefore[index]!;
+            const after = [...(view.scale(scale.name)?.domain() ?? [])];
+            const same = before.length === after.length && before.every((value, at) => +value === +after[at]);
+            return same || before.length < 2 || before.length !== after.length ? [] : [{ scale, path: domainPath(scale.type, before, after) }];
+        });
+        const resizing = sizes.flatMap((size, index) => {
+            const before = sizesBefore[index]!;
+            const after = Number(view.signal(size.dimension));
+            return Number.isFinite(before) && Number.isFinite(after) && Math.abs(after - before) > 0.5 ? [{ size, before, after }] : [];
+        });
+        // The frame moves only by the difference between the two resting layouts. When the rows, the
+        // hidden items, a scale or a size changed, the next one is read by drawing the change's last
+        // frame, before the leaving rows' copies are added; otherwise the frame keeps its heading.
+        const next = layoutMayMove || moving.length > 0 || resizing.length > 0 ? await (async () => {
+            view.signal(SCENE_T_SIGNAL, 1).signal(SCENE_ENTER_SIGNAL, 1).signal(SCENE_EXIT_SIGNAL, 1);
+            holdTicks();
+            holdFrame(undefined);
+            if (plan.titleMotion) view.signal(TITLE_ORIENT_SIGNAL, 'top').signal(SUBTITLE_DY_SIGNAL, 0);
+            await view.runAsync();
+            const frame = readFrame();
+            view.signal(SCENE_T_SIGNAL, 0).signal(SCENE_ENTER_SIGNAL, 0).signal(SCENE_EXIT_SIGNAL, 0);
+            return frame;
+        })() : undefined;
+        layoutMayMove = false;
+        const target: FramePlace = next ?? headingBefore ?? rest;
+        heading = target;
+        const ticksAfter = next?.ticks ?? headingBefore?.ticks;
         const ghostsAfter = captureGhosts(view, identity);
         const leaving = setSceneExits(view, ghosts, ghostsAfter) > 0;
         const drawnBefore = new Set(ghosts.paths.flatMap((path) => path.keys.map((key) => `${path.name}\u0000${key}`)));
@@ -1700,21 +1881,11 @@ export function mountVegaInteractions(
             || ghostsAfter.paths.some((path) => !path.keys.some((key) => drawnBefore.has(`${path.name}\u0000${key}`)));
         const staying = outlinesStay || [...ghostsAfter.items.keys()].some((id) => ghosts.items.has(id))
             || ghostsAfter.paths.some((path) => path.keys.some((key) => drawnBefore.has(`${path.name}\u0000${key}`)));
-        const moving = scales.flatMap((scale, index) => {
-            const before = domainsBefore[index]!;
-            const after = [...(view.scale(scale.name)?.domain() ?? [])];
-            const same = before.length === after.length && before.every((value, at) => +value === +after[at]);
-            return same || before.length < 2 ? [] : [{ scale, path: domainPath(scale.type, before, after) }];
-        });
+        holdFrame(mixFrame(frameFrom, target, 0));
+        holdTicks(ticksBefore, ticksAfter);
         for (const { scale, path } of moving) view.signal(scale.signal, path(0));
         view.signal(SCENE_CLIP_SIGNAL, moving.length > 0 || leaving || arriving);
-        const resizing = sizes.flatMap((size, index) => {
-            const before = sizesBefore[index]!;
-            const after = Number(view.signal(size.dimension));
-            return Number.isFinite(before) && Number.isFinite(after) && Math.abs(after - before) > 0.5 ? [{ size, before, after }] : [];
-        });
         const drawnSize = ({ before, after }: typeof resizing[number], move: number): number => (before + (after - before) * move) / after;
-        const settleSize = ({ size }: typeof resizing[number]) => view.signal(size.signal, null);
         for (const entry of resizing) view.signal(entry.size.signal, drawnSize(entry, 0));
         if (!arriving) view.signal(SCENE_ENTER_SIGNAL, 1);
         await view.runAsync();
@@ -1736,56 +1907,68 @@ export function mountVegaInteractions(
         const moveEnd = arriving && staged ? 1 - arriveShare : 1;
         const ease = easingCurve(easing);
         const stage = (t: number, start: number, end: number): number => ease(Math.max(0, Math.min(1, (t - start) / (end - start))));
+        let settled = false;
+        /** Lays the change's resting layout: the frame at its new rest, every held scale, size and copy released. */
+        const settle = (): void => {
+            if (settled) return;
+            settled = true;
+            rest = { ...target, ticks: ticksAfter ?? rest.ticks };
+            heading = undefined;
+            holdTicks();
+            holdFrame(undefined);
+            for (const { scale } of moving) view.signal(scale.signal, null);
+            for (const { size } of resizing) view.signal(size.signal, null);
+            setSceneExits(view, null);
+            view.signal(SCENE_FROM_SIGNAL, null);
+            view.signal(SCENE_OUTLINE_SIGNAL, null);
+            view.signal(SCENE_CLIP_SIGNAL, false);
+            view.signal(SCENE_T_SIGNAL, 1);
+            view.signal(SCENE_ENTER_SIGNAL, 1);
+            view.signal(SCENE_EXIT_SIGNAL, 1);
+            focusFade = undefined;
+        };
         const motion = runMotion(duration, async (t) => {
-            const move = stage(t, moveStart, moveEnd);
-            view.signal(SCENE_EXIT_SIGNAL, leaving ? stage(t, 0, staged ? leaveShare : 1) : 1);
-            view.signal(SCENE_T_SIGNAL, move);
-            view.signal(SCENE_ENTER_SIGNAL, arriving ? stage(t, staged ? moveEnd : 0, 1) : 1);
-            for (const { scale, path } of moving) view.signal(scale.signal, t >= 1 ? null : path(move));
-            for (const entry of resizing) {
-                if (t >= 1) settleSize(entry);
-                else view.signal(entry.size.signal, drawnSize(entry, move));
+            if (t >= 1) settle();
+            else {
+                const move = stage(t, moveStart, moveEnd);
+                view.signal(SCENE_EXIT_SIGNAL, leaving ? stage(t, 0, staged ? leaveShare : 1) : 1);
+                view.signal(SCENE_T_SIGNAL, move);
+                view.signal(SCENE_ENTER_SIGNAL, arriving ? stage(t, staged ? moveEnd : 0, 1) : 1);
+                for (const { scale, path } of moving) view.signal(scale.signal, path(move));
+                holdFrame(mixFrame(frameFrom, target, move));
+                for (const entry of resizing) view.signal(entry.size.signal, drawnSize(entry, move));
+                if (focusFade) focusFade = { ...focusFade, progress: move };
             }
-            if (t >= 1) {
-                view.signal(SCENE_FROM_SIGNAL, null);
-                view.signal(SCENE_OUTLINE_SIGNAL, null);
-                view.signal(SCENE_CLIP_SIGNAL, false);
-                setSceneExits(view, null);
-            }
-            if (focusFade) focusFade = t >= 1 ? undefined : { ...focusFade, progress: move };
             await view.runAsync();
             renderPathFocus();
             syncOverlays();
             holdWaiting();
         }, (t) => t);
         sceneMotion = motion;
-        void motion.done.then(() => {
+        settleRunning = settle;
+        motionEnd = { at: performance.now() + duration, easing };
+        // However the motion ends (run out, or a frame that throws), the chart comes to rest; a
+        // motion a newer one interrupted hands its frame over instead.
+        const ended = (): void => {
             if (sceneMotion !== motion) return;
             sceneMotion = undefined;
+            settleRunning = undefined;
+            motionEnd = undefined;
             revealWaiting();
-            if (focusFade) {
-                focusFade = undefined;
-                renderPathFocus();
-            }
-            if (view.signal(SCENE_T_SIGNAL) !== 1) {
-                setSceneExits(view, null);
-                for (const { scale } of moving) view.signal(scale.signal, null);
-                for (const entry of resizing) settleSize(entry);
-                view.signal(SCENE_FROM_SIGNAL, null);
-                view.signal(SCENE_OUTLINE_SIGNAL, null);
-                view.signal(SCENE_T_SIGNAL, 1);
-                view.signal(SCENE_ENTER_SIGNAL, 1);
-                view.signal(SCENE_EXIT_SIGNAL, 1);
+            if (!settled) {
+                settle();
                 void view.runAsync();
             }
-        });
+            renderPathFocus();
+        };
+        void motion.done.then(ended, ended);
         return { settled: motion.done };
     };
     // Changes that start together take turns: each waits until the one before has drawn its first
     // frame, then starts from that frame and cancels it, so the chart moves once to where both lead.
     let transitionTurn: Promise<unknown> = Promise.resolve();
-    const renderTransition = (duration: number, easing?: ChartUpdateTransition['easing']): Promise<{ settled: Promise<void> }> => {
-        const turn = transitionTurn.then(() => startTransition(duration, easing));
+    const renderTransition = (duration: number, easing?: ChartUpdateTransition['easing'], committed = true): Promise<{ settled: Promise<void> }> => {
+        const turn = transitionTurn.then(() => startTransition(duration, easing, committed));
         transitionTurn = turn.catch(() => undefined);
         return turn;
     };
@@ -1829,7 +2012,8 @@ export function mountVegaInteractions(
         const pendingTransitionUsed = pendingTransition !== undefined;
         let rendered: { settled: Promise<void> };
         try {
-            rendered = await renderTransition(destination === retainedUpdates ? sceneDuration(update, options?.transition) : 0, options?.transition?.easing);
+            const committed = destination === retainedUpdates;
+            rendered = await renderTransition(committed ? sceneDuration(update, options?.transition) : 0, options?.transition?.easing, committed);
         } finally {
             pendingTransition = undefined;
         }
@@ -3577,6 +3761,7 @@ export function mountVegaInteractions(
         resizeObserver?.disconnect();
         sceneMotion?.cancel();
         sceneMotion = undefined;
+        settleRunning = undefined;
         observedRenderer = undefined;
         if (syncFrame !== undefined && typeof cancelAnimationFrame !== 'undefined') {
             cancelAnimationFrame(syncFrame);
@@ -3612,6 +3797,8 @@ export function mountVegaInteractions(
         notifyChange({ phase: 'commit', source: 'host' });
         return results;
     };
+    // From the first frame the title stands at its resting layout, so a first preview cannot move it.
+    void settleLayout();
     return {
         getInteractionContext: context,
         onChange: (listener) => {
@@ -3653,6 +3840,8 @@ export function mountVegaInteractions(
         refresh: () => {
             observeRenderer();
             syncOverlays();
+            // A new room is a new resting layout.
+            void settleLayout();
         },
         destroy,
     };

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parse, View } from 'vega';
+import { compile as compileVegaLite } from 'vega-lite';
 import {
     captureGhosts,
     captureMorphScene,
@@ -8,6 +9,12 @@ import {
     drawnItemCount,
     identityRepeats,
     injectScaleMotion,
+    injectAxisExtentMotion,
+    injectAxisMotion,
+    injectAxisTickMotion,
+    axisTicksSignal,
+    axisExtentsAtRest,
+    viewRoom,
     injectSceneMotion,
     injectSizeMotion,
     placeOutlineStarts,
@@ -18,6 +25,12 @@ import {
     SCENE_OUTLINE_SIGNAL,
     SCENE_T_SIGNAL,
     setSceneExits,
+    injectTitleMotion,
+    SUBTITLE_DY_SIGNAL,
+    TITLE_ORIENT_SIGNAL,
+    TITLE_X_SIGNAL,
+    TITLE_Y_SIGNAL,
+    titlePosition,
 } from '../src/vegalite/interactions/scene-motion';
 import { INTERACTION_KEY } from '../src/vegalite/interactions/stores';
 import { mixItem, type MarkMotion } from '../src/vegalite/interactions/motion-transform';
@@ -102,6 +115,57 @@ describe('scene motion', () => {
         view.signal(SCENE_T_SIGNAL, 1).signal(SCENE_FROM_SIGNAL, null);
         await view.runAsync();
         expect(bars(view).a.x).toBe(200);
+    });
+
+    it('keeps Vega\'s own placement of a band axis at rest, and glides it from the captured frame', async () => {
+        const axisSpec = (order: string[]): Record<string, any> => ({
+            width: 300,
+            height: 100,
+            signals: [{ name: 'order', value: order }, { name: SCENE_T_SIGNAL, value: 1 }, { name: SCENE_FROM_SIGNAL, value: null }],
+            scales: [{ name: 'x', type: 'band', domain: { signal: 'order' }, range: 'width' }],
+            axes: [{ scale: 'x', orient: 'bottom', tickBand: 'extent', labelOffset: 3 }],
+        });
+        const placed = async (spec: Record<string, any>, set?: (view: View) => void): Promise<Record<string, number[]>> => {
+            const view = new View(parse(spec), { renderer: 'none' });
+            set?.(view);
+            await view.runAsync();
+            const axis = (view.scenegraph() as any).root.items[0].items[0].items[0];
+            const of = (role: string) => axis.items.find((mark: any) => mark.role === role).items.map((item: any) => item.x);
+            return { ticks: of('axis-tick'), labels: of('axis-label') };
+        };
+        const moving = axisSpec(['a', 'b', 'c']);
+        injectAxisMotion(moving);
+        expect(await placed(moving)).toEqual(await placed(axisSpec(['a', 'b', 'c'])));
+
+        const from = { '__axis:x:axis-label': { a: { x: 250 } } };
+        const midway = await placed(moving, (view) => view.signal(SCENE_FROM_SIGNAL, from).signal(SCENE_T_SIGNAL, 0.5));
+        expect(midway.labels[0]).toBeCloseTo((250 + 50 + 3) / 2, 6);
+    });
+
+    it('matches a mark keyed by one field whole when a new series repeats that field, so the new series arrives', async () => {
+        const spec: Record<string, any> = {
+            width: 200,
+            height: 100,
+            data: [{ name: 'rows', values: [{ s: 'A', k: 'a', v: 10 }, { s: 'A', k: 'b', v: 30 }], transform: [{ type: 'formula', as: INTERACTION_KEY, expr: "datum.s + '|' + datum.k" }] }],
+            scales: [
+                { name: 'x', type: 'band', domain: ['a', 'b'], range: 'width' },
+                { name: 'y', type: 'linear', domain: [0, 40], range: 'height' },
+            ],
+            marks: [{ type: 'symbol', name: 'dots', from: { data: 'rows' }, encode: { update: { x: { scale: 'x', field: 'k' }, y: { scale: 'y', field: 'v' } } } }],
+        };
+        injectSceneMotion(spec, ['s', 'k']);
+        const view = new View(parse(spec), { renderer: 'none' });
+        await view.runAsync();
+        const before = captureScene(view, ['s', 'k']);
+        expect((before.dots as any)['__flint_identity']).toEqual(['k']);
+
+        view.signal(SCENE_FROM_SIGNAL, before).signal(SCENE_T_SIGNAL, 0).signal(SCENE_ENTER_SIGNAL, 0);
+        view.data('rows', [{ s: 'A', k: 'a', v: 10 }, { s: 'A', k: 'b', v: 30 }, { s: 'B', k: 'a', v: 20 }, { s: 'B', k: 'b', v: 40 }]);
+        await view.runAsync();
+        const dots = (view.scenegraph() as any).root.items[0].items[0].items;
+        const arriving = dots.filter((item: any) => item.datum.s === 'B');
+        expect(arriving.map((item: any) => item.opacity)).toEqual([0, 0]);
+        expect(dots.filter((item: any) => item.datum.s === 'A').map((item: any) => item.opacity ?? 1)).toEqual([1, 1]);
     });
 
     it('fades in an item the captured frame did not draw', async () => {
@@ -247,6 +311,27 @@ describe('scene motion', () => {
         expect(bars(view).a.fill).toBe('rgb(18,43,92)');
     });
 
+    it('holds a title where it is told while Vega would lay it out against moving labels', async () => {
+        const spec: any = {
+            width: 200, height: 100,
+            title: { text: 'Units by product', subtitle: 'Units', anchor: 'start', frame: 'group', offset: 10 },
+            signals: [],
+            marks: [{ type: 'rect', encode: { update: { x: { value: 0 }, y: { value: 0 }, width: { value: 10 }, height: { value: 10 } } } }],
+        };
+        expect(injectTitleMotion(spec)).toBe(true);
+        const view = new View(parse(spec), { renderer: 'none' });
+        await view.runAsync();
+        const rest = titlePosition(view)!;
+        expect(rest.y).toBeLessThan(0);
+        expect(rest.subtitle).toBeGreaterThan(0);
+        view.signal(TITLE_ORIENT_SIGNAL, 'none').signal(TITLE_X_SIGNAL, 5).signal(TITLE_Y_SIGNAL, -40).signal(SUBTITLE_DY_SIGNAL, rest.subtitle);
+        await view.runAsync();
+        const group: any = (view.scenegraph() as any).root.items[0].items.find((mark: any) => mark.role === 'title').items[0];
+        expect([group.x, group.y]).toEqual([5, -40]);
+        const subtitle = group.items.find((mark: any) => mark.role === 'title-subtitle').items[0];
+        expect(subtitle.y + subtitle.dy).toBe(rest.subtitle);
+    });
+
     it('matches the new items by the identity the old frame was captured with', async () => {
         const spec = barSpec(['a', 'b', 'c']);
         // A row key that changes with the value, as one built from every field does.
@@ -327,6 +412,133 @@ describe('scene motion', () => {
         injectSceneMotion(spec);
         expect(injectScaleMotion(spec).map((scale) => scale.name)).toEqual(['x', 'y']);
         expect(spec.scales[1].domainRaw).toEqual({ signal: '__flint_domain_y' });
+    });
+
+    it('names a mark drawn from aggregated rows by the identity fields they kept, so its numbers count', async () => {
+        const spec: Record<string, any> = {
+            width: 100,
+            height: 100,
+            data: [{ name: 'rows', values: [{ k: 'a', v: 40 }, { k: 'a', v: 44 }, { k: 'b', v: 10 }], transform: [{ type: 'aggregate', groupby: ['k'], fields: ['v'], ops: ['sum'], as: ['total'] }] }],
+            marks: [{ type: 'text', name: 'totals', from: { data: 'rows' }, encode: { update: { text: { signal: 'format(datum.total, "d")' }, y: { value: 0 } } } }],
+        };
+        injectSceneMotion(spec, ['k']);
+        const view = new View(parse(spec), { renderer: 'none' });
+        await view.runAsync();
+        const before = captureScene(view, ['k']);
+        expect(before.totals).toMatchObject({ a: { text: '84' }, b: { text: '10' } });
+
+        view.signal(SCENE_FROM_SIGNAL, before).signal(SCENE_T_SIGNAL, 0.5);
+        view.data('rows', [{ k: 'a', v: 100 }, { k: 'b', v: 30 }]);
+        await view.runAsync();
+        const texts = Object.fromEntries((view.scenegraph() as any).root.items[0].items[0].items.map((item: any) => [item.datum.k, item.text]));
+        expect(texts).toEqual({ a: '92', b: '20' });
+    });
+
+    it('carries an axis\'s ticks across a change: shared ones stay, the rest fade out or in, overlap removal and the tick count stand down', async () => {
+        const spec: Record<string, any> = {
+            width: 100,
+            height: 100,
+            signals: [{ name: SCENE_T_SIGNAL, value: 1 }],
+            scales: [{ name: 'y', type: 'linear', domain: [0, 150], range: 'height' }],
+            axes: [{ scale: 'y', orient: 'left', values: [0, 50, 100, 150], labelOverlap: true, tickCount: 3 }],
+        };
+        expect(injectAxisTickMotion(spec)).toEqual(['y']);
+        const view = new View(parse(spec), { renderer: 'none' });
+        await view.runAsync();
+        const labels = (): string[] => (view.scenegraph() as any).root.items[0].items[0].items[0].items
+            .find((mark: any) => mark.role === 'axis-label').items.map((item: any) => `${item.text}:${item.opacity}`);
+        const faded = (): string[] => (view.scenegraph() as any).root.items[0].items[0].items[0].items
+            .find((mark: any) => mark.role === 'axis-label').items.map((item: any) => `${item.text}:${item.fillOpacity}`);
+        const rest = labels();
+        const plain = new View(parse({ ...spec, axes: [{ scale: 'y', orient: 'left', values: [0, 50, 100, 150], labelOverlap: true, tickCount: 3 }] }), { renderer: 'none' });
+        await plain.runAsync();
+        expect(rest).toEqual((plain.scenegraph() as any).root.items[0].items[0].items[0].items
+            .find((mark: any) => mark.role === 'axis-label').items.map((item: any) => `${item.text}:${item.opacity}`));
+
+        const hold = { values: [0, 40, 50, 80, 100, 120], text: { 40: 'forty' }, from: { 0: true, 50: true, 100: true }, to: { 0: true, 40: true, 80: true, 120: true } };
+        view.signal(axisTicksSignal('y'), hold).signal(SCENE_T_SIGNAL, 0.25);
+        await view.runAsync();
+        expect(faded()).toEqual(['0:1', 'forty:0.25', '50:0.75', '80:0.25', '100:0.75', '120:0.25']);
+        expect(labels().every((label) => label.endsWith(':1'))).toBe(true);
+
+        view.signal(axisTicksSignal('y'), null).signal(SCENE_T_SIGNAL, 1);
+        await view.runAsync();
+        expect(labels()).toEqual(rest);
+    });
+
+    it('holds the room an axis takes, and reads it back as Vega lays it out at rest', async () => {
+        const spec: Record<string, any> = {
+            width: 200,
+            height: 100,
+            data: [{ name: 'rows', values: [{ k: 'a', v: 10 }, { k: 'b', v: 1200 }] }],
+            scales: [
+                { name: 'x', type: 'band', domain: { data: 'rows', field: 'k' }, range: 'width' },
+                { name: 'y', type: 'linear', domain: { data: 'rows', field: 'v' }, range: 'height' },
+            ],
+            axes: [
+                { scale: 'y', orient: 'left', title: 'Value' },
+                { scale: 'y', orient: 'left', grid: true, labels: false, ticks: false, domain: false, minExtent: 0, maxExtent: 0 },
+                { scale: 'x', orient: 'bottom', maxExtent: 50 },
+            ],
+            signals: [{ name: SCENE_T_SIGNAL, value: 1 }],
+        };
+        const extents = injectAxisExtentMotion(spec);
+        expect(extents.map((entry) => [entry.key, entry.restMin, entry.restMax])).toEqual([['y|left', 0, 200], ['x|bottom', 0, 50]]);
+        expect(spec.axes[1]).toMatchObject({ minExtent: 0, maxExtent: 0 });
+        const configured: Record<string, any> = {
+            config: { axisY: { maxExtent: 30 }, axisBottom: { minExtent: 12, maxExtent: 12 } },
+            axes: [{ scale: 'y', orient: 'left' }, { scale: 'x', orient: 'bottom' }],
+        };
+        expect(injectAxisExtentMotion(configured).map((entry) => [entry.key, entry.restMin, entry.restMax])).toEqual([['y|left', 0, 30]]);
+        const view = new View(parse(spec), { renderer: 'none' });
+        await view.runAsync();
+        const title = (): number => (view.scenegraph() as any).root.items[0].items.find((mark: any) => mark.role === 'axis').items[0].items.find((mark: any) => mark.role === 'axis-title').items[0].x;
+        const rest = axisExtentsAtRest(view, extents);
+        const restTitle = title();
+        expect(rest.get('y|left')).toBeGreaterThan(20);
+
+        view.signal(extents[0]!.min, rest.get('y|left')! + 10).signal(extents[0]!.max, rest.get('y|left')! + 10);
+        await view.runAsync();
+        expect(title()).toBeCloseTo(restTitle - 10, 6);
+        expect(axisExtentsAtRest(view, extents).get('y|left')).toBeCloseTo(rest.get('y|left')!, 6);
+    });
+
+    it('reads the room pad autosize gives the scene, which a held padding reproduces exactly', async () => {
+        const spec: Record<string, any> = {
+            width: 200,
+            height: 100,
+            data: [{ name: 'rows', values: [{ k: 'a', v: 10 }, { k: 'b', v: 1200 }] }],
+            scales: [
+                { name: 'x', type: 'band', domain: { data: 'rows', field: 'k' }, range: 'width' },
+                { name: 'y', type: 'linear', domain: { data: 'rows', field: 'v' }, range: 'height' },
+            ],
+            axes: [{ scale: 'y', orient: 'left', title: 'Value' }, { scale: 'x', orient: 'bottom' }],
+        };
+        const view = new View(parse(spec), { renderer: 'none' });
+        await view.runAsync();
+        const room = viewRoom(view)!;
+        expect(room.left).toBeGreaterThan(20);
+        expect(room.bottom).toBeGreaterThan(10);
+        const [x, y] = view.origin();
+
+        view.autosize({ type: 'none' }).padding({ left: room.left, top: room.top, right: room.right, bottom: room.bottom });
+        await view.runAsync();
+        const padding = view.padding() as { left: number; top: number };
+        expect([view.origin()[0] + padding.left, view.origin()[1] + padding.top]).toEqual([x, y]);
+        expect([view.width(), view.height()]).toEqual([200, 100]);
+    });
+
+    it('moves the bins of a binned colour key, so its labels count with the change', () => {
+        const spec = areaSpec([{ i: 0, v: 40, w: 10 }, { i: 1, v: 60, w: 20 }], 'toString(datum.i)');
+        spec.scales.push(
+            { name: 'binned', type: 'quantize', domain: [0, 100], range: ['#eee', '#999', '#333'] },
+            { name: 'cut', type: 'threshold', domain: [10, 50], range: ['#eee', '#999', '#333'] },
+            { name: 'unkeyed', type: 'quantize', domain: [0, 100], range: ['#eee', '#333'] },
+        );
+        spec.legends = [{ fill: 'binned' }, { fill: 'cut' }];
+        injectSceneMotion(spec);
+        expect(injectScaleMotion(spec).map((scale) => scale.name)).toEqual(['x', 'y', 'binned', 'cut']);
+        expect(domainPath('quantize', [30, 80], [40, 100])(0.5)).toEqual([35, 90]);
     });
 
     it('slides the stretch a staying line lost out with its scale, joined to the line and clipped to the plot', async () => {
@@ -414,6 +626,71 @@ describe('scene motion', () => {
         expect(captureMorphScene(view, [], { x: 0, y: 0 }).items).toHaveLength(0);
         const scene = captureMorphScene(view, ['k'], { x: 0, y: 0 });
         expect(scene.items.map((item) => item.datum.k)).toEqual(['a', 'b', 'c']);
+    });
+
+    it('moves a rounded stack\'s clip and outline with its bars, in every panel', async () => {
+        const rows = (scale: number) => ['p', 'q'].flatMap((panel, at) => ['a', 'b'].map((k, index) => ({ panel, k, v: (10 + index * 10 + at * 5) * scale })));
+        const spec = compileVegaLite({
+            data: { name: 'rows' },
+            transform: [{ calculate: "datum.panel + '|' + datum.k", as: INTERACTION_KEY }],
+            mark: { type: 'bar', cornerRadiusEnd: 4 },
+            encoding: {
+                column: { field: 'panel', type: 'nominal' },
+                x: { field: 'k', type: 'nominal' },
+                y: { field: 'v', type: 'quantitative', scale: { domain: [0, 80] } },
+            },
+            width: 100,
+            height: 100,
+        } as any).spec as Record<string, any>;
+        injectSceneMotion(spec);
+        const stackMarks: any[] = [];
+        const findStacks = (marks: any[] | undefined): void => {
+            for (const mark of marks ?? []) {
+                if (mark.name?.startsWith('__flint_stack_')) stackMarks.push(mark);
+                findStacks(mark.marks);
+            }
+        };
+        findStacks(spec.marks);
+        expect(stackMarks[0].transform.at(-1).motion.extents).toEqual([
+            { start: 'y', size: 'height', scale: 'y', fields: ['min_v_start', 'max_v_start', 'min_v_end', 'max_v_end'] },
+        ]);
+        const view = new View(parse(spec), { renderer: 'none' });
+        view.data('rows', rows(1));
+        await view.runAsync();
+        // Each stack group, with the extent of the bars its inner group draws, in the group's own frame.
+        const stacks = (): { y: number; height: number; top: number; bottom: number }[] => {
+            const found: { y: number; height: number; top: number; bottom: number }[] = [];
+            const visit = (node: any): void => {
+                for (const item of node.items ?? []) {
+                    if (item.mark?.name?.startsWith('__flint_stack_')) {
+                        const inner = item.items[0].items[0];
+                        const rects = inner.items[0].items;
+                        const top = Math.min(...rects.map((rect: any) => item.y + inner.y + rect.y));
+                        const bottom = Math.max(...rects.map((rect: any) => item.y + inner.y + rect.y + rect.height));
+                        found.push({ y: item.y, height: item.height, top, bottom });
+                    }
+                    visit(item);
+                }
+            };
+            visit((view.scenegraph() as any).root);
+            return found;
+        };
+        expect(stacks()).toHaveLength(4);
+        const before = captureScene(view);
+        const startHeights = stacks().map((stack) => stack.height);
+
+        view.signal(SCENE_FROM_SIGNAL, before).signal(SCENE_T_SIGNAL, 0);
+        view.data('rows', rows(2));
+        await view.runAsync();
+        expect(stacks().map((stack) => stack.height)).toEqual(startHeights.map((height) => expect.closeTo(height, 6)));
+
+        view.signal(SCENE_T_SIGNAL, 0.5);
+        await view.runAsync();
+        for (const stack of stacks()) {
+            expect(stack.top).toBeCloseTo(stack.y, 6);
+            expect(stack.bottom).toBeCloseTo(stack.y + stack.height, 6);
+        }
+        expect(stacks().map((stack) => stack.height)).toEqual(startHeights.map((height) => expect.closeTo(height * 1.5, 6)));
     });
 });
 

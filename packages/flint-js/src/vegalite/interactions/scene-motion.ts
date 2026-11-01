@@ -4,13 +4,20 @@ import {
     drawnDataValue,
     identityKey,
     registerMotionTransform,
+    trackedKey,
+    drawnFieldValue,
     resetOutlineStarts,
+    stackGroupMotion,
+    stackKey,
     IDENTITY_FIELDS,
+    WHOLE_IDENTITY,
     WHOLE_KEY_FLAG,
     type ArrivalAxis,
     type DataPosition,
     type MarkMotion,
+    type StackExtent,
 } from './motion-transform';
+import { parseExpression } from 'vega';
 import { INTERACTION_KEY, MARK_IDENTITY } from './stores';
 
 /** The drawn state a motion starts from: per mark name, per row key, each channel's value. */
@@ -27,6 +34,181 @@ export const SCENE_CLIP_SIGNAL = '__flint_scene_clip';
 
 /** Changes for each motion that placed outline starts on its items; null when none. */
 export const SCENE_OUTLINE_SIGNAL = '__flint_scene_outline';
+/** How the title is placed: Vega lays it out (`top`) at rest; a motion holds it where it is told (`none`). */
+export const TITLE_ORIENT_SIGNAL = '__flint_title_orient';
+/** Where a held title's group stands, in the root group's coordinates. */
+export const TITLE_X_SIGNAL = '__flint_title_x';
+export const TITLE_Y_SIGNAL = '__flint_title_y';
+/** A held subtitle's offset below the title: Vega sets a subtitle at the group's origin when it does not lay the title out. */
+export const SUBTITLE_DY_SIGNAL = '__flint_subtitle_dy';
+
+/**
+ * Lets a motion hold the title where the resting layouts put it. Vega places a top title against
+ * everything drawn, labels included, so an in-between frame whose top label has left the plot's
+ * edge would move it; while a change runs the title is placed by position instead.
+ */
+export function injectTitleMotion(vegaSpec: Record<string, any>): boolean {
+    const stated = vegaSpec.title;
+    if (!stated) return false;
+    const title = typeof stated === 'string' || Array.isArray(stated) ? { text: stated } : stated;
+    if ((title.orient ?? 'top') !== 'top' || typeof title.orient === 'object') return false;
+    const encode = title.encode ?? {};
+    // The older form of `encode` styles the title text itself.
+    const parts = 'group' in encode || 'title' in encode || 'subtitle' in encode ? encode : (title.encode ? { title: encode } : {});
+    vegaSpec.signals = [
+        ...(vegaSpec.signals ?? []),
+        { name: TITLE_ORIENT_SIGNAL, value: 'top' },
+        { name: TITLE_X_SIGNAL, value: 0 },
+        { name: TITLE_Y_SIGNAL, value: 0 },
+        { name: SUBTITLE_DY_SIGNAL, value: 0 },
+    ];
+    vegaSpec.title = {
+        ...title,
+        orient: { signal: TITLE_ORIENT_SIGNAL },
+        encode: {
+            ...parts,
+            group: { ...(parts.group ?? {}), update: { ...(parts.group?.update ?? {}), x: { signal: TITLE_X_SIGNAL }, y: { signal: TITLE_Y_SIGNAL } } },
+            subtitle: { ...(parts.subtitle ?? {}), update: { ...(parts.subtitle?.update ?? {}), dy: { signal: SUBTITLE_DY_SIGNAL } } },
+        },
+    };
+    return true;
+}
+
+/** An axis whose room a motion holds: the signals bounding its extent, and the bounds Vega lays it out within at rest. */
+export interface AxisExtent {
+    readonly key: string;
+    readonly min: string;
+    readonly max: string;
+    readonly restMin: number;
+    readonly restMax: number;
+}
+
+const AXIS_ORIENTS = new Set(['left', 'right', 'top', 'bottom']);
+const axisExtentKey = (scale: string, orient: string): string => `${scale}|${orient}`;
+
+/**
+ * An axis property as Vega resolves it (vega-parser's `axis-config`): the axis's own, then the
+ * band config for an axis on a band scale, its orient's config, its x or y config, the axis config.
+ */
+function axisConfigValue(vegaSpec: Record<string, any>, axis: Record<string, any>, property: string, fallback: unknown): any {
+    if (axis[property] !== undefined) return axis[property];
+    const config = vegaSpec.config ?? {};
+    const orient = String(axis.orient);
+    const band = scaleTypeOf(vegaSpec, axis.scale) === 'band' ? config.axisBand : undefined;
+    const orientConfig = config[`axis${orient.charAt(0).toUpperCase()}${orient.slice(1)}`];
+    const xy = orient === 'top' || orient === 'bottom' ? config.axisX : config.axisY;
+    for (const source of [band, orientConfig, xy, config.axis]) {
+        if (source && Object.prototype.hasOwnProperty.call(source, property)) return source[property];
+    }
+    return fallback;
+}
+
+/** The type of the scale a name refers to, in any scope. */
+function scaleTypeOf(vegaSpec: Record<string, any>, name: unknown): string | undefined {
+    let type: string | undefined;
+    walkVegaScopes(vegaSpec, (scope) => {
+        const scale = (scope.scales ?? []).find((entry: Record<string, any>) => entry.name === name);
+        if (scale && type === undefined) type = scale.type ?? 'linear';
+    });
+    return type;
+}
+
+/**
+ * Lets a motion hold the room each axis takes for its ticks and labels, which places its title.
+ * At rest the extent is bounded as the axis or its config states (Vega's 0 to 200 when neither does), so Vega lays the axis out
+ * as before; while a change runs both bounds are one held value. An axis whose extent is already
+ * fixed keeps it.
+ */
+export function injectAxisExtentMotion(vegaSpec: Record<string, any>): AxisExtent[] {
+    const extents = new Map<string, AxisExtent>();
+    walkVegaScopes(vegaSpec, (scope) => {
+        for (const axis of scope.axes ?? []) {
+            if (typeof axis.scale !== 'string' || !AXIS_ORIENTS.has(axis.orient)) continue;
+            const minExtent = axisConfigValue(vegaSpec, axis, 'minExtent', 0);
+            const maxExtent = axisConfigValue(vegaSpec, axis, 'maxExtent', 200);
+            if (typeof minExtent !== 'number' || typeof maxExtent !== 'number' || minExtent === maxExtent) continue;
+            const key = axisExtentKey(axis.scale, axis.orient);
+            let entry = extents.get(key);
+            if (!entry) {
+                const name = `__flint_axis_extent_${key.replace(/\W/g, '_')}`;
+                entry = { key, min: `${name}_min`, max: `${name}_max`, restMin: minExtent, restMax: maxExtent };
+                extents.set(key, entry);
+            }
+            axis.minExtent = { signal: entry.min };
+            axis.maxExtent = { signal: entry.max };
+        }
+    });
+    if (extents.size === 0) return [];
+    vegaSpec.signals = [
+        ...(vegaSpec.signals ?? []),
+        ...[...extents.values()].flatMap((entry) => [{ name: entry.min, value: entry.restMin }, { name: entry.max, value: entry.restMax }]),
+    ];
+    return [...extents.values()];
+}
+
+/**
+ * The extent each axis takes at rest for the ticks and labels drawn now, as Vega's axis layout
+ * reads it (vega-view-transforms' `axisLayout`: the bounds of the tick and label groups, found by
+ * the same child order).
+ */
+export function axisExtentsAtRest(view: any, extents: readonly AxisExtent[]): Map<string, number> {
+    const byKey = new Map(extents.map((entry) => [entry.key, entry]));
+    const found = new Map<string, number>();
+    const visit = (node: any): void => {
+        for (const mark of node?.items ?? []) {
+            for (const item of mark.items ?? []) {
+                if (mark.role === 'axis' && item.datum && typeof item.datum.scale === 'string') {
+                    const entry = byKey.get(axisExtentKey(item.datum.scale, item.orient));
+                    if (entry) {
+                        let index = +item.datum.grid;
+                        const ticks = item.datum.ticks ? index++ : -1;
+                        const labels = item.datum.labels ? index++ : -1;
+                        const parts = [ticks, labels].filter((at) => at > -1).map((at) => item.items?.[at]?.bounds).filter(Boolean);
+                        const x1 = Math.min(0, ...parts.map((b: any) => b.x1));
+                        const x2 = Math.max(0, ...parts.map((b: any) => b.x2));
+                        const y1 = Math.min(0, ...parts.map((b: any) => b.y1));
+                        const y2 = Math.max(0, ...parts.map((b: any) => b.y2));
+                        const reach = item.orient === 'left' ? -x1 : item.orient === 'right' ? x2 : item.orient === 'top' ? -y1 : y2;
+                        const extent = Math.max(entry.restMin, Math.min(entry.restMax, Number.isFinite(reach) ? reach : 0));
+                        found.set(entry.key, Math.max(found.get(entry.key) ?? 0, extent));
+                    }
+                }
+                if (mark.marktype === 'group') visit(item);
+            }
+        }
+    };
+    const root = view.scenegraph?.()?.root;
+    if (root) visit({ items: [root] });
+    return found;
+}
+
+/** Where the title's group stands as Vega lays it out, and how far below it the subtitle sits; nothing for a chart without a top title. */
+export function titlePosition(view: any): { x: number; y: number; subtitle: number } | undefined {
+    const root = view.scenegraph?.()?.root?.items?.[0];
+    const group = root?.items?.find((mark: any) => mark.role === 'title')?.items?.[0];
+    if (!group || typeof group.x !== 'number' || typeof group.y !== 'number') return undefined;
+    const subtitle = group.items?.find((mark: any) => mark.role === 'title-subtitle')?.items?.[0];
+    return { x: group.x, y: group.y, subtitle: typeof subtitle?.y === 'number' ? subtitle.y : 0 };
+}
+
+/** How far a scene reaches past its plot on each side, which pad autosize gives it as room. */
+export interface ViewRoom {
+    readonly left: number;
+    readonly top: number;
+    readonly right: number;
+    readonly bottom: number;
+}
+
+/** The room the scene drawn now takes around its plot, as Vega's pad autosize lays it out (Vega's `viewSizeLayout`, read from the root group's bounds). */
+export function viewRoom(view: any): ViewRoom | undefined {
+    const root = view.scenegraph?.()?.root?.items?.[0];
+    const bounds = root?.bounds;
+    if (!root || !bounds) return undefined;
+    const width = Math.max(0, root.width || 0);
+    const height = Math.max(0, root.height || 0);
+    const [left, top] = view.origin();
+    return { left, top, right: Math.max(0, Math.ceil(bounds.x2 - width)), bottom: Math.max(0, Math.ceil(bounds.y2 - height)) };
+}
 
 const outlineEntry = (name: string): string => `__outline:${name}`;
 
@@ -40,6 +222,7 @@ const POSITION_CHANNELS: Record<string, readonly string[]> = {
     rule: ['x', 'y', 'x2', 'y2'],
     trail: ['x', 'y', 'size'],
     image: ['x', 'y', 'width', 'height'],
+    group: ['x', 'y', 'width', 'height'],
 };
 const NUMERIC_STYLE_CHANNELS = ['opacity', 'fillOpacity', 'strokeOpacity', 'strokeWidth'] as const;
 const COLOUR_CHANNELS = ['fill', 'stroke'] as const;
@@ -49,6 +232,8 @@ function channelsOf(marktype: string): readonly string[] {
 }
 
 const CONTINUOUS_SCALES = new Set(['linear', 'log', 'pow', 'sqrt', 'symlog', 'time', 'utc']);
+/** Scales whose domain is numbers a change can move through: continuous ones, and the bins a quantize or threshold scale cuts. */
+const MOVABLE_SCALES = new Set([...CONTINUOUS_SCALES, 'quantize', 'threshold']);
 const SIMPLE_FIELD = /^[^.[\]\\]+$/;
 
 /** The positions a mark draws as a continuous scale of a field or a constant: `scale(value) + offset`. */
@@ -100,7 +285,19 @@ export function injectSceneMotion(vegaSpec: Record<string, any>, identityFields:
     walkMarks(vegaSpec.marks, (mark) => {
         if (mark.type === 'group' && mark.from?.facet) walkMarks(mark.marks, (inner) => faceted.add(inner));
     });
+    const scopes = new Map<Record<string, any>, string[]>();
+    const scopeStacks = (marks: readonly Record<string, any>[] | undefined, fields: readonly string[]): void => {
+        for (const mark of marks ?? []) {
+            if (isStackGroup(mark)) scopes.set(mark, [...fields]);
+            else if (mark.type === 'group') scopeStacks(mark.marks, [...fields, ...(mark.from?.facet?.groupby ?? [])]);
+        }
+    };
+    scopeStacks(vegaSpec.marks, []);
     walkMarks(vegaSpec.marks, (mark) => {
+        if (isStackGroup(mark)) {
+            injectStackGroupMotion(mark, `__flint_stack_${unnamed++}`, continuous, scopes.get(mark) ?? []);
+            return;
+        }
         if (mark.type === 'group' || !mark.from || !mark.encode) return;
         if (!mark.name) mark.name = `__flint_moving_${unnamed++}`;
         const outline = Boolean(PATH_CHANNELS[mark.type]);
@@ -235,6 +432,75 @@ const PATH_CHANNELS: Record<string, readonly string[]> = {
     line: ['x', 'y', 'stroke', 'strokeWidth', 'strokeDash', 'strokeOpacity', 'interpolate'],
     area: ['x', 'y', 'y2', 'fill', 'fillOpacity', 'stroke', 'strokeWidth', 'interpolate'],
 };
+/**
+ * A group drawn once per stack (Vega-Lite's around rounded bars), which clips the stack to its
+ * rounded ends and draws its outline: faceted into aggregated stacks, with a group inside that
+ * cancels the outer group's place so the bars are drawn through the chart's own scales.
+ */
+function isStackGroup(mark: Record<string, any>): boolean {
+    const facet = mark.type === 'group' ? mark.from?.facet : undefined;
+    if (!facet || !Array.isArray(facet.groupby) || facet.groupby.length === 0 || !facet.aggregate) return false;
+    return (mark.marks ?? []).some((inner: Record<string, any>) => inner.type === 'group'
+        && (['x', 'y'] as const).some((channel) => {
+            const place = inner.encode?.update?.[channel];
+            return place?.field?.group === channel && place.mult === -1;
+        }));
+}
+
+/**
+ * Moves a stack's group with its bars: the group mixes its box in screen units, keyed by its stack's
+ * fields, and the groups inside it, which offset the bars back by the group's place, encode again each frame.
+ */
+function injectStackGroupMotion(mark: Record<string, any>, name: string, continuous: ReadonlySet<string>, scope: readonly string[]): void {
+    mark.name ??= name;
+    const groupby = mark.from.facet.groupby as string[];
+    const channels = channelsOf('group');
+    // The group spans the least to the greatest of its bars' stacked ends, which its aggregate names.
+    const aggregate = mark.from.facet.aggregate as { fields?: string[]; ops?: string[]; as?: string[] };
+    const outputs = (aggregate.fields ?? []).map((field, at) => ({ field, name: aggregate.as?.[at] ?? `${aggregate.ops?.[at]}_${field}` }));
+    const bars: Record<string, any>[] = [];
+    walkMarks(mark.marks, (inner) => { if (inner.type === 'rect') bars.push(inner); });
+    const positions = bars.flatMap((bar) => dataChannels(bar, continuous));
+    const extents = (([['y', 'y2', 'height'], ['x', 'x2', 'width']]) as const).flatMap(([start, end, size]): StackExtent[] => {
+        const ends = positions.filter((entry) => entry.channel === start || entry.channel === end);
+        const fields = outputs.filter((output) => ends.some((entry) => entry.field === output.field)).map((output) => output.name);
+        const scales = new Set(ends.map((entry) => entry.scale));
+        return fields.length > 0 && scales.size === 1 ? [{ start, size, scale: [...scales][0]!, fields }] : [];
+    });
+    const motion: MarkMotion = {
+        mark: mark.name,
+        channels,
+        colours: COLOUR_CHANNELS,
+        data: [],
+        box: false,
+        area: false,
+        arrival: [],
+        identity: groupby,
+        outline: false,
+        groupby,
+        ...(scope.length > 0 ? { scope } : {}),
+        extents,
+        written: [...new Set([...channels, ...COLOUR_CHANNELS])],
+    };
+    const frameSignal = { signal: `${SCENE_T_SIGNAL} + ${SCENE_ENTER_SIGNAL}` };
+    mark.encode = { ...(mark.encode ?? {}), update: { ...(mark.encode?.update ?? {}), __flint_scene_t: frameSignal } };
+    mark.transform = [
+        ...(Array.isArray(mark.transform) ? mark.transform : []),
+        {
+            type: 'flintmotion',
+            motion,
+            from: { signal: SCENE_FROM_SIGNAL },
+            t: { signal: SCENE_T_SIGNAL },
+            enter: { signal: SCENE_ENTER_SIGNAL },
+            outline: { signal: SCENE_OUTLINE_SIGNAL },
+        },
+    ];
+    for (const inner of mark.marks ?? []) {
+        if (inner.type !== 'group') continue;
+        inner.encode = { ...(inner.encode ?? {}), update: { ...(inner.encode?.update ?? {}), __flint_scene_t: frameSignal } };
+    }
+}
+
 const exitData = (type: string): string => `__flint_scene_exit_${type}`;
 
 export interface SceneGhosts {
@@ -249,11 +515,12 @@ export function captureGhosts(view: any, identityFields: readonly string[] = [])
     const byMark = new Map<string, { marktype: string; items: KeyedItem[] }>();
     const offsets = new Map<any, [number, number]>();
     const pathOf = new Map<any, { name: string; type: string; keys: string[]; vertices: Record<string, unknown>[] }>();
-    const visit = (node: any, offsetX: number, offsetY: number): void => {
+    // `top` is whether the mark sits in the chart's top scope, whose scales a change moves.
+    const visit = (node: any, offsetX: number, offsetY: number, top: boolean): void => {
         for (const item of node?.items ?? []) {
             const mark = item.mark;
             if (mark?.marktype === 'group') {
-                for (const child of item.items ?? []) visit(child, offsetX + (item.x ?? 0), offsetY + (item.y ?? 0));
+                for (const child of item.items ?? []) visit(child, offsetX + (item.x ?? 0), offsetY + (item.y ?? 0), false);
                 continue;
             }
             const pathChannels = PATH_CHANNELS[mark?.marktype];
@@ -265,7 +532,7 @@ export function captureGhosts(view: any, identityFields: readonly string[] = [])
                 if (typeof values.x === 'number') values.x += offsetX;
                 if (typeof values.y === 'number') values.y += offsetY;
                 if (typeof values.y2 === 'number') values.y2 += offsetY;
-                if (offsetX === 0 && offsetY === 0) {
+                if (top) {
                     for (const channel of ['x', 'y', 'y2'] as const) {
                         const value = drawnDataValue(view, item, channel);
                         if (typeof value === 'number' && Number.isFinite(value)) values[`__d_${channel}`] = value;
@@ -287,7 +554,7 @@ export function captureGhosts(view: any, identityFields: readonly string[] = [])
         }
     };
     const rootGroup = view.scenegraph?.()?.root?.items?.[0];
-    for (const child of rootGroup?.items ?? []) visit(child, 0, 0);
+    for (const child of rootGroup?.items ?? []) visit(child, 0, 0, true);
     const items = new Map<string, { type: string; values: Record<string, unknown> }>();
     for (const [name, { marktype, items: keyed }] of byMark) {
         for (const [key, item] of keyItems(keyed, identityFields).byKey) {
@@ -418,37 +685,152 @@ function injectLegendMotion(vegaSpec: Record<string, any>): void {
 const AXIS_ROLES = ['axis-label', 'axis-tick'] as const;
 const axisEntry = (scale: string, role: string): string => `__axis:${scale}:${role}`;
 
+/** Where Vega places a discrete axis's ticks along a band: its band position, extra tick and offset, as Vega's `tickBand` reads them. */
+function axisBand(vegaSpec: Record<string, any>, axis: Record<string, any>): { band: number; extra: boolean; offset: number } | undefined {
+    const tickBand = axisConfigValue(vegaSpec, axis, 'tickBand', undefined);
+    const offset = axisConfigValue(vegaSpec, axis, 'tickOffset', 0);
+    if (tickBand === 'extent') return { band: 1, extra: true, offset: 0 };
+    if (tickBand === 'center') return typeof offset === 'number' ? { band: 0.5, extra: false, offset } : undefined;
+    if (tickBand !== undefined) return undefined;
+    const band = axisConfigValue(vegaSpec, axis, 'bandPosition', 0.5);
+    const extra = axisConfigValue(vegaSpec, axis, 'tickExtra', false);
+    return typeof band === 'number' && typeof extra === 'boolean' && typeof offset === 'number' ? { band, extra, offset } : undefined;
+}
+
 /**
  * Lets the labels and ticks of every discrete axis glide with their marks when the order or the
- * categories change: each sits where the captured frame drew it and moves to its band's centre.
+ * categories change. Each keeps Vega's own placement and only offsets it: by where the captured
+ * frame drew it, less its new place, shrinking to nothing as the change runs, so at rest the axis
+ * draws as Vega does. An axis whose placement is stated by a signal keeps Vega's and does not glide.
  */
 export function injectAxisMotion(vegaSpec: Record<string, any>): void {
-    if (!(vegaSpec.signals ?? []).some((signal: { name?: string }) => signal.name === SCENE_T_SIGNAL)) return;
+    if (!compiledWithMotion(vegaSpec)) return;
     const discrete = new Set<string>((vegaSpec.scales ?? [])
         .filter((scale: Record<string, any>) => scale.type === 'band' || scale.type === 'point')
         .map((scale: Record<string, any>) => scale.name));
     walkVegaScopes(vegaSpec, (scope) => {
         for (const axis of scope.axes ?? []) {
             if (!discrete.has(axis.scale)) continue;
+            const ticks = axisBand(vegaSpec, axis);
+            const labelOffset = axisConfigValue(vegaSpec, axis, 'labelOffset', 0);
+            const round = axisConfigValue(vegaSpec, axis, 'tickRound', undefined);
+            if (!ticks || typeof labelOffset !== 'number') continue;
             const channel = axis.orient === 'left' || axis.orient === 'right' ? 'y' : 'x';
             const scale = JSON.stringify(axis.scale);
-            const centre = `scale(${scale}, datum.value) + bandwidth(${scale}) * 0.5`;
             const encode: Record<string, any> = { ...(axis.encode ?? {}) };
             for (const role of AXIS_ROLES) {
                 const part = role === 'axis-label' ? 'labels' : 'ticks';
+                const place = role === 'axis-label'
+                    ? { band: 0.5, offset: ticks.offset + labelOffset }
+                    : { band: ticks.band, offset: ticks.offset, extra: ticks.extra, ...(round !== undefined ? { round } : {}) };
                 const entry = `${SCENE_FROM_SIGNAL}[${JSON.stringify(axisEntry(axis.scale, role))}]`;
                 const from = `(${SCENE_FROM_SIGNAL} && ${entry} && ${entry}[datum.value] ? ${entry}[datum.value].${channel} : null)`;
+                const restAt = `scale(${scale}, datum.value) + bandwidth(${scale}) * ${place.band} + ${place.offset}`;
+                const { offset, ...rest } = place;
                 encode[part] = {
                     ...(encode[part] ?? {}),
                     update: {
                         ...(encode[part]?.update ?? {}),
-                        [channel]: { signal: `isNumber(${from}) ? ${from} + (${centre} - ${from}) * ${SCENE_T_SIGNAL} : ${centre}` },
+                        [channel]: {
+                            scale: axis.scale,
+                            field: 'value',
+                            ...rest,
+                            offset: { signal: `${offset} + (isNumber(${from}) ? (${from} - (${restAt})) * (1 - ${SCENE_T_SIGNAL}) : 0)` },
+                        },
                     },
                 };
             }
             axis.encode = encode;
         }
     });
+}
+
+/** The tick values a motion holds a continuous axis at: both sides' values, each label's text, and which side each is on. */
+export interface HeldTicks {
+    readonly values: readonly unknown[];
+    readonly text: Readonly<Record<string, string>>;
+    readonly from: Readonly<Record<string, true>>;
+    readonly to: Readonly<Record<string, true>>;
+}
+
+export const axisTicksSignal = (scale: string): string => `__flint_ticks_${scale.replace(/\W/g, '_')}`;
+
+/**
+ * Lets a committed change carry each continuous axis's ticks across: while it runs, an axis draws
+ * the values on both sides, placed by the moving scale. A value on both sides moves; one on a
+ * single side fades with the move, out or in; each label keeps the text it shows at rest. At
+ * rest the hold is null and the axis draws its own ticks.
+ */
+export function injectAxisTickMotion(vegaSpec: Record<string, any>): string[] {
+    if (!compiledWithMotion(vegaSpec)) return [];
+    const continuous = new Set<string>((vegaSpec.scales ?? [])
+        .filter((scale: Record<string, any>) => CONTINUOUS_SCALES.has(scale.type ?? 'linear'))
+        .map((scale: Record<string, any>) => scale.name));
+    const held = new Set<string>();
+    walkVegaScopes(vegaSpec, (scope) => {
+        for (const axis of scope.axes ?? []) {
+            if (!continuous.has(axis.scale)) continue;
+            const hold = axisTicksSignal(axis.scale);
+            const own = Array.isArray(axis.values) ? JSON.stringify(axis.values)
+                : typeof axis.values?.signal === 'string' ? `(${axis.values.signal})` : 'null';
+            axis.values = { signal: `${hold} ? ${hold}.values : ${own}` };
+            const key = 'toString(toNumber(datum.value))';
+            const side = `(${hold}.from[${key}] && ${hold}.to[${key}] ? 1 : ${hold}.to[${key}] ? ${SCENE_T_SIGNAL} : ${hold}.from[${key}] ? 1 - ${SCENE_T_SIGNAL} : 1)`;
+            const encode: Record<string, any> = { ...(axis.encode ?? {}) };
+            // The fade is laid on the fill or stroke opacity, which Vega's overlap removal leaves alone.
+            for (const part of ['labels', 'ticks', 'grid'] as const) {
+                const update = { ...(encode[part]?.update ?? {}) };
+                const channel = part === 'labels' ? 'fillOpacity' : 'strokeOpacity';
+                const base = update[channel] === undefined ? '1' : ruleExpression(update[channel]);
+                if (base === undefined) continue;
+                update[channel] = { signal: `(${base}) * (${hold} ? ${side} : 1)` };
+                if (part === 'labels') {
+                    const text = update.text === undefined ? 'datum.label' : ruleExpression(update.text);
+                    if (text !== undefined) update.text = { signal: `${hold} && isString(${hold}.text[${key}]) ? ${hold}.text[${key}] : (${text})` };
+                }
+                encode[part] = { ...(encode[part] ?? {}), update };
+            }
+            axis.encode = encode;
+            // While the hold fades both sides, overlap removal stands down, so it hides no label mid-motion.
+            const overlap = axisConfigValue(vegaSpec, axis, 'labelOverlap', false);
+            const restOverlap = typeof overlap?.signal === 'string' ? `(${overlap.signal})` : JSON.stringify(overlap);
+            axis.labelOverlap = { signal: `${hold} ? false : ${restOverlap}` };
+            // A tick count thins the values it is given, so it gives way to the held ones.
+            const count = axis.tickCount;
+            const restCount = count === undefined ? 'null' : typeof count?.signal === 'string' ? `(${count.signal})` : JSON.stringify(count);
+            axis.tickCount = { signal: `${hold} ? length(${hold}.values) : ${restCount}` };
+            held.add(axis.scale);
+        }
+    });
+    vegaSpec.signals = [...(vegaSpec.signals ?? []), ...[...held].map((scale) => ({ name: axisTicksSignal(scale), value: null }))];
+    return [...held];
+}
+
+/** The tick values each held axis shows at rest, with each label's text, read from the scene; a label overlap removal hid is not shown. */
+export function axisTicksShown(view: any, scales: readonly string[]): Map<string, { values: Map<string, unknown>; text: Record<string, string> }> {
+    const wanted = new Set(scales);
+    const shown = new Map<string, { values: Map<string, unknown>; text: Record<string, string> }>();
+    const visit = (item: any, scale?: string): void => {
+        for (const mark of item?.items ?? []) {
+            for (const child of mark.items ?? []) {
+                const axisScale = mark.role === 'axis' && typeof child.datum?.scale === 'string' ? child.datum.scale : scale;
+                if (axisScale && wanted.has(axisScale) && ['axis-label', 'axis-tick', 'axis-grid'].includes(mark.role) && child.datum?.value !== undefined) {
+                    const opacity = typeof child.opacity === 'number' ? child.opacity : 1;
+                    const text = mark.role === 'axis-label' ? (Array.isArray(child.text) ? child.text.join(' ') : String(child.text ?? '')) : undefined;
+                    if (opacity > 0 && text !== '') {
+                        const entry = shown.get(axisScale) ?? { values: new Map<string, unknown>(), text: {} };
+                        const key = String(+child.datum.value);
+                        entry.values.set(key, child.datum.value);
+                        if (text !== undefined) entry.text[key] = text;
+                        shown.set(axisScale, entry);
+                    }
+                }
+                if (mark.marktype === 'group') visit(child, axisScale);
+            }
+        }
+    };
+    visit(view.scenegraph?.()?.root?.items?.[0]);
+    return shown;
 }
 
 /** The signal that, while set, holds a continuous scale's domain during a transition. */
@@ -468,21 +850,54 @@ const LEGEND_SCALE_CHANNELS = ['fill', 'stroke', 'size', 'opacity', 'shape', 'st
  */
 export function bindLegendDomains(vegaSpec: Record<string, any>, pins: readonly LegendDomain[] = []): LegendDomain[] {
     const bound: LegendDomain[] = [];
+    const fields = scaleFields(vegaSpec);
+    const legends: Record<string, any>[] = [];
+    walkVegaScopes(vegaSpec, (scope) => legends.push(...(scope.legends ?? [])));
     for (const pin of pins) {
-        const candidates = (vegaSpec.scales ?? []).filter((scale: Record<string, any>) =>
-            (scale.name === pin.channel || String(scale.name).endsWith(`_${pin.channel}`)) && Array.isArray(scale.domain));
-        if (candidates.length === 0) continue;
+        // The scale the channel's legend draws, found by the legend's own reference to it.
+        const properties = pin.channel === 'color' ? ['fill', 'stroke'] : [pin.channel];
+        const keyed = legends.flatMap((legend) => properties.map((property) => legend[property])).find((name) => typeof name === 'string');
+        const scale = (vegaSpec.scales ?? []).find((entry: Record<string, any>) => entry.name === keyed);
+        if (!scale || !Array.isArray(scale.domain)) continue;
         // A layer may read the same field through a scale of its own (cell labels choosing their ink
-        // by the colour behind them): every scale pinned to the field's domain follows the rows together.
-        const domain = JSON.stringify(candidates[0].domain);
-        const shared = candidates.filter((scale: Record<string, any>) => JSON.stringify(scale.domain) === domain);
-        if (shared.length !== candidates.length) continue;
-        const signal = `__flint_legend_domain_${String(candidates[0].name).replace(/\W/g, '_')}`;
-        vegaSpec.signals = [...(vegaSpec.signals ?? []), { name: signal, value: candidates[0].domain }];
-        for (const scale of shared) scale.domain = { signal };
+        // by the colour behind them): every scale that places one of its fields with the same pinned domain follows the rows together.
+        const domain = JSON.stringify(scale.domain);
+        const read = fields.get(scale.name) ?? new Set<string>();
+        const shared = (vegaSpec.scales ?? []).filter((entry: Record<string, any>) => entry === scale
+            || (Array.isArray(entry.domain) && JSON.stringify(entry.domain) === domain && [...(fields.get(entry.name) ?? [])].some((field) => read.has(field))));
+        const signal = `__flint_legend_domain_${String(scale.name).replace(/\W/g, '_')}`;
+        vegaSpec.signals = [...(vegaSpec.signals ?? []), { name: signal, value: scale.domain }];
+        for (const entry of shared) entry.domain = { signal };
         bound.push({ ...pin, signal });
     }
     return bound;
+}
+
+/** The fields each scale places, read from every mark's encodings: `{ scale, field }` value references. */
+export function scaleFields(vegaSpec: Record<string, any>): Map<string, Set<string>> {
+    const fields = new Map<string, Set<string>>();
+    const place = (entry: any): void => {
+        if (!entry || typeof entry !== 'object') return;
+        if (Array.isArray(entry)) {
+            entry.forEach(place);
+            return;
+        }
+        const field = typeof entry.field === 'string' ? entry.field : typeof entry.field?.field === 'string' ? entry.field.field : undefined;
+        if (typeof entry.scale === 'string' && field !== undefined) {
+            const set = fields.get(entry.scale) ?? new Set<string>();
+            set.add(field);
+            fields.set(entry.scale, set);
+        }
+        for (const value of Object.values(entry)) place(value);
+    };
+    const visit = (scope: any): void => {
+        for (const mark of scope.marks ?? []) {
+            place(mark.encode);
+            if (mark.type === 'group') visit(mark);
+        }
+    };
+    visit(vegaSpec);
+    return fields;
 }
 
 /** A legend domain over `rows`: the field's smallest and largest values, in the scale's direction. */
@@ -506,7 +921,7 @@ export function legendDomainOf(pin: LegendDomain, rows: readonly Record<string, 
  * one drawn to the new one, so axes, legends, gridlines and marks read one scale on every frame.
  */
 export function injectScaleMotion(vegaSpec: Record<string, any>): MovingScale[] {
-    if (!(vegaSpec.signals ?? []).some((signal: { name?: string }) => signal.name === SCENE_T_SIGNAL)) return [];
+    if (!compiledWithMotion(vegaSpec)) return [];
     const placing = new Set<string>();
     walkVegaScopes(vegaSpec, (scope) => { for (const axis of scope.axes ?? []) placing.add(axis.scale); });
     walkVegaScopes(vegaSpec, (scope) => {
@@ -524,7 +939,7 @@ export function injectScaleMotion(vegaSpec: Record<string, any>): MovingScale[] 
     const moving: MovingScale[] = [];
     for (const scale of vegaSpec.scales ?? []) {
         const type = scale.type ?? 'linear';
-        if (!placing.has(scale.name) || !CONTINUOUS_SCALES.has(type)) continue;
+        if (!placing.has(scale.name) || !MOVABLE_SCALES.has(type)) continue;
         const signal = scaleMotionSignal(scale.name);
         vegaSpec.signals.push({ name: signal, value: null });
         const held = scale.domainRaw?.signal;
@@ -547,30 +962,51 @@ export interface MovingSize {
  */
 export function injectSizeMotion(vegaSpec: Record<string, any>): MovingSize[] {
     const signals: Record<string, any>[] = vegaSpec.signals ?? [];
-    if (!signals.some((signal) => signal.name === SCENE_T_SIGNAL)) return [];
+    if (!compiledWithMotion(vegaSpec)) return [];
     const sizes: MovingSize[] = [];
     for (const dimension of ['width', 'height'] as const) {
         const signal = signals.find((candidate) => candidate.name === dimension);
         if (!signal || signal.on || typeof signal.update !== 'string') continue;
         const update: string = signal.update;
+        const read = signalsRead(update);
         const stepped = (vegaSpec.scales ?? []).filter((scale: Record<string, any>) => {
             const step = scale.range?.step?.signal;
-            return typeof step === 'string' && new RegExp(`\\b${step}\\b`).test(update);
+            return typeof step === 'string' && read.has(step);
         });
         if (stepped.length === 0) continue;
         const share = `__flint_size_${dimension}_share`;
         const factor = `(isNumber(${share}) ? ${share} : 1)`;
         signals.push({ name: share, value: null });
-        let scaled = update;
-        for (const scale of stepped) {
-            const step: string = scale.range.step.signal;
-            scaled = scaled.replace(new RegExp(`\\b${step}\\b`, 'g'), `(${step} * ${factor})`);
-            scale.range = { ...scale.range, step: { signal: `${step} * ${factor}` } };
-        }
-        signal.update = scaled;
+        // A size laid out by its band steps is a whole number of steps, so it scales with them.
+        for (const scale of stepped) scale.range = { ...scale.range, step: { signal: `${scale.range.step.signal} * ${factor}` } };
+        signal.update = `(${update}) * ${factor}`;
         sizes.push({ dimension, signal: share });
     }
     return sizes;
+}
+
+/** Whether `injectSceneMotion` ran on the spec, so the motion signals the other parts read exist. */
+function compiledWithMotion(vegaSpec: Record<string, any>): boolean {
+    return (vegaSpec.signals ?? []).some((signal: { name?: string }) => signal.name === SCENE_T_SIGNAL);
+}
+
+/** The names an expression reads: the signals it depends on. */
+function signalsRead(expression: string): Set<string> {
+    const names = new Set<string>();
+    const walk = (node: any): void => {
+        if (!node || typeof node !== 'object') return;
+        if (node.type === 'Identifier' && !node.member) names.add(node.name);
+        for (const value of Object.values(node)) {
+            if (Array.isArray(value)) value.forEach(walk);
+            else if (value && typeof value === 'object') walk(value);
+        }
+    };
+    try {
+        walk(parseExpression(expression));
+    } catch {
+        // An expression Vega cannot parse reads nothing the motion can follow.
+    }
+    return names;
 }
 
 function walkVegaScopes(scope: Record<string, any>, visit: (scope: Record<string, any>) => void): void {
@@ -610,7 +1046,7 @@ export function identityRepeats(
  * items one identity field tells apart on its own (a dot at each series' end) is about that field,
  * so its items are keyed by it: the series' end moves with its new value.
  */
-function keyItems(items: readonly KeyedItem[], identityFields: readonly string[]): { whole: boolean; fields: readonly string[]; byKey: Map<string, any> } {
+function keyItems(items: readonly KeyedItem[], identityFields: readonly string[]): { whole: boolean; fields: readonly string[]; byKey: Map<string, any>; byIdentity?: Map<string, any> } {
     // A mark that states what its items are is keyed by that.
     if (items.length > 0 && items.every((entry) => typeof entry.item.datum?.[MARK_IDENTITY] === 'string')) {
         return { whole: false, fields: identityFields, byKey: new Map(items.map((entry) => [entry.item.datum[MARK_IDENTITY] as string, entry.item])) };
@@ -628,12 +1064,17 @@ function keyItems(items: readonly KeyedItem[], identityFields: readonly string[]
         const key = identityKey(entry.item.datum, fields);
         return typeof key === 'string' ? key : entry.whole;
     };
-    return { whole, fields, byKey: new Map(items.map((entry) => [keyOf(entry), entry.item])) };
+    return {
+        whole,
+        fields,
+        byKey: new Map(items.map((entry) => [keyOf(entry), entry.item])),
+        ...(own ? { byIdentity: new Map(items.map((entry) => [entry.identity, entry.item])) } : {}),
+    };
 }
 
 function keyedItem(item: any, identityFields: readonly string[]): KeyedItem | undefined {
-    const whole = item.datum?.[INTERACTION_KEY];
-    if (typeof whole !== 'string') return undefined;
+    const whole = trackedKey(item.datum, identityFields);
+    if (whole === undefined) return undefined;
     const stated = item.datum?.[MARK_IDENTITY];
     const identity = typeof stated === 'string' ? stated : identityKey(item.datum, identityFields);
     return { identity: typeof identity === 'string' ? identity : whole, whole, item };
@@ -660,6 +1101,17 @@ export function captureScene(view: any, identityFields: readonly string[] = []):
             const byValue = snapshot[axisEntry(axisScale, mark.role)] ?? (snapshot[axisEntry(axisScale, mark.role)] = {});
             byValue[String(node.datum.value)] = { x: node.x, y: node.y };
         }
+        const stack = mark?.marktype === 'group' && mark.name ? stackGroupMotion(view, mark.name) : undefined;
+        const key = stack ? stackKey(node, stack) : undefined;
+        if (stack && key !== undefined) {
+            const entries = snapshot[mark.name] ?? (snapshot[mark.name] = { [IDENTITY_FIELDS]: stack.groupby });
+            const values = drawnValues(node, 'group');
+            for (const field of (stack.extents ?? []).flatMap((extent) => extent.fields)) {
+                const value = drawnFieldValue(view, node, field);
+                if (value !== undefined) values[`__d_${field}`] = value;
+            }
+            entries[key] = values;
+        }
         const keyed = mark?.name && mark.marktype !== 'group' && !outlined.has(node) ? keyedItem(node, identityFields) : undefined;
         if (keyed) {
             const entry = byMark.get(mark.name) ?? { marktype: mark.marktype as string, items: [] as KeyedItem[] };
@@ -671,15 +1123,24 @@ export function captureScene(view: any, identityFields: readonly string[] = []):
     };
     visit(view.scenegraph?.()?.root);
     for (const [name, { marktype, items }] of byMark) {
-        const { whole, fields, byKey } = keyItems(items, identityFields);
+        const { whole, fields, byKey, byIdentity } = keyItems(items, identityFields);
         const entries: Record<string, unknown> = whole ? { [WHOLE_KEY_FLAG]: true } : { [IDENTITY_FIELDS]: fields };
-        for (const [key, item] of byKey) {
-            const values = drawnValues(item, marktype);
-            for (const channel of ['x', 'x2', 'y', 'y2'] as const) {
-                const value = drawnDataValue(view, item, channel);
-                if (typeof value === 'number' && Number.isFinite(value)) values[`__d_${channel}`] = value;
+        const valuesOf = new Map<any, Record<string, unknown>>();
+        const drawn = (item: any): Record<string, unknown> => {
+            let values = valuesOf.get(item);
+            if (!values) {
+                values = drawnValues(item, marktype);
+                for (const channel of ['x', 'x2', 'y', 'y2'] as const) {
+                    const value = drawnDataValue(view, item, channel);
+                    if (typeof value === 'number' && Number.isFinite(value)) values[`__d_${channel}`] = value;
+                }
+                valuesOf.set(item, values);
             }
-            entries[key] = values;
+            return values;
+        };
+        for (const [key, item] of byKey) entries[key] = drawn(item);
+        if (byIdentity) {
+            entries[WHOLE_IDENTITY] = { fields: identityFields, entries: Object.fromEntries([...byIdentity].map(([key, item]) => [key, drawn(item)])) };
         }
         snapshot[name] = entries;
     }
@@ -703,7 +1164,7 @@ function drawnValues(item: any, marktype: string): Record<string, unknown> {
  * its outline is its value. `series` names it by that key, or by its place among its mark's paths.
  */
 function eachOutline(view: any, identityFields: readonly string[], visit: (name: string, series: string, items: readonly any[]) => void): void {
-    const seen = new Map<string, number>();
+    const paths: { name: string; key: string | undefined; items: any[] }[] = [];
     const walk = (mark: any): void => {
         if (!mark) return;
         if (mark.marktype === 'group') {
@@ -712,15 +1173,21 @@ function eachOutline(view: any, identityFields: readonly string[], visit: (name:
         }
         if (!PATH_CHANNELS[mark.marktype] || !mark.name || mark.role === 'scene-exit') return;
         const items: any[] = mark.items ?? [];
-        const place = seen.get(mark.name) ?? 0;
-        seen.set(mark.name, place + 1);
         if (items.length < 2) return;
         const keys = new Set(items.map((item) => keyedItem(item, identityFields)?.identity));
         if (keys.size !== 1) return;
         const [key] = keys;
-        visit(mark.name, key ?? `#${place}`, items);
+        paths.push({ name: mark.name, key, items });
     };
     walk(view.scenegraph?.()?.root);
+    // A path no key names is matched only when it is its mark's one path (a regression line);
+    // among several, it is no element and starts afresh.
+    const counts = new Map<string, number>();
+    for (const path of paths) counts.set(path.name, (counts.get(path.name) ?? 0) + 1);
+    for (const path of paths) {
+        if (path.key !== undefined) visit(path.name, path.key, path.items);
+        else if (counts.get(path.name) === 1) visit(path.name, '#0', path.items);
+    }
 }
 
 /**
@@ -753,11 +1220,11 @@ export function placeOutlineStarts(view: any, snapshot: SceneSnapshot, identityF
 }
 
 /** How many keyed items the chart draws, the items a capture would hold, counted without capturing them. */
-export function drawnItemCount(view: any): number {
+export function drawnItemCount(view: any, identityFields: readonly string[] = []): number {
     let count = 0;
     const visit = (node: any): void => {
         if (!node) return;
-        if (node.mark?.name && node.mark.marktype !== 'group' && typeof node.datum?.[INTERACTION_KEY] === 'string') count += 1;
+        if (node.mark?.name && node.mark.marktype !== 'group' && trackedKey(node.datum, identityFields) !== undefined) count += 1;
         for (const child of node.items ?? []) visit(child);
     };
     visit(view.scenegraph?.()?.root);

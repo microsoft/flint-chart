@@ -70,6 +70,14 @@ export interface VegaInteractionPlan {
     reshapeRows?: (rows: readonly Record<string, unknown>[] | undefined) => Readonly<Record<string, readonly Record<string, unknown>[]>> | null;
     /** For rows the chart is sent: the axis ends and ticks planned again for them, by signal name. */
     plannedEnds?: (rows: readonly Record<string, unknown>[] | undefined) => Readonly<Record<string, unknown>>;
+    /** Whether the chart's title is held in place while a change moves. */
+    titleMotion?: boolean;
+    /** The continuous scales whose axes carry their ticks across a change. */
+    tickAxes?: readonly string[];
+    /** Whether the chart is one view whose plot the top-level size sets, so a change can hold the room around it; a facet or concatenation lays out its own. */
+    plotRoom?: boolean;
+    /** The axes whose room a change holds and moves between resting layouts. */
+    axisExtents?: readonly import('./scene-motion').AxisExtent[];
     /** The continuous scales a transition moves the domain of. */
     movingScales?: readonly import('./scene-motion').MovingScale[];
     /** The chart's sizes a transition moves when its data changes them. */

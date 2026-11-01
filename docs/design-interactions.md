@@ -194,7 +194,18 @@ the chart's top scope move; a faceted or concatenated chart's own scales do not 
 marks move in screen units. A line in a facet cell clips to its panel at rest too, since a clip
 changes the bounds the panels are laid out by. Axis ends the layout plan decides from the rows (a
 ruler's rounded domain and ticks, a dot axis's padded domain) are planned again for the rows a
-chart is sent, so the scale moves to them rather than keeping the ends of the rows it mounted with.
+chart is sent, so the scale moves to them rather than keeping the ends of the rows it mounted with. A binned colour
+key (a quantize or threshold scale) moves its bins the same way, so its labels count. A mark drawn
+from aggregated rows is matched by the identity fields its rows kept, and the group that clips a
+stack of rounded bars to its ends moves with its bars. The chart's title, the room each axis
+takes for its ticks and labels, which places the axis title, and the room around the plot, move
+from one resting layout to the next; a faceted or concatenated chart lays out its own room, which
+is fitted to the new layout once the change comes to rest. Legend entries
+within a legend and the boxes of facet and concatenated panels take their new place at once. A continuous
+axis carries its ticks across a committed change: it draws the values on both sides through the
+moving scale, a value on both sides moves, one on a single side fades out or in with the move, and
+each label keeps the text it shows at rest. A tick is drawn only inside its scale's range, so one
+at the range's end leaves or arrives through the plot's edge as the range moves.
 
 Out of scope by the same rules: a preview, which follows the hand; a resize of the room the
 host gives the chart, which changes room, not meaning; a theme, which changes style, not meaning,
