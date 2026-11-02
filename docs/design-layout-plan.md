@@ -310,10 +310,15 @@ layout values to one signal (`bindLiveValues`): each axis, title, key, header, s
 that holds a layout value becomes a read of that signal, and value signals carry what an expression
 would otherwise embed (temporal tick planner inputs, the zoom margin). `surface.relayout(size)`
 replans at the new size, shapes the next Vega spec as the mount did, and compares it with the mounted
-one (`liveValuesChange`): where the two differ only in bound values, signal values and the view size,
-it pushes them and runs Vega's enter set (Vega encodes key labels on enter only); otherwise it resolves
-false and the host remounts. A push keeps selections, filters, zoom and updates. React tries
-`relayout` first and remounts on false.
+one (`liveValuesChange`): where the two differ only in bound values, signal values, the view size and
+the rows of inline datasets that are otherwise unchanged (rows the plan works out for the room, such as a
+label's cut), it pushes them and runs Vega's enter set (Vega encodes key labels on enter only); otherwise
+it resolves false and the host remounts. The replan is for the rows on screen, a filter's or a host's.
+A push keeps selections, filters, zoom and updates. React tries `relayout` first and remounts on false.
+A remount keeps the host's updates but not the reader's state: a resize that crosses a decision of
+structure (a key moving below the plot and turning to a row, labels turning, a layer added) clears the
+reader's selection, hidden series and zoom once, at that step. Carrying them across waits on
+interactions that can hand over their own gesture state.
 
 # §9 Checks
 

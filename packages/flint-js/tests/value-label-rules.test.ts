@@ -287,7 +287,8 @@ describe('L5: stacked segments and donut rings', () => {
         const [label] = textLayers(spec);
         // A 60 segment is ~16px long: tall enough for a line of 14px text, too short for “60” across it.
         const keep = label.encoding.opacity.condition.test as string;
-        const threshold = Number(keep.match(/>= ([\d.]+)/)?.[1]);
+        const param = keep.match(/>= (\w+)/)?.[1];
+        const threshold = Number((spec.params ?? []).find((entry: any) => entry.name === param)?.value);
         expect(threshold).toBeGreaterThan(60);
         expect(threshold).toBeLessThanOrEqual(1400);
     });

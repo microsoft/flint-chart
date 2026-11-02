@@ -4,7 +4,7 @@ import type { ChartAssemblyInput } from '../../core/types';
 import { AXIS_LABEL_LIMIT } from '../../core/compute-layout';
 import type { AxisLabelPlan } from '../../core/axis-labels';
 import type { DesignDecisions } from '../../core/theme/types';
-import { temporalAxisPlanInputs, type TemporalAxisPlanInputs } from '../instantiate-spec';
+import { plannedTemporalTicks, temporalAxisPlanInputs, type TemporalAxisPlanInputs } from '../instantiate-spec';
 
 export const TEMPORAL_TICKS_FUNCTION = 'flintTemporalTicks';
 export const LIVE_LAYOUT_SIGNAL = '__flint_live_layout';
@@ -223,6 +223,44 @@ export function vegaLiteTemporalAxisPlans(
         }
     });
     return result;
+}
+
+/** The calendar ticks each axis of a Vega-Lite spec draws as its plan placed them, by channel. */
+export function vegaLitePlannedTemporalTicks(vlSpec: Record<string, any>): Partial<Record<'x' | 'y', { values: number[]; labels: Record<string, string> }>> {
+    const result: Partial<Record<'x' | 'y', { values: number[]; labels: Record<string, string> }>> = {};
+    walkSpec(vlSpec, (node) => {
+        for (const channel of ['x', 'y'] as const) {
+            const encoding = node.encoding?.[channel];
+            const ticks = encoding && typeof encoding === 'object' ? plannedTemporalTicks(encoding) : undefined;
+            if (ticks && !result[channel]) result[channel] = ticks;
+        }
+    });
+    return result;
+}
+
+/**
+ * A calendar axis holds the ticks and label text its plan placed in a signal, so the plan for
+ * another room sets them in place: the axis reads its values and each label's text from it.
+ */
+export function holdTemporalAxisTicks(
+    vegaSpec: Record<string, any>,
+    channel: 'x' | 'y',
+    scale: Record<string, any>,
+    ticks: { values: number[]; labels: Record<string, string> },
+): void {
+    const signal = `__flint_planned_ticks_${channel}`;
+    vegaSpec.signals = [...(vegaSpec.signals ?? []), { name: signal, value: ticks }];
+    walkVegaGroups(vegaSpec, (group) => {
+        for (const axis of group.axes ?? []) {
+            if (axis.scale !== scale.name) continue;
+            axis.values = { signal: `${signal}.values` };
+            axis.tickCount = { signal: `length(${signal}.values)` };
+            const text = axis.encode?.labels?.update?.text;
+            if (text && typeof text === 'object' && 'signal' in text) {
+                text.signal = `${signal}.labels[toString(toNumber(datum.value))] || ''`;
+            }
+        }
+    });
 }
 
 /**

@@ -4539,6 +4539,18 @@ function placeArc(units: any[], markDef: any, arc: NonNullable<ValueLabelPlan['a
     Object.assign(markDef, { x: arc.center.x, y: arc.center.y });
 }
 
+/**
+ * A number the plan decides for the room (a label's fit threshold) stated as a top-level param,
+ * so a plan for another room sets it in place rather than rewriting the expression that reads it.
+ */
+function planParam(spec: any, purpose: string, value: number): string {
+    const params: any[] = spec.params ?? (spec.params = []);
+    let name = `__flint_plan_${purpose}`;
+    for (let n = 1; params.some((param) => param.name === name); n += 1) name = `__flint_plan_${purpose}_${n}`;
+    params.push({ name, value });
+    return name;
+}
+
 function labelOneBody(
     spec: any, body: any, d: DesignDecisions, table: any[], say: ReportDeparture, planned: ValueLabelPlan,
 ): any {
@@ -4738,7 +4750,7 @@ function labelOneBody(
             if (total > 0 && labelRadius > 0) {
                 const minValue = (minArc * total) / (labelRadius * 2 * Math.PI);
                 if (minValue > 0) {
-                    radialLabelKeepTest = `abs(datum[${JSON.stringify(measure.field)}]) >= ${minValue}`;
+                    radialLabelKeepTest = `abs(datum[${JSON.stringify(measure.field)}]) >= ${planParam(spec, 'label_min', minValue)}`;
                     const dropped = table.filter((row) => {
                         const v = row?.[measure.field];
                         return typeof v === 'number' && Math.abs(v) < minValue;
@@ -4874,11 +4886,11 @@ function labelOneBody(
                 // number that goes in the segment is the share itself.
                 labelEncoding.text = { field: '__flintStackShare', type: 'quantitative', format: '.0%' };
                 say('dataLabels', 'value-labels-print-share', 'each segment prints its share — on a normalized bar the segment\'s length is its share, not its value');
-                stackedKeepTest = `datum.__flintStackTotal > 0 && ${v} / datum.__flintStackTotal >= ${minShare}`;
+                stackedKeepTest = `datum.__flintStackTotal > 0 && ${v} / datum.__flintStackTotal >= ${planParam(spec, 'label_share', minShare)}`;
             } else {
                 const minValue = planned.segmentMinValue;
                 if (minValue !== undefined) {
-                    stackedKeepTest = live ? `${v} >= ${live}.labels.minValue` : `${v} >= ${minValue}`;
+                    stackedKeepTest = live ? `${v} >= ${live}.labels.minValue` : `${v} >= ${planParam(spec, 'label_min', minValue)}`;
                     const dropped = table.filter((row) => {
                         const val = row?.[measure.field];
                         return typeof val === 'number' && Math.abs(val) < minValue;
@@ -5044,8 +5056,9 @@ function labelOneBody(
     // that reads on the plot (a house's white inside ink does not), and drops the per-series ink.
     const plotSurface = d.surface.plot ?? d.surface.canvas;
     const onPlot = (ink: string) => (contrastRatio(ink, plotSurface) >= 3 ? ink : readableOn(plotSurface, d.text.inverse, d.text.primary));
-    const split = (threshold: number, comparison: '<' | '>', message: string) => {
+    const split = (value: number, comparison: '<' | '>', message: string) => {
         const v = `abs(datum[${JSON.stringify(measure.field)}])`;
+        const threshold = planParam(spec, 'label_split', value);
         const flipped = !inside;
         layer.transform = [...(anchorTransform ? [anchorTransform] : []), { filter: `${v} ${comparison === '<' ? '>=' : '<='} ${threshold}` }];
         const { color: insideInk, ...rest } = labelEncoding;
@@ -5592,7 +5605,7 @@ function applyBarMinLength(spec: any, min: number, table: any[], plotWidth: numb
             void _m;
             added.push({
                 __themeSynthetic: true,
-                transform: [{ filter: `${v} != 0 && abs(${v}) < ${threshold}` }, { calculate: '0', as: '__flintStubZero' }],
+                transform: [{ filter: `${v} != 0 && abs(${v}) < ${planParam(spec, 'bar_min', threshold)}` }, { calculate: '0', as: '__flintStubZero' }],
                 mark: { ...normalizeMark(node.mark), [`${measure}2Offset`]: { expr: offset }, cornerRadiusEnd: 0 },
                 encoding: {
                     ...others,

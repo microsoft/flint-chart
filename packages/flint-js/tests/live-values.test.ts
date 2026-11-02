@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parse, View } from 'vega';
+import { changeset, parse, View } from 'vega';
 import { compile } from 'vega-lite';
 import { TEST_GENERATORS } from '../src/test-data';
 import { openVegaLiteSession } from '../src/vegalite/assemble';
@@ -58,6 +58,7 @@ describe('live values', () => {
                     const advanced = advanceLiveValues(live, next, change);
                     view.signal(LIVE_VALUES_SIGNAL, advanced.values);
                     for (const [name, value] of Object.entries(change.signals)) view.signal(name, value);
+                    for (const [name, rows] of Object.entries(change.datasets)) view.change(name, changeset().remove(() => true).insert([...rows]));
                     if (change.width !== undefined) view.width(change.width);
                     if (change.height !== undefined) view.height(change.height);
                     view.resize();
@@ -87,7 +88,7 @@ describe('live values', () => {
             ...(legend ? { legends: [{ fill: 'x' }] } : {}),
         });
         const live = bindLiveValues(spec(false));
-        expect(liveValuesChange(live, spec(false))).toEqual({ values: {}, signals: {}, furniture: false });
+        expect(liveValuesChange(live, spec(false))).toEqual({ values: {}, signals: {}, datasets: {}, furniture: false });
         expect(liveValuesChange(live, spec(true))).toBeNull();
         expect(liveValuesChange(live, { ...spec(false), axes: [{ scale: 'x', orient: 'bottom', labelFontSize: 12 }] })?.values)
             .toEqual({ [live.keys.get('.axes[0].labelFontSize')!.name]: 12 });
@@ -126,5 +127,28 @@ describe('session replans', () => {
             return at >= window[0] && at <= window[1];
         } });
         expect(JSON.stringify(byWindow.spec)).toBe(JSON.stringify(byKeep.spec));
+    });
+
+    it('binds the constant of a rule on an encoded channel, keeping its test', () => {
+        const spec = (width: number): any => ({
+            marks: [{ type: 'line', encode: { update: { strokeWidth: [{ test: 'datum.on', value: width + 1 }, { value: width }] } } }],
+        });
+        const mounted = spec(2.5);
+        const live = bindLiveValues(mounted);
+        expect(mounted.marks[0].encode.update.strokeWidth).toEqual([
+            { test: 'datum.on', signal: `${LIVE_VALUES_SIGNAL}.v0` },
+            { signal: `${LIVE_VALUES_SIGNAL}.v1` },
+        ]);
+        expect(liveValuesChange(live, spec(2.2))?.values).toEqual({ v0: 3.2, v1: 2.2 });
+    });
+
+    it('takes the new rows of an inline dataset that is otherwise unchanged, and nothing else about it', () => {
+        const spec = (limit: number, transform: unknown[] = []): any => ({
+            data: [{ name: 'rows', values: [{ k: 'a', __limit: limit }], transform }],
+            marks: [{ type: 'text', from: { data: 'rows' } }],
+        });
+        const live = bindLiveValues(spec(93));
+        expect(liveValuesChange(live, spec(83))?.datasets).toEqual({ rows: [{ k: 'a', __limit: 83 }] });
+        expect(liveValuesChange(live, spec(83, [{ type: 'filter', expr: 'datum.k' }]))).toBeNull();
     });
 });

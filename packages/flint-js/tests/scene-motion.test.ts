@@ -34,6 +34,7 @@ import {
 } from '../src/vegalite/interactions/scene-motion';
 import { INTERACTION_KEY } from '../src/vegalite/interactions/stores';
 import { mixItem, type MarkMotion } from '../src/vegalite/interactions/motion-transform';
+import { bindLiveValues, liveValuesChange } from '../src/vegalite/live-values';
 import { easingCurve, runMotion, transitionEasing, validateTransition } from '../src/interactive/transition';
 
 function barSpec(order: string[]): Record<string, any> {
@@ -434,6 +435,22 @@ describe('scene motion', () => {
         expect(texts).toEqual({ a: '92', b: '20' });
     });
 
+    it('keeps the ticks of a time axis whose values are stated as dates', async () => {
+        const spec: Record<string, any> = {
+            width: 300,
+            height: 100,
+            signals: [{ name: SCENE_T_SIGNAL, value: 1 }],
+            scales: [{ name: 'x', type: 'utc', domain: [Date.UTC(2020, 0, 1), Date.UTC(2022, 0, 1)], range: 'width' }],
+            axes: [{ scale: 'x', orient: 'bottom', values: [{ signal: 'datetime("2020-01-01T00:00:00.000Z")' }, { signal: 'datetime("2021-01-01T00:00:00.000Z")' }], format: '%Y', formatType: 'utc' }],
+        };
+        injectAxisTickMotion(spec);
+        const view = new View(parse(spec), { renderer: 'none' });
+        await view.runAsync();
+        const labels = (view.scenegraph() as any).root.items[0].items[0].items[0].items
+            .find((mark: any) => mark.role === 'axis-label').items.map((item: any) => item.text);
+        expect(labels).toEqual(['2020', '2021']);
+    });
+
     it('carries an axis\'s ticks across a change: shared ones stay, the rest fade out or in, overlap removal and the tick count stand down', async () => {
         const spec: Record<string, any> = {
             width: 100,
@@ -464,6 +481,21 @@ describe('scene motion', () => {
         view.signal(axisTicksSignal('y'), null).signal(SCENE_T_SIGNAL, 1);
         await view.runAsync();
         expect(labels()).toEqual(rest);
+    });
+
+    it('keeps a planned tick count in a signal of its own, so a new room sets it in place', () => {
+        const spec = (count: number): Record<string, any> => {
+            const vega: Record<string, any> = {
+                signals: [{ name: SCENE_T_SIGNAL, value: 1 }],
+                scales: [{ name: 'y', type: 'linear', domain: [0, 100], range: 'height' }],
+                axes: [{ scale: 'y', orient: 'left', tickCount: count }],
+            };
+            injectAxisTickMotion(vega);
+            return vega;
+        };
+        const live = bindLiveValues(spec(9));
+        const change = liveValuesChange(live, spec(5));
+        expect(change?.signals).toEqual({ __flint_ticks_y_left_count: 5 });
     });
 
     it('holds the room an axis takes, and reads it back as Vega lays it out at rest', async () => {

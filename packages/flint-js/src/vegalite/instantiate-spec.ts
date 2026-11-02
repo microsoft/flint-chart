@@ -731,6 +731,15 @@ export function temporalAxisPlanInputs(encoding: object): TemporalAxisPlanInputs
     return temporalAxisPlans.get(encoding)?.inputs;
 }
 
+/** The ticks and label text an axis draws as its plan wrote them; nothing where a template stated its own over them. */
+export function plannedTemporalTicks(encoding: { axis?: { labelExpr?: unknown } | null }): { values: number[]; labels: Record<string, string> } | undefined {
+    const plan = temporalAxisPlans.get(encoding);
+    return plan && encoding.axis?.labelExpr === plan.labelExpr ? plan.ticks : undefined;
+}
+
+const ticksOf = (plan: TemporalTickPlan): { values: number[]; labels: Record<string, string> } =>
+    ({ values: plan.values.map((value) => +new Date(value)), labels: plan.labels });
+
 /** Tick positions (ms) and label text for a temporal axis over `domain`, laid out across `span` pixels. */
 export function planTemporalTickValues(
     domain: unknown[], span: number, inputs: TemporalAxisPlanInputs,
@@ -759,6 +768,8 @@ interface TemporalTickLayout {
 
 const temporalAxisPlans = new WeakMap<object, {
     start: number; end: number; semanticType: string | undefined; labelExpr: string;
+    /** The ticks the plan placed, and the text each labelled one shows. */
+    ticks: { values: number[]; labels: Record<string, string> };
     /** The pixels the ticks were planned across. */
     span: number;
     inputs: TemporalAxisPlanInputs;
@@ -810,6 +821,7 @@ export function vlFinalizeTemporalAxes(spec: any, context: InstantiateContext): 
             if (!plan) continue;
             Object.assign(encoding.axis, axisPropertiesOf(plan));
             original.labelExpr = plan.labelExpr;
+            original.ticks = ticksOf(plan);
             original.span = span;
         }
         if (node.spec) visit(node.spec, plotWidth, plotHeight);
@@ -1076,6 +1088,7 @@ function vlApplyDefaultAxisFormat(
                 if (!plan) continue;
                 temporalAxisPlans.set(enc, {
                     start: earliest, end: latest,
+                    ticks: ticksOf(plan),
                     semanticType,
                     labelExpr: plan.labelExpr,
                     span,

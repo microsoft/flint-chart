@@ -767,12 +767,23 @@ export function injectAxisTickMotion(vegaSpec: Record<string, any>): string[] {
         .filter((scale: Record<string, any>) => CONTINUOUS_SCALES.has(scale.type ?? 'linear'))
         .map((scale: Record<string, any>) => scale.name));
     const held = new Set<string>();
+    const rests = new Map<string, unknown>();
     walkVegaScopes(vegaSpec, (scope) => {
         for (const axis of scope.axes ?? []) {
             if (!continuous.has(axis.scale)) continue;
             const hold = axisTicksSignal(axis.scale);
-            const own = Array.isArray(axis.values) ? JSON.stringify(axis.values)
-                : typeof axis.values?.signal === 'string' ? `(${axis.values.signal})` : 'null';
+            const place = `${hold}_${String(axis.orient).replace(/\W/g, '_')}`;
+            // Stated values and counts stand in signals of their own, so a new room sets them in place.
+            const restOf = (stated: any, name: string): string => {
+                if (typeof stated?.signal === 'string') return `(${stated.signal})`;
+                // Values stated as expressions (Vega-Lite writes dates as `datetime(…)`) are evaluated where they stand.
+                if (Array.isArray(stated) && stated.some((value) => typeof value?.signal === 'string')) {
+                    return `[${stated.map((value) => (typeof value?.signal === 'string' ? `(${value.signal})` : JSON.stringify(value))).join(', ')}]`;
+                }
+                rests.set(name, stated ?? null);
+                return name;
+            };
+            const own = restOf(axis.values, `${place}_values`);
             axis.values = { signal: `${hold} ? ${hold}.values : ${own}` };
             const key = 'toString(toNumber(datum.value))';
             const side = `(${hold}.from[${key}] && ${hold}.to[${key}] ? 1 : ${hold}.to[${key}] ? ${SCENE_T_SIGNAL} : ${hold}.from[${key}] ? 1 - ${SCENE_T_SIGNAL} : 1)`;
@@ -796,13 +807,13 @@ export function injectAxisTickMotion(vegaSpec: Record<string, any>): string[] {
             const restOverlap = typeof overlap?.signal === 'string' ? `(${overlap.signal})` : JSON.stringify(overlap);
             axis.labelOverlap = { signal: `${hold} ? false : ${restOverlap}` };
             // A tick count thins the values it is given, so it gives way to the held ones.
-            const count = axis.tickCount;
-            const restCount = count === undefined ? 'null' : typeof count?.signal === 'string' ? `(${count.signal})` : JSON.stringify(count);
+            const restCount = restOf(axis.tickCount, `${place}_count`);
             axis.tickCount = { signal: `${hold} ? length(${hold}.values) : ${restCount}` };
             held.add(axis.scale);
         }
     });
-    vegaSpec.signals = [...(vegaSpec.signals ?? []), ...[...held].map((scale) => ({ name: axisTicksSignal(scale), value: null }))];
+    vegaSpec.signals = [...(vegaSpec.signals ?? []), ...[...held].map((scale) => ({ name: axisTicksSignal(scale), value: null })),
+        ...[...rests].map(([name, value]) => ({ name, value }))];
     return [...held];
 }
 

@@ -7,7 +7,7 @@ import { currentFilters, isFilterControls } from '../interactive/filter-controls
 import { createFloatingPanel } from '../interactive/floating-panel';
 import { isCanvasInteraction, type ChartState, type InteractionContext, type InteractionDef } from '../interactive/interactions';
 import type { ChartUpdateTransition, InteractiveRendererAdapter, TargetFeedbackOptions, ViewportState } from '../interactive/types';
-import { openVegaLiteSession, type Replanned } from './assemble';
+import { openVegaLiteSession, type Replanned, type VegaLiteSession } from './assemble';
 import { canvasFurnitureMarkup, readCanvasFurniture, readCanvasPatterns, type CanvasPattern } from './canvas-furniture';
 import { enableGuideLabelTooltips, planTemporalTickValues } from './instantiate-spec';
 import {
@@ -30,6 +30,8 @@ import {
     navigationDomainSignal,
     TEMPORAL_TICKS_FUNCTION,
     vegaLiteTemporalAxisPlans,
+    vegaLitePlannedTemporalTicks,
+    holdTemporalAxisTicks,
     type LiveLayoutPlanner,
 } from './interactions/live-layout';
 import { mountVegaInteractions } from './interactions/runtime';
@@ -57,7 +59,7 @@ export function mountedInteractionList(
 }
 import { INTERACTION_STORES } from './interactions/stores';
 import { compile } from 'vega-lite';
-import { Error as VegaError, expressionFunction, parse, View } from 'vega';
+import { Error as VegaError, expressionFunction, parse, View, changeset } from 'vega';
 import { createDefaultStyle, DEFAULT_OPTIONS, Handler } from 'vega-tooltip';
 
 let tooltipSerial = 0;
@@ -283,19 +285,24 @@ export function bindPlannedEnds(vegaSpec: any): void {
             scale.domain = bind(`${PLANNED_ENDS}${key}_domain`, scale.domain);
             domains.push({ value, fields: fieldsOf.get(scale.name) ?? new Set(), signal: scale.domain });
         }
-        if (typeof scale.domainMin === 'number') scale.domainMin = bind(`${PLANNED_ENDS}${key}_min`, scale.domainMin);
-        if (typeof scale.domainMax === 'number') scale.domainMax = bind(`${PLANNED_ENDS}${key}_max`, scale.domainMax);
-        if (typeof scale.padding === 'number') scale.padding = bind(`${PLANNED_ENDS}${key}_padding`, scale.padding);
+        // Every end is bound, planned or not (null leaves it to the backend), so a plan for another
+        // room or other rows that plans it differently sets the same signals in place.
+        const plain = (value: unknown): value is number | undefined => value === undefined || typeof value === 'number';
+        if (!numbers(scale.domain)) {
+            if (plain(scale.domainMin)) scale.domainMin = bind(`${PLANNED_ENDS}${key}_min`, scale.domainMin ?? null);
+            if (plain(scale.domainMax)) scale.domainMax = bind(`${PLANNED_ENDS}${key}_max`, scale.domainMax ?? null);
+        }
+        if (plain(scale.padding)) scale.padding = bind(`${PLANNED_ENDS}${key}_padding`, scale.padding ?? null);
         planned.add(scale.name);
     }
-    const ticks = new Map<string, number[]>();
+    const ticks = new Map<string, number[] | null>();
     const visit = (scope: any): void => {
         for (const axis of scope.axes ?? []) {
-            if (!planned.has(axis.scale) || !numbers(axis.values)) continue;
+            if (!planned.has(axis.scale) || (axis.values !== undefined && !numbers(axis.values))) continue;
             const name = `${PLANNED_ENDS}${String(axis.scale).replace(/\W/g, '_')}_ticks`;
             if (!ticks.has(name)) {
-                ticks.set(name, axis.values);
-                signals.push({ name, value: axis.values });
+                ticks.set(name, axis.values ?? null);
+                signals.push({ name, value: axis.values ?? null });
             }
             axis.values = { signal: name };
         }
@@ -342,18 +349,104 @@ export function layoutSignals(vegaSpec: any): LayoutSignal[] {
     });
 }
 
+/** What a chart mounts with, beyond the plan it is shaped from. */
+export interface InteractiveShapeSetup {
+    readonly input: ChartAssemblyInput;
+    readonly interactions: readonly InteractionDef[];
+    readonly enableSemanticUpdates?: boolean;
+    readonly viewports: readonly CategoryViewport[];
+    readonly filtersRows: boolean;
+    readonly replan: VegaLiteSession['replan'];
+}
+
+/** The Vega spec a plan of a chart mounts as, with the interactions compiled in. */
+export function shapeInteractiveVega(planned: Pick<Replanned, 'spec' | 'axisLabels' | 'dataLabels'>, setup: InteractiveShapeSetup) {
+    const shapedSpec = planned.spec;
+    // What each mark is about, from the compile itself: a chart without interactions still morphs into its next spec by it.
+    const morphFields: readonly string[] = shapedSpec._interactionSemantics?.identityFields ?? [];
+    const interactionPlan = addVegaLiteInteractions(
+        shapedSpec,
+        setup.interactions,
+        setup.enableSemanticUpdates,
+    );
+    if (setup.viewports.length === 0 && setup.filtersRows) pinColorDomains(shapedSpec);
+    const vegaSpec = enableGuideLabelTooltips(compile(shapedSpec).spec as any);
+    bindPlannedEnds(vegaSpec);
+    const relaidSignals = setup.filtersRows ? layoutSignals(vegaSpec) : [];
+    let livePlanner: LiveLayoutPlanner | undefined;
+    if (interactionPlan) {
+        interactionPlan.axisTargets = collectVegaAxisTargets(
+            vegaSpec,
+            interactionPlan.axisFields,
+            interactionPlan.reorderAxes,
+            (interactionPlan.interactions ?? setup.interactions.filter(isCanvasInteraction)).some((interaction) =>
+                interaction.affordances['axis-label']?.hover)
+                ? interactionPlan.selectionBoundary?.color ?? '#20262c'
+                : undefined,
+        );
+        if (interactionPlan.semanticStores) {
+            injectVegaInteractionStore(vegaSpec, interactionPlan);
+        }
+        // A bar on a navigated x axis follows the rows in view: Flint plans its layout again for them.
+        const liveField = interactionPlan.axisFields?.x?.field;
+        const xScale = findVegaAxisScale(vegaSpec, 'x')?.name;
+        if (!interactionPlan.geoNavigation && interactionPlan.navigationChannels?.includes('x')
+            && setup.viewports.length === 0 && liveField && xScale) {
+            const planner = liveLayoutPlanner(
+                setup.input, liveField,
+                liveLayoutOf(shapedSpec, liveField, planned.axisLabels, planned.dataLabels), setup.replan,
+            );
+            if (bindLiveLayout(vegaSpec, xScale, findVegaAxisScale(vegaSpec, 'y')?.name, planner)) {
+                livePlanner = planner;
+            }
+        }
+        interactionPlan.navigationAxes = interactionPlan.geoNavigation
+            ? injectVegaGeoNavigationSignals(vegaSpec, interactionPlan.navigationChannels)
+            : injectVegaNavigationSignals(
+                vegaSpec, interactionPlan.navigationChannels, vegaLiteTemporalAxisPlans(shapedSpec),
+            );
+        // A calendar axis that draws its plan holds the planned ticks in a signal, so the plan for a
+        // new room sets them in place; a navigated one plans them from its window instead.
+        if (!interactionPlan.geoNavigation) {
+            for (const [channel, ticks] of Object.entries(vegaLitePlannedTemporalTicks(shapedSpec)) as ['x' | 'y', { values: number[]; labels: Record<string, string> }][]) {
+                const scale = findVegaAxisScale(vegaSpec, channel);
+                if (interactionPlan.navigationChannels?.includes(channel) || !scale || (scale.type !== 'time' && scale.type !== 'utc')) continue;
+                holdTemporalAxisTicks(vegaSpec, channel, scale, ticks);
+            }
+        }
+        if (interactionPlan.geoNavigation && interactionPlan.geoLevels) {
+            injectVegaGeoLevelFit(vegaSpec, interactionPlan.geoLevels);
+        } else if (interactionPlan.geoNavigation) {
+            interactionPlan.geoFocusSource = vegaGeoFocusSource(vegaSpec);
+        }
+        interactionPlan.reorderAxes = (interactionPlan.reorderAxes ?? [])
+            .map((axis) => injectVegaReorderSignal(vegaSpec, axis))
+            .filter((axis): axis is NonNullable<typeof axis> => !!axis);
+        interactionPlan.reorderAxis = interactionPlan.reorderAxes[0];
+        injectAxisMotion(vegaSpec);
+        interactionPlan.titleMotion = injectTitleMotion(vegaSpec);
+        interactionPlan.plotRoom = !vegaSpec.layout;
+        interactionPlan.axisExtents = injectAxisExtentMotion(vegaSpec);
+        interactionPlan.tickAxes = injectAxisTickMotion(vegaSpec);
+        interactionPlan.legendDomains = bindLegendDomains(vegaSpec, interactionPlan.legendDomains);
+        interactionPlan.movingScales = injectScaleMotion(vegaSpec);
+        interactionPlan.movingSizes = injectSizeMotion(vegaSpec);
+    }
+    return { interactionPlan, vegaSpec, relaidSignals, livePlanner, morphFields };
+}
+
 /** The windows over a subset of the rows: their categories in the same order, the window no larger than they are. */
 function viewportsOver(viewports: CategoryViewport[], rows: readonly Record<string, unknown>[]): CategoryViewport[] {
-    return viewports.map((viewport) => {
-        const present = new Set(rows.map((row) => row[viewport.field]));
-        const orderedValues = viewport.orderedValues.filter((value) => present.has(value));
-        return {
-            ...viewport,
-            orderedValues,
-            totalCount: orderedValues.length,
-            visibleCount: Math.min(viewport.visibleCount, orderedValues.length),
-        };
-    });
+return viewports.map((viewport) => {
+    const present = new Set(rows.map((row) => row[viewport.field]));
+    const orderedValues = viewport.orderedValues.filter((value) => present.has(value));
+    return {
+        ...viewport,
+        orderedValues,
+        totalCount: orderedValues.length,
+        visibleCount: Math.min(viewport.visibleCount, orderedValues.length),
+    };
+});
 }
 
 function applyViewportSorts(node: unknown, viewports: CategoryViewport[]): void {
@@ -424,72 +517,10 @@ export function createVegaInteractiveRenderer(
             const canvasInteractions = interactions.filter(isCanvasInteraction);
             const filtersRows = interactions.some((interaction) =>
                 isFilterControls(interaction) && (interaction.filterControls.options.mode ?? 'filter') === 'filter');
-            // The Vega spec a plan of this chart mounts as, with the interactions compiled in.
-            const shape = (planned: Pick<Replanned, 'spec' | 'axisLabels' | 'dataLabels'>) => {
-                const shapedSpec = planned.spec;
-                // What each mark is about, from the compile itself: a chart without interactions still morphs into its next spec by it.
-                const morphFields: readonly string[] = shapedSpec._interactionSemantics?.identityFields ?? [];
-                const interactionPlan = addVegaLiteInteractions(
-                    shapedSpec,
-                    interactions,
-                    options.enableSemanticUpdates,
-                );
-                if (viewports.length === 0 && filtersRows) pinColorDomains(shapedSpec);
-                const vegaSpec = enableGuideLabelTooltips(compile(shapedSpec).spec as any);
-                bindPlannedEnds(vegaSpec);
-                const relaidSignals = filtersRows ? layoutSignals(vegaSpec) : [];
-                let livePlanner: LiveLayoutPlanner | undefined;
-                if (interactionPlan) {
-                    interactionPlan.axisTargets = collectVegaAxisTargets(
-                        vegaSpec,
-                        interactionPlan.axisFields,
-                        interactionPlan.reorderAxes,
-                        (interactionPlan.interactions ?? canvasInteractions).some((interaction) =>
-                            interaction.affordances['axis-label']?.hover)
-                            ? interactionPlan.selectionBoundary?.color ?? '#20262c'
-                            : undefined,
-                    );
-                    if (interactionPlan.semanticStores) {
-                        injectVegaInteractionStore(vegaSpec, interactionPlan);
-                    }
-                    // A bar on a navigated x axis follows the rows in view: Flint plans its layout again for them.
-                    const liveField = interactionPlan.axisFields?.x?.field;
-                    const xScale = findVegaAxisScale(vegaSpec, 'x')?.name;
-                    if (!interactionPlan.geoNavigation && interactionPlan.navigationChannels?.includes('x')
-                        && viewports.length === 0 && liveField && xScale) {
-                        const planner = liveLayoutPlanner(
-                            interactiveInput, liveField,
-                            liveLayoutOf(shapedSpec, liveField, planned.axisLabels, planned.dataLabels), session.replan,
-                        );
-                        if (bindLiveLayout(vegaSpec, xScale, findVegaAxisScale(vegaSpec, 'y')?.name, planner)) {
-                            livePlanner = planner;
-                        }
-                    }
-                    interactionPlan.navigationAxes = interactionPlan.geoNavigation
-                        ? injectVegaGeoNavigationSignals(vegaSpec, interactionPlan.navigationChannels)
-                        : injectVegaNavigationSignals(
-                            vegaSpec, interactionPlan.navigationChannels, vegaLiteTemporalAxisPlans(shapedSpec),
-                        );
-                    if (interactionPlan.geoNavigation && interactionPlan.geoLevels) {
-                        injectVegaGeoLevelFit(vegaSpec, interactionPlan.geoLevels);
-                    } else if (interactionPlan.geoNavigation) {
-                        interactionPlan.geoFocusSource = vegaGeoFocusSource(vegaSpec);
-                    }
-                    interactionPlan.reorderAxes = (interactionPlan.reorderAxes ?? [])
-                        .map((axis) => injectVegaReorderSignal(vegaSpec, axis))
-                        .filter((axis): axis is NonNullable<typeof axis> => !!axis);
-                    interactionPlan.reorderAxis = interactionPlan.reorderAxes[0];
-                    injectAxisMotion(vegaSpec);
-                    interactionPlan.titleMotion = injectTitleMotion(vegaSpec);
-                    interactionPlan.plotRoom = !vegaSpec.layout;
-                    interactionPlan.axisExtents = injectAxisExtentMotion(vegaSpec);
-                    interactionPlan.tickAxes = injectAxisTickMotion(vegaSpec);
-                    interactionPlan.legendDomains = bindLegendDomains(vegaSpec, interactionPlan.legendDomains);
-                    interactionPlan.movingScales = injectScaleMotion(vegaSpec);
-                    interactionPlan.movingSizes = injectSizeMotion(vegaSpec);
-                }
-                return { interactionPlan, vegaSpec, relaidSignals, livePlanner, morphFields };
+            const shapeSetup: InteractiveShapeSetup = {
+                input: interactiveInput, interactions, enableSemanticUpdates: options.enableSemanticUpdates, viewports, filtersRows, replan: session.replan,
             };
+            const shape = (planned: Pick<Replanned, 'spec' | 'axisLabels' | 'dataLabels'>) => shapeInteractiveVega(planned, shapeSetup);
             const shaped = shape(drawn);
             type Replan = { readonly replanned: ReturnType<typeof session.replan>; readonly vegaSpec: any };
             // Rows the chart is sent are planned and compiled once, and every part that follows them reads that plan.
@@ -811,7 +842,9 @@ export function createVegaInteractiveRenderer(
                 async relayout(size) {
                     if (destroyed || !liveValues) return false;
                     const replanned = session.replan({ size });
-                    const next = shape(replanned);
+                    // The rows on screen (a filter's or a host's), planned for the new room.
+                    const shown = filteredRows ?? endsRows;
+                    const next = shape(shown ? session.replan({ rows: shown }) : replanned);
                     const change = liveValuesChange(liveValues, next.vegaSpec);
                     if (!change || !next.livePlanner !== !livePlanner) return false;
                     liveValues = advanceLiveValues(liveValues, next.vegaSpec, change);
@@ -819,6 +852,9 @@ export function createVegaInteractiveRenderer(
                     for (const [name, value] of Object.entries(change.signals)) {
                         view.signal(name, value);
                         relaidNames.add(name);
+                    }
+                    for (const [name, rows] of Object.entries(change.datasets)) {
+                        view.change(name, changeset().remove(() => true).insert([...rows]));
                     }
                     if (change.width !== undefined) view.width(change.width);
                     if (change.height !== undefined) view.height(change.height);

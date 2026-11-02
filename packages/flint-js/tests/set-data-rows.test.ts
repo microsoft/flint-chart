@@ -73,8 +73,18 @@ describe('planned axis ends', () => {
         bindPlannedEnds(mounted);
         bindPlannedEnds(replanned);
         expect(replanned.scales[0]).toEqual(mounted.scales[0]);
-        expect(mounted.signals.map((signal: any) => signal.name)).toEqual(['__flint_ends_y_min', '__flint_ends_y_max', '__flint_ends_y_padding']);
-        expect(replanned.signals.map((signal: any) => signal.value)).toEqual([55, 80, 4]);
+        expect(mounted.signals.map((signal: any) => signal.name)).toEqual(['__flint_ends_y_min', '__flint_ends_y_max', '__flint_ends_y_padding', '__flint_ends_y_ticks']);
+        expect(replanned.signals.map((signal: any) => signal.value)).toEqual([55, 80, 4, null]);
+    });
+
+    it('bind every end, planned or not, so a plan that leaves one to the backend sets the same signals', () => {
+        const scope = (scale: Record<string, unknown>): any => ({ scales: [{ name: 'y', type: 'linear', ...scale }], axes: [{ scale: 'y' }] });
+        const ruled = scope({ domain: { data: 'rows', field: 'v' }, domainMin: 0, domainMax: 50 });
+        const free = scope({ domain: { data: 'rows', field: 'v' } });
+        bindPlannedEnds(ruled);
+        bindPlannedEnds(free);
+        expect(free.scales[0]).toEqual(ruled.scales[0]);
+        expect(free.signals.map((signal: any) => signal.value)).toEqual([null, null, null, null]);
     });
 
     it('run a margin\'s density over the domain of the scale that places its field, even when two axes share the numbers', () => {

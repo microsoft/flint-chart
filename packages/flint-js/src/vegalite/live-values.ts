@@ -23,6 +23,7 @@ const LAYOUT_NUMBERS = new Set([
     'labelFontSize', 'labelLimit', 'labelSeparation', 'labelAngle', 'labelLineHeight', 'labelPadding', 'labelOffset',
     'titleFontSize', 'titlePadding', 'titleLimit', 'tickCount', 'gradientLength', 'gradientThickness',
     'symbolSize', 'columns', 'domainMin', 'domainMax', 'domainMid', 'padding', 'row', 'column', 'size',
+    'paddingInner', 'paddingOuter', 'strokeWidth', 'margin',
 ]);
 /** Properties whose string or flag is a layout value. */
 const LAYOUT_WORDS = new Set(['labelAlign', 'labelBaseline', 'nice', 'zero']);
@@ -31,7 +32,8 @@ const LAYOUT_LISTS: Record<string, string> = { values: 'axes', domain: 'scales',
 /** Encoded channels whose constant value is a layout value. */
 const ENCODED = new Set([
     'fontSize', 'limit', 'width', 'height', 'size', 'radius', 'innerRadius', 'outerRadius', 'cornerRadius',
-    'strokeWidth', 'dx', 'dy', 'x', 'y', 'x2', 'y2', 'xc', 'yc',
+    'cornerRadiusTopLeft', 'cornerRadiusTopRight', 'cornerRadiusBottomLeft', 'cornerRadiusBottomRight',
+    'strokeWidth', 'padAngle', 'angle', 'lineHeight', 'dx', 'dy', 'x', 'y', 'x2', 'y2', 'xc', 'yc',
 ]);
 const SKIPPED = new Set(['data', 'signals', 'usermeta', 'projections']);
 /** Sections a list property is read in. */
@@ -61,6 +63,8 @@ export interface LiveValuesChange {
     values: Record<string, unknown>;
     /** Signals whose initial value changed, by name. */
     signals: Record<string, unknown>;
+    /** Inline datasets whose rows changed, and nothing else about them, by name: the rows the plan worked out for the room. */
+    datasets: Record<string, readonly unknown[]>;
     width?: number;
     height?: number;
     /** Whether the canvas furniture the spec carries changed. */
@@ -68,6 +72,12 @@ export interface LiveValuesChange {
 }
 
 const DATETIME = /^datetime\("([^"]+)"\)$/;
+/** The path of an entry in the spec's top-level data. */
+const DATASET = /^\.data\[\d+\]$/;
+const isInline = (entry: unknown): entry is Node & { name: string; values: unknown[] } =>
+    Boolean(entry && typeof entry === 'object' && typeof (entry as Node).name === 'string' && Array.isArray((entry as Node).values));
+/** The key a rule of an encoded channel is walked under: the channel and the rule's place. */
+const RULE_VALUE = /^(.+)\[(\d+)\]$/;
 const NO_VALUE = Symbol('no value');
 
 /** A tick or domain entry as a plain value: a number, word, or a `datetime("…")` signal as its time. */
@@ -85,8 +95,12 @@ function entryValue(entry: unknown): unknown {
  */
 function liveValue(key: string, value: unknown, section: string, inEncode: boolean): unknown {
     if (inEncode) {
-        return ENCODED.has(key) && value && typeof value === 'object' && !Array.isArray(value)
-            && Object.keys(value).length === 1 && typeof (value as Node).value === 'number'
+        // A channel's constant, alone or as the value of one of its rules (`[{ test, value }, { value }]`).
+        const rule = RULE_VALUE.exec(key);
+        const channel = rule ? rule[1] : key;
+        return ENCODED.has(channel) && value && typeof value === 'object' && !Array.isArray(value)
+            && Object.keys(value).every((part) => part === 'value' || (rule !== null && part === 'test'))
+            && typeof (value as Node).value === 'number'
             ? (value as Node).value : NO_VALUE;
     }
     if (typeof value === 'number' && LAYOUT_NUMBERS.has(key)) return value;
@@ -121,7 +135,9 @@ function walk(
         const next = SECTIONS.has(key) ? key : section;
         if (Array.isArray(value)) {
             value.forEach((item, index) => {
-                if (item && typeof item === 'object') walk(item, `${at}[${index}]`, next, inEncode, visit);
+                const rule = inEncode ? liveValue(`${key}[${index}]`, item, next, inEncode) : NO_VALUE;
+                if (rule !== NO_VALUE) visit(`${at}[${index}]`, value as unknown as Node, { name: '', key: `${key}[${index}]`, section: next, inEncode }, rule);
+                else if (item && typeof item === 'object') walk(item, `${at}[${index}]`, next, inEncode, visit);
             });
         } else {
             walk(value, at, next, inEncode || key === 'encode', visit);
@@ -138,7 +154,13 @@ export function bindLiveValues(vegaSpec: Node): LiveValues {
         const name = `v${keys.size}`;
         keys.set(path, { ...leaf, name });
         values[name] = value;
-        holder[leaf.key] = { signal: `${LIVE_VALUES_SIGNAL}.${name}` };
+        const rule = RULE_VALUE.exec(leaf.key);
+        if (rule) {
+            const { value: _value, ...test } = holder[Number(rule[2])];
+            holder[Number(rule[2])] = { ...test, signal: `${LIVE_VALUES_SIGNAL}.${name}` };
+        } else {
+            holder[leaf.key] = { signal: `${LIVE_VALUES_SIGNAL}.${name}` };
+        }
     });
     if (keys.size > 0) vegaSpec.signals = [{ name: LIVE_VALUES_SIGNAL, value: values }, ...(vegaSpec.signals ?? [])];
     return { unbound, keys, values };
@@ -158,7 +180,7 @@ function same(a: unknown, b: unknown): boolean {
  */
 export function liveValuesChange(live: LiveValues, next: Node): LiveValuesChange | null {
     const { unbound, keys } = live;
-    const change: LiveValuesChange = { values: {}, signals: {}, furniture: false };
+    const change: LiveValuesChange = { values: {}, signals: {}, datasets: {}, furniture: false };
     for (const key of new Set([...Object.keys(unbound), ...Object.keys(next)])) {
         if (key === 'signals' || key === 'usermeta' || key === 'width' || key === 'height') continue;
         if (!(key in unbound) || !(key in next)) return null;
@@ -183,6 +205,14 @@ export function liveValuesChange(live: LiveValues, next: Node): LiveValuesChange
     let structural = false;
     const compare = (a: unknown, b: unknown, path: string): void => {
         if (structural || a === b) return;
+        // A dataset that keeps its name and transforms takes its new rows in place.
+        if (DATASET.test(path) && isInline(a) && isInline(b) && a.name === b.name) {
+            const { values: rowsWas, ...restWas } = a;
+            const { values: rowsNow, ...restNow } = b;
+            if (!same(restWas, restNow)) structural = true;
+            else if (!same(rowsWas, rowsNow)) change.datasets[b.name] = rowsNow;
+            return;
+        }
         const leaf = keys.get(path);
         if (leaf) {
             const value = liveValue(leaf.key, b, leaf.section, leaf.inEncode);
