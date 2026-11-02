@@ -153,7 +153,7 @@ export interface FlintChartProps {
 export interface FlintChartHandle {
     readonly surface: InteractiveChartSurface | null;
     applyUpdate(update: ChartUpdate, options?: ChartUpdateApplyOptions): Promise<ChartUpdateResult | null>;
-    clearUpdate(id: string): Promise<void>;
+    clearUpdate(id: string, options?: Pick<ChartUpdateApplyOptions, 'transition'>): Promise<void>;
     dispatch(interactionId: string, payload: unknown, options?: Pick<ChartUpdateApplyOptions, 'phase' | 'transition'>): Promise<ChartUpdateResult | null>;
     getState(): ChartState | undefined;
     refresh(): void;
@@ -581,8 +581,8 @@ export function createFlintChart(loaders: InteractiveRendererLoaders) {
                 ownersRef.current.set(update.id, 'host');
                 return surface.applyUpdate(update, options);
             },
-            clearUpdate: async (id) => {
-                await surfaceRef.current?.clearUpdate(id);
+            clearUpdate: async (id, options) => {
+                await surfaceRef.current?.clearUpdate(id, options);
             },
             dispatch: async (interactionId, payload, options) => surfaceRef.current?.dispatch(interactionId, payload, options) ?? null,
             getState: () => surfaceRef.current?.getState(),

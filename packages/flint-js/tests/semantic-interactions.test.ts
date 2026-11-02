@@ -4917,8 +4917,8 @@ describe('elementsFromHits', () => {
     });
 
     it('reports an element in field terms, without the columns the renderer adds', () => {
-        const hits: RenderHit[] = [{ datum: { ...row(2012, 'a'), color_Segment_sort_index: 0, _vgsid_: 4 }, source: 'mark', markType: 'symbol' }];
-        expect(elementsFromHits(hits, key)[0].value).toEqual({ Year: 2012, Share: 12, Segment: 'Hidden' });
+        const hits: RenderHit[] = [{ datum: { ...row(2012, 'a'), color_Segment_sort_index: 0, _Segment_sort_index: 1, _vgsid_: 4, rank_sort_index: 2 }, source: 'mark', markType: 'symbol' }];
+        expect(elementsFromHits(hits, key)[0].value).toEqual({ Year: 2012, Share: 12, Segment: 'Hidden', rank_sort_index: 2 });
     });
 
     it('keeps one key per element when every vertex starts a segment', () => {

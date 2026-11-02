@@ -70,9 +70,16 @@ export function associateSemanticElementRenderKeys(
     return element;
 }
 
-/** A column the renderer adds to a row for itself: Flint's interaction keys, Vega's ids, Vega-Lite's sort indices. */
+const rendererColumns: ((field: string) => boolean)[] = [];
+
+/** Lets a renderer name the columns it adds to rows for itself, so reported elements leave them out. */
+export function registerRenderColumns(test: (field: string) => boolean): void {
+    if (!rendererColumns.includes(test)) rendererColumns.push(test);
+}
+
+/** A column the renderer adds to a row for itself: Flint's interaction keys, and any a renderer registered. */
 export function isRenderColumn(field: string): boolean {
-    return field.startsWith('__flint_interaction_') || field === '_vgsid_' || field.endsWith('_sort_index');
+    return field.startsWith('__flint_interaction_') || rendererColumns.some((test) => test(field));
 }
 
 export function withoutRenderIdentity(

@@ -119,6 +119,8 @@ const UNTHEMED_TITLE_OFFSET = 10;
 const VEGA_LITE_LAYOUT: BackendLayoutProfile = {
     spellField: (name) => escapeVlFieldName(name),
     measureText: rendererTextMeasurer,
+    // Vega-Lite grids a measure axis and labels it `ceil(length / 40)` times.
+    measureAxis: { tickSpacing: 40, grid: true },
     defaults: {
         // Vega-Lite's native width:{step} preserves the authored category pitch.
         bandStepFit: 0,

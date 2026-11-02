@@ -736,8 +736,8 @@ surface.destroy();
 | --- | --- |
 | `ready`, `warnings` | Promises: the first render; the dropped or yielded interactions. Every call below waits for `ready` itself. |
 | `applyUpdate(update, options?)` | Retains one update by id; replaces the layer with the same id, easing from what is drawn (300 ms by default). `options.transition` sets the duration, `{ duration: 0 }` jumps. `options.phase: 'preview'` shows a streamed change at once (a drag, a scrub), `commit` keeps and animates it, `cancel` drops the preview. |
-| `setUpdates(updates)` | Replaces every retained update. |
-| `clearUpdate(id)` | Removes one layer. |
+| `setUpdates(updates, options?)` | Replaces every retained update; `options.transition` as for `applyUpdate`. |
+| `clearUpdate(id, options?)` | Removes one layer; `options.transition` as for `applyUpdate`. |
 | `dispatch(id, payload, options?)` | Runs an `externalInteraction` handler and applies what it returns; `options.phase` and `options.transition` as for `applyUpdate`. |
 | `setInput(input, options?)` | Draws a new input in place (new data, chart type or theme), keeping the surface. Marks morph along a chart transition Flint lists, else the charts cross-fade. Host updates and filters carry over; a reader's state starts afresh; `interaction_spec` must not change. |
 | `getState()` | What the chart shows now; `undefined` before `ready`. |

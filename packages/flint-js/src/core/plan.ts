@@ -53,6 +53,8 @@ export interface BackendLayoutProfile {
     spacing: FurnitureSpacing;
     /** The sizes the backend draws a headline and deck at where no theme sets them. */
     titleSizes?: { headline: number; deck: number };
+    /** How the backend draws a measure axis no theme rules: a label about every `tickSpacing` px, gridded or not. */
+    measureAxis?: { tickSpacing: number; grid: boolean };
 }
 
 /** The size a chart is planned into. */
@@ -448,8 +450,18 @@ interface RulerContext {
     points?: LayoutPlan['points'];
 }
 
+/** The axes an unthemed chart draws, as the backend draws them: its measure axes' label spacing and grid. */
+function backendAxisDefaults(design: DesignDecisions, measureAxis: BackendLayoutProfile['measureAxis']): DesignDecisions {
+    if (!measureAxis) return design;
+    const axes = Object.fromEntries((['x', 'y'] as const).flatMap((channel) => {
+        const axis = design.axes[channel];
+        return axis ? [[channel, axis.role === 'measure' ? { ...axis, tickSpacing: measureAxis.tickSpacing, grid: { ...axis.grid, show: measureAxis.grid } } : axis]] : [];
+    }));
+    return { ...design, axes: { ...design.axes, ...axes } };
+}
+
 /**
- * The ruler of each themed measure axis Flint can draw: one with a planned extent, read on a
+ * The ruler of each measure axis Flint can draw, themed or as the backend draws it: one with a planned extent, read on a
  * linear scale from rows as they are, not aggregated, binned, held to set ticks, ticked at
  * observed values, or ruled by the template itself. A gridded axis rounds its free ends to the
  * step. An ungridded one rounds as the backend's default does, except at an end value labels
@@ -462,18 +474,6 @@ interface RulerContext {
  * and a half where the theme flushes the end labels too), and the step is never finer than the
  * axis can name.
  */
-/** Vega-Lite's own label spacing on a measure axis: `ceil(length / 40)` ticks. */
-const BACKEND_TICK_SPACING = 40;
-
-/** The axes an unthemed chart draws, as the backend draws them: measure axes gridded, a label every 40 px. */
-function backendAxisDefaults(design: DesignDecisions): DesignDecisions {
-    const axes = Object.fromEntries((['x', 'y'] as const).flatMap((channel) => {
-        const axis = design.axes[channel];
-        return axis ? [[channel, axis.role === 'measure' ? { ...axis, tickSpacing: BACKEND_TICK_SPACING, grid: { ...axis.grid, show: true } } : axis]] : [];
-    }));
-    return { ...design, axes: { ...design.axes, ...axes } };
-}
-
 function measureRulers(context: RulerContext): Partial<Record<'x' | 'y', AxisRuler>> {
     const { structure, design, domains, channelSemantics, encodings, axisLabels, valueLabels, length, measure, points } = context;
     const out: Partial<Record<'x' | 'y', AxisRuler>> = {};
@@ -1877,8 +1877,8 @@ function planAroundPlot(prepared: PreparedPlan, reserve: FurnitureReserve): Layo
     // Facet panels share their scales, so each panel draws the ruler a single plot of its size would;
     // a template's own composite, and a y each wrapped panel scales for itself, keep theirs.
     // Every chart's measure axes take a ruler. Without a theme the plan's ground is neutral, but the
-    // backend draws its own defaults, so the ruler reads those: a grid, and a label every 40 px.
-    const rulerDesign = theme ? design : backendAxisDefaults(design);
+    // backend draws its own defaults, so the ruler reads those.
+    const rulerDesign = theme ? design : backendAxisDefaults(design, profile.measureAxis);
     const measured = !template.composite && !options.liveLayoutSignal ? measureRulers({
         structure, design: rulerDesign, domains, channelSemantics, encodings, axisLabels, valueLabels,
         length: drawnLengths(plot, titlePlan, valueLabels), measure: measureText, points,

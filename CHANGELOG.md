@@ -110,6 +110,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `setUpdates` and `clearUpdate` take `{ transition }` as `applyUpdate` does, so a layer can be
+  cleared at once without an empty update standing in for it.
+- A linked chart shows another chart's hover as a preview and cancels it when the hover ends,
+  instead of committing each pointer move.
+- A change that would jump while a motion runs is carried to where the motion was heading over the
+  time it had left; a change too dense to move ends the running motion and settles the layout.
+- A discrete axis lands where Vega places it (`tickBand`, `tickOffset`, `labelOffset` and the
+  rest), and a user field named like a Vega-Lite sort index is no longer dropped from reports.
 - Axis ends a layout plan decides from the rows (a themed ruler's rounded domain and ticks, a dot
   axis's padded domain) are planned again for the rows a chart is sent, so a filter's version or
   a host's `set-data` moves the axis to its own ends. They were pinned from every row the chart

@@ -160,20 +160,23 @@ in the type registry) joins the identity, drawn or not, where it tells apart the
 every mark, so a scatter of countries coloured by region follows each country. The check runs on
 the drawn rows, and both frames of a change are keyed by the identity the old rows were drawn
 with. A mark whose items one identity field tells apart on its own (a label at each series' end)
-is matched by that field, and a mark derived by a rule (a theme's first and last point of each
+is matched by that field (unless the new items repeat it, when they are matched by their whole
+identity), and a mark derived by a rule (a theme's first and last point of each
 series) states what each of its items is, so both move with their series. Everything that must follow an element through a change reads the same identity. A held
 selection, a hidden series and a note re-find their elements among the new rows: a `where` or a
 `key` runs again as the predicate it is, and an element a reader picked is found by its identity,
 so a changed value never makes it another element. One that is absent recedes the rest until it
 returns. The animation matches marks by it, so a value moves rather than fading out and in. Where
 a chart has no identity (anonymous points, or several sharing a colour), each row is its own
-element, and a change of data starts it afresh.
+element, and a change of data starts it afresh; a path no key names follows a change only when it
+is its mark's one path (a regression line).
 
 So a committed change moves each continuous scale an axis reads from the domain drawn to the
 new one, linearly or, on a log scale, geometrically, and axes, ticks and gridlines ride it. Marks
 move in data units: each frame mixes a row's value toward its new one and places it through the
 scale as that frame draws it, so a bar sits on its gridline mid-way. What a scale does not
-explain moves in screen units: a new order (the labels of a discrete axis glide with it), a
+explain moves in screen units: a new order (the labels and ticks of a discrete axis glide with it, landing where the backend
+places them), a
 stack re-forming, sizes, angles, colours. A chart whose size follows its data (a bar per
 category) moves to its new size with the change, and while it moves a line clips to its plot: a
 stretch it lost slides out through the edge with the scale, and a stretch it gained slides in. Legend entries fade between shown, dimmed and hidden.
@@ -186,7 +189,9 @@ because they change what it is built of (a KPI card per row), draw it again with
 handing over to the one in its place. A text that says the same but for its numbers counts from
 one to the other ("72" to "88", "90% of 80" to "104% of 85"), in place or across a handover. A post-encoding transform on each mark does the mixing from a
 frame captured before the render, so no data transform re-runs per frame, SVG and canvas move
-alike, and a change mid-flight starts from the frame on screen. At rest it passes the marks
+alike, and a change mid-flight starts from the frame on screen. A change that would jump while a motion
+runs (a zoom during an animated sort) is carried to where the motion was heading, over the time it
+had left. At rest it passes the marks
 through untouched, so a chart that is not moving costs what it would without motion. `set-viewport` moves the same scales through
 its own domain path. `getState()` reports where an update goes, never a frame, and a host's call
 resolves when the motion ends. Past 2,000 drawn items a committed change jumps. Scales in
@@ -194,12 +199,14 @@ the chart's top scope move; a faceted or concatenated chart's own scales do not 
 marks move in screen units. A line in a facet cell clips to its panel at rest too, since a clip
 changes the bounds the panels are laid out by. Axis ends the layout plan decides from the rows (a
 ruler's rounded domain and ticks, a dot axis's padded domain) are planned again for the rows a
-chart is sent, so the scale moves to them rather than keeping the ends of the rows it mounted with. A binned colour
+chart is sent, so the scale moves to them rather than keeping the ends of the rows it mounted with.
+An end the new rows plan no value for is left to the backend, and a new room plans the ends again
+for the rows on screen. A binned colour
 key (a quantize or threshold scale) moves its bins the same way, so its labels count. A mark drawn
 from aggregated rows is matched by the identity fields its rows kept, and the group that clips a
 stack of rounded bars to its ends moves with its bars. The chart's title, the room each axis
 takes for its ticks and labels, which places the axis title, and the room around the plot, move
-from one resting layout to the next; a faceted or concatenated chart lays out its own room, which
+from one resting layout to the next, starting from the last one, never from a preview on screen; a faceted or concatenated chart lays out its own room, which
 is fitted to the new layout once the change comes to rest. Legend entries
 within a legend and the boxes of facet and concatenated panels take their new place at once. A continuous
 axis carries its ticks across a committed change: it draws the values on both sides through the
@@ -207,7 +214,8 @@ moving scale, a value on both sides moves, one on a single side fades out or in 
 each label keeps the text it shows at rest. A tick is drawn only inside its scale's range, so one
 at the range's end leaves or arrives through the plot's edge as the range moves.
 
-Out of scope by the same rules: a preview, which follows the hand; a resize of the room the
+Out of scope by the same rules: a preview, which follows the hand (a linked chart shows another
+chart's hover as a preview too, cancelled when the hover ends); a resize of the room the
 host gives the chart, which changes room, not meaning; a theme, which changes style, not meaning,
 and so cross-fades at most.
 

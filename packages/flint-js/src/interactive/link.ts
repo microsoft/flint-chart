@@ -298,23 +298,31 @@ export function linkCharts(charts: Record<string, LinkedChart>, spec: LinkSpec, 
     const links = options.links ? Promise.resolve(options.links) : loadLinks(inputs, spec);
     const listeners = new Set<(snapshot: LinkSnapshot) => void>();
     const layered = new Set<string>();
+    const previewed = new Set<string>();
     let state: LinkState | null = null;
     let destroyed = false;
 
-    /** Shows the link's state on every chart; a hover follows the pointer, so what it shows jumps. */
-    const show = (followsPointer = false) => {
+    /**
+     * Shows the link's state on every chart. A hover is a preview, as on the chart it comes from:
+     * it follows the pointer, and when it ends it is cancelled, leaving any committed link as it was.
+     */
+    const show = (preview = false) => {
         if (!state || destroyed) return;
         const snapshot = state.snapshot();
         const updates = conditionUpdates(state.links, snapshot.shown);
-        const jump = followsPointer ? { transition: { duration: 0 } } : undefined;
         for (const [id, chart] of Object.entries(charts)) {
             const layer = updates.get(id);
+            if (layer && preview) {
+                previewed.add(id);
+                void chart.surface.applyUpdate(layer, { phase: 'preview' });
+                continue;
+            }
+            if (previewed.delete(id) && !layer) void chart.surface.applyUpdate({ id: LINK_LAYER, ops: [] }, { phase: 'cancel' });
             if (layer) {
                 layered.add(id);
-                void chart.surface.applyUpdate(layer, jump);
-            } else if (layered.delete(id)) {
-                if (jump) void chart.surface.applyUpdate({ id: LINK_LAYER, ops: [] }, jump);
-                else void chart.surface.clearUpdate(LINK_LAYER);
+                void chart.surface.applyUpdate(layer);
+            } else if (!preview && layered.delete(id)) {
+                void chart.surface.clearUpdate(LINK_LAYER);
             }
         }
         for (const listener of listeners) listener(snapshot);

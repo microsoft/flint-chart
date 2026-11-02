@@ -5,6 +5,7 @@ import {
     type RenderHit,
     type SemanticTarget,
     type LegendTargetValue,
+    registerRenderColumns,
 } from '../../core/interaction-semantics';
 import type {
     ElementInteractionEvent,
@@ -33,6 +34,14 @@ export {
     rendererPlotOrigin,
     type RendererCoordinateSpace,
 } from '../../interactive/geometry/coordinate-space';
+
+// Vega-Lite's encoding channels (vega-lite's `channel.ts`), which prefix the sort indices it adds.
+const VEGA_LITE_CHANNELS = ['row', 'column', 'facet', 'x', 'y', 'x2', 'y2', 'xOffset', 'yOffset', 'radius', 'radius2', 'theta', 'theta2',
+    'latitude', 'longitude', 'latitude2', 'longitude2', 'time', 'color', 'fill', 'stroke', 'shape', 'size', 'angle', 'opacity',
+    'fillOpacity', 'strokeOpacity', 'strokeWidth', 'strokeDash', 'text', 'order', 'detail', 'key', 'tooltip', 'href', 'url', 'description'];
+const SORT_INDEX = new RegExp(`^(_|(${VEGA_LITE_CHANNELS.join('|')})_).+_sort_index$`);
+// Vega's own row ids and the sort indices Vega-Lite adds (`_${field}_sort_index`, `${channel}_${field}_sort_index`) are no fields of the data.
+registerRenderColumns((field) => field === '_vgsid_' || SORT_INDEX.test(field));
 
 /** Where the renderer draws the plot: View#origin leaves out the padding it is translated by. */
 export function vegaRendererOrigin(view: any): PlotPoint {

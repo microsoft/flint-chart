@@ -781,8 +781,8 @@ export function createVegaInteractiveRenderer(
                         unsupportedOps: [...new Set(update.ops.map((op) => op.op))],
                     }));
                 },
-                async clearUpdate(id) {
-                    await interactionController?.clearUpdate(id);
+                async clearUpdate(id, options) {
+                    await interactionController?.clearUpdate(id, options);
                 },
                 refresh() {
                     interactionController?.refresh();

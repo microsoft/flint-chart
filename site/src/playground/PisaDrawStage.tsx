@@ -240,8 +240,8 @@ export function PisaDrawStage({ theme, ink }: PisaDrawStageProps) {
       if (cancelled) return;
       // The real series take over from the overlay along the same path: the
       // hide layer goes first, then the revealed layers drop it for good.
-      // The picture is already final, so the swap jumps: an empty update clears the hide layer.
-      await chart.applyUpdate({ id: HIDE_UPDATE_ID, ops: [] }, { transition: SWAP });
+      // The picture is already final, so the swap jumps.
+      await chart.clearUpdate(HIDE_UPDATE_ID, { transition: SWAP });
       await chart.applyUpdate(clearRevealUpdate(), { transition: SWAP });
       if (cancelled) return;
       setScores(nextScores);

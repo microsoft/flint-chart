@@ -658,19 +658,19 @@ export function mountInteractiveChartSurface(
             const result = await renderer.applyUpdate(update, applyOptions);
             return applyOptions?.phase === 'preview' ? result : redrawForRows(update, result, applyOptions?.transition);
         },
-        setUpdates: async (updates) => {
+        setUpdates: async (updates, options) => {
             await ready;
             if (destroyed || !renderer?.setUpdates) {
                 return updates.map(unsupportedUpdate);
             }
             hostLayers.clear();
             for (const update of updates) hostLayers.set(update.id, update);
-            return renderer.setUpdates(updates);
+            return renderer.setUpdates(updates, options);
         },
-        clearUpdate: async (id) => {
+        clearUpdate: async (id, options) => {
             await ready;
             hostLayers.delete(id);
-            if (!destroyed) await renderer?.clearUpdate?.(id);
+            if (!destroyed) await renderer?.clearUpdate?.(id, options);
         },
         setInput,
         getState: () => (destroyed ? undefined : renderer?.getState?.()),

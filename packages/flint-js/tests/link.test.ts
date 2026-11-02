@@ -94,10 +94,12 @@ describe('validateLinks', () => {
 function fakeSurface() {
     const listeners = new Set<(change: ChartChange) => void>();
     const applied: ChartUpdate[] = [];
+    const phases: (string | undefined)[] = [];
     const cleared: string[] = [];
     const surface = {
-        applyUpdate: async (update: ChartUpdate) => {
+        applyUpdate: async (update: ChartUpdate, options?: { phase?: string }) => {
             applied.push(update);
+            phases.push(options?.phase);
             return {} as never;
         },
         clearUpdate: async (id: string) => {
@@ -112,7 +114,7 @@ function fakeSurface() {
         const state = { chartType: 'Bar Chart', selected: [], ...change.state } as ChartState;
         for (const listener of listeners) listener({ phase: 'commit', source: 'reader', changed: [], previous: state, ...change, state } as ChartChange);
     };
-    return { surface, applied, cleared, emit, listeners };
+    return { surface, applied, phases, cleared, emit, listeners };
 }
 
 const holding = (interaction: string, layer: 'retained' | 'preview', elements: SemanticElement[]): ChartState => ({
@@ -169,13 +171,15 @@ describe('linkCharts', () => {
         expect(trend.cleared.at(-1)).toBe(LINK_LAYER);
     });
 
-    it('previews a hover over the condition and lets it go when the pointer leaves', async () => {
+    it('previews a hover over the condition and cancels the preview when the pointer leaves', async () => {
         const { bars, trend, linked } = await setup();
         trend.emit({ phase: 'preview', interactionId: 'hover-group-focus', state: holding('hover-group-focus', 'preview', marks({ region: 'Europe' })) });
         expect(whereOf(bars.applied.at(-1))).toEqual({ region: { in: ['Europe'] } });
+        expect(bars.phases.at(-1)).toBe('preview');
         expect(linked.condition().condition).toEqual({});
         trend.emit({ phase: 'cancel', interactionId: 'hover-group-focus' });
-        expect(bars.cleared.at(-1)).toBe(LINK_LAYER);
+        expect([bars.applied.at(-1)?.id, bars.phases.at(-1)]).toEqual([LINK_LAYER, 'cancel']);
+        expect(bars.cleared).toEqual([]);
     });
 
     it('clears everywhere on a reader reset, and ignores the host’s own changes', async () => {

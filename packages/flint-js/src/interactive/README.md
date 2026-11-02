@@ -102,8 +102,8 @@ The surface API is intentionally small:
 | `layout` | Read the plot box the chart is drawn with, once ready; a filter that re-lays the chart out updates it (Vega-Lite charts that draw one plot) |
 | `flint-interaction` event | Receive every resolved canvas action before the chart reacts to it |
 | `applyUpdate(update, options?)` | Apply precomputed retained chart state by ID; `phase` (`preview`, `commit`, `cancel`) and `transition` as below |
-| `setUpdates(updates)` | Replace the retained update collection |
-| `clearUpdate(id)` | Remove one retained update |
+| `setUpdates(updates, options?)` | Replace the retained update collection; `transition` as below |
+| `clearUpdate(id, options?)` | Remove one retained update; `transition` as below |
 | `dispatch(interactionId, payload, options?)` | Invoke an external handler and report its update result; `phase` and `transition` as for `applyUpdate` |
 | `setInput(input, options?)` | Draw a new input in place (new data, chart type or theme), keeping the surface, host updates and filters |
 | `destroy()` | Remove listeners, renderer state, and DOM |

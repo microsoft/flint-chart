@@ -117,7 +117,7 @@ export interface InteractiveRenderer {
     refresh?(): void;
     applyUpdate?(update: ChartUpdate, options?: ChartUpdateApplyOptions): Promise<ChartUpdateResult>;
     setUpdates?(updates: readonly ChartUpdate[], options?: Pick<ChartUpdateApplyOptions, 'transition'>): Promise<readonly ChartUpdateResult[]>;
-    clearUpdate?(id: string): Promise<void>;
+    clearUpdate?(id: string, options?: Pick<ChartUpdateApplyOptions, 'transition'>): Promise<void>;
     /** What the chart draws, for a morph to another chart. */
     morphScene?(): MorphScene | undefined;
     /**
@@ -220,8 +220,8 @@ export interface InteractiveChartSurface {
         options?: Pick<ChartUpdateApplyOptions, 'phase' | 'transition'>,
     ): Promise<ChartUpdateResult | null>;
     applyUpdate(update: ChartUpdate, options?: ChartUpdateApplyOptions): Promise<ChartUpdateResult>;
-    setUpdates(updates: readonly ChartUpdate[]): Promise<readonly ChartUpdateResult[]>;
-    clearUpdate(id: string): Promise<void>;
+    setUpdates(updates: readonly ChartUpdate[], options?: Pick<ChartUpdateApplyOptions, 'transition'>): Promise<readonly ChartUpdateResult[]>;
+    clearUpdate(id: string, options?: Pick<ChartUpdateApplyOptions, 'transition'>): Promise<void>;
     /**
      * Draws a new input in place, keeping this surface and its element. The host's updates and
      * the filters carry over; a reader's selections, hidden series and zoom start afresh. The

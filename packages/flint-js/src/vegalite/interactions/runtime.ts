@@ -434,7 +434,7 @@ export interface VegaInteractionController {
     reportChange(change: Omit<ChartChangeReport, 'state'>): void;
     applyUpdate(update: ChartUpdate, options?: ChartUpdateApplyOptions): Promise<ChartUpdateResult>;
     setUpdates(updates: readonly ChartUpdate[], options?: Pick<ChartUpdateApplyOptions, 'transition'>): Promise<readonly ChartUpdateResult[]>;
-    clearUpdate(id: string): Promise<void>;
+    clearUpdate(id: string, options?: Pick<ChartUpdateApplyOptions, 'transition'>): Promise<void>;
     refresh(): void;
     /** Draws the retained updates again, as after a rail scroll moves the category window. */
     rerender(): Promise<void>;
@@ -3771,11 +3771,11 @@ export function mountVegaInteractions(
         if (longPressInteractions.length > 0) container.style.touchAction = previousTouchAction;
         if (!regionInteraction && !navigationInteraction) container.style.cursor = previousCursor;
     };
-    const clearUpdate = async (id: string): Promise<void> => {
+    const clearUpdate = async (id: string, options?: Pick<ChartUpdateApplyOptions, 'transition'>): Promise<void> => {
         if (id === regionInteraction?.id) regionGesture?.reset();
         const previewed = previewUpdates.delete(id);
         if (!retainedUpdates.delete(id) && !previewed) return;
-        const transition = commitTransition();
+        const transition = commitTransition(options?.transition);
         const { settled } = await renderTransition(transition?.duration ?? 0, transition?.easing);
         await settled;
         notifyChange({ phase: 'commit', source: 'host' });

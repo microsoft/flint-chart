@@ -186,8 +186,8 @@ export function YouDrawItStage() {
       if (cancelled) return;
       // The hide layer goes before the overlay that covers the same path, so
       // the swap is invisible; the revealed layers then drop it for good.
-      // The picture is already final, so the swap jumps: an empty update clears the hide layer.
-      await chart.applyUpdate({ id: HIDE_UPDATE_ID, ops: [] }, { transition: SWAP });
+      // The picture is already final, so the swap jumps.
+      await chart.clearUpdate(HIDE_UPDATE_ID, { transition: SWAP });
       await chart.applyUpdate(clearRevealUpdate(), { transition: SWAP });
       if (cancelled) return;
       const drawnEnd = finishedPath.samples[finishedPath.samples.length - 1].value;
