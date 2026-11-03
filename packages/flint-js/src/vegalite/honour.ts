@@ -98,10 +98,17 @@ function axisDepartures(plan: LayoutPlan, spec: any, out: PlanDeparture[]): void
             const stated = statedDomains(encodings);
             const ruler = plan.rulers[channel];
             if (ruler) {
-                const departs = !stated.length || stated.some(([min, max]) => (min !== undefined && min !== ruler.domain[0]) || (max !== undefined && max !== ruler.domain[1]));
+                // Room for value labels past horizontal bars runs the ruler on past its planned end, with
+                // its ticks at the same step: the planned ruler is the start of the drawn one.
+                const labelRoom = channel === 'x' && plan.valueLabels && !('refused' in plan.valueLabels)
+                    && plan.valueLabels.channel === 'x' && (plan.valueLabels.inset ?? 0) > 0;
+                const departs = !stated.length || stated.some(([min, max]) => (min !== undefined && min !== ruler.domain[0])
+                    || (max !== undefined && max !== ruler.domain[1] && !(labelRoom && typeof max === 'number' && max > ruler.domain[1])));
                 if (departs) out.push({ decision: `rulers.${channel}.domain`, at, planned: ruler.domain, drawn: stated });
                 const values = encodings.map((encoding) => encoding.axis?.values).filter((list) => list !== undefined);
-                if (!values.length || values.some((list) => !sameDecision(ruler.values, list))) out.push({ decision: `rulers.${channel}.values`, at, planned: ruler.values, drawn: values });
+                const matches = (list: unknown) => sameDecision(ruler.values, list)
+                    || (labelRoom && Array.isArray(list) && sameDecision(ruler.values, list.slice(0, ruler.values.length)));
+                if (!values.length || values.some((list) => !matches(list))) out.push({ decision: `rulers.${channel}.values`, at, planned: ruler.values, drawn: values });
                 continue;
             }
             const planned = plan.domains[channel];

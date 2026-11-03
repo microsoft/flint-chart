@@ -908,7 +908,7 @@ describe('interaction definitions', () => {
                         elements: [{ value: { axis: 'x', field: 'Category', value: 'A' } }],
                     },
                 ],
-                value: { state: 'emphasized', opacity: 1 },
+                value: { state: 'emphasized', opacity: 1, mutedOpacity: 0.25 },
             },
             {
                 op: 'set-freeform-overlay',
@@ -1812,7 +1812,7 @@ describe('interaction definitions', () => {
             id: 'click-annotate',
             ops: [
                 {
-                    op: 'set-annotation',
+                    op: 'annotate-text',
                     target: { visual: target.visual, elements: target.elements },
                     value: {},
                 },
@@ -1825,7 +1825,7 @@ describe('interaction definitions', () => {
         expect(semanticUpdate(interaction, null, context)).toEqual({
             id: 'click-annotate',
             ops: [
-                { op: 'set-annotation', target: { select: { key: {} } }, value: null },
+                { op: 'annotate-text', target: { select: { key: {} } }, value: null },
                 { op: 'set-style', targets: [], value: { state: 'normal' } },
             ],
         });
@@ -1848,7 +1848,7 @@ describe('interaction definitions', () => {
             categoryField: 'task',
             seriesField: 'phase',
         })?.ops[0]).toMatchObject({
-            op: 'set-annotation',
+            op: 'annotate-text',
         });
         expect(semanticUpdate(interaction, target, {
             chartType: 'Gantt Chart', selected: [], categoryField: 'task', seriesField: 'phase',
@@ -2823,7 +2823,7 @@ describe('assisted, keyboard, and lasso acquisition', () => {
             op: 'set-style',
         });
         expect(clickAnnotate().handle!(activation, context)?.ops[0]).toMatchObject({
-            op: 'set-annotation',
+            op: 'annotate-text',
         });
     });
 });

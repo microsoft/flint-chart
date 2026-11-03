@@ -1,5 +1,6 @@
 import type { CanvasInteractionDef, DragReorderOptions, SemanticElement } from '../interactions';
 import { dragTrigger } from '../triggers';
+import { DEFAULT_DIM_OPACITY } from './utils';
 
 function categoryValue(element: SemanticElement | undefined, field: string): unknown {
     return element?.records?.[0]?.[field]
@@ -118,7 +119,7 @@ export function createDragReorderInteraction(options: DragReorderOptions = {}): 
                     id,
                     ops: [
                         { op: 'set-style', targets: mutedTargets, value: { state: 'muted', opacity: 0.35 } },
-                        { op: 'set-style', targets: sourceTargets, value: { state: 'emphasized', opacity: 1 } },
+                        { op: 'set-style', targets: sourceTargets, value: { state: 'emphasized', opacity: 1, mutedOpacity: DEFAULT_DIM_OPACITY } },
                         {
                             op: 'set-freeform-overlay',
                             name: 'drag-reorder-preview',

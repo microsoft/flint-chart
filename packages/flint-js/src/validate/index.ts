@@ -395,11 +395,18 @@ function checkSpecUpdates(
         };
     }
     const checks = checkUpdates(input, updates, assembled, admitted);
-    const warnings = checks.flatMap((check) => check.ops.flatMap((op): ChartWarning[] => (op.ok ? [] : [{
-        severity: 'warning',
-        code: 'update_not_applied',
-        message: `Update "${check.id}" will not apply ${op.text}: ${op.reason}`,
-    }])));
+    const warnings = checks.flatMap((check) => check.ops.flatMap((op): ChartWarning[] => [
+        ...(op.ok ? [] : [{
+            severity: 'warning' as const,
+            code: 'update_not_applied',
+            message: `Update "${check.id}" will not apply ${op.text}: ${op.reason}`,
+        }]),
+        ...(op.advice ? [{
+            severity: 'info' as const,
+            code: 'note_repeats_chart',
+            message: `Update "${check.id}" ${op.text}: ${op.advice}`,
+        }] : []),
+    ]));
     return { checks, warnings };
 }
 

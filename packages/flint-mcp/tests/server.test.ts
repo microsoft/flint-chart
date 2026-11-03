@@ -384,7 +384,9 @@ describe('MCP server', () => {
     const { tools } = await client.listTools();
     const view = tools.find((tool) => tool.name === 'show')!;
     const schemaText = JSON.stringify(view.inputSchema);
-    expect(schemaText).toContain("set-annotation { target: UpdateTarget, value: { text, anchor?: 'segment' | 'point' } | null }");
+    expect(schemaText).toContain("annotate-text { target: UpdateTarget, value: { text, anchor?: 'segment' | 'point', highlight?: 'none' | 'light' | 'strong' | 'exclusive' } | null } (set-annotation is its older name)");
+    expect(schemaText).toContain('annotate-region { name, value: { x?: [lo, hi] | categories');
+    expect(schemaText).toContain('annotate-enclosure { name, value: { targets: UpdateTarget[]');
   });
 
   it('render_chart surfaces assembly errors as isError', async () => {

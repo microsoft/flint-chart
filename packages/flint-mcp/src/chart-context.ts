@@ -251,8 +251,11 @@ function opTargets(op: ChartUpdateOp): readonly unknown[] {
   switch (op.op) {
     case 'set-style':
       return op.targets;
+    case 'annotate-text':
     case 'set-annotation':
       return [op.target];
+    case 'annotate-enclosure':
+      return op.value?.targets ?? [];
     case 'set-freeform-overlay':
       return op.value?.body.flatMap((body) => (body.type === 'clone' ? body.targets : [])) ?? [];
     default:
@@ -295,7 +298,7 @@ function updateLines(
         [text, ...more] = emphasisLines(values, undefined);
       }
     }
-    if (outcome.ok && op.op === 'set-annotation' && op.value) {
+    if (outcome.ok && (op.op === 'annotate-text' || op.op === 'set-annotation') && op.value) {
       const note = state?.annotations?.find((annotation) =>
         annotation.id === update.id && JSON.stringify(annotation.target) === JSON.stringify(op.target));
       if (note?.inView === false) text += OUT_OF_VIEW;

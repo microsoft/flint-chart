@@ -30,9 +30,10 @@ or `assembleChartjs` to get a backend spec.
   filtering, joins, pivots, derived columns, or long/wide reshaping beyond
   Flint's built-in static-series fold, use a coding, notebook, SQL, or data tool
   first. Then author the Flint spec against the transformed table.
-- **Style after Flint, only when needed.** Author structure in Flint. For a
-  presentation tweak Flint does not express (a reference line, annotation, or
-  shaded band), use the Vega-Lite escape hatch — see "Post-Flint style
+- **Style after Flint, only when needed.** Author structure in Flint. Notes on
+  marks, shaded regions, outlines, emphasis and reference lines are Flint too:
+  `updates` passed beside the input (below). For a presentation tweak Flint
+  expresses neither way, use the Vega-Lite escape hatch — see "Post-Flint style
   customization". Never feed edited Vega-Lite JSON back to `render_chart`.
 
 ## When the user wants more than a spec
@@ -54,9 +55,12 @@ First decide which workflow the user is asking for:
   image. Use `compile_chart` when the user wants backend-native JSON, and
   `list_chart_types` when you need the supported chart catalog.
 - **DO** pass `updates` beside the input to `validate_chart` and `show` when the user
-  asks the chart to open in a state: rows to stand out, a note on a mark, a
-  framed range. It is a list of ChartUpdate layers, state not behaviour; the
-  shapes are in `flint://interaction-skill` under "Update the chart". To change a
+  asks the chart to open in a state (rows to stand out, a note on a mark, a
+  framed range), or when the chart answers a question whose point sits on
+  particular marks. It is a list of ChartUpdate layers, state not behaviour, and
+  needs no `interaction_spec`; the shapes are in `flint://interaction-skill`
+  under "Update the chart". The live view draws them; `render_chart` and
+  `compile_chart` do not. To change a
   chart in a later turn, change its spec or `updates` and call `show` again: a
   new card shows it, earlier cards stay as they were. The reader's edits in the
   card's panel live on that card; its context gives the `chart_spec` that keeps
@@ -195,7 +199,8 @@ Stay at the Flint level for structure (data, chart type, channels, transforms,
 sizing, properties) — Flint specs stay portable and regenerate safely. Drop to
 backend JSON only after a valid Flint chart exists, and only for a narrow
 presentation change Flint does not expose (exact axis/legend/mark styling,
-titles, annotations, reference lines, layout polish). Never use it to change the
+layout polish). Titles are `chart_spec.title`; notes, regions and reference
+lines are `updates`. Never use it to change the
 data, chart type, field mappings, or transforms — fix those upstream.
 
 For a Vega-Lite-specific style tweak:
@@ -244,8 +249,9 @@ breaks: with no headline to lean on, the compiler keeps the axis titles instead.
 
 ## Visual themes (`theme_spec`)
 
-Use one of two forms. Prefer a preset unless the user asks for a specific
-brand adjustment.
+Add `theme_spec` only when the user names a look, a house or a brand; without
+one the chart draws in the host's style. Use one of two forms. Prefer a preset
+unless the user asks for a specific brand adjustment.
 
 ### 1. Use a preset
 
@@ -270,6 +276,7 @@ Call `list_themes` to choose an id, then place it beside `chart_spec`:
 | `de-stijl` | De Stijl composition: primary planes in heavy black lines, steps not slopes, title under the picture. |
 | `bbc` | BBC News graphic: big bold headline, gridlines only, heavy zero rule, footer rule with the source. |
 | `material` | Material Design 3 product chart: purple-led tonal palette, Roboto type, light gridlines, rounded bars. |
+| `pop` | Pop-art remix of Swiss: electric process colours, heavy black structure, oversized marks, punchy display type. |
 
 ### 2. Override a preset
 
@@ -577,6 +584,12 @@ understates what you know:
 - `divergingMidpoint` — where the middle colour of a diverging scale sits.
   Set it if you can tell what the reader is comparing against; leave it out if
   you can't.
+- `divergingNeutral` — for a colour stepped into classes, how far either side
+  of the midpoint still reads as neither side: `0.1` makes correlations within
+  ±0.1 one neutral class; `false` makes the midpoint a break, so a small gain
+  never looks like a small loss. Leave it out and the type decides
+  (`Correlation`, `Sentiment`: a neutral class; `Profit`, `PercentageChange`:
+  a break).
 - `sortOrder` — the order the categories should appear in, when the order in
   the data is not the one you want and it isn't alphabetical either:
   `["Low", "Medium", "High"]`. For a handful of categories, not a long list.
@@ -610,8 +623,9 @@ Put the three steps into one `ChartAssemblyInput`, with the data bound as in
 }
 ```
 
-Add `theme_spec`, `chartProperties`, `interaction_spec` or `updates` only when
-the request asks for them. With the MCP tools, check it with `validate_chart`,
+Add `theme_spec`, `chartProperties` or `interaction_spec` only when the request
+asks for them, and `updates` when it asks or the answer sits on particular
+marks. With the MCP tools, check it with `validate_chart`,
 fix what the report asks in the spec, then pass the whole spec to `show` as
 `chart`. Without them, run the "Validation checklist".
 

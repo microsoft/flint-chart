@@ -28,6 +28,20 @@ import {
     type AnnotationLeaderRoute,
     type AnnotationPortEdge,
 } from './annotation-leader-routing';
+import {
+    NOTE_LINE_COST,
+    balanceNote,
+    noteSize,
+    noteStyle,
+    noteWrapWidths,
+    placeNote,
+    type ChartTextStyle,
+    type NoteObstacle,
+    type NotePlacement,
+    type NoteSegment,
+    type NoteTarget,
+} from '../../../core/annotation';
+import { rendererTextMeasurer } from '../../../core/text-width';
 
 function keyOfDatum(datum: unknown): string | undefined {
     if (!datum || typeof datum !== 'object') return undefined;
@@ -138,6 +152,121 @@ function sceneObstacles(view: any): any[] {
 
 function connectorFor(candidate: AnnotationCandidate): 'line' | 'none' {
     return candidate.connector ?? 'line';
+}
+
+/** The connections that point a note at one mark: its centre, a side, a bar's value end. */
+const POINTING_CONNECTIONS = new Set<AnnotationConnection>(['center', 'top', 'right', 'bottom', 'left', 'value-end', 'value-side']);
+
+/**
+ * Whether a note names one mark it can point at — a dot, a bar, a cell, the point of a line — and so
+ * is set as a caption beside it ({@link placeNote}). A note on a stretch of a line or area, a slice,
+ * a region, or one joined to several parts of a mark keeps its card.
+ */
+export function isPointingNote(
+    annotation: Pick<AnnotationSpec, 'subject'> & { candidates: readonly AnnotationCandidate[] },
+    item: any,
+    rowPoint?: PlotPoint,
+): boolean {
+    if (annotation.subject?.kind === 'region') return false;
+    const first = annotation.candidates[0];
+    if (!first || !POINTING_CONNECTIONS.has(first.connection) || first.connectorAnchors?.length) return false;
+    if (rowPoint) return true;
+    if (item?.interactionGeometry) return false;
+    return item?.mark?.marktype === 'symbol' || item?.mark?.marktype === 'rect';
+}
+
+/**
+ * Which rect marks tile the plot, as a heatmap's cells do: their rects cover most of it (`plotArea`, in
+ * the scene's units) and do not stand on one baseline. Bars share their foot (or, run across, their
+ * start), however much of the plot a histogram's fill; cells in a grid share neither.
+ */
+export function tiledRects(
+    boxes: readonly { item: any; bounds: { x1: number; x2: number; y1: number; y2: number } }[],
+    plotArea: number,
+): (mark: unknown) => boolean {
+    const marks = new Map<unknown, { area: number; foot: Map<number, number>; start: Map<number, number>; count: number }>();
+    for (const { item, bounds } of boxes) {
+        if (item.mark?.marktype !== 'rect') continue;
+        const entry = marks.get(item.mark) ?? { area: 0, foot: new Map(), start: new Map(), count: 0 };
+        entry.area += Math.abs((bounds.x2 - bounds.x1) * (bounds.y2 - bounds.y1));
+        const foot = Math.round(Math.max(bounds.y1, bounds.y2));
+        const start = Math.round(Math.min(bounds.x1, bounds.x2));
+        entry.foot.set(foot, (entry.foot.get(foot) ?? 0) + 1);
+        entry.start.set(start, (entry.start.get(start) ?? 0) + 1);
+        entry.count += 1;
+        marks.set(item.mark, entry);
+    }
+    const tiled = new Set<unknown>();
+    for (const [mark, entry] of marks) {
+        if (entry.area < plotArea * 0.6) continue;
+        const shared = Math.max(...entry.foot.values(), ...entry.start.values());
+        if (entry.count >= 2 && shared >= entry.count * 0.8) continue;
+        tiled.add(mark);
+    }
+    return (mark) => tiled.has(mark);
+}
+
+/**
+ * What a caption keeps clear of, cut to what each clip leaves on screen: marks and text as boxes,
+ * and thin ink — lines, rules, axis domains — as segments, since a line's box spans the whole plot.
+ * Gridlines and filled areas are left to the caption's halo.
+ */
+export function sceneInk(view: any): { boxes: { item: any; bounds: { x1: number; x2: number; y1: number; y2: number } }[]; segments: NoteSegment[] } {
+    const boxes: { item: any; bounds: { x1: number; x2: number; y1: number; y2: number } }[] = [];
+    const segments: NoteSegment[] = [];
+    const visit = (node: any, offsetX: number, offsetY: number, clip?: { x1: number; y1: number; x2: number; y2: number }): void => {
+        if (!node) return;
+        // A line mark's items are its points: the line runs between them.
+        if ((node.marktype === 'line' || node.marktype === 'trail') && node.role !== 'axis-grid' && Array.isArray(node.items)) {
+            const points = node.items.filter((point: any) => point.defined !== false && typeof point.x === 'number' && typeof point.y === 'number'
+                && (point.opacity ?? 1) > 0);
+            for (let index = 1; index < points.length; index++) {
+                segments.push({
+                    a: { x: points[index - 1].x + offsetX, y: points[index - 1].y + offsetY },
+                    b: { x: points[index].x + offsetX, y: points[index].y + offsetY },
+                });
+            }
+            return;
+        }
+        const type = node.mark?.marktype;
+        const isGroup = type === 'group';
+        if (!isGroup && type && isAnnotationObstacle(node) && (node.opacity ?? 1) > 0) {
+            if (type === 'rule') {
+                if (typeof node.x === 'number' && typeof node.y === 'number') {
+                    segments.push({
+                        a: { x: node.x + offsetX, y: node.y + offsetY },
+                        b: { x: (typeof node.x2 === 'number' ? node.x2 : node.x) + offsetX, y: (typeof node.y2 === 'number' ? node.y2 : node.y) + offsetY },
+                    });
+                }
+            } else if (type !== 'area' && node.bounds) {
+                const bounds = clippedBounds({
+                    x1: node.bounds.x1 + offsetX, x2: node.bounds.x2 + offsetX,
+                    y1: node.bounds.y1 + offsetY, y2: node.bounds.y2 + offsetY,
+                }, clip);
+                if (bounds) boxes.push({ item: node, bounds });
+            }
+        }
+        const childOffsetX = offsetX + (isGroup && typeof node.x === 'number' ? node.x : 0);
+        const childOffsetY = offsetY + (isGroup && typeof node.y === 'number' ? node.y : 0);
+        const childClip = sceneContentClip(node, childOffsetX, childOffsetY, clip);
+        if (Array.isArray(node.items)) for (const child of node.items) visit(child, childOffsetX, childOffsetY, childClip);
+    };
+    visit(view.scenegraph()?.root, 0, 0);
+    return { boxes, segments };
+}
+
+/** The chart's own label face and ink, read from its axis labels, and its background. */
+export function chartTextStyle(view: any, boxes: readonly { item: any }[]): ChartTextStyle {
+    const label = boxes.find(({ item }) => item.mark?.role === 'axis-label')?.item
+        ?? boxes.find(({ item }) => item.mark?.marktype === 'text')?.item;
+    const background = typeof view.background === 'function' ? view.background() : undefined;
+    return {
+        ...(typeof label?.font === 'string' ? { font: label.font } : {}),
+        ...(typeof label?.fontSize === 'number' ? { fontSize: label.fontSize } : {}),
+        ...(label?.fontWeight !== undefined ? { fontWeight: label.fontWeight } : {}),
+        ...(typeof label?.fill === 'string' ? { color: label.fill } : {}),
+        ...(typeof background === 'string' ? { background } : {}),
+    };
 }
 
 function overlapArea(a: LayoutRect, b: LayoutRect): number {
@@ -345,8 +474,11 @@ export function annotationItem(
             candidate.datum?.[field] === undefined || Object.is(candidate.datum[field], value)))
         : [];
     const resolved = recordMatches.length > 0 ? recordMatches : available;
-    const preferRepresentativePath = pathTarget && recordMatches.length === 0 && resolved.length > 1;
-    return resolved
+    // A value label shares its mark's key, but the note is on the mark it labels.
+    const drawn = resolved.filter((candidate) => candidate.mark?.marktype !== 'text');
+    const pool = drawn.length > 0 ? drawn : resolved;
+    const preferRepresentativePath = pathTarget && recordMatches.length === 0 && pool.length > 1;
+    return pool
         .sort((a, b) => {
             const aSpan = Math.max(a.bounds.x2 - a.bounds.x1, a.bounds.y2 - a.bounds.y1);
             const bSpan = Math.max(b.bounds.x2 - b.bounds.x1, b.bounds.y2 - b.bounds.y1);
@@ -462,6 +594,88 @@ export function annotationConnectionPoint(
     return { point: center, preferredAngle: vectorAngle(center.x - plotCenter.x, center.y - plotCenter.y) };
 }
 
+/**
+ * The outline of the mark a caption points at, in the drawing: a dot, a line's point, a bar or a cell.
+ * A note at one end of a rect — a bar's value end, a named side — points at that edge, the rest of
+ * the rect its `body`.
+ */
+function noteTarget(
+    item: any, rowPoint: PlotPoint | undefined, toLayout: (point: PlotPoint) => PlotPoint, scale: number,
+    edgePoint?: PlotPoint,
+): { target: NoteTarget; body?: NoteObstacle['box'] } {
+    if (rowPoint) {
+        const point = toLayout(rowPoint);
+        const radius = 3.5 * scale;
+        return { target: { shape: 'circle', x: point.x, y: point.y, rx: radius, ry: radius } };
+    }
+    const leading = toLayout({ x: item.bounds.x1, y: item.bounds.y1 });
+    const trailing = toLayout({ x: item.bounds.x2, y: item.bounds.y2 });
+    const round = item.mark?.marktype === 'symbol' && (item.shape === undefined || item.shape === 'circle');
+    const target: NoteTarget = {
+        shape: round ? 'circle' : 'rect',
+        x: (leading.x + trailing.x) / 2,
+        y: (leading.y + trailing.y) / 2,
+        rx: Math.abs(trailing.x - leading.x) / 2,
+        ry: Math.abs(trailing.y - leading.y) / 2,
+    };
+    if (round || !edgePoint) return { target };
+    const edge = toLayout(edgePoint);
+    const body = { x: target.x - target.rx, y: target.y - target.ry, width: target.rx * 2, height: target.ry * 2 };
+    const near = (a: number, b: number) => Math.abs(a - b) <= 0.5;
+    if (near(edge.y, body.y) || near(edge.y, body.y + body.height)) {
+        return { target: { shape: 'rect', x: target.x, y: edge.y, rx: target.rx, ry: 0 }, body };
+    }
+    if (near(edge.x, body.x) || near(edge.x, body.x + body.width)) {
+        return { target: { shape: 'rect', x: edge.x, y: target.y, rx: 0, ry: target.ry }, body };
+    }
+    return { target };
+}
+
+/**
+ * A bar's value label printed past its value face, where a note on the bar continues it: the face
+ * moved out to the label's far edge, wide enough to take the label in, so the note reads as one
+ * with the printed value ("0.616  Down from 0.706 …") instead of a second annotation pointing past it.
+ */
+function valueLabelBeyondFace(
+    noted: { target: NoteTarget; body?: NoteObstacle['box'] },
+    items: readonly any[],
+    item: any,
+    toBox: (bounds: { x1: number; x2: number; y1: number; y2: number }) => NoteObstacle['box'],
+): { face: NoteTarget; items: any[] } | undefined {
+    const { target, body } = noted;
+    if (!body || target.shape !== 'rect' || (target.rx > 0 && target.ry > 0)) return undefined;
+    const key = keyOfDatum(item.datum);
+    if (!key) return undefined;
+    const labels = items.filter((candidate) => candidate !== item && candidate.mark?.marktype === 'text' && candidate.bounds
+        && keyOfDatum(candidate.datum) === key && (candidate.opacity ?? 1) > 0);
+    if (labels.length === 0) return undefined;
+    const boxes = labels.map((label) => toBox(label.bounds));
+    const x1 = Math.min(...boxes.map((b) => b.x));
+    const y1 = Math.min(...boxes.map((b) => b.y));
+    const x2 = Math.max(...boxes.map((b) => b.x + b.width));
+    const y2 = Math.max(...boxes.map((b) => b.y + b.height));
+    // A face across x (a horizontal bar's end) has no width; one across y (a column's top) no height.
+    const along = target.rx === 0 ? 'x' : 'y';
+    const centre = along === 'x' ? body.x + body.width / 2 : body.y + body.height / 2;
+    const face = along === 'x' ? target.x : target.y;
+    const outward = Math.sign(face - centre) || 1;
+    // The label must stand past the face, beside it, not printed inside the bar.
+    const beyond = outward > 0 ? (along === 'x' ? x1 : y1) >= face - 2 : (along === 'x' ? x2 : y2) <= face + 2;
+    const across = along === 'x'
+        ? y1 < target.y + target.ry && y2 > target.y - target.ry
+        : x1 < target.x + target.rx && x2 > target.x - target.rx;
+    if (!beyond || !across) return undefined;
+    const far = along === 'x' ? (outward > 0 ? x2 : x1) : (outward > 0 ? y2 : y1);
+    if (along === 'x') {
+        const top = Math.min(y1, target.y - target.ry);
+        const bottom = Math.max(y2, target.y + target.ry);
+        return { face: { shape: 'rect', x: far, y: (top + bottom) / 2, rx: 0, ry: (bottom - top) / 2 }, items: labels };
+    }
+    const left = Math.min(x1, target.x - target.rx);
+    const right = Math.max(x2, target.x + target.rx);
+    return { face: { shape: 'rect', x: (left + right) / 2, y: far, rx: (right - left) / 2, ry: 0 }, items: labels };
+}
+
 export interface AnnotationOverlayController {
     render(element: SemanticElement, annotation: RenderableAnnotation): void;
     /**
@@ -481,6 +695,20 @@ export interface AnnotationOverlayOptions {
     containerLayoutSize(): { width: number; height: number };
     /** Vega marktype the chart anchors annotations to when a key matches several marks. */
     annotationMarkType?: string;
+    /**
+     * The captions the chart's notes stand in, shared by them: each note takes the next slot when it
+     * is made, keeps clear of the captions and leaders in the slots before it, and writes its own.
+     * Notes are placed one after another, not jointly.
+     */
+    placedCaptions?: { slots: (PlacedCaption | undefined)[]; fixed?: PlacedCaption[] };
+}
+
+/** A caption already set on the chart: its box and the leader joining it to its mark. */
+export interface PlacedCaption {
+    box: NoteObstacle['box'];
+    leader?: NoteSegment;
+    /** Further lines drawn with it, such as an enclosure's outline. */
+    segments?: readonly NoteSegment[];
 }
 
 export function createAnnotationOverlay({
@@ -489,6 +717,7 @@ export function createAnnotationOverlay({
     coordinateSpace,
     containerLayoutSize,
     annotationMarkType,
+    placedCaptions,
 }: AnnotationOverlayOptions): AnnotationOverlayController {
     const annotationLayer = document.createElement('div');
     annotationLayer.dataset.flintAnnotation = '';
@@ -503,6 +732,12 @@ export function createAnnotationOverlay({
     annotationPath.setAttribute('stroke-width', '1.25');
     annotationPath.setAttribute('stroke-linecap', 'round');
     annotationSvg.append(annotationPath);
+    // A caption's leader is haloed like its words, so it reads over a filled mark.
+    const leaderHalo = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    leaderHalo.setAttribute('fill', 'none');
+    leaderHalo.setAttribute('stroke-linecap', 'round');
+    leaderHalo.style.display = 'none';
+    annotationSvg.insertBefore(leaderHalo, annotationPath);
     const annotationCard = document.createElement('div');
     Object.assign(annotationCard.style, {
         position: 'absolute', color: 'var(--flint-annotation-color, #000)',
@@ -516,17 +751,188 @@ export function createAnnotationOverlay({
         boxShadow: 'var(--flint-annotation-shadow, 2px 2px 4px rgba(0, 0, 0, 0.1))',
     });
     annotationLayer.append(annotationSvg, annotationCard);
+    // A note on one mark is set as words beside it, haloed in the background, not as a card.
+    const annotationText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    annotationText.setAttribute('paint-order', 'stroke');
+    annotationText.setAttribute('stroke-linejoin', 'round');
+    annotationText.style.display = 'none';
+    annotationSvg.append(annotationText);
+    // The mark a caption names, drawn again above its neighbours with a ring or an outline.
+    const annotationCue = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    annotationCue.style.display = 'none';
+    annotationSvg.insertBefore(annotationCue, leaderHalo);
+
+    const renderCaption = ({ annotation, item, rowPoint, subject, items, plotCenter, toLayout, plot, canvas }: {
+        annotation: RenderableAnnotation; item: any; rowPoint: PlotPoint | undefined; subject: any; items: readonly any[];
+        plotCenter: PlotPoint; toLayout: (point: PlotPoint) => PlotPoint;
+        plot: NoteObstacle['box']; canvas: NoteObstacle['box'];
+    }): NotePlacement => {
+        const origin = toLayout({ x: 0, y: 0 });
+        const unit = toLayout({ x: 1, y: 0 });
+        const scale = Math.hypot(unit.x - origin.x, unit.y - origin.y) || 1;
+        const ink = sceneInk(view);
+        const base = noteStyle(chartTextStyle(view, ink.boxes));
+        const style = { ...base, fontSize: base.fontSize * scale, lineHeight: base.lineHeight * scale, padding: base.padding * scale };
+        const measure = rendererTextMeasurer(style.fontSize, style.font, style.fontWeight, 'normal');
+        const toBox = (bounds: { x1: number; x2: number; y1: number; y2: number }): NoteObstacle['box'] => {
+            const leading = toLayout({ x: bounds.x1, y: bounds.y1 });
+            const trailing = toLayout({ x: bounds.x2, y: bounds.y2 });
+            return {
+                x: Math.min(leading.x, trailing.x), y: Math.min(leading.y, trailing.y),
+                width: Math.abs(trailing.x - leading.x), height: Math.abs(trailing.y - leading.y),
+            };
+        };
+        const first = annotation.candidates[0];
+        const { point: connectionPoint, preferredAngle } = annotationConnectionPoint(
+            subject, first.connection, items, plotCenter, first.valueAxis, first.crossSide, first.valueInset,
+        );
+        const noted = noteTarget(
+            item, rowPoint, toLayout, scale, first.connection === 'center' ? undefined : connectionPoint,
+        );
+        const ownLabel = valueLabelBeyondFace(noted, items, item, toBox);
+        const { target: drawnTarget, body } = ownLabel ? { ...noted, target: ownLabel.face } : noted;
+        // A strong highlight rings a dot: the caption and its leader keep off the ring, not the dot.
+        const highlight = annotation.highlight ?? 'light';
+        const ringed = highlight === 'strong' || highlight === 'exclusive';
+        const ringGap = 2.5 * scale;
+        const outset = highlight === 'none' || drawnTarget.shape !== 'circle' ? 0
+            : ringed ? ringGap + 0.5 * scale : rowPoint ? scale : 0.75 * scale;
+        const target = outset > 0 ? { ...drawnTarget, rx: drawnTarget.rx + outset, ry: drawnTarget.ry + outset } : drawnTarget;
+        // Rects that tile most of the plot — a heatmap's cells — are a ground the halo reads over, not marks to dodge.
+        const tiled = tiledRects(ink.boxes, Math.max(1, plot.width * plot.height) / (scale * scale));
+        const obstacles: NoteObstacle[] = ink.boxes.flatMap(({ item: inkItem, bounds }) => {
+            if (isAnnotationSourceItem(inkItem, item)) return [];
+            // The mark's own value label is part of what the note continues, not a neighbour to dodge.
+            if (ownLabel?.items.includes(inkItem)) return [];
+            const box = toBox(bounds);
+            // The target's own ink — its point drawn over its line — is the target, not a neighbour.
+            const own = box.x <= drawnTarget.x && drawnTarget.x <= box.x + box.width && box.y <= drawnTarget.y && drawnTarget.y <= box.y + box.height
+                && box.width <= drawnTarget.rx * 2 + 6 && box.height <= drawnTarget.ry * 2 + 6;
+            if (own) return [];
+            const kind: NoteObstacle['kind'] = inkItem.mark?.marktype === 'text' ? 'text'
+                : (typeof inkItem.opacity === 'number' ? inkItem.opacity : 1) < 0.5 || tiled(inkItem.mark) ? 'faint' : 'mark';
+            return [{ box, kind }];
+        });
+        const earlier = earlierCaptions();
+        for (const caption of earlier) if (caption.box.width > 0) obstacles.push({ box: caption.box, kind: 'text' });
+        const segments = [
+            ...ink.segments.map((segment) => ({ a: toLayout(segment.a), b: toLayout(segment.b) })),
+            ...earlier.flatMap((caption) => [...(caption.leader ? [caption.leader] : []), ...(caption.segments ?? [])]),
+        ];
+        // Wrap widths are in the chart's px; the measure is at the drawing's scale.
+        const widths = first.maxWidth ? [first.maxWidth] : noteWrapWidths(annotation.text, (text) => measure(text) / scale);
+        let best: { placed: NotePlacement; lines: string[]; cost: number } | undefined;
+        const tried = new Set<string>();
+        for (const maxWidth of widths) {
+            const lines = balanceNote(annotation.text, maxWidth * scale, measure);
+            if (tried.has(lines.join('\n'))) continue;
+            tried.add(lines.join('\n'));
+            const placed = placeNote({
+                target, ...(body ? { body } : {}), label: noteSize(lines, style, measure), plot, canvas, obstacles, segments,
+                ...(preferredAngle !== undefined ? { preferredAngle } : {}),
+                connector: first.connector === 'none' ? 'none' : 'auto',
+                fontSize: style.fontSize,
+            });
+            const cost = placed.cost + NOTE_LINE_COST * (lines.length - 1);
+            if (!best || cost < best.cost) best = { placed, lines, cost };
+        }
+        const { placed, lines } = best!;
+        const { box, align, leader } = placed;
+        annotationCard.style.display = 'none';
+        annotationText.style.display = '';
+        annotationText.setAttribute('font-family', style.font);
+        annotationText.setAttribute('font-size', String(style.fontSize));
+        annotationText.setAttribute('font-weight', String(style.fontWeight));
+        annotationText.setAttribute('text-anchor', align === 'left' ? 'start' : align === 'right' ? 'end' : 'middle');
+        annotationText.style.fill = `var(--flint-annotation-color, ${style.color})`;
+        annotationText.style.stroke = `var(--flint-annotation-halo, ${style.halo.color})`;
+        annotationText.style.strokeWidth = String(style.halo.width * scale);
+        const x = align === 'left' ? box.x + style.padding : align === 'right' ? box.x + box.width - style.padding : box.x + box.width / 2;
+        const baseline = box.y + style.padding + style.fontSize * 0.82;
+        annotationText.replaceChildren(...lines.map((line, index) => {
+            const tspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+            tspan.setAttribute('x', String(x));
+            tspan.setAttribute('y', String(baseline + index * style.lineHeight));
+            tspan.textContent = line;
+            return tspan;
+        }));
+        annotationPath.setAttribute('stroke', `var(--flint-annotation-line-color, ${style.leader.color})`);
+        annotationPath.setAttribute('stroke-width', String(style.leader.width * scale));
+        const path = leader ? `M ${leader.from.x} ${leader.from.y} L ${leader.to.x} ${leader.to.y}` : '';
+        annotationPath.setAttribute('d', path);
+        annotationPath.style.display = leader ? '' : 'none';
+        leaderHalo.setAttribute('stroke', `var(--flint-annotation-halo, ${style.halo.color})`);
+        leaderHalo.setAttribute('stroke-width', String((style.leader.width + 2) * scale));
+        leaderHalo.setAttribute('d', path);
+        leaderHalo.style.display = leader ? '' : 'none';
+        drawCue(highlight, item, rowPoint, drawnTarget, body, style, scale, ringGap);
+        return placed;
+    };
+
+    const svgShape = (tag: 'circle' | 'rect', attributes: Record<string, string | number>): SVGElement => {
+        const shape = document.createElementNS('http://www.w3.org/2000/svg', tag);
+        for (const [name, value] of Object.entries(attributes)) shape.setAttribute(name, String(value));
+        return shape;
+    };
+    const paintOf = (value: unknown): string | undefined =>
+        typeof value === 'string' && value !== 'transparent' && value !== 'none' ? value : undefined;
+    /**
+     * The highlight on the mark a caption names, drawn above the chart so the mark stands over its
+     * neighbours. Light: a dot drawn again at full strength with a halo, a line's point as a dot in
+     * the line's ink, a bar or cell with a faint haloed outline. Strong (and exclusive, whose
+     * receding of the rest the runtime does): a thin ring a little out from a dot, a full outline.
+     */
+    const drawCue = (
+        highlight: NonNullable<AnnotationSpec['highlight']>, item: any, rowPoint: PlotPoint | undefined, target: NoteTarget,
+        body: NoteObstacle['box'] | undefined, style: ReturnType<typeof noteStyle>, scale: number, ringGap: number,
+    ): void => {
+        if (highlight === 'none') {
+            annotationCue.replaceChildren();
+            annotationCue.style.display = 'none';
+            return;
+        }
+        const strong = highlight !== 'light';
+        const ink = `var(--flint-annotation-line-color, ${style.leader.color})`;
+        const halo = `var(--flint-annotation-halo, ${style.halo.color})`;
+        const shapes: SVGElement[] = [];
+        if (rowPoint) {
+            const color = paintOf(item.stroke) ?? paintOf(item.mark?.items?.[0]?.stroke) ?? style.color;
+            shapes.push(svgShape('circle', { cx: target.x, cy: target.y, r: target.rx, fill: color, stroke: halo, 'stroke-width': 1.5 * scale }));
+            if (strong) shapes.push(svgShape('circle', { cx: target.x, cy: target.y, r: target.rx + ringGap, fill: 'none', stroke: ink, 'stroke-width': scale }));
+        } else if (target.shape === 'circle') {
+            const color = paintOf(item.fill) ?? paintOf(item.stroke) ?? style.color;
+            shapes.push(svgShape('circle', { cx: target.x, cy: target.y, r: target.rx, fill: color, stroke: halo, 'stroke-width': 1.5 * scale }));
+            if (strong) shapes.push(svgShape('circle', { cx: target.x, cy: target.y, r: target.rx + ringGap, fill: 'none', stroke: ink, 'stroke-width': scale }));
+        } else {
+            const box = body ?? { x: target.x - target.rx, y: target.y - target.ry, width: target.rx * 2, height: target.ry * 2 };
+            const outline = { x: box.x, y: box.y, width: Math.max(0, box.width), height: Math.max(0, box.height), fill: 'none' };
+            shapes.push(
+                svgShape('rect', { ...outline, stroke: halo, 'stroke-width': (strong ? 3 : 2) * scale }),
+                svgShape('rect', { ...outline, stroke: ink, 'stroke-width': (strong ? 1.25 : 1) * scale, 'stroke-opacity': strong ? 1 : 0.45 }),
+            );
+        }
+        annotationCue.replaceChildren(...shapes);
+        annotationCue.style.display = '';
+    };
 
     // Placement is derived from rendered geometry, so the runtime re-syncs it
     // whenever the renderer is resized or the host rescales the chart.
     let current: { element: SemanticElement; annotation: RenderableAnnotation } | undefined;
     let laidOut: string | undefined;
     let inView: boolean | undefined;
+    const slot = placedCaptions ? placedCaptions.slots.push(undefined) - 1 : -1;
+    // Regions' and enclosures' captions are drawn first; each note keeps clear of them and of the notes before it.
+    const earlierCaptions = (): PlacedCaption[] => [...(placedCaptions?.fixed ?? []), ...(placedCaptions?.slots.slice(0, slot) ?? [])]
+        .filter((caption): caption is PlacedCaption => caption !== undefined);
+    const holdCaption = (caption: PlacedCaption | undefined): void => {
+        if (placedCaptions && slot >= 0) placedCaptions.slots[slot] = caption;
+    };
 
     const clear = (): void => {
         current = undefined;
         laidOut = undefined;
         inView = undefined;
+        holdCaption(undefined);
         annotationLayer.remove();
     };
     // A note whose target is out of view keeps its place in `current`, so it comes back on the
@@ -534,6 +940,7 @@ export function createAnnotationOverlay({
     const hide = (): void => {
         laidOut = undefined;
         inView = false;
+        holdCaption(undefined);
         annotationLayer.remove();
     };
     const render = (element: SemanticElement, annotation: RenderableAnnotation): void => {
@@ -622,10 +1029,36 @@ export function createAnnotationOverlay({
         };
         const canvasRect = { left: 0, top: 0, width, height };
         const layoutInputs = JSON.stringify([
-            annotation, markSourceRect, plotRect, canvasRect, obstacles.map((obstacle) => obstacle.rect),
+            annotation, markSourceRect, plotRect, canvasRect, obstacles.map((obstacle) => obstacle.rect), earlierCaptions(),
         ]);
         if (layoutInputs === laidOut && annotationLayer.isConnected) return;
+        holdCaption(undefined);
         const plotCenter = { x: space.plotWidth / 2, y: space.plotHeight / 2 };
+        if (isPointingNote(annotation, item, rowPoint)) {
+            const placed = renderCaption({
+                annotation, item, rowPoint, subject, items, plotCenter, toLayout,
+                plot: { x: plotRect.left, y: plotRect.top, width: plotRect.width, height: plotRect.height },
+                canvas: { x: 0, y: 0, width, height },
+            });
+            annotationSvg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+            annotationLayer.dataset.style = 'caption';
+            annotationLayer.dataset.connection = annotation.candidates[0].connection;
+            annotationLayer.dataset.angle = String(Math.round(((placed.angle * 180) / Math.PI + 360) % 360));
+            annotationLayer.dataset.distance = String(placed.gap);
+            annotationLayer.dataset.align = placed.align;
+            annotationLayer.dataset.connector = placed.leader ? 'line' : 'none';
+            annotationLayer.dataset.score = String(Math.round(placed.cost));
+            holdCaption({ box: placed.box, ...(placed.leader ? { leader: { a: placed.leader.from, b: placed.leader.to } } : {}) });
+            laidOut = layoutInputs;
+            return;
+        }
+        delete annotationLayer.dataset.style;
+        annotationCard.style.display = '';
+        annotationText.style.display = 'none';
+        leaderHalo.style.display = 'none';
+        annotationCue.style.display = 'none';
+        annotationPath.setAttribute('stroke', 'var(--flint-annotation-line-color, #808080)');
+        annotationPath.setAttribute('stroke-width', '1.25');
         const sourceGap = 10;
         let best: AnnotationLayout | undefined;
         let fallback: AnnotationLayout | undefined;

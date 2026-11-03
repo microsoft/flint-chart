@@ -40,7 +40,7 @@ import {
     isDateField,
     type EncodingTypeContext,
 } from './decisions';
-import { hasTemporalParsers, parseTemporalByType } from './temporal-parse';
+import { hasTemporalParsers, parseTemporalByType, readIsoTimestamp } from './temporal-parse';
 import {
     resolveFieldSemantics,
     toTypeString,
@@ -451,8 +451,10 @@ export function convertTemporalData(
         for (const temporalKey of temporalKeys) {
             const val = r[temporalKey];
             const st = effectiveSemanticTypes[temporalKey];
+            const calendar = (SEMANTIC_LEVEL[st] ?? -1) >= SEMANTIC_LEVEL.Date;
             // An untyped full date in a spelling only some engines parse is read here, once.
-            const parsed = parseTemporalByType(val, st)
+            const parsed = readIsoTimestamp(val, calendar)
+                ?? parseTemporalByType(val, st)
                 ?? (!st && typeof val === 'string' && !ISO_PREFIX.test(val.trim()) ? parseTemporalByType(val, 'Date') : null);
 
             if (parsed !== null) {
@@ -466,7 +468,11 @@ export function convertTemporalData(
                     r[temporalKey] = String(val);
                 }
             } else if (val instanceof Date) {
-                r[temporalKey] = val.toISOString();
+                // A Date at local midnight under a calendar grain names that day, as temporalFieldValue reads it.
+                const localMidnight = !val.getHours() && !val.getMinutes() && !val.getSeconds() && !val.getMilliseconds();
+                r[temporalKey] = calendar && localMidnight && Number.isFinite(val.getTime())
+                    ? `${val.getFullYear()}-${String(val.getMonth() + 1).padStart(2, '0')}-${String(val.getDate()).padStart(2, '0')}`
+                    : val.toISOString();
             } else {
                 // For Year/Decade strings, normalise to 4-digit years so
                 // Vega-Lite parses them unambiguously and doesn't auto-tick

@@ -221,7 +221,10 @@ export {
     type TargetDetailsOptions,
     type TargetFeedbackOptions,
 } from './interaction-spec';
-export { CHART_UPDATE_OPS, type ChartUpdate, type ChartUpdateOp } from './interaction-contracts';
+export {
+    CHART_UPDATE_OPS, EMPHASIS_OPACITY, canonicalUpdateOp, isTextAnnotationOp,
+    type ChartUpdate, type ChartUpdateOp, type EnclosureAnnotationSpec, type RegionAnnotationSpec,
+} from './interaction-contracts';
 export { comparableValue, selectorConditions, selectorPredicate, selectorRowTest, selectorText, type RowComparison } from './target-selector';
 export { chartTable, chartTableRowTest, chartTableStyle, type ChartTable, type ChartTableCell, type ChartTableHeading, type ChartTableFurniture, type ChartTableColumn, type ChartTableStyle, type ChartTableText } from './chart-table';
 

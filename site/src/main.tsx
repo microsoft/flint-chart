@@ -31,6 +31,7 @@ import { CanvasSqueeze } from './playground/canvas-squeeze/CanvasSqueeze';
 import { ColorLab } from './playground/ColorLab';
 import { TalkDeck } from './talk/TalkDeck';
 import { BandStretchingLab } from './playground/BandStretchingLab';
+import { TitleBalanceLab } from './playground/TitleBalanceLab';
 import { LabelExperimentLab } from './playground/LabelExperimentLab';
 import { AxisLabelLab } from './playground/AxisLabelLab';
 import { TitleWrapLab } from './playground/TitleWrapLab';
@@ -61,6 +62,7 @@ import { DenseMarks } from './playground/DenseMarks';
 import { DensityLab } from './playground/DensityLab';
 import { LegendLab } from './playground/LegendLab';
 import { BinningLab } from './playground/binning/BinningLab';
+import { AnnotationCaptionLab } from './playground/AnnotationCaptionLab';
 import { BackendLayoutLab } from './playground/backend-layout/BackendLayoutLab';
 import { EChartsFixesLab } from './playground/backend-layout/EChartsFixesLab';
 import { LocaleProvider, useLocale } from './i18n/LocaleContext';
@@ -129,6 +131,7 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="label-experiment" element={<LabelExperimentLab />} />
           <Route path="axis-label" element={<AxisLabelLab />} />
           <Route path="title-wrap" element={<TitleWrapLab />} />
+          <Route path="title-balance" element={<TitleBalanceLab />} />
           <Route path="calendar-axis" element={<CalendarAxisLab />} />
           <Route path="categorical-temporal" element={<CategoricalTemporalLab />} />
           <Route path="release-examples">
@@ -161,6 +164,7 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="density" element={<DensityLab />} />
           <Route path="legend" element={<LegendLab />} />
           <Route path="binning" element={<BinningLab />} />
+          <Route path="annotation-captions" element={<AnnotationCaptionLab />} />
           <Route path="backend-layout" element={<Navigate to="echarts" replace />} />
           <Route path="backend-layout-echarts-fixes" element={<EChartsFixesLab />} />
           <Route path="backend-layout/:backend" element={<BackendLayoutLab />} />

@@ -821,7 +821,10 @@ interface ChartUpdate {
 
 type ChartUpdateOp =
     | { op: 'set-style'; targets: readonly UpdateTarget[]; value: StyleSpec }
-    | { op: 'set-annotation'; target: UpdateTarget; value: AnnotationSpec | null }
+    | { op: 'annotate-text'; target: UpdateTarget; value: AnnotationSpec | null }
+    | { op: 'set-annotation'; target: UpdateTarget; value: AnnotationSpec | null } // older name of annotate-text
+    | { op: 'annotate-region'; name: string; value: RegionAnnotationSpec | null }
+    | { op: 'annotate-enclosure'; name: string; value: EnclosureAnnotationSpec | null }
     | { op: 'set-viewport'; axes: 'x' | 'y' | 'xy'; value: { x?: Domain; y?: Domain } }
     | {
         op: 'set-order';
@@ -844,7 +847,12 @@ interface StyleSpec {
 Operators are plain JSON. Presets and applications construct object literals directly;
 there are no trivial operator factory functions.
 
-`emphasized` and `focused` recede every other mark to `mutedOpacity`. `highlighted` gives its
+`emphasized` and `focused` recede every other mark; `emphasis` says how far, as a note's
+`highlight` does: `'light'` (the default: the rest keep 0.6 of their own opacity, so they stay
+readable), `'strong'` (0.35) or `'exclusive'` (0.2). `mutedOpacity` states the receded opacity
+outright. The labels of the marks set
+back recede no further than half, and a label drawn on its mark takes the page's ink, so their
+values still read. `highlighted` gives its
 targets their mark's hover cue (a wider line drawn in front, an outline, a contrast step) and
 leaves every other mark as drawn.
 
@@ -898,7 +906,44 @@ the same `SemanticTargetRef` shape; the surrounding `ChartUpdateOp` does not cha
 
 ChartDefs may enrich an operator without changing its kind. For example,
 `set-annotation` can begin with text only and gain meaningful connection candidates in
-its `value`:
+its `value`.
+
+In Vega-Lite, a note that points at one mark (a dot, a bar's value end, a cell, a line's
+point) is drawn as a caption beside the mark. The note's `highlight` sets how much the
+mark itself stands out:
+
+- `'none'` leaves the mark as drawn.
+- `'light'` (the default) lifts the mark above its neighbours with a halo. A bar or cell
+  gets a faint outline.
+- `'strong'` also draws a thin ring round a dot or point, and a full outline round a bar
+  or cell.
+- `'exclusive'` is strong and also fades every other mark, as `set-style` `emphasized`
+  does.
+
+The notes a chart mounts with (its first `updates`) also get
+room in the compile: when a noted mark sits at the top of a vertical measure axis, the axis runs
+on just far enough for the caption at its nearest seat over the mark, ending at a fine round
+step, using at most a third of the axis (`AssembleOptions.notes`). A note added after mount is placed in the room the chart
+already has.
+
+`annotate-region` and `annotate-enclosure` follow Blabber's `region` and `enclose`. A region
+shades a stretch of the plot: one axis gives a band across it, both a box. A continuous
+stretch is two bounds, either `null` for the plot's end; a banded one lists the categories it
+covers, which must be adjacent. Its caption is centred on the stretch, clear of the series that
+cross it, and moves outside on a leader only where nothing inside is clear. A stretch of x
+the chart mounts with gets room as a note does where its marks reach too near the plot's top
+for the caption: the axis runs on past the stretch's tallest mark (`AssembleOptions.regions`).
+A wash under the
+marks is cut away where they stand; over an area or a heatmap it is drawn over them. An
+enclosure outlines each of its targets (bars and cells with a rectangle, other marks with a
+hull; `shape` may ask for `ellipse` or `circle`): a cluster sharing a colour in that colour,
+any other group in a neutral grey over a thin halo of the page, and sets one shared caption beside them, with leaders to two or three outlines
+(`connect`). Regions and enclosures are drawn before notes, whose captions keep clear of them.
+
+A note should say what the chart does not show: why the mark stands out, what changed
+there, how it compares. It should not restate the mark's printed value or its axis label.
+`validateChart` gives an info `note_repeats_chart` for a note that repeats a value the
+chart prints on its mark.
 
 ```ts
 interface AnnotationCandidate {

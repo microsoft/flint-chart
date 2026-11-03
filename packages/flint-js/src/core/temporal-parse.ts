@@ -84,6 +84,26 @@ export function hasTemporalParsers(semanticType: string): boolean {
     return semanticType in PARSERS_BY_TYPE;
 }
 
+const ISO_TIMESTAMP = /^(\d{4}-\d{2}-\d{2})[T ](\d{2}):(\d{2})(?::(\d{2})(\.\d+)?)?(Z|[+-]\d{2}(?::?\d{2})?)?$/i;
+
+/**
+ * An ISO timestamp as Flint reads it, or null for any other value. Under a calendar grain (a year,
+ * quarter, month or date), a timestamp at midnight is that date, as a database `DATE` column
+ * serialised to JSON writes it (`2005-05-01T00:00:00.000`), whatever its zone. A timestamp with no
+ * zone is read in UTC, as a date-only value is, so it lands on the same instant on every machine;
+ * one with a zone is kept as written.
+ */
+export function readIsoTimestamp(value: unknown, calendarGrain: boolean): string | null {
+    if (typeof value !== 'string') return null;
+    const match = value.trim().match(ISO_TIMESTAMP);
+    if (!match) return null;
+    const [, day, hours, minutes, seconds = '00', fraction = '', zone] = match;
+    const midnight = Number(hours) === 0 && Number(minutes) === 0 && Number(seconds) === 0 && !/[1-9]/.test(fraction);
+    if (calendarGrain && midnight) return day;
+    if (zone) return null;
+    return `${day}T${hours}:${minutes}:${seconds}${fraction}Z`;
+}
+
 /**
  * The canonical string for a value of the given temporal semantic type, or null when
  * the type has no parsers or the value is not one of its spellings (the caller keeps

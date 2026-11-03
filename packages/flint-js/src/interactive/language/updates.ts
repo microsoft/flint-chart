@@ -17,6 +17,8 @@ export type {
     ChartUpdate,
     ChartUpdateOp,
     ChartOverlaySpec,
+    EnclosureAnnotationSpec,
+    RegionAnnotationSpec,
     FreeformOverlayBody,
     FreeformCloneBody,
     FreeformOverlaySpec,

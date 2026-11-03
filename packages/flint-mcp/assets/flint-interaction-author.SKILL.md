@@ -1,6 +1,6 @@
 ---
 name: flint-interaction-author
-description: "Use when: a Flint chart should respond to the reader (highlight, zoom, brush, legend toggle, reorder, annotate, explore, link charts); an application or an agent changes a mounted chart from outside or reads what it shows; or a gesture no preset gives must be built. Produce one valid interaction_spec, one ChartUpdate, or code against flint-chart/interactive, with no invented names."
+description: "Use when: a chart should carry notes, shaded regions, outlines, emphasis or reference lines (updates); a Flint chart should respond to the reader (highlight, zoom, brush, legend toggle, reorder, explore, link charts); an application or an agent changes a mounted chart from outside or reads what it shows; or a gesture no preset gives must be built. Produce one valid interaction_spec, one ChartUpdate, or code against flint-chart/interactive, with no invented names."
 ---
 
 # flint-chart: interactions and updates on a chart
@@ -21,6 +21,7 @@ other backends leave `interaction_spec` and updates untouched.
 | The request says | You produce | Section |
 | --- | --- | --- |
 | A gesture or a behaviour on the chart: "highlight on click", "zoom", "brush a period", "make it interactive", "add behaviour to this chart". | One `interaction_spec`: `{ "interactions": [ ... ] }`, presets only. | Add interactions to the chart |
+| A chart that makes a point: notes on marks, a shaded period, an outlined group, emphasis, a reference line, drawn with the chart from the start. | `updates` beside the input: ChartUpdate layers, no `interaction_spec`. | Update the chart |
 | A change to a chart that is already on screen, from outside: "point out Japan", "frame 2010 to 2020", "note this value", "reorder by value", an agent answering a user with the chart. | One `ChartUpdate`: `{ "id", "ops": [ ... ] }`. | Update the chart |
 | Code around a chart: "in my app", "on click open the record", "a panel that follows the hover". | TypeScript against `flint-chart/interactive`: mount, presets as factories, `onChange`, `dispatch`. | Use Flint in an application |
 | Code across charts or over time: "link these two charts", "a table that follows the selection", "play the years". | `linkCharts` or `useLinkedCharts`; `dispatch` on a timer. On an MCP board, `link_spec` instead (board skill, "Step 5 — connect them"). | Link charts |
@@ -527,26 +528,28 @@ of thing:
 
 | Op | It is for | Effect | Shape | Needs |
 | --- | --- | --- | --- | --- |
-| `set-style` | The marks the chart already draws: emphasize some, fade some, hide some, recolour some. A highlight is this op with `state: 'emphasized'`. | Emphasize the targets and mute the rest; recolour; fade; hide. | `{ op, targets: UpdateTarget[], value: StyleSpec }` | marks |
-| `set-annotation` | One mark that should carry a note. | Pin a note on one mark; `null` clears it. | `{ op, target: UpdateTarget, value: { text, anchor?: 'segment' \| 'point' } \| null }` | one resolved element |
+| `set-style` | The marks the chart already draws: emphasize some, fade some, hide some, recolour some. A highlight is this op with `state: 'emphasized'`. | Emphasize the targets and recede the rest; recolour; fade; hide. `emphasis` sets how far the rest recede: `'light'` (default; they stay readable), `'strong'`, `'exclusive'` (only the targets read). | `{ op, targets: UpdateTarget[], value: StyleSpec }` | marks |
+| `annotate-text` (older name `set-annotation`) | One mark that should carry a note. | Pin a caption on one mark; `null` clears it. `highlight` sets how much the mark stands out: `'none'`, `'light'` (default), `'strong'`, `'exclusive'` (the rest recede). | `{ op, target: UpdateTarget, value: { text, anchor?: 'segment' \| 'point', highlight? } \| null }` | one resolved element |
+| `annotate-region` | A stretch of the plot: a period, a band of values, a box, a run of categories. | Shade it, with an optional caption set on it; `null` clears it. | `{ op, name, value: { x?: [lo, hi] \| categories, y?: [lo, hi] \| categories, text?, color?, opacity?, layer?: 'under' \| 'over', placement?: 'top' \| 'bottom' \| 'left' \| 'right' \| 'center' \| 'above' \| 'below' } \| null }` | x or y scales (not a map, pie or radar) |
+| `annotate-enclosure` | A group of marks that belong together: a cluster, a run of bars, a block of cells. | Outline each target group; one optional caption shared by them, with leaders to two or three outlines; `null` clears it. | `{ op, name, value: { targets: UpdateTarget[], text?, shape?: 'hull' \| 'rect' \| 'ellipse' \| 'circle', connect?: 'auto' \| 'all' \| 'none', color? } \| null }` | marks |
 | `set-viewport` | The range or region the chart should frame. | Frame a continuous domain. | `{ op, axes: 'x' \| 'y' \| 'xy', value: { x?: [lo, hi], y?: [lo, hi] } }`; on a multi-level map `value: { region: { key } }` | `navigate` or `brush-zoom` mounted on that axis |
 | `set-order` | The order of the categories on a discrete axis. | Reorder the axis; list every category in the order wanted. | `{ op, scope: 'category', field, values: unknown[] }` | `drag-reorder` mounted on that axis |
 | `set-overlay` | Marks the chart does not draw: a reference line, a threshold band, a forecast, a sketch of rows. | Draw new rows through the plot's own scales. | `{ op, name, value: { mark, data: { values }, encodings: { x?, y?, x2?, y2?, order?, color?, text? }, role, interactive?, projectable?, style? } \| null }` | x and y scales |
 | `set-freeform-overlay` | A custom shape with no data behind it. | Draw SVG, or a clone of marks, over the plot. | `{ op, name, value: { coordinateSpace: 'plot' \| 'renderer', body: [{ type: 'svg', content } \| { type: 'clone', targets, transform?, opacity? }] } \| null }` | — |
 | `set-data` | The rows the chart draws, for playback or a swap. | Replace every row; the rows carry every encoded field. | `{ op, source: 'main', value: { rows } }` | inline data |
 
-`StyleSpec` is `{ state?, opacity?, visible?, fill?, stroke?, strokeWidth?,
-mutedOpacity? }`. Two states matter from outside: `emphasized` keeps the
-targets at full ink and mutes every other mark; `normal` with `targets: []`
-clears the layer. `opacity` on the targets fades a subset and leaves the rest
-alone; `opacity: 0` hides marks and keeps the axes, where `visible: false`
-removes the rows and shrinks the scales. The mute level is one per chart,
-fixed at mount from the lowest `mutedOpacity` the mounted interactions carry
-(0.25 when none).
+`StyleSpec` is `{ state?, emphasis?, opacity?, visible?, fill?, stroke?,
+strokeWidth?, mutedOpacity? }`. Two states matter from outside: `emphasized`
+keeps the targets at full ink and recedes every other mark by `emphasis`
+(`'light'` by default, `'strong'`, `'exclusive'`; `mutedOpacity` sets the level
+outright); `normal` with `targets: []` clears the layer. `opacity` on the
+targets fades a subset and leaves the rest alone; `opacity: 0` hides marks and
+keeps the axes, where `visible: false` removes the rows and shrinks the scales.
 
 Overlay marks are `line`, `point`, `rule`, `rect`, `text`. `encodings` name
 fields of the overlay's own rows, projected through the chart's x, y, and
-colour scales. `style` takes `stroke`, `strokeWidth`, `strokeDash`, `fill`,
+colour scales. `style` takes `stroke`, `strokeWidth`, `strokeDash` (lengths, or
+`'dash'` / `'dot'`), `fill`,
 `fillOpacity`, `opacity`, `pointRadius`, `fontSize`, `fontWeight`, `textAlign`
 (`start`, `middle`, `end`), `dx`, `dy`. A `line` takes its stroke and a `text`
 its fill from the `color` encoding; a `point` takes `style.fill`. A `text` sits on
@@ -575,8 +578,16 @@ A target is one of three forms:
 - A `where` describes a set, in the words filters use: each field `in` a list
   or within a `range` (ends included; `null` leaves an end open), and every
   field must hold. Use it for a period, a band of values, or several categories
-  at once, where a key would need one target per row. Only `set-style` takes a
-  `where`; a note or an order names one mark, so it takes a key.
+  at once, where a key would need one target per row. `set-style` and an
+  enclosure's targets take a `where`; a note or an order names one mark, so it
+  takes a key.
+- Use the annotation ops to put a message on the chart: a note
+  (`annotate-text`) on a mark, a shaded region (`annotate-region`) over a
+  stretch of the plot (two bounds on a continuous axis, `null` for the plot's
+  end, or adjacent categories on a banded one), or an outline
+  (`annotate-enclosure`) round a group of marks, each with optional text.
+  Leave colour, shape and placement to the chart unless the request names
+  them.
 
 - A selector key names fields the chart encodes (`x`, `y`, `color`, `detail`,
   `size`, …) and matches rows by equality, so `'2007'` and `2007` differ. One
@@ -589,6 +600,10 @@ A target is one of three forms:
   a change from one row to the next ("2019 → 2020: +4%"); `anchor: "point"`
   marks the row's own point, for its value ("Dec 2022: $0.87B"). A note on
   the last row is always at its point.
+- Annotation text says what the chart does not ("Promotion launched", "Lowest
+  in Q3"), not a value or label it already prints (`note_repeats_chart`). The
+  title states the finding; a note puts its specifics on the mark, and names
+  the mark where the chart does not (a dot on a scatter).
 - A field the chart does not encode resolves to nothing. Encode the identity
   field (`detail` on a scatter), or pass elements from `event.target`,
   `state.selected`, or `context.available` through as `{ visual, elements }`,
@@ -663,7 +678,7 @@ as the `updates` argument beside the chart input, not inside it, to
   "updates": [
     { "id": "agent", "ops": [
       { "op": "set-style", "targets": [{ "select": { "key": { "region": "East" } } }], "value": { "state": "emphasized" } },
-      { "op": "set-annotation", "target": { "select": { "key": { "region": "West" } } }, "value": { "text": "Lowest in Q3" } }
+      { "op": "annotate-text", "target": { "select": { "key": { "region": "West" } } }, "value": { "text": "Lowest in Q3" } }
     ] }
   ]
 }
@@ -1041,7 +1056,7 @@ emphasized. The agent finds Japan and Singapore in its rows and answers:
         { "select": { "key": { "country": "Singapore" } } }
       ],
       "value": { "state": "emphasized" } },
-    { "op": "set-annotation",
+    { "op": "annotate-text",
       "target": { "select": { "key": { "country": "Japan" } } },
       "value": { "text": "Japan, 82.6 years" } },
     { "op": "set-viewport", "axes": "y", "value": { "y": [70, 86] } }

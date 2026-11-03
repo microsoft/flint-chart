@@ -93,6 +93,13 @@ const APPROX_CHAR_WIDTH_RATIO = 0.62;
  */
 const SPARSE_FIT_BAND_CEILING = 100;
 
+/** The share of the room the canvas leaves its plot that a sparse x axis fills, under `sparseFill`. */
+const SPARSE_FILL_SHARE = 0.85;
+/** The widest a band of bars grows under `sparseFill`, in px of step. */
+const SPARSE_FILL_BAR_CAP = 200;
+/** The widest a band of points (a strip, a jitter) grows under `sparseFill`, in px of step. */
+const SPARSE_FILL_POINT_CAP = 360;
+
 /** Smallest readable default step for a discrete item before overflow activates. */
 export const DEFAULT_MIN_STEP = 8;
 
@@ -1310,6 +1317,29 @@ export function computeLayout(
                 : pressed ? 'the house band would overrun the span and the cap allows no stretch, so the step is the span per band'
                     : decision.fitted ? 'sparse bands grow toward the room the canvas leaves' : 'the house band fits the span and keeps its size');
         if (step !== decision.step) stage(key, 'clamped', step, axis === 'y' ? { min: yMinStep, max: yMaxStep } : { min: minStepVal, max: maxStepSize }, 'held between the smallest readable step and the widest a band may be');
+    }
+    // --- Sparse fill ---
+    // Few x bands, held at the sparse-fit ceiling, leave the plot a strip under a title and a source
+    // set to the canvas. The bands thicken until the plot spans a share of the room the canvas leaves
+    // it, each no wider than a bar, or a column of points, reads as one mark.
+    const fill = options.sparseFill;
+    if (fill && !pinnedPlot && facetCols === 1 && xTotalNominalCount > 0 && yTotalNominalCount === 0 && yContinuousAsDiscrete === 0) {
+        const tuning = typeof fill === 'object' ? fill : {};
+        const share = Math.max(0, Math.min(1, tuning.share ?? SPARSE_FILL_SHARE));
+        const room = options.bandStepFitCapacityX ?? defaultChartWidth;
+        // The drawing, not the plot, fills the share: the value labels beside it come out of the room.
+        const tick = computeFontSizing(Math.min(subplotWidth, subplotHeight), { baseLabelFontSize: options.baseLabelFontSize, baseTitleFontSize: options.baseTitleFontSize }).tickBase;
+        const gutter = VALUE_LABEL_CHARS[1] * tick * APPROX_CHAR_WIDTH_RATIO + TICK_ROOM;
+        const grouped = xIsDiscrete && xHasGrouping;
+        const bands = grouped ? nominalCount.x : xTotalNominalCount;
+        const lanes = grouped ? nominalCount.group : 1;
+        const cap = (options.sparseFillBars === false ? tuning.pointCap ?? SPARSE_FILL_POINT_CAP : tuning.barCap ?? SPARSE_FILL_BAR_CAP) * lanes;
+        const want = Math.floor(Math.min(cap, Math.max(0, share * room - gutter) / bands));
+        if (want > xStepSize) {
+            const from = xStepSize;
+            xStepSize = want;
+            stage('xStep', 'sparse fill', xStepSize, { from, bands, room: r1(room), gutter: r1(gutter), share, cap }, 'few bands thicken until the drawing spans a share of the room the canvas leaves it, each band no wider than one mark reads');
+        }
     }
     // The step value labels need, which the plan has checked the canvas holds.
     for (const axis of ['x', 'y'] as const) {

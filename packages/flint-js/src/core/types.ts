@@ -1495,6 +1495,31 @@ export interface AssembleOptions {
     /** Whether to add tooltips to the chart (default: false) */
     addTooltips?: boolean;
     /**
+     * Notes the chart is drawn with from the start: each names its mark by the fields of the row the
+     * mark stands for (`key`) and gives the caption's text. A noted mark at the top of a vertical
+     * measure axis — the tallest bar, the highest point — gets room over it for its caption: the
+     * axis runs on just far enough for the caption at its nearest seat, ending at a fine round step,
+     * using at most a third of the axis. Bars keep their proportions; an axis with a
+     * stated domain is left as it is. Set by the interactive Vega-Lite renderer from the first
+     * `annotate-text` updates; a note added later is placed in the room the chart has.
+     */
+    notes?: readonly { key: Record<string, unknown>; text: string }[];
+    /**
+     * Regions the chart is drawn with from the start, as `annotate-region` sets them. A captioned
+     * stretch of x whose marks rise too near the plot's top for its caption to stand clear over them
+     * gets room as a note does: the measure axis runs on past the stretch's tallest mark, to a fine
+     * round step, within a third of the axis. A stretch with room above or below its marks, or a
+     * caption placed elsewhere, takes none. Set by the interactive Vega-Lite renderer from the first
+     * updates.
+     */
+    regions?: readonly { x?: readonly unknown[]; y?: readonly unknown[]; text?: string; placement?: string }[];
+    /**
+     * Enclosures the chart is drawn with from the start, as `annotate-enclosure` sets them: where a
+     * dot they enclose sits at the edge of a continuous axis, the axis is padded by the px the outline
+     * needs, so it is drawn whole. Set by the interactive Vega-Lite renderer from the first updates.
+     */
+    enclosures?: readonly { targets: readonly unknown[] }[];
+    /**
      * The host page's background, as a CSS colour. A chart with no theme draws on it, and so does a
      * theme whose surface defers to the host (`ink.surface.source: 'host'`); a theme with its own
      * canvas keeps it.
@@ -1823,6 +1848,25 @@ export interface AssembleOptions {
      * again is aimed for instead.
      */
     bandBalance?: boolean;
+
+    /**
+     * Whether an x axis of few bands fills at least a share of the room the canvas leaves its plot
+     * (default false): the bands thicken past the sparse-fit ceiling until the plot spans `share` of
+     * that room (0.85), a band growing to at most `barCap` px where it holds bars (200) or
+     * `pointCap` px where it holds points (360). One view, y not banded.
+     */
+    sparseFill?: boolean | { share?: number; barCap?: number; pointCap?: number };
+
+    /**
+     * Whether a themed title wraps to the drawing rather than to the canvas (default false): its block
+     * is the plot with what stands beside it, which the title may overhang by `overhang` (1.15×),
+     * never narrower than `floor` of the canvas (0.6) nor `minWidth` px (320), never wider than the
+     * canvas unless the drawing is.
+     */
+    titleWrap?: boolean | { floor?: number; minWidth?: number; overhang?: number };
+
+    /** @internal Whether the plot's marks are filled bands (bars, boxes) rather than points, for the sparse fill's cap. */
+    sparseFillBars?: boolean;
 
     /** The centre of that range, as width over height: unset, the base's. */
     targetAspect?: number;

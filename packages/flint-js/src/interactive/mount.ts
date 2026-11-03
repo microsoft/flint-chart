@@ -1,5 +1,6 @@
 import type { ChartAssemblyInput } from '../core/types';
 import { isCanvasInteraction } from './interactions';
+import { enclosuresOfUpdates, notesOfUpdates, regionsOfUpdates } from './presentation/annotation';
 import { composeInteractiveOptions } from './spec/compose';
 import { mountInteractiveChartSurface } from './surface';
 import type {
@@ -76,6 +77,9 @@ export function mountChartWith(
                                 || (updates?.length ?? 0) > 0,
                             expressionInterpreter,
                             background,
+                            notes: notesOfUpdates(updates),
+                            regions: regionsOfUpdates(updates),
+                            enclosures: enclosuresOfUpdates(updates),
                             assistDistance: assistedTargeting === false
                                 ? 0
                                 : typeof assistedTargeting === 'object'

@@ -190,14 +190,16 @@ export const updatesShape = {
               .passthrough()
               .describe(
                 'One ChartUpdate op, by op: ' +
-                  'set-style { targets: UpdateTarget[], value: { state?, opacity?, visible?, fill?, stroke? } }; ' +
-                  "set-annotation { target: UpdateTarget, value: { text, anchor?: 'segment' | 'point' } | null }; " +
+                  'set-style { targets: UpdateTarget[], value: { state?, emphasis?: "light" | "strong" | "exclusive" (how far the rest recede when state is "emphasized"; default "light"), opacity?, visible?, fill?, stroke? } }; ' +
+                  "annotate-text { target: UpdateTarget, value: { text, anchor?: 'segment' | 'point', highlight?: 'none' | 'light' | 'strong' | 'exclusive' } | null } (set-annotation is its older name); " +
+                  "annotate-region { name, value: { x?: [lo, hi] | categories, y?: [lo, hi] | categories, text?, color?, opacity?, layer?: 'under' | 'over', placement? } | null }; " +
+                  "annotate-enclosure { name, value: { targets: UpdateTarget[], text?, shape?: 'hull' | 'rect' | 'ellipse' | 'circle', connect?: 'auto' | 'all' | 'none', color? } | null }; " +
                   "set-viewport { axes: 'x' | 'y' | 'xy', value: { x?: [lo, hi], y?: [lo, hi] } }; " +
                   "set-order { scope: 'category', field, values }; " +
                   'set-overlay { name, value: { mark, data: { values }, encodings: { x?, y?, x2?, y2? }, role, style? } | null }; ' +
                   "set-freeform-overlay { name, value: { coordinateSpace: 'plot' | 'renderer', body } | null }; " +
                   "set-data { source: 'main', value: { rows } }. " +
-                  'UpdateTarget is { select: { key: { field: value } } } for marks with those values, or, in set-style only, { select: { where: { field: { in: [...] } | { range: [low, high] } } } } for a set: a period, a band, several categories.',
+                  "UpdateTarget is { select: { key: { field: value } } } for marks with those values, or, in set-style and an enclosure's targets, { select: { where: { field: { in: [...] } | { range: [low, high] } } } } for a set: a period, a band, several categories.",
               ),
           )
           .describe('The ops of this layer, applied in order.'),

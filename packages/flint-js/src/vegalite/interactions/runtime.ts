@@ -12,6 +12,7 @@ import {
 import type {
     CanvasInteractionDef,
     ChartOverlaySpec,
+    RegionAnnotationSpec,
     ChartUpdate,
     ChartUpdateOp,
     ChartUpdatePresenter,
@@ -45,6 +46,8 @@ import { normalizeInspectGuideOptions } from '../../interactive/guides';
 import { wheelZoomFactor } from '../../interactive/gestures/navigation';
 import type { CanvasInteractionEvent, DomainGeometry } from '../../interactive/language/events';
 import type { ChartAnnotation, ChartHiddenValue, ChartStateEntry, DomainValue } from '../../core/interaction-contracts';
+import { EMPHASIS_OPACITY, canonicalUpdateOp, isTextAnnotationOp } from '../../core/interaction-contracts';
+import { DEFAULT_DIM_OPACITY } from '../../interactive/presets/utils';
 import type { ChartChangeReport, ChartUpdateApplyOptions } from '../../interactive/types';
 import {
     INTERACTION_KEY,
@@ -83,7 +86,8 @@ import { isInteractiveControlTarget, mountVegaRegionGesture } from './gestures/r
 import { mountVegaNavigationGesture, resolvedNavigationAxes } from './gestures/navigation';
 import { createVegaNavigationController, type NavigationApplyOptions } from './navigation-scale';
 import { createVegaGeoNavigationController } from './navigation-geo';
-import { createAnnotationOverlay } from './presentation/annotation-overlay';
+import { createAnnotationOverlay, type PlacedCaption } from './presentation/annotation-overlay';
+import { createMarkupOverlay, type ResolvedEnclosure } from './presentation/markup-overlay';
 import {
     createDragReorderOverlay,
     eligibleReorderAxesForAxis,
@@ -108,6 +112,8 @@ import {
     AXIS_HOVER_STORE,
     LEGEND_SELECTION_STORE,
     STYLE_SIGNAL,
+    DIM_SIGNAL,
+    DIM_RELATIVE_SIGNAL,
 } from './stores';
 
 const EMPTY_SEMANTIC_SELECTION_KEY = '__flint_empty_semantic_selection';
@@ -434,7 +440,7 @@ export function longPressMovedBeyond(
     return Math.hypot(current.x - start.x, current.y - start.y) > tolerance;
 }
 
-type AnnotationUpdate = Extract<ChartUpdateOp, { op: 'set-annotation' }>;
+type AnnotationUpdate = Extract<ChartUpdateOp, { op: 'annotate-text' }>;
 
 export interface EffectiveAnnotationEntry {
     key: string;
@@ -454,7 +460,7 @@ export function effectiveAnnotationEntries(updates: readonly ChartUpdate[]): Eff
     const entries = new Map<string, EffectiveAnnotationEntry>();
     for (const update of updates) {
         for (const op of update.ops) {
-            if (op.op !== 'set-annotation' || 'select' in op.target) continue;
+            if (!isTextAnnotationOp(op) || 'select' in op.target) continue;
             const element = op.target.elements[0];
             if (!element) continue;
             const key = annotationEntryKey(update.id, element);
@@ -750,14 +756,24 @@ export function mountVegaInteractions(
         containerLayoutSize,
     });
     const legendRangeOverlay = createLegendRangeOverlay({ container, coordinateSpace, containerLayoutSize });
+    // The captions the chart's notes stand in, one slot per note in the order they came: each
+    // keeps clear of those before it.
+    const placedCaptions: { slots: (PlacedCaption | undefined)[]; fixed?: PlacedCaption[] } = { slots: [] };
     const annotationOverlayOptions = {
         view,
         container,
         coordinateSpace,
         containerLayoutSize,
         annotationMarkType: plan.annotationMarkType,
+        placedCaptions,
     };
     const annotationOverlays = new Map<string, ReturnType<typeof createAnnotationOverlay>>();
+    // Regions and enclosures: drawn before the notes, which keep clear of their captions.
+    const markupOverlay = createMarkupOverlay({
+        view, container, coordinateSpace, containerLayoutSize, placedCaptions,
+        scales: { ...(plan.overlayScales?.x ? { x: plan.overlayScales.x } : {}), ...(plan.overlayScales?.y ? { y: plan.overlayScales.y } : {}) },
+        axisValue: (axis, value) => axisValue(axis, value),
+    });
     const clearAnnotations = (): void => {
         for (const overlay of annotationOverlays.values()) overlay.clear();
     };
@@ -907,7 +923,7 @@ export function mountVegaInteractions(
         for (const id of new Set([...retainedUpdates.keys(), ...previewUpdates.keys()])) {
             const update = mergeRetainedPreview(retainedUpdates.get(id), previewUpdates.get(id));
             for (const op of update?.ops ?? []) {
-                if (op.op !== 'set-annotation' || !op.value) continue;
+                if (op.op !== 'annotate-text' || !op.value) continue;
                 const element = 'select' in op.target ? undefined : op.target.elements[0];
                 const inView = element ? annotationOverlays.get(annotationEntryKey(id, element))?.inView() : undefined;
                 annotations.push({
@@ -1089,7 +1105,7 @@ export function mountVegaInteractions(
         const unsupportedOps: ChartUpdateOp['op'][] = [];
         let resolvedTargets = 0;
         const ops: ChartUpdateOp[] = [];
-        for (const op of update.ops) {
+        for (const op of update.ops.map(canonicalUpdateOp)) {
             if (op.op === 'set-style') {
                 const targets = op.targets.flatMap((target) => {
                     const resolved = resolveUpdateTarget(target);
@@ -1101,7 +1117,7 @@ export function mountVegaInteractions(
                     return [resolved];
                 });
                 if (targets.length > 0 || op.targets.length === 0) ops.push({ ...op, targets });
-            } else if (op.op === 'set-annotation' && op.value !== null) {
+            } else if (op.op === 'annotate-text' && op.value !== null) {
                 // A note anchors to one mark, which a set does not name.
                 const target = 'select' in op.target && isWhereSelector(op.target) ? null : resolveUpdateTarget(op.target, true);
                 if (!target || target.elements.length !== 1) unresolvedTargets.push(op.target);
@@ -1109,6 +1125,22 @@ export function mountVegaInteractions(
                     resolvedTargets += 1;
                     ops.push({ ...op, target, value: lastPointTargets.has(target) ? { ...op.value, anchor: 'point' } : op.value });
                 }
+            } else if (op.op === 'annotate-region' && op.value !== null) {
+                // A region is read off the chart's scales: it shades only where they name its stretch.
+                const problem = markupOverlay.check(op.value);
+                if (problem) unsupportedOps.push(op.op);
+                else ops.push(op);
+            } else if (op.op === 'annotate-enclosure' && op.value !== null) {
+                const targets = op.value.targets.flatMap((target) => {
+                    const resolved = resolveUpdateTarget(target);
+                    if (!resolved || resolved.elements.length === 0) {
+                        unresolvedTargets.push(target);
+                        return [];
+                    }
+                    resolvedTargets += resolved.elements.length;
+                    return [resolved];
+                });
+                if (targets.length > 0) ops.push({ ...op, value: { ...op.value, targets } });
             } else if (op.op === 'set-viewport') {
                 const bound = (axis: 'x' | 'y') => {
                     const domain = op.value[axis];
@@ -1196,6 +1228,12 @@ export function mountVegaInteractions(
         let dataRows = initialDataRows;
         let hostRows: readonly Record<string, unknown>[] | undefined;
         let emptyEmphasisActive = false;
+        // How far the marks outside an emphasis recede: the deepest level any active emphasis asks for.
+        let recedeTo: number | undefined;
+        let recedeRelative = true;
+        const recede = (opacity: number, relative: boolean) => {
+            if (recedeTo === undefined || opacity < recedeTo) { recedeTo = opacity; recedeRelative = relative; }
+        };
         const freeformOverlays = new Map<string, import('../../core/interaction-contracts').FreeformOverlaySpec>();
         selectedElements.clear();
         emphasizedRenderKeys.clear();
@@ -1247,7 +1285,21 @@ export function mountVegaInteractions(
                         }
                     }
                 }
+                if (op.op === 'annotate-text' && op.value?.highlight === 'exclusive' && !('select' in op.target)) {
+                    // An exclusive note recedes every other mark, as an exclusive emphasis does.
+                    recede(EMPHASIS_OPACITY.exclusive, true);
+                    for (const element of op.target.elements) {
+                        for (const key of semanticElementRenderKeys(element)) {
+                            selectedElements.set(key, element);
+                            emphasizedRenderKeys.add(key);
+                        }
+                    }
+                }
                 if (op.op === 'set-style') {
+                    if (op.value.state === 'emphasized' || op.value.state === 'focused') {
+                        if (op.value.mutedOpacity !== undefined) recede(op.value.mutedOpacity, false);
+                        else recede(EMPHASIS_OPACITY[op.value.emphasis ?? 'light'] ?? EMPHASIS_OPACITY.light, true);
+                    }
                     if (op.targets.length === 0
                         && (op.value.state === 'emphasized' || op.value.state === 'focused')) {
                         emptyEmphasisActive = true;
@@ -1348,6 +1400,8 @@ export function mountVegaInteractions(
         // A navigation-only chart compiles without the selection stores.
         if (plan.semanticStores !== false) {
             view.signal(STYLE_SIGNAL, stylesByKey);
+            view.signal(DIM_SIGNAL, recedeTo ?? plan.dimOpacity ?? DEFAULT_DIM_OPACITY);
+            view.signal(DIM_RELATIVE_SIGNAL, recedeTo !== undefined && recedeRelative);
             view.change(
                 INTERACTION_STORE,
                 changeset().remove(() => true).insert(emptyEmphasisActive && keys.length === 0
@@ -1413,6 +1467,20 @@ export function mountVegaInteractions(
         renderLegendRange();
         reorderResetControls.layout();
         viewportResetControl.layout();
+        const regions = new Map<string, RegionAnnotationSpec>();
+        const enclosures = new Map<string, ResolvedEnclosure>();
+        for (const update of displayUpdates) {
+            for (const op of update.ops) {
+                if (op.op === 'annotate-region') {
+                    if (op.value === null) regions.delete(op.name);
+                    else regions.set(op.name, op.value);
+                } else if (op.op === 'annotate-enclosure') {
+                    if (op.value === null) enclosures.delete(op.name);
+                    else enclosures.set(op.name, op.value as ResolvedEnclosure);
+                }
+            }
+        }
+        markupOverlay.render(regions, enclosures);
         const annotations = effectiveAnnotationEntries(displayUpdates)
             .filter((entry) => entry.value.text && entry.value.candidates);
         const annotationKeys = new Set(annotations.map((entry) => entry.key));
@@ -3111,6 +3179,7 @@ export function mountVegaInteractions(
     const projectOverlays = (): void => {
         renderPathFocus();
         renderLegendRange();
+        markupOverlay.sync();
         for (const overlay of annotationOverlays.values()) overlay.sync();
         dataOverlay.sync();
         regionGesture?.sync();
@@ -3202,6 +3271,7 @@ export function mountVegaInteractions(
         legendRangeOverlay.destroy();
         for (const overlay of annotationOverlays.values()) overlay.destroy();
         annotationOverlays.clear();
+        markupOverlay.destroy();
         inspectGuideOverlay.destroy();
         dragPreviewOverlay.destroy();
         freeformOverlay.destroy();

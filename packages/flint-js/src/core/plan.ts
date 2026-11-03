@@ -731,6 +731,12 @@ export function planLayout(analysis: PlanAnalysis, context: PlanContext): Layout
 
 /** How far past its canvas, in px, a drawing may run and still count as within it. */
 const CONTAIN_TOLERANCE = 0.5;
+/** Under `titleWrap`, the least share of the canvas a title spans, however narrow the drawing. */
+const TITLE_WRAP_FLOOR = 0.6;
+/** Under `titleWrap`, the least width in px a title spans, however narrow the drawing. */
+const TITLE_WRAP_MIN_WIDTH = 320;
+/** Under `titleWrap`, how far a title may run past the drawing before it wraps, as a ratio of the drawing. */
+const TITLE_WRAP_OVERHANG = 1.15;
 /** The px a contained drawing keeps clear of its canvas's edge, for what the estimate misses and the renderer's rounding. */
 const CONTAIN_MARGIN = 4;
 /** How many times, at most, a chart is laid out again to bring its drawing within the canvas. */
@@ -1715,6 +1721,9 @@ function planAroundPlot(prepared: PreparedPlan, reserve: FurnitureReserve): Layo
         ...prepared.options,
         bandStepFitCapacityX: Math.max(ceiling.width * 0.6, ceiling.width - reserve.width),
         bandStepFitCapacityY: Math.max(ceiling.height * 0.6, ceiling.height - reserve.height),
+        ...(prepared.options.sparseFill
+            ? { sparseFillBars: [...templateMarks(template)].some((mark) => mark === 'bar' || mark === 'rect' || mark === 'boxplot') }
+            : {}),
         // Small multiples shrink their tick labels no further than the theme lets type go.
         ...(theme && prepared.options.minLabelFontSize === undefined
             ? { minLabelFontSize: (theme as ThemeSpec).type?.minSize ?? 8 }
@@ -1978,9 +1987,15 @@ function planAroundPlot(prepared: PreparedPlan, reserve: FurnitureReserve): Layo
             if (fit) axisTitleFit[channel] = fit;
         }
     }
+    const wrapAsked = context.options?.titleWrap;
     const titleInputs = {
         structure, design, layout: layoutResult, axisLabels, axisTitles: titles, plot, rows: values,
         title: context.title, rowFacet: channelSemantics.row?.field, themed: Boolean(theme),
+        ...(wrapAsked ? { wrap: {
+            floor: (typeof wrapAsked === 'object' ? wrapAsked.floor : undefined) ?? TITLE_WRAP_FLOOR,
+            minWidth: (typeof wrapAsked === 'object' ? wrapAsked.minWidth : undefined) ?? TITLE_WRAP_MIN_WIDTH,
+            overhang: (typeof wrapAsked === 'object' ? wrapAsked.overhang : undefined) ?? TITLE_WRAP_OVERHANG,
+        } } : {}),
     };
     // The header is planned before the title: its edge band and the line above push the title down,
     // and what sits beside the headline is taken from the width the title is fitted to.

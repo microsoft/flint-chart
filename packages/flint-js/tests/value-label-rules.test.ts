@@ -104,8 +104,11 @@ describe('L2: the room past a bar’s end, in px', () => {
         } as any);
         const bar = [spec, ...(spec.layer ?? [])].find((n: any) => (n.mark?.type ?? n.mark) === 'bar');
         const scale = bar.encoding.x.scale;
-        expect(scale.rangeMax).toBeDefined();
-        const inset = spec._width - scale.rangeMax;
+        // The room runs on the axis: the domain extends past the longest bar's rounded end (1,500)
+        // by the share of the plot the labels take, the range left whole.
+        expect(scale.rangeMax).toBeUndefined();
+        expect(scale.domainMax).toBeGreaterThan(1500);
+        const inset = spec._width * (1 - 1500 / scale.domainMax);
         const widest = measureValueLabels([1429], { format: ',', text: { font: 'Arial', fontSize: 13 } }).widest;
         expect(inset).toBeGreaterThan(widest);
         // The old 0.8em a character kept 60px for "1,429" at 13px, and grew the canvas instead.

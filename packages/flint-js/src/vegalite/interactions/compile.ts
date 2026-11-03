@@ -35,7 +35,10 @@ import {
     AXIS_HOVER_STORE,
     LEGEND_SELECTION_STORE,
     STYLE_SIGNAL,
+    DIM_SIGNAL,
+    DIM_RELATIVE_SIGNAL,
 } from './stores';
+import { isDarkPage } from '../../core/annotation/color';
 import type { TemporalAxisPlanInputs } from '../instantiate-spec';
 import { bindTemporalAxisTicks, navigationDomainSignal, walkVegaGroups } from './live-layout';
 import {
@@ -179,6 +182,14 @@ function isSelectable(type: string, selectableMarks: ReadonlySet<string>): boole
     return DOT_MARKS.has(type) && [...DOT_MARKS].some((dot) => selectableMarks.has(dot));
 }
 
+/**
+ * The opacity a mark recedes to outside an emphasis: an emphasis level scales the mark's own
+ * opacity (a dot drawn at 0.7 recedes from 0.7, not from 1), a stated opacity replaces it.
+ */
+function recededOpacity(authored: number): string {
+    return `${DIM_RELATIVE_SIGNAL} ? ${authored} * ${DIM_SIGNAL} : min(${DIM_SIGNAL}, ${authored})`;
+}
+
 function instrumentNode(
     node: Record<string, any>,
     inherited: Record<string, any>,
@@ -187,6 +198,7 @@ function instrumentNode(
     continuousColorFocus: ContinuousColorFocusStyle | undefined,
     selectableMarks: ReadonlySet<string>,
     config: Record<string, any> | undefined,
+    pageInk?: string,
 ): boolean {
     const type = markType(node.mark);
     const selectable = !!type && SUPPORTED_SPEC_MARKS.has(type) && isSelectable(type, selectableMarks);
@@ -222,7 +234,23 @@ function instrumentNode(
         && (encodedColor.type === 'quantitative' || encodedColor.type === 'temporal')
         && !encodedColor.condition;
     const dataDrivenOpacity = encodedOpacity?.field && !encodedOpacity.condition;
-    if ((textLabel || legendLabel) && provenance.presentation === 'on-mark') return true;
+    const receded = `length(data('${INTERACTION_STORE}')) && !indata('${INTERACTION_STORE}', 'key', datum.${INTERACTION_KEY})`;
+    if ((textLabel || legendLabel) && provenance.presentation === 'on-mark') {
+        // A label drawn on its mark was inked against the mark's fill; as the mark recedes toward
+        // the page, the label takes the page's ink so it stays readable.
+        if (textLabel && pageInk) {
+            const markColor = typeof node.mark === 'object' ? node.mark?.color ?? node.mark?.fill : undefined;
+            const existing = node.encoding?.color;
+            const recededInk = { test: receded, value: pageInk };
+            node.encoding = {
+                ...(node.encoding ?? {}),
+                color: existing && typeof existing === 'object'
+                    ? { ...existing, condition: [recededInk, ...(existing.condition ? (Array.isArray(existing.condition) ? existing.condition : [existing.condition]) : [])] }
+                    : { condition: recededInk, ...(typeof markColor === 'string' ? { value: markColor } : {}) },
+            };
+        }
+        return true;
+    }
     if ((encodedOpacity && typeof encodedOpacity.value !== 'number' && !dataDrivenOpacity)
         || encoding.fillOpacity || encoding.strokeOpacity) return false;
     const authoredOpacity = typeof encodedOpacity?.value === 'number'
@@ -255,18 +283,27 @@ function instrumentNode(
                 value: continuousColorFocus.mutedFill,
             },
         } : {}),
+        // The receded opacity follows the emphasis level each render (DIM_SIGNAL); a label recedes
+        // less than its mark, so the values of the marks set back can still be read.
         opacity: continuousColor ? { value: authoredOpacity } : dataDrivenOpacity ? {
             condition: { test: selectionTest, ...encodedOpacity },
-            value: dimOpacity,
+            value: { expr: DIM_SIGNAL },
         } : {
             condition: {
                 test: `${selectionTest} || ${hoverTest}`,
                 value: authoredOpacity,
             },
-            value: Math.min(dimOpacity, authoredOpacity),
+            value: { expr: textLabel ? `min(${authoredOpacity}, max(${recededOpacity(authoredOpacity)}, 0.5))` : recededOpacity(authoredOpacity) },
         },
     };
     return true;
+}
+
+/** The ink text reads in on the chart's page, for a label whose mark recedes into it. */
+function pageTextInk(spec: Record<string, any>): string {
+    const background = typeof spec.background === 'string' ? spec.background
+        : typeof spec.config?.background === 'string' ? spec.config.background : '#ffffff';
+    return isDarkPage(background) ? '#e6e6e6' : '#333333';
 }
 
 function instrumentMarks(
@@ -277,6 +314,7 @@ function instrumentMarks(
     continuousColorFocus: ContinuousColorFocusStyle | undefined,
     selectableMarks: ReadonlySet<string>,
     config: Record<string, any> | undefined,
+    pageInk?: string,
 ): boolean {
     const encoding = { ...inherited, ...(spec.encoding ?? {}) };
     let instrumented = instrumentNode(
@@ -287,6 +325,7 @@ function instrumentMarks(
         continuousColorFocus,
         selectableMarks,
         config,
+        pageInk,
     );
     for (const property of ['layer', 'hconcat', 'vconcat', 'concat'] as const) {
         if (!Array.isArray(spec[property])) continue;
@@ -299,6 +338,7 @@ function instrumentMarks(
                 continuousColorFocus,
                 selectableMarks,
                 config,
+                pageInk,
             ) || instrumented;
         }
     }
@@ -311,6 +351,7 @@ function instrumentMarks(
             continuousColorFocus,
             selectableMarks,
             config,
+            pageInk,
         ) || instrumented;
     }
     return instrumented;
@@ -559,6 +600,7 @@ export function addVegaLiteInteractions(
             templateSemantics.neutralizeContinuousColor ? templateSemantics.continuousColorFocus : undefined,
             selectableMarks,
             spec.config,
+            pageTextInk(spec),
         )
         : false;
     if (needsSemanticPresentation && !instrumented) return null;
@@ -918,8 +960,11 @@ function applyCompiledHoverStyles(
         for (const [channel, value] of Object.entries(hoverStyle)) {
             if (channel === 'opacity' && (value === 'contrast' || value === 'spotlight')) {
                 const currentOpacity = Array.isArray(update.opacity) ? update.opacity : [update.opacity];
+                // A data-driven opacity is the author's; the receded level's signal is Flint's own.
                 if (value === 'spotlight' && currentOpacity.some((entry: any) =>
-                    entry?.field !== undefined || entry?.signal !== undefined || entry?.condition?.field !== undefined
+                    entry?.field !== undefined
+                    || (entry?.signal !== undefined && !String(entry.signal).includes(DIM_SIGNAL))
+                    || entry?.condition?.field !== undefined
                 )) continue;
                 const numericValues = currentOpacity
                     .map((entry: any) => entry?.value)
@@ -1016,6 +1061,8 @@ export function injectVegaInteractionStore(
     vegaSpec.signals = [
         ...(Array.isArray(vegaSpec.signals) ? vegaSpec.signals : []),
         { name: STYLE_SIGNAL, value: {} },
+        { name: DIM_SIGNAL, value: plan?.dimOpacity ?? DEFAULT_DIM_OPACITY },
+        { name: DIM_RELATIVE_SIGNAL, value: false },
     ];
     const instrumentLegends = (scope: Record<string, any>): void => {
         for (const legend of scope.legends ?? []) {

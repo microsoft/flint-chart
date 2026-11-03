@@ -45,6 +45,7 @@ import type { FurniturePlan } from '../core/furniture-plan';
 import type { SeriesEndLayout } from '../core/series-end';
 import type { LegendPlan, PlannedKey } from '../core/legend-plan';
 import { stepColorScale } from './color-classes';
+import { niceExtent } from './nice';
 import type { NeutralBand } from '../core/color-controls';
 
 /** Mark families that carry data values (as opposed to chrome). */
@@ -5154,12 +5155,21 @@ function labelOneBody(
                 if (typeof plotWidth === 'number' && plotWidth > inset * (hasNegative ? 2 : 1)
                     && encodings.length && encodings.every(encoding => encoding.scale?.range == null
                         && encoding.scale?.rangeMin == null && encoding.scale?.rangeMax == null)) {
+                    // Where the bars grow one way, the room runs on the axis itself: the domain extends
+                    // by the share of the plot the labels take, so every bar keeps its length and the
+                    // axis, its ticks and its grid reach the plot's edge rather than stopping short.
+                    const end = !reversed && !hasNegative ? labelRoomEnd(encodings, table, measure, enc, plotWidth, inset) : undefined;
                     for (const encoding of encodings) {
-                        encoding.scale = {
-                            ...(encoding.scale ?? {}),
-                            rangeMin: reversed || hasNegative ? inset : 0,
-                            rangeMax: !reversed || hasNegative ? plotWidth - inset : plotWidth,
-                        };
+                        encoding.scale = end
+                            ? { ...(encoding.scale ?? {}), domainMax: end.max, nice: false, ...(end.min !== undefined ? { domainMin: end.min } : {}) }
+                            : {
+                                ...(encoding.scale ?? {}),
+                                rangeMin: reversed || hasNegative ? inset : 0,
+                                rangeMax: !reversed || hasNegative ? plotWidth - inset : plotWidth,
+                            };
+                        if (end?.ticks && encoding.axis && Array.isArray(encoding.axis.values)) {
+                            encoding.axis = { ...encoding.axis, values: end.ticks, tickCount: end.ticks.length };
+                        }
                     }
                     reserved = true;
                 }
@@ -5807,6 +5817,62 @@ function growPadding(spec: any, side: 'left' | 'right' | 'top' | 'bottom', amoun
  * Write the headroom the plan gives labels above (or below) bar ends to each
  * encoding of the measure whose scale leaves that end free.
  */
+/**
+ * The domain a horizontal measure takes so `inset` px past its end hold the value labels: the end the
+ * axis draws now (Flint's ruler, or the data's extent rounded as Vega rounds it) run on by the share
+ * of the plot the labels take, so each bar is drawn exactly as long as with the range cut short.
+ * Undefined where the end is not known here: a stated domain, a scale other than linear, a measure
+ * the spec computes (a bin, an aggregate other than sum, mean, min or max).
+ */
+function labelRoomEnd(
+    encodings: any[], table: any[], measure: any, enc: any, plotWidth: number, inset: number,
+): { min?: number; max: number; ticks?: number[] } | undefined {
+    if (!(plotWidth > inset) || !Array.isArray(table) || table.length === 0) return undefined;
+    const scale = measure.scale ?? {};
+    if (encodings.some((encoding) => Array.isArray(encoding.scale?.domain) || encoding.scale?.domainRaw)) return undefined;
+    if ((scale.type && scale.type !== 'linear') || measure.bin) return undefined;
+    const ruled = scale.nice === false && typeof scale.domainMin === 'number' && typeof scale.domainMax === 'number';
+    let lo: number;
+    let hi: number;
+    if (ruled) {
+        lo = scale.domainMin;
+        hi = scale.domainMax;
+    } else {
+        if (scale.domainMax !== undefined) return undefined;
+        const op = typeof measure.aggregate === 'string' ? measure.aggregate : undefined;
+        if (op && !['sum', 'mean', 'average', 'min', 'max'].includes(op)) return undefined;
+        const band = op ? enc.y?.field : undefined;
+        if (op && !band) return undefined;
+        const field = measure.field as string;
+        const groups = new Map<string, number[]>();
+        for (const row of table) {
+            const value = row?.[field];
+            if (typeof value !== 'number' || !Number.isFinite(value)) continue;
+            const key = op ? String(row[band]) : String(groups.size);
+            groups.set(key, [...(groups.get(key) ?? []), value]);
+        }
+        const totals = [...groups.values()].map((values) => op === 'sum' ? values.reduce((a, b) => a + b, 0)
+            : op === 'mean' || op === 'average' ? values.reduce((a, b) => a + b, 0) / values.length
+                : op === 'min' ? Math.min(...values) : Math.max(...values));
+        if (!totals.length) return undefined;
+        const zero = scale.zero ?? true;
+        const low = typeof scale.domainMin === 'number' ? scale.domainMin : zero ? Math.min(0, ...totals) : Math.min(...totals);
+        const high = zero ? Math.max(0, ...totals) : Math.max(...totals);
+        [lo, hi] = scale.nice === false ? [low, high] : niceExtent(low, high);
+        if (typeof scale.domainMin === 'number') lo = scale.domainMin;
+    }
+    if (!(hi > lo)) return undefined;
+    const max = +(lo + (hi - lo) * plotWidth / (plotWidth - inset)).toPrecision(12);
+    const values: unknown = measure.axis?.values;
+    let ticks: number[] | undefined;
+    if (ruled && Array.isArray(values) && values.length > 1 && values.every((value) => typeof value === 'number')) {
+        const step = (values[1] as number) - (values[0] as number);
+        ticks = [...values as number[]];
+        if (step > 0) while (ticks[ticks.length - 1] + step <= max + 1e-9) ticks.push(+(ticks[ticks.length - 1] + step).toPrecision(12));
+    }
+    return { max, ...(ruled ? { min: lo } : {}), ...(ticks ? { ticks } : {}) };
+}
+
 function addMeasureHeadroom(
     body: any, channel: 'x' | 'y' | 'theta' | 'color', field: string, headroom: { min?: number; max?: number },
 ): void {

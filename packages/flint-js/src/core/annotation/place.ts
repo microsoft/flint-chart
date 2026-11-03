@@ -1,0 +1,272 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+import {
+    angularDistance,
+    boxDistance,
+    overflow,
+    overlapArea,
+    portToward,
+    rimPoint,
+    seatBox,
+    segmentCrossesBox,
+    segmentsCross,
+    targetGap,
+    type Box,
+    type NoteTarget,
+    type Point,
+} from './geometry';
+
+/**
+ * Where a note that names one mark stands, and whether a leader joins them. A lightweight reading of
+ * Blabber's caption placement (the `blabber` placement notes): the caption is set at a ring of
+ * seats round the mark's visible outline, each a few px further out, and the one with the least cost
+ * is kept — one note at a time, no joint search. The cost is tiered so a fault of meaning always
+ * outranks a tidiness term: running off the canvas, then covering ink (marks and text by the area
+ * hidden, a thin line by being cut), then distance from the mark and the leader it needs, then a
+ * preferred side.
+ */
+
+/** What a caption must not cover: a mark, a piece of text (axis labels, a legend), or faint ink. */
+export interface NoteObstacle {
+    box: Box;
+    kind: 'mark' | 'text' | 'faint';
+}
+
+/** Thin ink a caption should not cut: a line between two of its points, a rule, an axis domain. */
+export interface NoteSegment {
+    a: Point;
+    b: Point;
+}
+
+export interface PlaceNoteInput {
+    /** The mark the note names. */
+    target: NoteTarget;
+    /**
+     * The rest of the mark where the note names one end of it — a bar whose value end is the target:
+     * a caption keeps off it as off any mark, but standing beside it is no ambiguity.
+     */
+    body?: Box;
+    /** The caption's box size, its halo included. */
+    label: { width: number; height: number };
+    /** The plot the caption should stay within, and the canvas it must. */
+    plot: Box;
+    canvas: Box;
+    obstacles?: readonly NoteObstacle[];
+    segments?: readonly NoteSegment[];
+    /** The side the mark's own geometry suggests (a bar's value end), in radians, y downward. */
+    preferredAngle?: number;
+    /** `'none'` never draws a leader; `'auto'` draws one only where the caption is not plainly beside its mark. */
+    connector?: 'auto' | 'none';
+    /** The caption's font size, in px: a bar's direct seats stand off by multiples of it. */
+    fontSize?: number;
+}
+
+export interface NotePlacement {
+    box: Box;
+    /** How the caption's lines align: toward the mark beside it, centred above or below it. */
+    align: 'left' | 'center' | 'right';
+    /** From the caption's edge to the mark's outline, where one is drawn. */
+    leader?: { from: Point; to: Point };
+    /** The seat's direction from the mark's centre, in radians, and its clear gap from the outline, in px. */
+    angle: number;
+    gap: number;
+    cost: number;
+}
+
+/** Directions round the mark, every 22.5°. */
+const DIRECTIONS = Array.from({ length: 16 }, (_, index) => (index * Math.PI * 2) / 16);
+/** Clear gaps from the mark's outline, in px: near seats first, as association is meaning. */
+const GAPS = [2, 5, 9, 14, 20, 28, 40, 56];
+/** A caption nearer its mark than this needs no leader, unless another mark is about as near. */
+const MAX_UNLED_GAP = 10;
+/** A leader shorter than this reads as a stub. */
+const MIN_LEADER = 6;
+/** Up to this reach the eye carries from caption to mark in one movement. */
+const COMFORTABLE_REACH = 34;
+
+const COST = {
+    canvas: 10_000,
+    plot: 40,
+    /** Per px² of ink hidden. Text is the dearest: a covered axis label is a lost value. */
+    area: { mark: 8, text: 25, faint: 1 },
+    /** Per thin line the caption cuts. */
+    cut: 250,
+    /** Per mark, piece of text or line a leader runs across. */
+    leaderCross: 150,
+    leaderFixed: 30,
+    leaderLength: 1.5,
+    /** Per px² beyond a comfortable reach: past it, a leader is a hunt across the plot. */
+    leaderReach: 0.06,
+    stub: 200,
+    gapLinear: 1.2,
+    gapSquare: 0.3,
+    /** Per radian away from the side the mark suggests. */
+    preferred: 25,
+    /** Per radian away from above-right, the conventional reading side, where nothing else decides. */
+    reading: 2,
+    /**
+     * A seat round a bar's value end where the face itself offers a direct seat: Blabber offers the
+     * value-face centre first and the ring only as an escape.
+     */
+    escape: 300,
+};
+
+/** A place a caption may stand: its box, its direction and gap from the mark, how its lines align. */
+interface Seat {
+    box: Box;
+    angle: number;
+    gap: number;
+    align: NotePlacement['align'];
+    /** A direct seat past a bar's value face, with the leader it always draws. */
+    direct?: { from: Point; to: Point };
+    escape?: boolean;
+}
+
+/**
+ * The side a bar's value face looks toward, from its body: the face a note on the bar's end names, an
+ * edge of no width across the bar. Undefined for any other target.
+ */
+function valueDirection(target: NoteTarget, body: Box | undefined): Point | undefined {
+    if (!body || target.shape !== 'rect' || (target.rx > 0 && target.ry > 0)) return undefined;
+    const dx = target.x - (body.x + body.width / 2);
+    const dy = target.y - (body.y + body.height / 2);
+    if (target.rx === 0 && Math.abs(dx) > 1e-6) return { x: Math.sign(dx), y: 0 };
+    if (target.ry === 0 && Math.abs(dy) > 1e-6) return { x: 0, y: Math.sign(dy) };
+    return undefined;
+}
+
+/** How far past a bar's value face a direct seat stands, in font sizes (Blabber's bar routes). */
+const FACE_REACHES = [0.9, 1.5, 2.5, 4, 6, 8];
+/** The clear gap between a caption and the leader that leaves it, in px. */
+const PORT_GAP = 2.5;
+
+/**
+ * Blabber's direct routes for a caption on a bar's value: the caption past the value face, centred on
+ * it and free to slide aside as far as its own edge, with a straight leader from the caption to the
+ * face's centre. A vertical bar's caption is centred over the face, a horizontal bar's beside it.
+ */
+function faceSeats(
+    target: NoteTarget, label: { width: number; height: number }, forward: Point, fontSize: number, canvas: Box,
+): Seat[] {
+    const vertical = forward.x === 0;
+    const sign = vertical ? forward.y : forward.x;
+    const face = { x: target.x, y: target.y };
+    const extent = vertical ? label.width : label.height;
+    const centre = vertical ? face.x : face.y;
+    const lo = vertical ? canvas.x : canvas.y;
+    const hi = lo + (vertical ? canvas.width : canvas.height);
+    const fitShift = Math.max(lo + extent / 2, Math.min(hi - extent / 2, centre)) - centre;
+    const edgeSlide = Math.max(0, extent / 2 - Math.min(6, extent / 4));
+    const seats: Seat[] = [];
+    for (const reach of FACE_REACHES.map((multiple) => multiple * fontSize)) {
+        const slides = new Set([fitShift, ...[0, -0.5, 0.5, -1, 1].map((fraction) => fraction * reach),
+            ...[-1, -0.5, 0.5, 1].map((fraction) => fraction * edgeSlide)]);
+        for (const slide of slides) {
+            const box: Box = vertical
+                ? { x: face.x - label.width / 2 + slide, y: sign < 0 ? face.y - reach - label.height : face.y + reach, ...label }
+                : { x: sign < 0 ? face.x - reach - label.width : face.x + reach, y: face.y - label.height / 2 + slide, ...label };
+            const from = vertical
+                ? { x: Math.max(box.x + 0.5, Math.min(box.x + box.width - 0.5, face.x)), y: sign < 0 ? box.y + box.height + PORT_GAP : box.y - PORT_GAP }
+                : { x: sign < 0 ? box.x + box.width + PORT_GAP : box.x - PORT_GAP, y: Math.max(box.y + 0.5, Math.min(box.y + box.height - 0.5, face.y)) };
+            seats.push({
+                box, angle: Math.atan2(forward.y, forward.x), gap: reach, align: vertical ? 'center' : sign < 0 ? 'right' : 'left',
+                direct: { from, to: face },
+            });
+        }
+    }
+    return seats;
+}
+
+/**
+ * How near a mark that is not its own may stand before the caption could be read as naming it: two
+ * thirds of a line, between 6 and 12 px.
+ */
+function associationMargin(height: number): number {
+    return Math.max(6, Math.min(12, height * 0.65));
+}
+
+function textAlign(angle: number): NotePlacement['align'] {
+    const cos = Math.cos(angle);
+    return cos > 0.38 ? 'left' : cos < -0.38 ? 'right' : 'center';
+}
+
+export function placeNote(input: PlaceNoteInput): NotePlacement {
+    const { target, label, plot, canvas } = input;
+    const obstacles = input.obstacles ?? [];
+    const segments = input.segments ?? [];
+    const leaderAllowed = input.connector !== 'none';
+    const margin = associationMargin(label.height);
+    const fontSize = input.fontSize ?? 11;
+    // Only what stands near the ring can touch a seat: the rest is left out of every test.
+    const reach = Math.max(label.width, label.height) + Math.max(GAPS[GAPS.length - 1], 8 * fontSize) + Math.max(target.rx, target.ry) + 4;
+    const near = (box: Box) => Math.abs(box.x + box.width / 2 - target.x) <= reach + box.width / 2
+        && Math.abs(box.y + box.height / 2 - target.y) <= reach + box.height / 2;
+    const nearObstacles = obstacles.filter((obstacle) => near(obstacle.box));
+    const nearSegments = segments.filter((segment) => near({
+        x: Math.min(segment.a.x, segment.b.x), y: Math.min(segment.a.y, segment.b.y),
+        width: Math.abs(segment.b.x - segment.a.x), height: Math.abs(segment.b.y - segment.a.y),
+    }));
+    // Faint marks — dimmed, or cells under a halo — can still be read as the one named.
+    const marks = nearObstacles.filter((obstacle) => obstacle.kind !== 'text');
+
+    // A note on a bar's value: the value face first, the ring round the end only as an escape.
+    const forward = leaderAllowed ? valueDirection(target, input.body) : undefined;
+    const seats: Seat[] = forward ? faceSeats(target, label, forward, fontSize, canvas) : [];
+    for (const angle of DIRECTIONS) {
+        const ux = Math.cos(angle);
+        const uy = Math.sin(angle);
+        for (const gap of GAPS) {
+            seats.push({
+                box: seatBox(target, label.width, label.height, ux, uy, gap), angle, gap, align: textAlign(angle),
+                ...(forward ? { escape: true } : {}),
+            });
+        }
+    }
+
+    let best: NotePlacement | undefined;
+    for (const seat of seats) {
+        const { box, angle, gap } = seat;
+        // A direct seat may stand past the plot in the paper the chart keeps, as Blabber's does.
+        let cost = COST.canvas * overflow(box, canvas, 1) + (seat.direct ? 0 : COST.plot * overflow(box, plot));
+        if (seat.escape) cost += COST.escape;
+        if (best && cost >= best.cost) continue;
+        for (const obstacle of nearObstacles) cost += COST.area[obstacle.kind] * overlapArea(box, obstacle.box);
+        if (input.body) cost += COST.area.mark * overlapArea(box, input.body);
+        for (const segment of nearSegments) if (segmentCrossesBox(segment.a, segment.b, box)) cost += COST.cut;
+        if (best && cost >= best.cost) continue;
+        let drawn: NotePlacement['leader'];
+        let ambiguous = false;
+        if (seat.direct) drawn = seat.direct;
+        else {
+            // Another mark about as near as its own makes the caption ambiguous without a leader.
+            const own = targetGap(target, box);
+            ambiguous = marks.some((mark) => boxDistance(box, mark.box) < own + margin);
+            if (leaderAllowed && (gap > MAX_UNLED_GAP || ambiguous)) {
+                const from = portToward(box, target);
+                drawn = { from, to: rimPoint(target, from) };
+            }
+            cost += COST.gapLinear * gap + COST.gapSquare * gap * gap;
+        }
+        if (drawn) {
+            const { from, to } = drawn;
+            const length = Math.hypot(from.x - to.x, from.y - to.y);
+            cost += COST.leaderFixed + COST.leaderLength * length
+                + COST.leaderReach * Math.max(0, length - COMFORTABLE_REACH) ** 2;
+            if (length < MIN_LEADER && !seat.direct) cost += COST.stub;
+            for (const obstacle of nearObstacles) if (segmentCrossesBox(from, to, obstacle.box)) cost += COST.leaderCross;
+            for (const segment of nearSegments) if (segmentsCross(from, to, segment.a, segment.b)) cost += COST.leaderCross;
+        } else if (ambiguous) {
+            // Without a leader to say which, a caption between two marks names neither.
+            cost += COST.stub * 2;
+        }
+        if (!seat.direct) {
+            if (input.preferredAngle !== undefined) cost += COST.preferred * angularDistance(angle, input.preferredAngle);
+            cost += COST.reading * angularDistance(angle, -Math.PI / 4);
+        }
+        if (!best || cost < best.cost) {
+            best = { box, align: seat.align, ...(drawn ? { leader: drawn } : {}), angle, gap, cost };
+        }
+    }
+    return best!;
+}

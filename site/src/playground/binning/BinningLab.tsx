@@ -1,145 +1,55 @@
 import { useCallback, useMemo, useState } from 'react';
-import { piecewise, interpolateLab } from 'd3';
-import { scheme as vegaScheme } from 'vega';
 import { assembleVegaLite, type ChartAssemblyInput } from 'flint-chart';
 import { VegaLiteView } from '../../components/VegaLiteView';
 import { CASES, type BinningCase } from './cases';
-import { STRATEGIES, decimalsOf, score, type Binning, type Strategy } from './strategies';
 import './binning-lab.css';
 
 /**
- * How a continuous colour scale is cut into stepped classes, and what each way of cutting costs.
- * "Flint today" is the compiled chart as it ships; every other panel is the same compiled chart
- * with only its colour scale replaced by a threshold scale at the strategy's breaks, so the panels
- * differ in nothing but the binning.
+ * How Flint cuts a continuous colour into stepped classes, shown as it ships: every case under every
+ * setup that bins — the four houses that quantize their ramp, and an author's `bins` without a
+ * house — with what each chart's key prints and how its cells fill the classes. Known limits follow,
+ * each with the alternatives considered.
  */
-
-const THEMES = [
-  { id: 'pop', label: 'Pop (quantize 5)' },
-  { id: 'swiss', label: 'Swiss (quantize 5)' },
-  { id: 'cartoon', label: 'Cartoon (quantize 5)' },
-  { id: 'de-stijl', label: 'De Stijl (quantize 5)' },
-  { id: '', label: 'Unthemed + author bins' },
-];
-
-const SIZES = [
-  { key: 's', label: 'Small 420×300', width: 420, height: 300 },
-  { key: 'm', label: 'Medium 560×360', width: 560, height: 360 },
-];
 
 type Spec = Record<string, any>;
 
-/** The input as an author would write it: the theme's own bins, or `bins` on the colour encoding without one. */
-function inputOf(c: BinningCase, theme: string, classes: number, size: { width: number; height: number }): ChartAssemblyInput {
+const SETUPS: { id: string; label: string; theme?: string; bins?: number }[] = [
+  { id: 'pop', label: 'Pop', theme: 'pop' },
+  { id: 'swiss', label: 'Swiss', theme: 'swiss' },
+  { id: 'cartoon', label: 'Cartoon', theme: 'cartoon' },
+  { id: 'de-stijl', label: 'De Stijl', theme: 'de-stijl' },
+  { id: 'bins', label: 'No theme, bins: 5', bins: 5 },
+];
+
+const SIZE = { width: 340, height: 240 };
+
+function inputOf(c: BinningCase, setup: { theme?: string; bins?: number }, extra: { semantic?: Record<string, unknown>; showTextLabels?: boolean } = {}): ChartAssemblyInput {
   return {
     data: { values: c.values },
-    semantic_types: c.semantic,
+    semantic_types: { ...c.semantic, ...extra.semantic },
     chart_spec: {
       chartType: 'Heatmap',
       title: c.title,
-      ...(c.subtitle ? { subtitle: c.subtitle } : {}),
-      encodings: { x: c.x, y: c.y, color: theme ? c.color : { field: c.color, bins: classes } },
-      canvasSize: size,
+      encodings: { x: c.x, y: c.y, color: setup.bins ? { field: c.color, bins: setup.bins } : c.color },
+      canvasSize: SIZE,
+      ...(extra.showTextLabels ? { chartProperties: { showTextLabels: true } } : {}),
     },
-    ...(theme ? { theme_spec: theme } : {}),
+    ...(setup.theme ? { theme_spec: setup.theme } : {}),
   } as unknown as ChartAssemblyInput;
 }
 
-/** Every encoding on the colour field: the drawn fill, and the label ink scale that reads the same ramp. */
-function colorEncodings(spec: Spec, field: string): { fill: Spec[]; ink: Spec[] } {
-  const fill: Spec[] = [];
-  const ink: Spec[] = [];
+/** The drawn cells' colour encoding: the first on the field that draws a key. */
+function cellColor(spec: Spec, field: string): Spec | undefined {
+  let found: Spec | undefined;
   const visit = (node: Spec | undefined) => {
-    if (!node || typeof node !== 'object') return;
+    if (!node || typeof node !== 'object' || found) return;
     const enc = node.encoding?.color;
-    if (enc?.field === field) (enc.legend === null ? ink : fill).push(enc);
+    if (enc?.field?.startsWith(field) && enc.legend !== null) found = enc;
     for (const key of ['layer', 'hconcat', 'vconcat', 'concat'] as const) (node[key] ?? []).forEach(visit);
     if (node.spec) visit(node.spec);
   };
   visit(spec);
-  return { fill, ink };
-}
-
-/** The ramp the compiled scale paints with, low to high. */
-function rampOf(scale: Spec): string[] {
-  if (Array.isArray(scale?.range) && scale.range.length >= 2) return scale.range;
-  const name = typeof scale?.scheme === 'string' ? scale.scheme : scale?.scheme?.name;
-  const found = name ? vegaScheme(name) : undefined;
-  const stops = typeof found === 'function' ? Array.from({ length: 9 }, (_, i) => found(i / 8)) : Array.isArray(found) ? found : ['#f7fbff', '#08306b'];
-  return scale?.reverse ? [...stops].reverse() : stops;
-}
-
-/**
- * One colour per class from the ramp. A diverging binning keeps equal colour steps per class on both
- * arms: the ramp is cut for the longer arm on each side, and the shorter arm takes its light end.
- */
-function classColors(ramp: string[], binning: Binning): string[] {
-  const at = piecewise(interpolateLab, ramp);
-  const k = binning.breaks.length + 1;
-  if (binning.below !== undefined && binning.above !== undefined && !binning.neutral) {
-    const side = Math.max(binning.below, binning.above);
-    const all = Array.from({ length: 2 * side }, (_, i) => at((i + 0.5) / (2 * side)));
-    return all.slice(side - binning.below, side + binning.above);
-  }
-  return Array.from({ length: k }, (_, i) => at(k === 1 ? 0.5 : i / (k - 1)));
-}
-
-const luminance = (hex: string) => {
-  const c = hex.replace('#', '');
-  const [r, g, b] = [0, 2, 4].map((i) => parseInt(c.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-};
-const toHex = (color: string) => {
-  const m = /rgb\((\d+), ?(\d+), ?(\d+)\)/.exec(color);
-  return m ? `#${m.slice(1).map((v) => Number(v).toString(16).padStart(2, '0')).join('')}` : color;
-};
-
-/** A label format exact for the breaks, kept a percentage where the field prints as one. */
-function exactFormat(legend: Spec | undefined, breaks: number[]): string {
-  const decimals = Math.max(...breaks.map(decimalsOf));
-  return typeof legend?.format === 'string' && legend.format.includes('%')
-    ? `.${Math.max(0, decimals - 2)}~%`
-    : `,.${decimals}~f`;
-}
-
-/** The compiled chart with its colour scale replaced by a threshold scale at the binning's breaks. */
-function withBinning(compiled: Spec, field: string, binning: Binning): Spec {
-  // The compiled spec carries interaction handlers Vega-Lite never reads; a JSON copy drops them.
-  const spec = JSON.parse(JSON.stringify(compiled)) as Spec;
-  const { fill, ink } = colorEncodings(spec, field);
-  const ramp = rampOf(fill[0]?.scale);
-  const colors = classColors(ramp, binning).map(toHex);
-  for (const enc of fill) {
-    enc.scale = { type: 'threshold', domain: binning.breaks, range: colors };
-    const { labelExpr: _labelExpr, values: _values, ...legend } = enc.legend ?? {};
-    enc.legend = { ...legend, format: exactFormat(enc.legend, binning.breaks) };
-  }
-  for (const enc of ink) enc.scale = { type: 'threshold', domain: binning.breaks, range: colors.map((c) => (luminance(c) > 0.35 ? '#222222' : '#ffffff')) };
-  return spec;
-}
-
-/** The binning the compiled chart ships with, read from its own colour scale. */
-function shippedBinning(compiled: Spec, field: string, values: number[]): Binning | undefined {
-  const scale = colorEncodings(compiled, field).fill[0]?.scale;
-  if (!scale) return undefined;
-  if (scale.type === 'threshold' && Array.isArray(scale.domain)) {
-    const breaks: number[] = scale.domain;
-    const step = breaks.length > 1 ? breaks[1] - breaks[0] : undefined;
-    const even = step !== undefined && breaks.every((b, i) => i === 0 || Math.abs(b - breaks[i - 1] - step) < 1e-9 * Math.abs(step));
-    const [dmin, dmax] = [Math.min(...values), Math.max(...values)];
-    // Even breaks whose outer classes reach no further than a step past the data close there.
-    const closed = even && dmin >= breaks[0] - step! - 1e-9 && dmax <= breaks[breaks.length - 1] + step! + 1e-9;
-    return {
-      breaks,
-      ...(closed ? { lo: Number((breaks[0] - step!).toPrecision(12)), hi: Number((breaks[breaks.length - 1] + step!).toPrecision(12)) } : {}),
-      note: `threshold at ${breaks.length + 1} round classes${closed ? '' : ', ends open'}`,
-    };
-  }
-  if (scale.type !== 'quantize') return undefined;
-  const k = Array.isArray(scale.range) ? scale.range.length : scale.scheme?.count ?? 5;
-  const [lo, hi] = Array.isArray(scale.domain) ? scale.domain : [Math.min(...values), Math.max(...values)];
-  const step = (hi - lo) / k;
-  return { breaks: Array.from({ length: k - 1 }, (_, i) => Number((lo + step * (i + 1)).toPrecision(12))), lo, hi, note: `quantize ${k} over [${lo}, ${hi}], step ${Number(step.toPrecision(6))}` };
+  return found;
 }
 
 const fmt = (v: number) => {
@@ -147,125 +57,259 @@ const fmt = (v: number) => {
   return v < 0 ? `−${s.slice(1)}` : s;
 };
 
-function Panel({ strategy, spec, binning, values, pivot }: { strategy: Strategy | 'today'; spec: Spec; binning: Binning; values: number[]; pivot?: number }) {
+/** A drawn key label read back as a number: "−10%" is −0.1, "1,000" is 1000, "−40k" is −40000. */
+function readBack(label: string): number {
+  const text = label.replace('−', '-').replace(/,/g, '');
+  const scale = text.endsWith('%') ? 0.01 : text.endsWith('k') ? 1e3 : text.endsWith('M') ? 1e6 : 1;
+  return Number(text.replace(/[%kM]$/, '')) * scale;
+}
+
+interface Stepped {
+  breaks: number[];
+  /** Where the outer classes close, where the breaks are even and the data lies within a step of them. */
+  closed?: [number, number];
+  counts: number[];
+}
+
+/** The classes a compiled chart steps its colour into, and how its cells fill them. */
+function steppedOf(spec: Spec, field: string, values: number[]): Stepped | undefined {
+  const scale = cellColor(spec, field)?.scale;
+  if (scale?.type !== 'threshold' || !Array.isArray(scale.domain)) return undefined;
+  const breaks: number[] = scale.domain;
+  const counts = new Array(breaks.length + 1).fill(0);
+  for (const v of values) {
+    let i = 0;
+    while (i < breaks.length && v >= breaks[i]) i++;
+    counts[i]++;
+  }
+  const step = breaks.length > 1 ? breaks[1] - breaks[0] : undefined;
+  const even = step !== undefined && breaks.every((b, i) => i === 0 || Math.abs(b - breaks[i - 1] - step) < 1e-9 * Math.abs(step));
+  const [dmin, dmax] = [Math.min(...values), Math.max(...values)];
+  const closed = even && dmin >= breaks[0] - step! - 1e-9 && dmax <= breaks[breaks.length - 1] + step! + 1e-9
+    ? [Number((breaks[0] - step!).toPrecision(12)), Number((breaks[breaks.length - 1] + step!).toPrecision(12))] as [number, number]
+    : undefined;
+  return { breaks, ...(closed ? { closed } : {}), counts };
+}
+
+/** One compiled chart, with what its key prints and how its cells fill the classes. */
+function Panel({ title, input, field, values, pivot, note }: {
+  title: string; input: ChartAssemblyInput; field: string; values: number[]; pivot?: number; note?: string;
+}) {
   const [drawn, setDrawn] = useState<string[]>();
+  const built = useMemo(() => {
+    try {
+      const compiled = assembleVegaLite(input) as Spec;
+      return { compiled, stepped: steppedOf(compiled, field, values) };
+    } catch (error) {
+      return { error: (error as Error).message };
+    }
+  }, [input, field, values]);
   const onReady = useCallback((svg: SVGSVGElement) => {
     const legend = svg.querySelector('.role-legend');
-    const labels = [...(legend?.querySelectorAll('.role-legend-label text') ?? [])].map((t) => (t.textContent ?? '').trim()).filter(Boolean);
-    setDrawn(labels);
+    setDrawn([...(legend?.querySelectorAll('.role-legend-label text') ?? [])].map((t) => (t.textContent ?? '').trim()).filter(Boolean));
   }, []);
-  const s = score(values, binning, pivot);
-  const exact = binning.breaks.map(fmt);
-  // A label read back as a number: "−10%" is −0.1, "1,000" is 1000.
-  const readBack = (label: string) => {
-    const n = Number(label.replace('−', '-').replace(/,/g, '').replace('%', ''));
-    return label.endsWith('%') ? n / 100 : n;
-  };
-  const mismatch = drawn && drawn.length === binning.breaks.length
-    && drawn.some((label, i) => Math.abs(readBack(label) - binning.breaks[i]) > 1e-9 * Math.max(1, Math.abs(binning.breaks[i])));
-  const label = strategy === 'today' ? 'Flint today' : strategy.label;
+  if ('error' in built) return <figure className="bl-panel"><figcaption><b>{title}</b></figcaption><p className="bl-bad">{built.error}</p></figure>;
+  const { compiled, stepped } = built;
+  const mismatch = stepped && drawn && drawn.length === stepped.breaks.length
+    && drawn.some((label, i) => Math.abs(readBack(label) - stepped.breaks[i]) > 1e-9 * Math.max(1, Math.abs(stepped.breaks[i])));
+  const empty = stepped?.counts.filter((count) => count === 0).length ?? 0;
+  const neutral = stepped && pivot !== undefined && !stepped.breaks.includes(pivot)
+    && stepped.breaks.some((b, i) => i > 0 && Math.abs((stepped.breaks[i - 1] + b) / 2 - pivot) < 1e-9);
   return (
-    <figure className={strategy === 'today' ? 'bl-panel bl-today' : 'bl-panel'}>
-      <figcaption>
-        <b>{label}</b>
-        <span>{binning.note}</span>
-      </figcaption>
-      <VegaLiteView spec={spec} renderer="svg" onReady={onReady} />
-      <dl className="bl-metrics">
-        <dt>breaks</dt><dd>{exact.join('  ')}</dd>
-        {drawn && <><dt>legend draws</dt><dd className={mismatch ? 'bl-bad' : ''}>{drawn.join('  ')}{mismatch ? '  ← not the breaks' : ''}</dd></>}
-        <dt>domain</dt><dd>{binning.lo !== undefined ? `[${fmt(binning.lo)}, ${fmt(binning.hi!)}] · ×${s.inflation} of data span` : 'open ends'}</dd>
-        <dt>classes</dt><dd>{s.classes} · counts {s.counts.join('/')}{s.empty ? <span className="bl-bad"> · {s.empty} empty</span> : null}</dd>
-        <dt>evenness</dt><dd>{s.evenness}</dd>
-        <dt>coverage</dt><dd className={s.coverage !== undefined && s.coverage < 0 ? 'bl-warn' : ''}>{s.coverage ?? '—'}</dd>
-        <dt>label digits</dt><dd className={s.digits > 2 ? 'bl-warn' : ''}>{s.digits}{s.simplicity !== undefined ? ` · step simplicity ${s.simplicity}` : ' · no round step'}</dd>
-        {s.pivotRespected !== undefined && <><dt>pivot</dt><dd className={s.pivotRespected ? '' : 'bl-bad'}>{s.pivotRespected ? 'a break or a class centre' : 'falls inside a class off-centre'}</dd></>}
-      </dl>
+    <figure className="bl-panel">
+      <figcaption><b>{title}</b>{note ? <span>{note}</span> : null}</figcaption>
+      <VegaLiteView spec={compiled} renderer="svg" onReady={onReady} />
+      {stepped ? (
+        <dl className="bl-metrics">
+          <dt>breaks</dt><dd>{stepped.breaks.map(fmt).join('  ')}</dd>
+          {drawn && <><dt>key prints</dt><dd className={mismatch ? 'bl-bad' : ''}>{drawn.join('  ')}{mismatch ? '  ← not the breaks' : ''}</dd></>}
+          <dt>classes</dt><dd>{stepped.counts.length}{stepped.closed ? ` · closed ${fmt(stepped.closed[0])} … ${fmt(stepped.closed[1])}` : ' · ends open'}</dd>
+          <dt>cells</dt><dd>{stepped.counts.join(' / ')}{empty ? <span className="bl-bad"> · {empty} empty</span> : null}</dd>
+          {pivot !== undefined && <><dt>pivot</dt><dd>{stepped.breaks.includes(pivot) ? 'a break' : neutral ? 'centres a neutral class' : 'inside a class'}</dd></>}
+        </dl>
+      ) : <p className="bl-warn">Not stepped: the colour runs as {cellColor(compiled, field)?.scale?.type ?? 'a continuous'} scale.</p>}
     </figure>
   );
 }
 
-function CaseRow({ c, theme, classes, size }: { c: BinningCase; theme: string; classes: number; size: { width: number; height: number } }) {
+function CaseRow({ c }: { c: BinningCase }) {
   const values = useMemo(() => c.values.map((row) => Number(row[c.color])).filter(Number.isFinite), [c]);
-  const built = useMemo(() => {
-    try {
-      const compiled = assembleVegaLite(inputOf(c, theme, classes, size)) as Spec;
-      const shipped = shippedBinning(compiled, c.color, values);
-      // The house's count (5 for every binning preset) or the author's bins: what each candidate is asked for.
-      const k = theme ? 5 : classes;
-      const panels = STRATEGIES.map((strategy) => {
-        const binning = strategy.bin(values, { pivot: c.pivot, classes: k });
-        return { strategy, binning, spec: binning ? withBinning(compiled, c.color, binning) : undefined };
-      });
-      return { compiled, shipped, panels };
-    } catch (error) {
-      return { error: (error as Error).message };
-    }
-  }, [c, theme, classes, size, values]);
-  const [dmin, dmax] = [Math.min(...values), Math.max(...values)];
+  const inputs = useMemo(() => SETUPS.map((setup) => ({ setup, input: inputOf(c, setup) })), [c]);
   return (
     <section className="bl-case">
-      <h2>{c.label} <span>data {fmt(dmin)} … {fmt(dmax)}{c.pivot !== undefined ? ` · pivot ${c.pivot}` : ' · no pivot'}</span></h2>
+      <h3>
+        {c.label}
+        <span>
+          data {fmt(Math.min(...values))} … {fmt(Math.max(...values))}
+          {c.pivot !== undefined ? ` · pivot ${c.pivot}, ${c.pivotRole === 'neutral' ? 'a neutral class' : 'a break'}` : ' · no pivot'}
+        </span>
+      </h3>
       <p>{c.why}</p>
-      {'error' in built ? <p className="bl-bad">{built.error}</p> : (
-        <div className="bl-panels">
-          {built.shipped
-            ? <Panel strategy="today" spec={built.compiled} binning={built.shipped} values={values} pivot={c.pivot} />
-            : <p className="bl-warn">The compiled chart is not binned (no quantize scale).</p>}
-          {built.panels.map(({ strategy, binning, spec }) => binning && spec
-            ? <Panel key={strategy.id} strategy={strategy} spec={spec} binning={binning} values={values} pivot={c.pivot} />
-            : <figure key={strategy.id} className="bl-panel"><figcaption><b>{strategy.label}</b><span>no binning fits</span></figcaption></figure>)}
-        </div>
-      )}
+      <div className="bl-panels">
+        {inputs.map(({ setup, input }) => (
+          <Panel key={setup.id} title={setup.label} input={input} field={c.color} values={values} pivot={c.pivot} />
+        ))}
+      </div>
     </section>
   );
 }
 
+/** The ramp-balance finding grounding reports for each house that bins, read from a compiled chart. */
+function RampReports() {
+  const warm = CASES.find((c) => c.key === 'warm')!;
+  const rows = useMemo(() => SETUPS.filter((setup) => setup.theme).map((setup) => {
+    const report = ((assembleVegaLite(inputOf(warm, setup)) as Spec)._theme?.report ?? []) as { code: string; message: string }[];
+    return { label: setup.label, message: report.find((entry) => entry.code === 'diverging-ramp-unbalanced')?.message };
+  }), [warm]);
+  return (
+    <ul className="bl-list">
+      {rows.map((row) => <li key={row.label}><b>{row.label}</b> — {row.message ?? 'balanced within 3 L*'}</li>)}
+    </ul>
+  );
+}
+
+/** The count each case steps into under each house, where it is not the house's five. */
+function CountDrift() {
+  const rows = useMemo(() => CASES.flatMap((c) => {
+    const values = c.values.map((row) => Number(row[c.color])).filter(Number.isFinite);
+    return SETUPS.filter((setup) => setup.theme).map((setup) => {
+      const stepped = steppedOf(assembleVegaLite(inputOf(c, setup)) as Spec, c.color, values);
+      return { key: `${c.key}-${setup.id}`, label: `${c.label}, ${setup.label}`, classes: stepped?.counts.length };
+    }).filter((row) => row.classes !== undefined && row.classes !== 5);
+  }), []);
+  return <p className="bl-small">{rows.length ? rows.map((row) => `${row.label}: ${row.classes}`).join(' · ') : 'Every case steps into five.'}</p>;
+}
+
+/** A grid of signed net values no round step closes into seven classes. */
+const NET: BinningCase = {
+  key: 'net', label: 'Net new users', values: ['A', 'B', 'C'].flatMap((game, g) => ['Jan', 'Feb', 'Mar'].map((month, p) => ({ game, month, net: (g - 1) * 1000 + p * 300 - 400 }))),
+  x: 'month', y: 'game', color: 'net', pivot: 0, pivotRole: 'break',
+  semantic: { game: 'Category', month: 'Category', net: 'Profit' }, title: 'Net new users', why: '',
+};
+
 export function BinningLab() {
-  const [theme, setTheme] = useState('pop');
-  const [classes, setClasses] = useState(5);
-  const [sizeKey, setSizeKey] = useState('s');
-  const [only, setOnly] = useState('');
-  const size = SIZES.find((s) => s.key === sizeKey) ?? SIZES[0];
-  const cases = only ? CASES.filter((c) => c.key === only) : CASES;
+  const correlation = CASES.find((c) => c.key === 'correlation')!;
+  const corrValues = useMemo(() => correlation.values.map((row) => Number(row[correlation.color])), [correlation]);
+  const warm = CASES.find((c) => c.key === 'warm')!;
+  const warmValues = useMemo(() => warm.values.map((row) => Number(row[warm.color])), [warm]);
+  const netValues = useMemo(() => NET.values.map((row) => Number(row.net)), []);
+  const demos = useMemo(() => ({
+    corrAuto: inputOf(correlation, { theme: 'swiss' }),
+    corrStated: inputOf(correlation, { theme: 'swiss' }, { semantic: { r: { semanticType: 'Correlation', divergingNeutral: 0.1 } } }),
+    netSeven: inputOf(NET, { bins: 7 }),
+    netFour: inputOf(NET, { bins: 4 }),
+    labelled: inputOf(warm, { theme: 'pop' }, { showTextLabels: true }),
+  }), [correlation, warm]);
   return (
     <div className="bl-page">
       <header className="bl-heading">
         <h1>Binned colour scales</h1>
         <p>
-          A stepped colour scale cuts a continuous field into a few classes. Flint used to make a diverging domain
-          symmetric about its pivot and cut it into equal classes (the theme's <code>consumption: 'quantize'</code>, or
-          an author's <code>bins</code>), and Vega labelled the raw thresholds with its default format — the climate chart
-          read "−20, −7, 7, 20" for breaks at ±20.1 and ±6.7, its darkest cold classes empty. It now steps at round
-          classes about the pivot (<code>roundColorClasses</code>). "Flint today" is the compiled chart as it ships; each
-          other panel keeps it and replaces only its colour scale with a threshold scale at a candidate's breaks.
+          A stepped colour scale cuts a continuous field into a few classes: a house that bins its ramp
+          (<code>consumption: 'quantize'</code> — pop, swiss, cartoon, de-stijl) or an author's <code>bins</code>.
+          Flint cuts it at round values (<code>roundColorClasses</code>), the same in Vega-Lite and ECharts.
         </p>
-        <ul className="bl-legend">
-          {STRATEGIES.map((s) => <li key={s.id}><b>{s.label}</b> — {s.summary}</li>)}
-        </ul>
-        <p className="bl-small">
-          <b>coverage</b> is Talbot, Lin &amp; Hanrahan's (2010) term: 1 when the domain fits the data, falling quadratically
-          as it overreaches (below 0 is a domain much wider than the data). <b>evenness</b> is how evenly the cells fill the
-          classes (1 = every class equally used). <b>label digits</b> is the most significant digits a break needs.
-        </p>
-        <div className="bl-controls">
-          <label>Theme <select value={theme} onChange={(e) => setTheme(e.target.value)}>
-            {THEMES.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
-          </select></label>
-          <label>Classes <select value={classes} onChange={(e) => setClasses(Number(e.target.value))}>
-            {[3, 4, 5, 6, 7].map((n) => <option key={n} value={n}>{n}</option>)}
-          </select></label>
-          <span className="bl-small">themes bin at their own count (5); classes sets the unthemed bins</span>
-          <label>Size <select value={sizeKey} onChange={(e) => setSizeKey(e.target.value)}>
-            {SIZES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
-          </select></label>
-          <label>Case <select value={only} onChange={(e) => setOnly(e.target.value)}>
-            <option value="">All</option>
-            {CASES.map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
-          </select></label>
-        </div>
       </header>
-      {cases.map((c) => <CaseRow key={`${c.key}-${theme}-${classes}-${sizeKey}`} c={c} theme={theme} classes={classes} size={size} />)}
+
+      <section className="bl-decision">
+        <h2>How the classes are chosen</h2>
+        <ol>
+          <li><b>A round step.</b> 1, 2, 2.5 or 5 of a power of ten, the one Talbot, Lin &amp; Hanrahan's (2010) extended labeling scores best: how round the step is, how closely the classes cover the data, how near their count comes to the target.</li>
+          <li><b>The pivot.</b> A diverging field's pivot is a <i>break</i> where its values merely cross a sign (Profit, PercentageChange, Temperature), so a small gain never reads as a small loss; it centres a <i>neutral class</i> a step wide where the type always has it (Correlation, Sentiment, a stated <code>divergingMidpoint</code>). The <code>divergingNeutral</code> annotation sets the band's half-width, or <code>false</code> for a break.</li>
+          <li><b>Each side its own classes.</b> Every break is a multiple of the step from the pivot, and each side takes only the classes its data reaches — no symmetric domain, no empty dark classes. Neither side takes more than four where a coarser step holds it.</li>
+          <li><b>Colour per unit, the same both sides.</b> The ramp steps out from its centre at one rate set by the longer side, so equal distances from the pivot read as equal colours and the shorter side keeps to its pale end. Each class takes the colour at its far edge, so the classes beside a break show their sign; a neutral class takes the centre.</li>
+          <li><b>The count.</b> A house's five is a target. An author's <code>bins</code> is held exactly where a round step closes that many classes, else that many with the outer two open.</li>
+          <li><b>The key prints each break as it is</b>, in the field's own format (a percentage, a currency), compacted (<code>−40k</code>) only where full labels would not fit.</li>
+          <li><b>Grounding reports a diverging ramp</b> whose two arms differ by more than 3 L* at mirrored points (<code>diverging-ramp-unbalanced</code>).</li>
+        </ol>
+        <p className="bl-small">
+          Under each chart: the <b>breaks</b> in the compiled scale, what the <b>key prints</b> (flagged where it is not the breaks),
+          the <b>classes</b> and where they close, how many <b>cells</b> fall in each class, and how the <b>pivot</b> sits.
+        </p>
+      </section>
+
+      <section>
+        <h2>Every case, every setup</h2>
+        {CASES.map((c) => <CaseRow key={c.key} c={c} />)}
+      </section>
+
+      <section className="bl-issues">
+        <h2>Known limits and alternatives</h2>
+
+        <article>
+          <h3>1. A neutral class a step wide can print two-digit breaks</h3>
+          <p>
+            A neutral class centred on the pivot puts its breaks half a step from it. With the step correlations take
+            (0.5), that is ±0.25 and ±0.75 — round, but two digits. A step of 1 would give ±0.5 and only three classes;
+            a step of 0.2 would give ±0.1, ±0.3 … and more classes a side than the cap allows. An author who knows the
+            band states it: <code>divergingNeutral: 0.1</code>.
+          </p>
+          <p className="bl-small"><b>Alternatives:</b> a default band per type (±0.1 for Correlation); let the neutral class be narrower than the other classes.</p>
+          <div className="bl-panels">
+            <Panel title="Correlation, swiss" note="neutral class a step wide (default)" input={demos.corrAuto} field="r" values={corrValues} pivot={0} />
+            <Panel title="Correlation, swiss" note="divergingNeutral: 0.1" input={demos.corrStated} field="r" values={corrValues} pivot={0} />
+          </div>
+        </article>
+
+        <article>
+          <h3>2. The houses' diverging ramps are not balanced</h3>
+          <p>
+            Equal distances from the pivot read as equal only where the ramp's two arms are equally light at mirrored
+            points. The classes are placed for that, but every house that bins today has arms that differ — pop by
+            more than 20 L* — so one side's classes read heavier. Warm hues also read stronger than cool ones at the
+            same lightness. Grounding reports it; it does not correct it.
+          </p>
+          <RampReports />
+          <p className="bl-small"><b>Alternatives:</b> rebalance the ramps in a perceptual space (OKLCH / CIELAB, matched L* per mirrored stop); let grounding correct a ramp past the tolerance rather than report it.</p>
+        </article>
+
+        <article>
+          <h3>3. An author's count no round step closes is held with the outer classes open</h3>
+          <p>
+            <code>bins: 7</code> over −1,400 … 1,200 has no round step that closes seven classes about 0, so the seven
+            come with the outer two open ("&lt; −750", "≥ 500"), wider than the rest. <code>bins: 4</code> closes at ±2,000.
+            The open edges are centred on the data's middle, not fitted to where the values fall, so a gappy field can
+            leave a class empty — here, and the unemployment case under <code>bins: 5</code> above.
+          </p>
+          <p className="bl-small"><b>Alternatives:</b> treat an author's count as a target, as a house's is (round and closed, but not the count asked for); widen the round steps to 3 and 4 of a power of ten; place the open edges where they leave no class empty.</p>
+          <div className="bl-panels">
+            <Panel title="bins: 4" note="closed" input={demos.netFour} field="net" values={netValues} pivot={0} />
+            <Panel title="bins: 7" note="outer two open" input={demos.netSeven} field="net" values={netValues} pivot={0} />
+          </div>
+        </article>
+
+        <article>
+          <h3>4. A house's count drifts from five</h3>
+          <p>
+            Five is a target: the step that reads best can give fewer or more classes (up to seven, within the
+            four-a-side cap). The cases that step into other than five:
+          </p>
+          <CountDrift />
+          <p className="bl-small"><b>Alternatives:</b> hold a house to its count ±1; cap the total at the house's count rather than per side.</p>
+        </article>
+
+        <article>
+          <h3>5. A heatmap's printed values keep their own ink rule</h3>
+          <p>
+            Values printed in the cells pick white or black by their distance from the pivot (past half the widest),
+            not by the class colour behind them, so a label can sit dark on a dark class or light on a pale one.
+          </p>
+          <p className="bl-small"><b>Alternative:</b> derive the label ink from the class colours (as the themes' ink scale on a ramp does).</p>
+          <div className="bl-panels">
+            <Panel title="Warm cities, pop" note="values printed in the cells" input={demos.labelled} field={warm.color} values={warmValues} pivot={0} />
+          </div>
+        </article>
+
+        <article>
+          <h3>6. A colour Vega-Lite aggregates is not stepped</h3>
+          <p>
+            The classes are found from the rows. Where the colour encoding still carries an <code>aggregate</code> for
+            Vega-Lite to compute (rather than Flint aggregating before it draws, as a heatmap does), the rows do not hold
+            the values drawn, and the scale stays an even quantize of the domain, with unround breaks.
+          </p>
+          <p className="bl-small"><b>Alternative:</b> aggregate the rows as Vega-Lite will before finding the classes.</p>
+        </article>
+      </section>
     </div>
   );
 }

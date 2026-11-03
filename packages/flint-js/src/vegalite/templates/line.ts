@@ -129,6 +129,40 @@ function buildContinuousColorLayers(
     }
 }
 
+/** Rows a series stands on, for the lone-row test below. */
+const LONE_SERIES_ROWS = '__flint_series_rows';
+
+/**
+ * A series with one row draws no line, so its value would not be on the chart at all, nor could a
+ * note find it. Such series are drawn as a point each, on a layer of their own over the lines; a
+ * chart that already draws its points, or is faceted, is left as it is.
+ */
+function drawLoneSeriesPoints(spec: any, ctx: InstantiateContext): void {
+    const mark = typeof spec.mark === 'string' ? { type: spec.mark } : spec.mark;
+    if (!mark || mark.type !== 'line' || mark.point) return;
+    const encoding = spec.encoding ?? {};
+    if (encoding.column || encoding.row || encoding.facet) return;
+    const series = [encoding.color?.field, encoding.detail?.field, encoding.strokeDash?.field].filter((field): field is string => !!field);
+    if (series.length === 0) return;
+    const counts = new Map<string, number>();
+    for (const row of ctx.table ?? []) {
+        const key = JSON.stringify(series.map((field) => row[field]));
+        counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    if (![...counts.values()].some((count) => count === 1)) return;
+    spec.layer = [
+        { mark: spec.mark },
+        {
+            transform: [
+                { joinaggregate: [{ op: 'count', as: LONE_SERIES_ROWS }], groupby: series },
+                { filter: `datum.${LONE_SERIES_ROWS} === 1` },
+            ],
+            mark: { type: 'point', filled: true, size: 50, opacity: 1 },
+        },
+    ];
+    delete spec.mark;
+}
+
 export const lineChartDef: ChartTemplateDef = {
     chart: "Line Chart",
     template: { mark: "line", encoding: {} },
@@ -187,6 +221,7 @@ export const lineChartDef: ChartTemplateDef = {
         defaultBuildEncodings(spec, ctx.resolvedEncodings);
         spec.mark = applyInterpolate(spec.mark, ctx.chartProperties);
         spec.mark = applyShowPoints(spec.mark, ctx);
+        drawLoneSeriesPoints(spec, ctx);
     },
     properties: [interpolateConfigProperty, showPointsProperty],
     // No `transpose`: a line pins its domain to `x` (never a vertical line, for any

@@ -131,8 +131,60 @@ export interface AnnotationSpec {
      * starts no segment and is always marked at its point.
      */
     anchor?: 'segment' | 'point';
+    /**
+     * How a note set beside one mark (a dot, a bar, a cell, a line's point) marks that mark:
+     * `'none'` leaves it as drawn; `'light'` (the default) lifts it above its neighbours with a
+     * halo, a bar or cell with a faint outline; `'strong'` adds a ring round a dot and a full
+     * outline round a bar or cell; `'exclusive'` is strong and recedes every other mark, as
+     * `set-style` `emphasized` does.
+     */
+    highlight?: 'none' | 'light' | 'strong' | 'exclusive';
     candidates?: readonly AnnotationCandidate[];
     subject?: Partial<SemanticTarget['visual']>;
+}
+
+/**
+ * A shaded stretch of the plot, after Blabber's `region`. One axis shades a band across the plot,
+ * both a box. On a continuous axis a stretch is two bounds, either of which may be `null` (open: the
+ * plot's end on that side); on a banded axis it is the categories it covers, which must be next to
+ * each other. The caption is set on the stretch it names, inside where it fits clear of the data,
+ * else outside it with a leader.
+ */
+export interface RegionAnnotationSpec {
+    x?: readonly unknown[];
+    y?: readonly unknown[];
+    text?: string;
+    /** The wash's colour; by default a muted one distinct from the marks and the other regions. */
+    color?: string;
+    /** The wash's opacity; 0.16 by default, 0.18 over an area chart. */
+    opacity?: number;
+    /** `under` (the default) reads beneath the marks; `over` washes over them, as on an area chart. */
+    layer?: 'under' | 'over';
+    /**
+     * Where the caption stands: `top`, `bottom`, `left`, `right`, `center` within the region, `above`
+     * or `below` it, just past its edge (past the plot for a stretch of x, which spans the plot's
+     * height). A region too small for its caption where asked has it placed where it fits. Left out,
+     * the clearest place is chosen.
+     */
+    placement?: 'top' | 'bottom' | 'left' | 'right' | 'center' | 'above' | 'below';
+}
+
+/**
+ * An outline round sets of marks, after Blabber's `enclose`. Each target is one group, outlined on
+ * its own; all of them share the caption. Bars, cells and stacks default to a `rect`, other marks to
+ * a `hull`.
+ */
+export interface EnclosureAnnotationSpec {
+    targets: readonly UpdateTarget[];
+    text?: string;
+    shape?: 'hull' | 'rect' | 'ellipse' | 'circle';
+    /**
+     * Leaders from the shared caption to the outlines: `auto` (the default) draws one to each of two
+     * or three outlines and none for one or more than three; `all` and `none` say so outright.
+     */
+    connect?: 'auto' | 'all' | 'none';
+    /** The outline's, its caption's and its leaders' colour; by default one that reads on the marks and the page. */
+    color?: string;
 }
 
 export interface StyleSpec {
@@ -142,12 +194,22 @@ export interface StyleSpec {
     stroke?: string;
     strokeWidth?: number;
     /**
-     * `emphasized` and `focused` recede everything else to `mutedOpacity`. `highlighted` gives the
-     * targets their mark's hover cue and leaves the rest as drawn.
+     * `emphasized` and `focused` recede everything else; `emphasis` says how far. `highlighted` gives
+     * the targets their mark's hover cue and leaves the rest as drawn.
      */
     state?: 'normal' | 'focused' | 'emphasized' | 'highlighted' | 'muted';
+    /**
+     * How far the rest recede when the targets are emphasized, as a note's `highlight`: `'light'`
+     * (the default; the rest keep 0.6 of their opacity and stay readable), `'strong'` (0.35) or
+     * `'exclusive'` (0.2, only the targets read). Their value labels stay legible: they recede less
+     * and take the page's ink. `mutedOpacity` states the receded opacity outright.
+     */
+    emphasis?: 'light' | 'strong' | 'exclusive';
     mutedOpacity?: number;
 }
+
+/** The opacity each emphasis level recedes the other marks to. */
+export const EMPHASIS_OPACITY = { light: 0.6, strong: 0.35, exclusive: 0.2 } as const;
 
 export interface OverlayStyleSpec {
     fill?: string;
@@ -155,7 +217,8 @@ export interface OverlayStyleSpec {
     /** On text, the halo behind the glyphs: the chart's background by default, `'none'` for no halo. */
     stroke?: string;
     strokeWidth?: number;
-    strokeDash?: readonly number[];
+    /** Dash and gap lengths in px, or a word: `'dash'` (`'dashed'`) or `'dot'` (`'dotted'`). */
+    strokeDash?: readonly number[] | 'dash' | 'dashed' | 'dot' | 'dotted';
     opacity?: number;
     pointRadius?: number;
     fontSize?: number;
@@ -231,9 +294,28 @@ export type ChartUpdateOp =
         value: StyleSpec;
     }
     | {
+        /** A caption on one mark, after Blabber's `text`. */
+        op: 'annotate-text';
+        target: UpdateTarget;
+        value: AnnotationSpec | null;
+    }
+    | {
+        /** The older name of `annotate-text`, which it means. */
         op: 'set-annotation';
         target: UpdateTarget;
         value: AnnotationSpec | null;
+    }
+    | {
+        op: 'annotate-region';
+        /** Names the region, so several stand together and each clears on its own (`value: null`). */
+        name: string;
+        value: RegionAnnotationSpec | null;
+    }
+    | {
+        op: 'annotate-enclosure';
+        /** Names the enclosure, so several stand together and each clears on its own (`value: null`). */
+        name: string;
+        value: EnclosureAnnotationSpec | null;
     }
     | {
         op: 'set-viewport';
@@ -265,7 +347,10 @@ export type ChartUpdateOp =
 
 export const CHART_UPDATE_OPS = [
     'set-style',
+    'annotate-text',
     'set-annotation',
+    'annotate-region',
+    'annotate-enclosure',
     'set-viewport',
     'set-order',
     'set-overlay',
@@ -276,6 +361,18 @@ export const CHART_UPDATE_OPS = [
 export interface ChartUpdate {
     id: string;
     ops: readonly ChartUpdateOp[];
+}
+
+export type TextAnnotationOp = Extract<ChartUpdateOp, { op: 'annotate-text' }>;
+
+/** An op as the runtime reads it: `set-annotation` is `annotate-text` by its older name. */
+export function canonicalUpdateOp(op: ChartUpdateOp): ChartUpdateOp {
+    return op.op === 'set-annotation' ? { ...op, op: 'annotate-text' } : op;
+}
+
+/** Whether an op is a caption on one mark, by either name. */
+export function isTextAnnotationOp(op: ChartUpdateOp): op is Extract<ChartUpdateOp, { op: 'annotate-text' | 'set-annotation' }> {
+    return op.op === 'annotate-text' || op.op === 'set-annotation';
 }
 
 export interface NavigationDomainGuard {

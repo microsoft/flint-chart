@@ -95,6 +95,8 @@ export type {
     AnnotationConnectorAnchor,
     AnnotationSpec,
     ChartOverlaySpec,
+    EnclosureAnnotationSpec,
+    RegionAnnotationSpec,
     ChartUpdate,
     ChartUpdateOp,
     OverlayFieldEncoding,

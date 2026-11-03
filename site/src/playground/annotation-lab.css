@@ -61,6 +61,27 @@
   gap: 8px;
 }
 
+/* Caption lab: each card is as wide as its 640 × 400 chart and legend, so nothing is clipped. */
+.caption-grid {
+  width: min(100%, 1400px);
+  grid-template-columns: repeat(auto-fill, minmax(min(680px, 100%), 1fr));
+  gap: 16px;
+}
+
+.caption-card {
+  grid-template-rows: auto auto;
+  overflow: auto;
+}
+
+.caption-card .cf-probe-heading {
+  padding: 12px 16px 0;
+}
+
+.caption-card .cf-mount {
+  padding: 12px 16px 16px;
+  min-height: 400px;
+}
+
 .annotation-static-card {
   grid-template-rows: auto auto;
   min-width: 0;

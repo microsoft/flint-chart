@@ -27,6 +27,15 @@ export interface DataOverlayOptions {
 }
 
 
+
+/** An overlay's dash as an SVG dash array: its lengths, or the pattern a word names; none for anything else. */
+function dashArray(dash: unknown): string | undefined {
+    if (Array.isArray(dash)) return dash.length && dash.every((length) => typeof length === 'number' && length >= 0) ? dash.join(' ') : undefined;
+    if (dash === 'dash' || dash === 'dashed') return '6 4';
+    if (dash === 'dot' || dash === 'dotted') return '2 3';
+    return undefined;
+}
+
 export function orderedOverlayRows(spec: ChartOverlaySpec): readonly Record<string, unknown>[] {
     const rows = [...spec.data.values];
     const field = spec.encodings.order?.field;
@@ -203,7 +212,8 @@ export function createDataOverlay({
                         rule.setAttribute('y2', String(y2));
                         rule.setAttribute('stroke', spec.style?.stroke ?? '#4c78a8');
                         rule.setAttribute('stroke-width', String(spec.style?.strokeWidth ?? 1));
-                        if (spec.style?.strokeDash?.length) rule.setAttribute('stroke-dasharray', spec.style.strokeDash.join(' '));
+                        const dash = dashArray(spec.style?.strokeDash);
+                        if (dash) rule.setAttribute('stroke-dasharray', dash);
                         clipped(rule);
                         layer.append(rule);
                         return;
@@ -255,8 +265,9 @@ export function createDataOverlay({
                     : undefined;
                 path.setAttribute('stroke', spec.style?.stroke ?? colorValue ?? '#4c78a8');
                 path.setAttribute('stroke-width', String(spec.style?.strokeWidth ?? 2));
-                if (spec.style?.strokeDash?.length) {
-                    path.setAttribute('stroke-dasharray', spec.style.strokeDash.join(' '));
+                const dash = dashArray(spec.style?.strokeDash);
+                if (dash) {
+                    path.setAttribute('stroke-dasharray', dash);
                 }
                 path.setAttribute('stroke-linecap', 'round');
                 path.setAttribute('stroke-linejoin', 'round');
@@ -333,7 +344,13 @@ export function createDataOverlay({
     return {
         render(overlays) {
             current = new Map(overlays);
-            draw();
+            try {
+                draw();
+            } catch (error) {
+                // An overlay the drawing cannot read is left off; the chart's other updates still draw.
+                layer.replaceChildren();
+                console.warn('[flint-chart] an overlay could not be drawn:', error);
+            }
         },
         targetForElement(element) {
             if (!element || typeof (element as Element).getAttribute !== 'function') return null;

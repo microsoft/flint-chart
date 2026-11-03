@@ -13,6 +13,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Two update ops that annotate a stretch of the chart or a group of its marks, after Blabber's
+  `region` and `enclose`, in Vega-Lite. `annotate-region` shades a period, a band of values, a
+  box or a run of adjacent categories, with an optional caption centred on it, clear of the
+  series it crosses, or outside on a leader when nothing inside is clear. Its options are
+  `color`, `opacity`, `layer: 'under' | 'over'` and `placement`. Regions on one chart take
+  distinct muted washes. A wash under the marks is cut away where they stand; over an area or
+  a heatmap it is drawn over them. `annotate-enclosure` outlines each target group: bars and
+  cells by a rectangle, other marks by a padded hull, pie slices by their own wedge.
+  `shape: 'ellipse' | 'circle'` is also offered. A cluster that shares a colour is outlined in
+  it, any other group in Blabber's neutral grey, over a thin halo of the page so the line reads
+  on dark marks, and one caption is shared, with leaders to two or three outlines (`connect: 'auto'
+  | 'all' | 'none'`). Both are named, so several stand together, and `value: null` clears
+  one. `validateChart` checks a region's bounds against the chart's axes. A captioned stretch of x
+  whose marks reach too near the plot's top for its caption (`AssembleOptions.regions`, set from
+  the first updates) gets room as a note does. The axis runs on past the stretch's tallest mark,
+  enough for the caption just inside the plot's top with 8 px of air. A stretch that has room
+  above its marks, or a line that has room below, takes none. A histogram's bins and counts are
+  worked out as Vega bins them, so its notes and regions get that room too. A histogram's bars,
+  standing on one baseline, are not taken for a heatmap's cells, so a region's wash stays under them.
+  The caption on a mark is now `annotate-text`;
+  `set-annotation` stays as its older name.
 - ECharts, Chart.js and Plotly lay out their frame with the layout's own rules, in each library's
   look: a headline and deck broken to full lines with no widow (set a size down where that fits one
   line), band labels wrapped, turned, thinned or cut by the shared band-label plan, axis gutters and
@@ -94,6 +115,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- A note on a bar whose value is printed past its end continues the printed value instead of
+  pointing past it: it stands after the label, joined to it, so "0.616 — Down from 0.706 before
+  taxes" reads as one statement rather than a value label and a second annotation.
+- **Visible change:** `set-style` emphasis (`state: 'emphasized'` or `'focused'`) recedes the other
+  marks to 0.6 of their own opacity by default instead of to 0.25, so the rest of the chart stays
+  readable. A new `emphasis: 'light' | 'strong' | 'exclusive'` sets how far they recede (0.6,
+  0.35, 0.2 of their opacity, so a dot drawn at 0.7 recedes from 0.7), like a note's `highlight`;
+  `mutedOpacity` still states the receded opacity outright, and the presets keep their 0.25.
+  A region caption asked for a side its region is too narrow for stands as near that side as fits.
+  The value labels of the marks set back recede no further than half, and a label drawn on its
+  mark switches to the page's ink, so values stay readable under every house: before, faded bars
+  kept a label ink chosen for the full-strength fill (black on dark blue, white on pale blue).
+
+- **Visible change:** a note that points at one mark (a dot, a bar's value end, a cell, a line's
+  point) is now drawn as a caption beside the mark instead of a card, in Vega-Lite. The caption
+  uses the chart's own axis-label face one size up, haloed in the chart's background. A short
+  leader to the mark's outline is drawn only when the caption stands off the mark or another mark
+  sits as close. Placement (`core/annotation`) tries a ring of seats around the mark and keeps the
+  cheapest. Leaving the canvas costs most, then covering marks, text or lines, then leader length.
+  Notes are placed one at a time, each clear of the captions and leaders placed before it. There is
+  no joint search. Notes on a stretch of a line or area, a slice, or a region keep their card.
+  Restyle captions with `--flint-annotation-color`, `--flint-annotation-halo` and
+  `--flint-annotation-line-color`.
+- **Visible change:** the chart now helps its notes. A note's `highlight` sets how much the
+  mark it names stands out. `'light'` is the default: the mark is lifted above its
+  neighbours with a halo, a line's point is drawn as a dot in the line's colour, and a bar
+  or cell gets a faint outline. `'strong'` adds a ring round a dot and a full outline round
+  a bar. `'exclusive'` is strong and fades every other mark, as `set-style` `emphasized`
+  does. `'none'` leaves the mark as drawn. The notes a chart mounts with (its first
+  `updates`, or `AssembleOptions.notes`) also get room: a noted mark at the top of a measure
+  axis (the tallest bar, a peak) makes the axis run on just far enough for the caption and the
+  nearest seat over it (0.9 of a font size), ending at a fine round step (a twentieth of the
+  span) rather than the next major tick, so a one-line caption takes about 30 px. This uses at
+  most a third of the axis and keeps any domain end the spec states. Long captions now
+  break into even lines, preferring a break after a colon or comma, instead of leaving one
+  word alone on the last line. A caption too wide for the gap beside its mark may stand in two
+  even lines. A note on a bar's value stands past the value face, centred on it (or slid aside
+  as far as its own edge), with a straight leader to the face's centre, as Blabber's bar
+  captions do; the ring round the bar's end is only an escape. A note now resolves to its mark
+  rather than to the mark's value label.
+- `validateChart` now gives an info `note_repeats_chart` when a note repeats a value the
+  chart already prints on its mark, such as "Online leads: 61" over a bar labelled 61. A
+  note should say what the chart does not. The interaction skill now says so too.
 - A heatmap side over a whole run of months or quarters (every period from the first to the last,
   up to 50) is drawn as equal cells named by the calendar (`Jan` over `2025`, `Feb`, …) in
   Vega-Lite too, as ECharts and Plotly draw it. On a time scale its cells, one width each, stood
@@ -128,6 +192,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Dates that arrive as ISO timestamps (`"2005-05-01T00:00:00.000"`, `"…Z"`, `"2005-05-01 00:00:00"`,
+  as a database `DATE` column serialised to JSON often is) are read as dates under `Year`,
+  `YearMonth`, `Date` and the other calendar types: a midnight timestamp becomes its date, so the
+  axis shortens its labels (`Jun · Jul · Aug`) as it does for `"2005-05-01"` instead of printing the
+  full timestamp. A `Date` object at local midnight reads the same way. A timestamp without a zone
+  is read in UTC, so marks sit on their date whatever the machine's time zone (before, a Pacific
+  machine drew them 7 h late). A timestamp with a time of day keeps it (one with a zone offset is
+  kept as written).
+- An enclosure round dots at the edge of the plot is drawn whole: where a dot it encloses sits
+  within 12 px of a continuous axis's end, that axis is padded by 12 px (`AssembleOptions.enclosures`,
+  set from the chart's first updates), instead of the outline being cut at the plot's edge.
+- The room kept for value labels past the ends of horizontal bars now runs the axis on rather than
+  cutting the axis short. The domain extends by the share of the plot the labels take (Flint's own
+  ticks continue at their step), so the axis line, its ticks and the gridlines reach the plot's
+  edge; before, they stopped at the last tick and left an empty stretch with no scale. Bars keep
+  their lengths. Bars that grow both ways, or run on a reversed scale (a pyramid), keep the inset.
+- Four kinds of chart update that `validateChart` reported as applying were dropped when drawn
+  (found by the annotation experiment's pilot). A key with a number now matches a field drawn as
+  categories, whose values Vega-Lite carries as text (`{ Year: 2016 }` on a banded year). A
+  series with a single row on a line chart is drawn as a point, so its value shows and a note
+  can point at it. A region caption asked for a placement its region is too small to hold is
+  placed where it fits instead of dropped, and `placement: 'above'` or `'below'` stands just past
+  a band's own edge, or moves inside a full-height stretch where the header holds the seat over
+  the plot. An overlay with `strokeDash: 'dash'` or `'dot'` draws, and an overlay the renderer
+  cannot read no longer stops the chart's other updates from drawing.
+- An enclosure round a cluster of dots takes the cluster's fill colour, not the outline a house
+  draws round every dot (every cluster came out black under `pop`).
+
+- A stepped colour key standing beside the plot (an author's `bins` without a theme) runs no
+  longer than the plot. Vega-Lite drops a binned key's own `gradientLength` and drew the ramp at
+  its 200 px default, twice the height of a short heatmap; the planned length now goes on the
+  legend config, which the ramp reads.
 - A size key prints the values it lists. Vega-Lite labelled the round values it sampled with the
   scale's tick format, so a key for 0.5, 1 and 2.5 read "1, 1, 3" (a Map's "0, 1, 1, 3"); each key
   now carries a format precise enough for its values, keeping the field's own (a share, a currency)
@@ -148,7 +244,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   labels and title stand inside the canvas (`_canvasFit.treatment.contain`, reported as
   `canvas-contain`). The plot keeps at least half of each side, and no value is cut or label turned
   for the room; what cannot be brought within is left nearer, for the host to scale. Charts without
-  a `canvasSize`, composite charts, the other backends and `canvasFit: 'off'` are unchanged.
+  a `canvasSize`, composite charts, the other backends and `canvasFit: 'off'` are unchanged. A
+  chart that ran past its `canvasSize` now draws a smaller plot; `canvasFit: 'off'` keeps the
+  drawing as it was.
 - `filterControls` filters a Vega-Lite chart with an `aggregate` encoding (an average, a count, a
   sum) or several y fields. The rows a filter left were swapped in raw, while the chart's data had
   been folded and aggregated when it was built, so the bars found no value and the plot emptied

@@ -174,3 +174,18 @@ describe('a diverging ramp\'s balance', () => {
         expect(pop[0].message).toMatch(/L\*/);
     });
 });
+
+describe('an upright stepped key', () => {
+    it('runs no longer than the plot beside it, as a continuous ramp does', async () => {
+        const height = async (color: unknown) => {
+            const spec: any = assembleVegaLite({ ...heatmap(color), chart_spec: { ...heatmap(color).chart_spec, canvasSize: undefined } });
+            const svg = await new View(parse(compile(spec).spec), { renderer: 'none' }).toSVG();
+            return { spec, height: Number(/<svg[^>]*height="([\d.]+)"/.exec(svg)![1]) };
+        };
+        const stepped = await height({ field: 'temp', bins: 5 });
+        const ramp = await height('temp');
+        // Vega-Lite drops a binned key's own length; the config carries the one the plan gave it.
+        expect(stepped.spec.config.legend.gradientLength).toBe(stepped.spec.encoding.color.legend.gradientLength);
+        expect(stepped.height).toBeLessThanOrEqual(ramp.height + 2);
+    });
+});

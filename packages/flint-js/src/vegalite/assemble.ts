@@ -81,6 +81,7 @@ import { withChrome } from '../core/theme/chrome';
 import { alignBandOrders, applyHeaderFurniture, applySourceLine, realizeThemeVegaLite, realizeValueLabelsVegaLite, vegaLiteBuiltFacts } from './theme';
 import { applyChartValueColors } from './value-colors';
 import { vlCaseKeyLabels, vlWriteKeyLayout } from './key-layout';
+import { vlReserveEnclosureRoom, vlReserveNoteRoom } from './note-room';
 import { familyMeasure, rendererTextMeasurer } from '../core/text-width';
 import { themeBodyFamily } from '../core/theme/ground';
 import { chartDisplayNames, encodingTitle, TIGHT_X_MARKS, titleText, type BuiltFacts, type ChartStructure } from '../core/structure';
@@ -655,6 +656,8 @@ function emitVegaLite(input: ChartAssemblyInput, prepared: VegaLitePreparation, 
     vlWriteAxisTitles(vgObj, plan.axisTitleFit);
     vlCaseKeyLabels(vgObj, plan.legend);
     vlListTooltipFields(vgObj);
+    vlReserveNoteRoom(vgObj, { notes: plan.options.notes, regions: plan.options.regions }, values, plan.plot, plan.axisLabels, VEGA_LITE_LAYOUT.measureText!);
+    vlReserveEnclosureRoom(vgObj, plan.options.enclosures, values, plan.plot, input.semantic_types);
     const plotAsPlanned = plotSizeFields(vgObj) === plannedPlotSize;
 
     // ═══════════════════════════════════════════════════════════════════════

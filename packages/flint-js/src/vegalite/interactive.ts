@@ -1,6 +1,6 @@
 import type { ViewNode } from '../core/views';
 import { applyCategoryViewports, resolveCategoryViewport } from '../core/filter-overflow';
-import type { CategoryViewport, ChartAssemblyInput } from '../core/types';
+import type { AssembleOptions, CategoryViewport, ChartAssemblyInput } from '../core/types';
 import { temporalFieldValue } from '../core/resolve-semantics';
 import { createChangeFilter } from '../interactive/chart-state';
 import { currentFilters, isFilterControls } from '../interactive/filter-controls';
@@ -99,6 +99,12 @@ export interface VegaInteractiveRendererOptions {
     enableSemanticUpdates?: boolean;
     expressionInterpreter?: unknown;
     background?: string;
+    /** The notes the chart mounts with, so the compile makes room for them (`AssembleOptions.notes`). */
+    notes?: AssembleOptions['notes'];
+    /** The regions the chart mounts with, so the compile makes room for their captions (`AssembleOptions.regions`). */
+    regions?: AssembleOptions['regions'];
+    /** The enclosures the chart mounts with, so the compile pads an axis their outlines would cross (`AssembleOptions.enclosures`). */
+    enclosures?: AssembleOptions['enclosures'];
     assistDistance?: number;
     hoverTolerance?: number;
     keyboardTargeting?: boolean;
@@ -290,9 +296,19 @@ export function createVegaInteractiveRenderer(
         async mount(container, input) {
             // Tooltips are presentation, so the spec decides: off unless `options.addTooltips` is set.
             // The host's background is the chart's where no house sets a canvas of its own.
-            const interactiveInput: ChartAssemblyInput = options.background !== undefined && input.options?.background === undefined
+            const backed: ChartAssemblyInput = options.background !== undefined && input.options?.background === undefined
                 ? { ...input, options: { ...input.options, background: options.background } }
                 : input;
+            // The notes and regions the chart mounts with get room at their marks; a spec that names its own keeps them.
+            const withNotes: ChartAssemblyInput = options.notes?.length && backed.options?.notes === undefined
+                ? { ...backed, options: { ...backed.options, notes: options.notes } }
+                : backed;
+            const withRegions: ChartAssemblyInput = options.regions?.length && withNotes.options?.regions === undefined
+                ? { ...withNotes, options: { ...withNotes.options, regions: options.regions } }
+                : withNotes;
+            const interactiveInput: ChartAssemblyInput = options.enclosures?.length && withRegions.options?.enclosures === undefined
+                ? { ...withRegions, options: { ...withRegions.options, enclosures: options.enclosures } }
+                : withRegions;
             // A viewport on x changes the rows in view, so the compile leaves room for a live layout.
             const navigatesX = (options.interactions ?? []).some((interaction) => isCanvasInteraction(interaction)
                 && interaction.eventSource.type === 'navigation' && interaction.eventSource.axes !== 'y');

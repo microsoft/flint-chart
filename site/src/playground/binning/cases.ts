@@ -1,7 +1,6 @@
 /**
- * Fields a stepped colour scale is asked to cut: the climate heatmap that reads "−20, −7, 7, 20",
- * and fields of other shapes — lopsided the other way, balanced, fractional, skewed, one-signed —
- * so a strategy is judged on more than the case that prompted it.
+ * Fields a stepped colour scale is asked to cut, of every shape the rules must hold for: lopsided
+ * either way about a pivot, balanced about one, fractional, skewed and one-signed.
  */
 
 type Row = Record<string, string | number>;
@@ -12,6 +11,8 @@ export interface BinningCase {
   why: string;
   /** The field's diverging midpoint, where it has one. */
   pivot?: number;
+  /** How the pivot sits among the classes, as the semantics decide it. */
+  pivotRole?: 'break' | 'neutral';
   values: Row[];
   x: string;
   y: string;
@@ -84,41 +85,41 @@ const unemployment = (() => {
 
 export const CASES: BinningCase[] = [
   {
-    key: 'warm', label: 'Warm cities (the report)', pivot: 0,
-    why: 'Diverging about 0 °C but lopsided: −6.7 … 33.5. Today the symmetric domain is ±33.5, so the breaks are ±6.7 and ±20.1, printed "−20, −7, 7, 20", and the darkest blue class is empty.',
+    key: 'warm', label: 'Warm cities', pivot: 0, pivotRole: 'break',
+    why: 'Lopsided about 0 °C (−6.7 … 33.5): one pale cold class, four warm. The chart that prompted this work, which read "−20, −7, 7, 20" with two cold classes empty.',
     values: grid(WARM, MONTHS, 'City', 'Month', 'Temp (°C)'), x: 'Month', y: 'City', color: 'Temp (°C)',
     semantic: { City: 'Category', Month: 'Month', 'Temp (°C)': { semanticType: 'Temperature', unit: '°C' } },
     title: 'Average monthly temperature', subtitle: '°C, climate normals, four cities',
   },
   {
-    key: 'cold', label: 'Cold cities', pivot: 0,
-    why: 'Lopsided the other way: −38.6 … 21.2. The empty classes move to the warm end.',
+    key: 'cold', label: 'Cold cities', pivot: 0, pivotRole: 'break',
+    why: 'Lopsided the other way (−38.6 … 21.2): the cold side takes more classes, the warm side its pale end.',
     values: grid(COLD, MONTHS, 'City', 'Month', 'Temp (°C)'), x: 'Month', y: 'City', color: 'Temp (°C)',
     semantic: { City: 'Category', Month: 'Month', 'Temp (°C)': { semanticType: 'Temperature', unit: '°C' } },
     title: 'Average monthly temperature', subtitle: '°C, climate normals, cold cities',
   },
   {
-    key: 'growth', label: 'Growth, fractions', pivot: 0,
-    why: 'A percentage change stored as fractions, mostly positive: breaks need percent labels at a round step.',
+    key: 'growth', label: 'Growth, fractions', pivot: 0, pivotRole: 'break',
+    why: 'A percentage change stored as fractions: a round step in percent, a break at 0 so a small gain never reads as a small loss.',
     values: grid(growth, QUARTERS, 'Region', 'Quarter', 'Growth'), x: 'Quarter', y: 'Region', color: 'Growth',
     semantic: { Region: 'Category', Quarter: 'Category', Growth: { semanticType: 'PercentageChange', percentScale: 'fraction' } },
     title: 'Sales growth by region', subtitle: 'Year over year',
   },
   {
-    key: 'correlation', label: 'Correlation matrix', pivot: 0,
-    why: 'Balanced about 0 with an intrinsic [−1, 1]: the case symmetry was made for.',
+    key: 'correlation', label: 'Correlation matrix', pivot: 0, pivotRole: 'neutral',
+    why: 'Balanced about 0, a pivot the type always has: a neutral class centred on 0 reads "no relationship".',
     values: grid(correlations, VARIABLES, 'Variable', 'With', 'r'), x: 'With', y: 'Variable', color: 'r',
     semantic: { Variable: 'Category', With: 'Category', r: 'Correlation' },
     title: 'Correlation between household measures',
   },
   {
-    key: 'sales', label: 'Sales, skewed', why: 'One-signed and skewed, 40 … ~1,300: no pivot, round steps of 250 or 500.',
+    key: 'sales', label: 'Sales, skewed', why: 'One-signed and skewed (40 … ~1,200): no pivot, steps counted from zero.',
     values: grid(sales, MONTHS, 'State', 'Month', 'Sales ($K)'), x: 'Month', y: 'State', color: 'Sales ($K)',
     semantic: { State: 'Category', Month: 'Month', 'Sales ($K)': 'Amount' },
     title: 'Monthly sales by state',
   },
   {
-    key: 'unemployment', label: 'Unemployment, narrow', why: 'One-signed and narrow, ~2 … 10 percent points: steps of 1 or 2.',
+    key: 'unemployment', label: 'Unemployment, narrow', why: 'One-signed and narrow (~2 … 10 points): a step of 2.',
     values: grid(unemployment, YEARS, 'Country', 'Year', 'Unemployment (%)'), x: 'Year', y: 'Country', color: 'Unemployment (%)',
     semantic: { Country: 'Country', Year: 'Category', 'Unemployment (%)': { semanticType: 'Percentage', percentScale: 'percent' } },
     title: 'Unemployment rate',

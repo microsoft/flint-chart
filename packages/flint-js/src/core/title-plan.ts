@@ -48,6 +48,12 @@ export interface TitlePlanInputs {
      * it may run over them. Rules and the source close only the chart block, and do not.
      */
     keysBeside?: number;
+    /**
+     * Where set, the title spans the drawing rather than the canvas, overhanging it by at most
+     * `overhang` (a ratio): never narrower than `floor` of the canvas nor `minWidth` px, never wider
+     * than the canvas unless the drawing is.
+     */
+    wrap?: { floor: number; minWidth: number; overhang: number };
 }
 
 /**
@@ -148,7 +154,12 @@ export function chartBlock(inputs: TitlePlanInputs, toCanvas = true): number | u
     const field = structure.x?.derived ? undefined : structure.x?.fields[0];
     const bands = layout.xNominalCount > 0 && field ? new Set(rows.map((row) => row?.[field]).filter((v) => v != null)).size : 0;
     const plotWidth = Math.round((inputs.viewsWidth ?? (bands ? layout.xStep * bands : plot.width)) * 1.07);
-    const block = Math.max(plotWidth + labelGutter(inputs) + (inputs.keysBeside ?? 0), toCanvas ? canvasContentWidth(design.layout) : 0);
+    const canvas = canvasContentWidth(design.layout);
+    const drawn = plotWidth + labelGutter(inputs) + (inputs.keysBeside ?? 0);
+    const wrap = toCanvas && canvas ? inputs.wrap : undefined;
+    const floor = !toCanvas ? 0
+        : wrap ? Math.min(canvas, Math.max(wrap.minWidth, wrap.floor * canvas, drawn * Math.max(1, wrap.overhang))) : canvas;
+    const block = Math.max(drawn, floor);
     return block && Number.isFinite(block) ? block : undefined;
 }
 

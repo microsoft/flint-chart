@@ -1,6 +1,8 @@
+import { isTextAnnotationOp, type RegionAnnotationSpec } from '../../core/interaction-contracts';
 import type {
     AnnotationCandidate,
     AnnotationConnection,
+    ChartUpdate,
     ChartUpdatePresenter,
     InteractionContext,
     SemanticElement,
@@ -70,7 +72,7 @@ export function presentAnnotationUpdate(
     return (update, context) => ({
         id: update.id,
         ops: update.ops.flatMap((op) => {
-            if (op.op !== 'set-annotation' || op.value === null || 'select' in op.target) return op;
+            if ((op.op !== 'annotate-text' && op.op !== 'set-annotation') || op.value === null || 'select' in op.target) return op;
             const element = op.target.elements[0];
             if (!element) return [];
             const presentation = presentAnnotation(
@@ -95,8 +97,33 @@ export function presentAnnotationUpdate(
 
 export const suppressAnnotationUpdate: ChartUpdatePresenter = (update) => ({
     id: update.id,
-    ops: update.ops.filter((op) => op.op !== 'set-annotation'),
+    ops: update.ops.filter((op) => !isTextAnnotationOp(op)),
 });
+
+/**
+ * The notes a list of updates sets, each by the fields that name its mark and its text, for a
+ * compile to make room for them: a note by `select.key`, or on an element with its row. A note
+ * whose text the chart would write, or set on a `where` selection, is left out.
+ */
+export function notesOfUpdates(updates: readonly ChartUpdate[] | undefined): { key: Record<string, unknown>; text: string }[] {
+    return (updates ?? []).flatMap((update) => update.ops.flatMap((op) => {
+        if (!isTextAnnotationOp(op) || !op.value || typeof op.value.text !== 'string' || !op.value.text) return [];
+        const text = op.value.text;
+        if ('select' in op.target) return 'key' in op.target.select && op.target.select.key ? [{ key: { ...op.target.select.key }, text }] : [];
+        const record = op.target.elements[0]?.records?.[0];
+        return record && typeof record === 'object' ? [{ key: { ...(record as Record<string, unknown>) }, text }] : [];
+    }));
+}
+
+/** The enclosures a list of updates sets, for a compile to make room for their outlines (`AssembleOptions.enclosures`). */
+export function enclosuresOfUpdates(updates: readonly ChartUpdate[] | undefined): { targets: readonly unknown[] }[] {
+    return (updates ?? []).flatMap((update) => update.ops.flatMap((op) => op.op === 'annotate-enclosure' && op.value ? [{ targets: op.value.targets }] : []));
+}
+
+/** The regions a list of updates sets, for a compile to make room for their captions (`AssembleOptions.regions`). */
+export function regionsOfUpdates(updates: readonly ChartUpdate[] | undefined): RegionAnnotationSpec[] {
+    return (updates ?? []).flatMap((update) => update.ops.flatMap((op) => op.op === 'annotate-region' && op.value ? [op.value] : []));
+}
 
 // In the chart's locale: Vega labels axes in en-US whatever the browser's.
 function displayValue(field: string | undefined, value: unknown): string | undefined {

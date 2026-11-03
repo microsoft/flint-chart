@@ -18,7 +18,7 @@ export function createClickAnnotateInteraction(options: ClickAnnotateOptions = {
                 return {
                     id,
                     ops: [
-                        { op: 'set-annotation', target: { select: { key: {} } }, value: null },
+                        { op: 'annotate-text', target: { select: { key: {} } }, value: null },
                         { op: 'set-style', targets: [], value: { state: 'normal' } },
                     ],
                 };
@@ -30,7 +30,7 @@ export function createClickAnnotateInteraction(options: ClickAnnotateOptions = {
             return {
                 id,
                 ops: [{
-                    op: 'set-annotation',
+                    op: 'annotate-text',
                     target: { visual: event.target.visual, elements: [element] },
                     value: text === undefined ? {} : { text },
                 }, ...(emphasis?.ops ?? [])],
