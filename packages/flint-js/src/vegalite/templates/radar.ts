@@ -463,6 +463,7 @@ export const radarChartDef: ChartTemplateDef = {
             fields: [axisField, valueField, groupField].filter((field): field is string => !!field),
             categoryField: axisField,
             seriesField: groupField,
+            polarOrigin: { x: 0, y: 0 },
             legendFields: groupField ? { color: groupField } : undefined,
             selectableMarks: ['line', 'point'],
             renderHoverStyles: {

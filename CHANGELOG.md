@@ -96,8 +96,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   interaction, `interaction_spec.transition`, `mountChart({ transition })` and each host call
   take a `transition` (`duration`, `easing`); `{ duration: 0 }` jumps, and reduced motion turns
   motion off. Host calls take `phase: 'preview' | 'commit' | 'cancel'`.
-- `surface.setInput(input)` draws a new input in place, morphing between chart types Flint
-  lists a transition for; `FlintChart` routes a new `spec` through it and takes `transition`.
+- `surface.setInput(input)` draws a new input in place; `FlintChart` routes a new `spec`
+  through it and takes `transition`. Marks that name the same elements in both charts morph
+  into each other, edge to edge by the role each edge plays (a bar's length becomes a wedge's
+  sweep). Between a cartesian and a polar chart they first gather into the polar chart
+  unrolled, then curl into it, one ring per panel; between side-by-side and stacked bars they
+  move one axis at a time; between columns and rows the chart squashes onto its baseline and
+  grows along the other axis. Segments merge into totals and totals split into segments, and
+  an area's rows take the slices around their points.
+- Templates may declare `polarOrigin`, the centre a template that lays its points out in polar
+  coordinates of its own (the radar) places them about.
 - Templates may declare `identityFields`, the fields that name an element across data changes.
   A field whose semantic type names a thing (`ID`, `Name`, `Category`, a place) joins an
   element's identity, drawn or not, where it tells the drawn rows apart, so a scatter of

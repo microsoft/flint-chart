@@ -1,7 +1,5 @@
 import { Bounds, renderModule } from 'vega';
 import type { FramePart, FramePose, FrameScene } from '../../interactive/morph';
-import { MORPH_TYPES } from './scene-motion';
-import { INTERACTION_KEY } from './stores';
 
 /** Item fields a renderer keeps on an item it drew; a copy drawn by another renderer starts without them. */
 const RENDERER_FIELDS = ['_svg', 'dirty', 'mark', 'items'] as const;
@@ -42,7 +40,7 @@ function box(bounds: any, fallbackX: number, fallbackY: number): { x: number; y:
 
 /**
  * Every item `view` draws, as parts placed in the element it renders into: group backgrounds,
- * axes, titles, legends and marks. A keyed item the mark morph draws is flagged `morphed`.
+ * axes, titles, legends and marks. A part drawing one item names it, so the mark morph can take it over.
  */
 export function captureFrameScene(
     view: any,
@@ -63,7 +61,6 @@ export function captureFrameScene(
                 // A group's bounds reach over its axes and legends; its own box is what it draws.
                 parts.push({
                     key: `group|${groupPath}`,
-                    morphed: false,
                     x: gx + (item.x ?? 0),
                     y: gy + (item.y ?? 0),
                     width: item.width ?? 0,
@@ -79,19 +76,19 @@ export function captureFrameScene(
         }
         if (items.length === 0 || mark.role === 'scene-exit') return;
         if (nested) {
-            // The morph draws a line's vertices, not its path, so the path leaves or arrives.
+            // The morph draws a line's vertices, not its path, so the path leaves or arrives; an area's
+            // slices tile it, so the morph may take the whole area over.
             const drawn = box(mark.bounds, 0, 0);
-            parts.push({ morphed: false, ...drawn, x: gx + drawn.x, y: gy + drawn.y, mark, items, gx, gy });
+            parts.push({ ...drawn, x: gx + drawn.x, y: gy + drawn.y, mark, items, gx, gy, ...(mark.marktype === 'area' ? { item: mark } : {}) });
             return;
         }
-        const morphed = Boolean(MORPH_TYPES[mark.marktype]) && items.some((item) => typeof item.datum?.[INTERACTION_KEY] === 'string');
         items.forEach((item, index) => {
             const drawn = box(item.bounds, item.x ?? 0, item.y ?? 0);
             const text = mark.marktype === 'text'
                 ? { x: gx + (item.x ?? 0), y: gy + (item.y ?? 0), angle: item.angle ?? 0, fontSize: item.fontSize ?? 11, content: textOf(item) }
                 : undefined;
             const key = byPlace ? `place|${path}/${mark.name ?? mark.marktype}#${index}` : partKey(mark.role, item, orient);
-            parts.push({ key, morphed: !byPlace && morphed, ...drawn, x: gx + drawn.x, y: gy + drawn.y, ...(text ? { text } : {}), mark, items: [item], gx, gy });
+            parts.push({ key, item, ...drawn, x: gx + drawn.x, y: gy + drawn.y, ...(text ? { text } : {}), mark, items: [item], gx, gy });
         });
     };
     visit(root, origin.x, origin.y, '', '');

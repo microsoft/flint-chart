@@ -1,4 +1,4 @@
-import type { MorphItem, MorphScene } from '../../interactive/morph';
+import type { MorphItem, MorphScene, MorphValueChannel } from '../../interactive/morph';
 import type { LegendDomain } from './contracts';
 import {
     drawnDataValue,
@@ -1257,13 +1257,75 @@ export const MORPH_TYPES: Record<string, readonly string[]> = {
     line: ['x', 'y', 'stroke', 'strokeWidth'],
 };
 
+const num = (value: unknown): number => (typeof value === 'number' && Number.isFinite(value) ? value : 0);
+
+/** Each area point's span along the axis the area runs: from the midpoint with the point before to the one with the point after. */
+function areaSlices(points: readonly any[], axis: 'x' | 'y'): Map<any, readonly [number, number]> {
+    const sorted = [...points].sort((a, b) => num(a[axis]) - num(b[axis]));
+    return new Map(sorted.map((point, index) => {
+        const at = num(point[axis]);
+        const before = index > 0 ? (num(sorted[index - 1][axis]) + at) / 2 : at;
+        const after = index < sorted.length - 1 ? (num(sorted[index + 1][axis]) + at) / 2 : at;
+        return [point, [before, after] as const];
+    }));
+}
+
+/** Vega-Lite marks by the scene mark type that draws them, for the channel each draws its value along. */
+const VALUE_MARKS: Record<string, 'rect' | 'arc'> = { bar: 'rect', rect: 'rect', arc: 'arc' };
+
 /**
- * Every item of `view` that names its element, offset by where its root group sits in the
- * rendered element: by its row key, or, on a chart compiled without interactions, by the
- * identity fields its datum carries.
+ * The channel each kind of drawn mark lays its value along, from the encodings of the Vega-Lite
+ * spec: a bar's or a range's along its measure (a quantity before a time or a bin), a wedge's
+ * along its sweep or, when the radius carries the quantity, along its reach.
  */
-export function captureMorphScene(view: any, fields: readonly string[], origin: { x: number; y: number }): MorphScene {
-    const items: MorphItem[] = [];
+export function morphValueChannels(vlSpec: Record<string, any>): Partial<Record<string, MorphValueChannel>> {
+    const rank = (encoding: any): number => {
+        if (!encoding || typeof encoding !== 'object') return 0;
+        if (encoding.type === 'quantitative' && !encoding.bin) return 2;
+        return encoding.type === 'temporal' || encoding.type === 'quantitative' ? 1 : 0;
+    };
+    const channels: Partial<Record<string, MorphValueChannel>> = {};
+    const visit = (spec: any, inherited: Record<string, any>): void => {
+        if (!spec || typeof spec !== 'object') return;
+        const encoding = { ...inherited, ...(spec.encoding ?? {}) };
+        const markType = typeof spec.mark === 'string' ? spec.mark : spec.mark?.type;
+        const drawn = VALUE_MARKS[markType];
+        if (drawn === 'rect') channels.rect ??= rank(encoding.x) > rank(encoding.y) ? 'x' : 'y';
+        if (drawn === 'arc') channels.arc ??= rank(encoding.radius) > rank(encoding.theta) ? 'radius' : 'theta';
+        for (const layer of spec.layer ?? []) visit(layer, encoding);
+        if (spec.spec) visit(spec.spec, encoding);
+        for (const part of [...(spec.hconcat ?? []), ...(spec.vconcat ?? []), ...(spec.concat ?? [])]) visit(part, {});
+    };
+    visit(vlSpec, {});
+    return channels;
+}
+
+/**
+ * Every item of `view` that draws a data row and names its element, offset by where its root group sits in
+ * the rendered element. The element is named by the identity the chart declares, joined by each
+ * field typed as a name of things that every item carries and that tells each mark's items apart:
+ * the same rule a chart's own changes follow.
+ */
+export function captureMorphScene(
+    view: any,
+    identity: { fields: readonly string[]; candidates?: readonly string[] },
+    origin: { x: number; y: number },
+    valueChannels: Partial<Record<string, MorphValueChannel>> = {},
+    polarOrigin?: { x: number; y: number },
+): MorphScene {
+    // A template that lays its points out about a centre of its own states it in data; its scales place it.
+    const scaled = (name: string, value: number): number | undefined => {
+        try {
+            const at = view.scale(name)?.(value);
+            return typeof at === 'number' && Number.isFinite(at) ? at : undefined;
+        } catch {
+            return undefined;
+        }
+    };
+    const polarCentre = polarOrigin && scaled('x', polarOrigin.x) !== undefined && scaled('y', polarOrigin.y) !== undefined
+        ? [scaled('x', polarOrigin.x)!, scaled('y', polarOrigin.y)!] as const
+        : undefined;
+    const drawn: { item: any; mark: any; x: number; y: number }[] = [];
     const visit = (node: any, offsetX: number, offsetY: number): void => {
         for (const item of node?.items ?? []) {
             const mark = item.mark;
@@ -1271,18 +1333,55 @@ export function captureMorphScene(view: any, fields: readonly string[], origin: 
                 for (const child of item.items ?? []) visit(child, offsetX + (item.x ?? 0), offsetY + (item.y ?? 0));
                 continue;
             }
-            const channels = MORPH_TYPES[mark?.marktype];
-            const named = typeof item.datum?.[INTERACTION_KEY] === 'string'
-                || (fields.length > 0 && fields.every((field) => item.datum?.[field] !== undefined && item.datum?.[field] !== null));
-            if (!channels || mark?.role === 'scene-exit' || !named) continue;
-            const values: Record<string, unknown> = { opacity: item.opacity };
-            for (const channel of channels) if (item[channel] !== undefined) values[channel] = item[channel];
-            if (typeof values.x === 'number') values.x += offsetX + origin.x;
-            if (typeof values.y === 'number') values.y += offsetY + origin.y;
-            items.push({ type: mark.marktype, datum: item.datum, values });
+            // A data row is drawn by an item keyed by the interactions, or, without them, carrying the declared identity.
+            const row = typeof item.datum?.[INTERACTION_KEY] === 'string'
+                || (identity.fields.length > 0 && identity.fields.every((field) => item.datum?.[field] !== undefined && item.datum?.[field] !== null));
+            if ((!MORPH_TYPES[mark?.marktype] && mark?.marktype !== 'area') || mark?.role === 'scene-exit' || !row) continue;
+            drawn.push({ item, mark, x: offsetX, y: offsetY });
         }
     };
     const rootGroup = view.scenegraph?.()?.root?.items?.[0];
     for (const child of rootGroup?.items ?? []) visit(child, rootGroup?.x ?? 0, rootGroup?.y ?? 0);
+    const carries = (field: string): boolean => drawn.every(({ item }) => item.datum[field] !== undefined && item.datum[field] !== null);
+    const keyed = drawn.map(({ item, mark }) => ({ mark: mark.name, datum: item.datum }));
+    const named = (identity.candidates ?? []).filter((field) => !identity.fields.includes(field)
+        && drawn.length > 0 && carries(field) && !identityRepeats(keyed, [field]));
+    const fields = [...identity.fields, ...named];
+    const items: MorphItem[] = [];
+    const slices = new Map<any, Map<any, readonly [number, number]>>();
+    for (const { item, mark, x, y } of drawn) {
+        if (fields.length === 0 || !fields.every((field) => item.datum[field] !== undefined && item.datum[field] !== null)) continue;
+        if (mark.marktype === 'area') {
+            // An area keeps a point per row; each row's share is the slice between its neighbours' midpoints.
+            const across = item.orient === 'horizontal';
+            if (!slices.has(mark)) slices.set(mark, areaSlices(mark.items ?? [], across ? 'y' : 'x'));
+            const [start, end] = slices.get(mark)!.get(item) ?? [0, 0];
+            const low = Math.min(num(item[across ? 'x' : 'y']), num(item[across ? 'x2' : 'y2']));
+            const high = Math.max(num(item[across ? 'x' : 'y']), num(item[across ? 'x2' : 'y2']));
+            const box = across
+                ? { x: low + x + origin.x, width: high - low, y: start + y + origin.y, height: end - start }
+                : { x: start + x + origin.x, width: end - start, y: low + y + origin.y, height: high - low };
+            items.push({
+                type: 'rect',
+                datum: item.datum,
+                values: { ...box, opacity: item.opacity, fill: item.fill ?? mark.items?.[0]?.fill, fillOpacity: item.fillOpacity },
+                valueChannel: across ? 'x' : 'y',
+                source: item,
+                covers: mark,
+            });
+            continue;
+        }
+        const values: Record<string, unknown> = { opacity: item.opacity };
+        for (const channel of MORPH_TYPES[mark.marktype]!) if (item[channel] !== undefined) values[channel] = item[channel];
+        if (typeof values.x === 'number') values.x += x + origin.x;
+        if (typeof values.y === 'number') values.y += y + origin.y;
+        if (polarCentre && (mark.marktype === 'symbol' || mark.marktype === 'line')) {
+            const centre = [polarCentre[0] + x + origin.x, polarCentre[1] + y + origin.y] as const;
+            items.push({ type: mark.marktype, datum: item.datum, values, source: item, valueChannel: 'radius', centre });
+            continue;
+        }
+        const valueChannel = valueChannels[mark.marktype];
+        items.push({ type: mark.marktype, datum: item.datum, values, source: item, ...(valueChannel ? { valueChannel } : {}) });
+    }
     return { items, fields };
 }

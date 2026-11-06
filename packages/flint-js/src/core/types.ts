@@ -1048,6 +1048,12 @@ export interface ChartTemplateDef {
         identityFields?: readonly string[];
         /** Fields typed as names of things, which join the identity where each tells the drawn rows apart. */
         identityCandidates?: readonly string[];
+        /**
+         * Where a template that lays its marks out in polar coordinates of its own (a radar) puts
+         * their centre, in the data its x and y scales read; a change of chart reads each point's
+         * angle and reach about it.
+         */
+        polarOrigin?: { readonly x: number; readonly y: number };
         provenanceFields?: readonly string[];
         temporalProvenanceFields?: readonly string[];
         rangeProvenance?: readonly { field: string; startField: string; endField: string }[];

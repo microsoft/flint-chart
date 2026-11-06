@@ -11,8 +11,9 @@ import {
 } from 'flint-chart/interactive';
 import { Case, chart, versionPicker, versions, where, type Renderer } from './animation-case';
 import { BespokeCases, ChartTypeGallery, IdentityCases } from './animation-gallery';
+import { MorphCases } from './animation-morph';
 import { AnimationOverview } from './animation-overview';
-import { CrossFade, InterruptAndRepeat, LinkedPair, OpeningTour, WithAndWithout } from './animation-showcase';
+import { InterruptAndRepeat, LinkedPair, OpeningTour, PieToBars, WithAndWithout } from './animation-showcase';
 import './click-focus-lab.css';
 import './interaction-candidates.css';
 import './overflow-viewport-lab.css';
@@ -181,7 +182,7 @@ export function AnimationLab() {
       id="retype-stack"
       title="Grouped to stacked, and what carries"
       op="setInput · morph"
-      note="Grouped to stacked is a transition Flint lists: each bar morphs into its segment, and the axes move and resize to the new chart. Emphasize North first: an update the host sent carries to the new chart. A bar you clicked does not; the reader's own selections start afresh."
+      note="Each grouped bar and its stacked segment name the same quarter and region, so the bar morphs into its segment, and the axes move and resize to the new chart. Emphasize North first: an update the host sent carries to the new chart. A bar you clicked does not; the reader's own selections start afresh."
       input={inputs.grouped}
       interactions={interactions.grouped}
       {...shared}
@@ -200,7 +201,7 @@ export function AnimationLab() {
       id="retype-line"
       title="Bars to a line, an area, a lollipop"
       op="setInput · morph"
-      note="Each is a transition Flint lists for bars on an ordered axis: the bars shrink to the line's points, fill into the area, or thin into stems. The axes and title are the same parts on both sides, so they stay put."
+      note="Each bar names the same month as a point of the line: the bars shrink to the line's points, fill into the area, or thin into stems. The axes and title are the same parts on both sides, so they stay put."
       input={inputs.monthly}
       interactions={interactions.monthly}
       {...shared}
@@ -275,14 +276,18 @@ export function AnimationLab() {
         <LinkedPair {...shared} />
       </Section>
 
-      <Section title="A new spec lands too" note="A new chart type is a new spec, not an update: setInput mounts it beside the chart on screen and one layer draws both while they hand over. Shared axes, ticks, titles and legend entries move and resize; marks morph along a chart transition Flint lists, and otherwise cross-fade. A new theme cross-fades.">
+      <Section title="A new spec lands too" note="A new chart type is a new spec, not an update: setInput mounts it beside the chart on screen and one layer draws both while they hand over. Shared axes, ticks, titles and legend entries move and resize; marks that name the same elements morph into each other, and the rest cross-fades.">
         {pick(cases, 'retype-stack', 'retype-line')}
-        <CrossFade {...shared} />
+        <PieToBars {...shared} />
       </Section>
 
 
       <Section className="ua-gallery-grid" title="Every chart type" actions={<ThemePicker themeId={galleryTheme} onTheme={setGalleryTheme} />} note="Each chart holds two versions of its data; pick the other one under the chart, and click a mark to emphasize it. Faceted charts move their marks in screen units, since only the top scope's scales move. Maps and plain tables are left out.">
         <ChartTypeGallery themeId={galleryTheme} {...shared} />
+      </Section>
+
+      <Section title="One chart becomes another, element by element" note="Marks that name the same element in both charts morph into each other, matched edge to edge by the role each edge plays: a bar's length becomes a wedge's sweep, its base the wedge's first edge. Between a cartesian and a polar chart the change runs in two stages that share the duration: gather into the polar chart laid out straight, then curl into it. Press Tour to step through each case.">
+        <MorphCases {...shared} />
       </Section>
     </div>
   );

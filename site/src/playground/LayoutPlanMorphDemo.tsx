@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { getChartTransitions, type ChartAssemblyInput } from 'flint-chart';
+import type { ChartAssemblyInput } from 'flint-chart';
 import { FlintChart } from 'flint-chart/react';
 import { BASKET_ROWS, TEAMS } from './layout-plan-shared';
 import './layout-plan-morph.css';
@@ -87,8 +87,6 @@ export function MorphDemo() {
   // The swap the demo waits on lands when the chart reports its next render.
   const landing = useRef<(() => void) | null>(null);
 
-  const siblings = useMemo(() => new Set(getChartTransitions(dataset.charts[current].type).map(({ to }) => to)), [dataset, current]);
-
   const pickDataset = (id: string) => {
     setDatasetId(id);
     setCurrent(0);
@@ -142,10 +140,10 @@ export function MorphDemo() {
               key={type}
               className={index === current ? 'active' : ''}
               data-type={type}
-              title={siblings.has(type) ? `${type} · a registered transition from ${dataset.charts[current].type}` : type}
+              title={type}
               onClick={() => choose(index)}
             >
-              {label}{siblings.has(type) ? <span className="lm-edge" aria-hidden="true" /> : null}
+              {label}
             </button>
           ))}
         </div>
@@ -161,7 +159,7 @@ export function MorphDemo() {
         <MorphingChart key={datasetId} spec={dataset.charts[current].spec} duration={duration} onMorph={landed} />
       </div>
       <p className="lp-note lm-summary">
-        Pick a chart type to change into. A dot marks the types Flint lists as transitions from the current one; the rest cross-fade.
+        Pick a chart type to change into. Marks that name the same team or month morph, edge by edge: a bar's length becomes a wedge's sweep, and bars gather into a column before it curls into the pie. The rest cross-fades.
       </p>
     </section>
   );

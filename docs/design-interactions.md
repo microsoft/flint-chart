@@ -226,9 +226,27 @@ the two hand over with the same `transition`, by the same two rules. While they 
 chart draws; a layer draws both, part by part, with the backend's own renderer. What the two
 share moves and resizes from one to the other: an axis label by its text, a tick or gridline by
 its value, a domain line by its axis, a title by its text, a legend entry by its value, a
-group's box by its place. Along a change `chart-transitions.ts` lists, with row fields both
-charts share, each mark morphs into its counterpart, and what has no counterpart leaves in the
-first quarter and arrives in the last. Otherwise the marks have no counterparts either, and
+group's box by its place. Marks that name the same element in both charts, by the identity
+both share, morph into each other: a key one item holds on each side pairs those two; a key one
+item holds on one side and several on the other pairs it with each of them, so segments merge
+into their total and a total splits into its segments, one copy staying to the end; a key
+several items hold on both sides names no element. An area keeps a point per row, so each row
+takes the slice of area around its point. Each item is walked by role, across its band and along
+its value, from the channel its chart draws the value along, so a bar's length becomes a wedge's
+sweep and its base the wedge's first edge. In one coordinate system the outlines move point to
+point; between two polar charts about one centre they move in angle and radius. Between a
+cartesian and a polar chart the change runs in two stages that share the duration: the items
+gather into the polar chart unrolled into a straight strip, laid along the cartesian axis that
+plays the angle's role (a pie's sweep along the bars' values, a rose's or a radar's along their
+bands, its reach then scaled to the bars' lengths), opened before the wedge paired with the first
+item along the strip; then the strip curls about the point where the ring faces the way it does
+until it closes, one strip per ring when there is a pie per panel. The other way, the stages run
+backwards. A template that lays its points out about a centre of its own (a radar) states it
+(`polarOrigin`), so its points are read by angle and reach. Between bars side by side and the
+same bars stacked, a bar moves one axis at a time, so none sweeps through another: bars that come
+to share a band rise to their places, then slide together; bars that stop sharing one slide
+apart, then drop to their places. Between columns and rows the chart squashes onto its baseline,
+travels to the new one, and grows along the new axis. What has no counterpart leaves in the first quarter and arrives in the last. Otherwise the marks have no counterparts either, and
 what has none cross-fades over the whole duration, so the plot never stands empty. The
 chart's box moves from its size to the next chart's with them. A reader's own selections,
 hidden series and zoom start afresh, and a new `interaction_spec` needs a new mount. Past

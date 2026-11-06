@@ -6,20 +6,6 @@
   margin-bottom: 12px;
 }
 
-.lm-targets button {
-  position: relative;
-}
-
-.lm-edge {
-  position: absolute;
-  top: 3px;
-  right: 2px;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: #2f6fd0;
-}
-
 .lm-slider {
   width: 150px;
   font-size: 11px;

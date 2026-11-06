@@ -490,8 +490,8 @@ export function mountInteractiveChartSurface(
     }
     /**
      * Draws a new input in place. The chart mounts beside the one on screen, takes the host's
-     * layers and the filters, and the two trade places through `transitionBetween`: a morph along
-     * a listed chart transition, else a cross-fade. A reader's own state starts afresh. One input
+     * layers and the filters, and the two trade places through `transitionBetween`: marks naming the
+     * same elements morph, the rest cross-fades. A reader's own state starts afresh. One input
      * draws at a time; a call that a newer one overtakes while it waits is dropped.
      */
     function setInput(next: ChartAssemblyInput, setOptions: Pick<ChartUpdateApplyOptions, 'transition'> = {}): Promise<void> {
@@ -575,8 +575,8 @@ export function mountInteractiveChartSurface(
             chart.style.display = '';
             hold(fromSize.width, fromSize.height);
             await transitionBetween({
-                from: { element: chart, source: previous, chartType: currentInput.chart_spec.chartType },
-                to: { element: stage, source: mounted, chartType: next.chart_spec.chartType },
+                from: { element: chart, source: previous },
+                to: { element: stage, source: mounted },
                 stage: layer,
                 duration: transitionDuration(setOptions.transition, options.transition),
                 easing: transitionEasing(setOptions.transition, options.transition),

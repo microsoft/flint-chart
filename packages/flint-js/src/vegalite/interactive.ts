@@ -35,7 +35,7 @@ import {
     type LiveLayoutPlanner,
 } from './interactions/live-layout';
 import { mountVegaInteractions } from './interactions/runtime';
-import { bindLegendDomains, captureMorphScene, scaleFields, hasSceneMotion, injectAxisExtentMotion, injectAxisMotion, injectAxisTickMotion, injectTitleMotion, injectScaleMotion, injectSizeMotion } from './interactions/scene-motion';
+import { bindLegendDomains, captureMorphScene, scaleFields, hasSceneMotion, morphValueChannels, injectAxisExtentMotion, injectAxisMotion, injectAxisTickMotion, injectTitleMotion, injectScaleMotion, injectSizeMotion } from './interactions/scene-motion';
 import { captureFrameScene } from './interactions/frame-scene';
 import { advanceLiveValues, bindLiveValues, LIVE_VALUES_SIGNAL, liveValuesChange } from './live-values';
 import { readDrawnLayout } from './drawn-layout';
@@ -362,8 +362,14 @@ export interface InteractiveShapeSetup {
 /** The Vega spec a plan of a chart mounts as, with the interactions compiled in. */
 export function shapeInteractiveVega(planned: Pick<Replanned, 'spec' | 'axisLabels' | 'dataLabels'>, setup: InteractiveShapeSetup) {
     const shapedSpec = planned.spec;
-    // What each mark is about, from the compile itself: a chart without interactions still morphs into its next spec by it.
-    const morphFields: readonly string[] = shapedSpec._interactionSemantics?.identityFields ?? [];
+    // What each mark is about and which way it draws its value, from the compile itself: a chart
+    // without interactions still morphs into its next spec by them.
+    const morphIdentity = {
+        fields: (shapedSpec._interactionSemantics?.identityFields ?? []) as readonly string[],
+        candidates: (shapedSpec._interactionSemantics?.identityCandidates ?? []) as readonly string[],
+    };
+    const polarOrigin: { x: number; y: number } | undefined = shapedSpec._interactionSemantics?.polarOrigin;
+    const valueChannels = morphValueChannels(shapedSpec);
     const interactionPlan = addVegaLiteInteractions(
         shapedSpec,
         setup.interactions,
@@ -432,7 +438,7 @@ export function shapeInteractiveVega(planned: Pick<Replanned, 'spec' | 'axisLabe
         interactionPlan.movingScales = injectScaleMotion(vegaSpec);
         interactionPlan.movingSizes = injectSizeMotion(vegaSpec);
     }
-    return { interactionPlan, vegaSpec, relaidSignals, livePlanner, morphFields };
+    return { interactionPlan, vegaSpec, relaidSignals, livePlanner, morphIdentity, valueChannels, polarOrigin };
 }
 
 /** The windows over a subset of the rows: their categories in the same order, the window no larger than they are. */
@@ -535,7 +541,7 @@ export function createVegaInteractiveRenderer(
                 }
                 return entry;
             };
-            const { interactionPlan, vegaSpec, relaidSignals, morphFields } = shaped;
+            const { interactionPlan, vegaSpec, relaidSignals, morphIdentity, valueChannels, polarOrigin } = shaped;
             let livePlanner = shaped.livePlanner;
             // What the chart is built of: its datasets by name and its marks, read before live values bind them.
             // Rows that change either cannot be swapped in.
@@ -770,9 +776,11 @@ export function createVegaInteractiveRenderer(
                     return interactionController?.getInteractionContext() ?? fallbackContext();
                 },
                 morphScene() {
-                    const fields = interactionPlan ? interactionPlan.identityFields ?? [] : morphFields;
-                    if (destroyed || fields.length === 0 || (interactionPlan && !hasSceneMotion(view))) return undefined;
-                    return captureMorphScene(view, fields, drawnOrigin());
+                    if (destroyed || (interactionPlan && !hasSceneMotion(view))) return undefined;
+                    const identity = interactionPlan
+                        ? { fields: interactionPlan.identityFields ?? [], candidates: interactionPlan.identityCandidates }
+                        : morphIdentity;
+                    return captureMorphScene(view, identity, drawnOrigin(), valueChannels, polarOrigin);
                 },
                 frameScene(options) {
                     if (destroyed) return undefined;

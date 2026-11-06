@@ -224,9 +224,9 @@ export interface InteractiveChartSurface {
     clearUpdate(id: string, options?: Pick<ChartUpdateApplyOptions, 'transition'>): Promise<void>;
     /**
      * Draws a new input in place, keeping this surface and its element. The host's updates and
-     * the filters carry over; a reader's selections, hidden series and zoom start afresh. The
-     * marks morph along a chart transition Flint lists, else the charts cross-fade, over
-     * `transition` (the chart's by default). `interaction_spec` must not change.
+     * the filters carry over; a reader's selections, hidden series and zoom start afresh. Marks
+     * that name the same elements in both charts morph into each other and the rest cross-fades,
+     * over `transition` (the chart's by default). `interaction_spec` must not change.
      */
     setInput(input: ChartAssemblyInput, options?: Pick<ChartUpdateApplyOptions, 'transition'>): Promise<void>;
     /** What the chart shows now, previews included; undefined before the mount or after destroy. */

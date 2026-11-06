@@ -112,7 +112,8 @@ export function AnimationOverview() {
           <p>
             A chart type is <code>chart_spec</code>, not state, so it arrives through <code>setInput</code>. While the
             two charts hand over, one layer draws both: shared parts (axis labels, ticks, titles, legend entries) move
-            and resize; marks morph along a chart transition Flint lists, else cross-fade over the whole duration. The
+            and resize; marks that name the same element morph, edge by edge (a bar's length becomes a wedge's sweep),
+            and the rest cross-fade. The
             host's updates and filters carry over; the reader's own selections start afresh. An equal input changes
             nothing; a new <code>interaction_spec</code> needs a new mount.
           </p>

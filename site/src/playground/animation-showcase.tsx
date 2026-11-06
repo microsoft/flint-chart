@@ -275,18 +275,18 @@ export function LinkedPair({ duration, renderer }: Shared) {
 
 const SHARES = [{ Source: 'Wind', Share: 38 }, { Source: 'Solar', Share: 29 }, { Source: 'Hydro', Share: 19 }, { Source: 'Gas', Share: 14 }];
 
-/** Pie to bars is not a transition Flint lists, and a theme is style, so both cross-fade. */
-export function CrossFade({ duration, renderer }: Shared) {
+/** A pie becomes bars by the sources both name; a theme is style. */
+export function PieToBars({ duration, renderer }: Shared) {
   const pie = useMemo(() => chart('Pie Chart', 'Electricity by source, 2025', SHARES, { Source: 'Category', Share: 'Percentage' }, { color: 'Source', size: 'Share' }, 240, 200), []);
   const bars = useMemo(() => chart('Bar Chart', 'Electricity by source, 2025', SHARES, { Source: 'Category', Share: 'Percentage' }, { x: 'Source', y: 'Share', color: 'Source' }, 240, 200), []);
   const themed = useMemo(() => ({ ...pie, theme_spec: 'economist' }), [pie]);
   const interactions = useMemo(() => [clickHighlight()], []);
   return (
     <Case
-      id="crossfade"
+      id="pie-bars"
       title="A pie becomes bars; a theme changes"
-      op="setInput · cross-fade"
-      note="Pie to bars is not a transition Flint lists: a wedge has no honest path to a bar, so the two charts cross-fade. A new theme changes style, not meaning, so it cross-fades too."
+      op="setInput · gather and bend"
+      note="Each wedge and each bar name the same source, so the pie opens into one column of segments, which part into bars; going back, the bars gather into the column and it curls into the pie. A new theme changes style, not meaning."
       input={pie}
       interactions={interactions}
       duration={duration}

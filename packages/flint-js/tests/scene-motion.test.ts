@@ -655,9 +655,10 @@ describe('scene motion', () => {
         spec.data[0].transform = [];
         const view = new View(parse(spec), { renderer: 'none' });
         await view.runAsync();
-        expect(captureMorphScene(view, [], { x: 0, y: 0 }).items).toHaveLength(0);
-        const scene = captureMorphScene(view, ['k'], { x: 0, y: 0 });
+        expect(captureMorphScene(view, { fields: [] }, { x: 0, y: 0 }).items).toHaveLength(0);
+        const scene = captureMorphScene(view, { fields: ['k'] }, { x: 0, y: 0 }, { rect: 'y' });
         expect(scene.items.map((item) => item.datum.k)).toEqual(['a', 'b', 'c']);
+        expect(scene.items.every((item) => item.valueChannel === 'y' && item.source)).toBe(true);
     });
 
     it('moves a rounded stack\'s clip and outline with its bars, in every panel', async () => {
