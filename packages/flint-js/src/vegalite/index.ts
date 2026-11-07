@@ -33,6 +33,9 @@ export {
     canvasPatternDefs,
 } from './canvas-furniture';
 
+// The built-in maps' boundaries, served from the package to a Vega view of the host's own
+export { bundledBasemap, withBundledBasemaps } from './basemap-loader';
+
 // VL template registry
 export {
     vlTemplateDefs,

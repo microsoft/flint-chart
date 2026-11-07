@@ -28,8 +28,10 @@ import { NewThemeTest } from './playground/new-theme-test/NewThemeTest';
 import { ThemeImprovement } from './playground/theme-improvement/ThemeImprovement';
 import { LabelAngles } from './playground/label-angles/LabelAngles';
 import { CanvasSqueeze } from './playground/canvas-squeeze/CanvasSqueeze';
+import { MapsLab } from './playground/MapsLab';
 import { ColorLab } from './playground/ColorLab';
 import { TalkDeck } from './talk/TalkDeck';
+import { DevDesign } from './routes/DevDesign';
 import { BandStretchingLab } from './playground/BandStretchingLab';
 import { TitleBalanceLab } from './playground/TitleBalanceLab';
 import { LabelExperimentLab } from './playground/LabelExperimentLab';
@@ -107,6 +109,7 @@ function AppRoutes({ locale }: { locale: Locale }) {
         <Route path="themes/lab" element={<Navigate to={localePath('/theme-lab', locale)} replace />} />
         {/* Playground is public — poke around and play with the widgets. */}
         <Route path="dev-playground" element={<Navigate to={localePath('/playground/illustrations', locale)} replace />} />
+        <Route path="dev/design" element={<DevDesign />} />
         <Route path="dev/*" element={<Navigate to={localePath('/playground', locale)} replace />} />
         <Route path="playground" element={<PlaygroundShell />}>
           <Route index element={<Navigate to="illustrations" replace />} />
@@ -126,6 +129,7 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="theme-improvement" element={<ThemeImprovement />} />
           <Route path="label-angles" element={<LabelAngles />} />
           <Route path="canvas-squeeze" element={<CanvasSqueeze />} />
+          <Route path="maps" element={<MapsLab />} />
           <Route path="color" element={<ColorLab />} />
           <Route path="band-stretching" element={<BandStretchingLab />} />
           <Route path="label-experiment" element={<LabelExperimentLab />} />

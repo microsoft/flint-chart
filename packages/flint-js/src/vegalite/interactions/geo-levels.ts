@@ -6,6 +6,12 @@ export function isGlobeProjection(type: unknown): boolean {
     return type === 'orthographic';
 }
 
+/**
+ * The rotation of a globe's projection, in degrees. Navigation turns it on a drag; a globe that
+ * hides what stands behind it reads it to tell the near side from the far one.
+ */
+export const GEO_ROTATE_SIGNAL = '__flint_geo_rotate';
+
 /** Names the detail level a multi-level projected chart currently draws. */
 export const GEO_LEVEL_SIGNAL = '__flint_geo_level';
 

@@ -337,10 +337,12 @@ describe('bubble map levels', () => {
 
     it('leaves a plain bubble map alone', () => {
         const spec = bubble({});
-        expect(spec.layer[0].data.url).toContain('world-110m');
+        const land = spec.layer.find((layer: any) => layer.data?.format?.feature === 'countries');
+        const points = spec.layer.find((layer: any) => (layer.mark?.type ?? layer.mark) === 'circle');
+        expect(land.data.url).toContain('world-bank');
         expect(spec.params).toBeUndefined();
-        expect(spec.layer[1].transform).toBeUndefined();
-        expect(spec.layer[1].encoding.color.scale?.domain).toBeUndefined();
+        expect(points.transform).toBeUndefined();
+        expect(points.encoding.color.scale?.domain).toBeUndefined();
         expect(spec._interactionSemantics.geoLevels).toBeUndefined();
         // Levels need a level column and at least two levels.
         expect(bubble({ levelField: 'Level', levels: [{ value: 'province' }] }).params).toBeUndefined();

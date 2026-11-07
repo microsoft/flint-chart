@@ -1,3 +1,4 @@
+import { DISPUTED_FEATURE } from '../../chart-types/basemap-sources';
 import type { ChartInteractionResolver } from '../../core/interaction-semantics';
 import type { InteractionCapability } from '../../core/interaction-spec';
 import {
@@ -227,7 +228,10 @@ function instrumentNode(
         ];
     }
     const encoding = { ...inherited, ...(node.encoding ?? {}) };
-    const encodedOpacity = encoding.opacity;
+    // Value conditions the template put on the opacity — a globe hiding what stands behind its
+    // horizon — are gates focus must not lift: they stay first, and focus manages the rest.
+    const opacityGates = opacityValueGates(encoding.opacity);
+    const encodedOpacity = opacityGates ? undefined : encoding.opacity;
     const encodedColor = encoding.color;
     const continuousColor = continuousColorFocus
         && encodedColor?.field
@@ -266,6 +270,11 @@ function instrumentNode(
     const selectionTest = isPath
         ? `!length(data('${INTERACTION_STORE}'))`
         : `!length(data('${INTERACTION_STORE}')) || indata('${INTERACTION_STORE}', 'key', datum.${INTERACTION_KEY})`;
+    const gated = (opacity: Record<string, any>): Record<string, any> => {
+        if (!opacityGates) return opacity;
+        const own = opacity.condition === undefined ? [] : Array.isArray(opacity.condition) ? opacity.condition : [opacity.condition];
+        return { ...opacity, condition: [...opacityGates, ...own] };
+    };
     node.encoding = {
         ...(node.encoding ?? {}),
         ...(isPath ? {} : {
@@ -285,7 +294,7 @@ function instrumentNode(
         } : {}),
         // The receded opacity follows the emphasis level each render (DIM_SIGNAL); a label recedes
         // less than its mark, so the values of the marks set back can still be read.
-        opacity: continuousColor ? { value: authoredOpacity } : dataDrivenOpacity ? {
+        opacity: gated(continuousColor ? { value: authoredOpacity } : dataDrivenOpacity ? {
             condition: { test: selectionTest, ...encodedOpacity },
             value: { expr: DIM_SIGNAL },
         } : {
@@ -294,9 +303,20 @@ function instrumentNode(
                 value: authoredOpacity,
             },
             value: { expr: textLabel ? `min(${authoredOpacity}, max(${recededOpacity(authoredOpacity)}, 0.5))` : recededOpacity(authoredOpacity) },
-        },
+        }),
     };
     return true;
+}
+
+/**
+ * The value conditions of an opacity that states nothing else — no field, no value of its own —
+ * which a template set to hide marks under a test; undefined for any other opacity.
+ */
+function opacityValueGates(opacity: any): Record<string, any>[] | undefined {
+    if (!opacity || typeof opacity !== 'object' || opacity.field !== undefined || opacity.value !== undefined) return undefined;
+    const conditions = Array.isArray(opacity.condition) ? opacity.condition : opacity.condition ? [opacity.condition] : [];
+    if (!conditions.length || !conditions.every((condition: any) => typeof condition?.test === 'string' && typeof condition.value === 'number')) return undefined;
+    return conditions;
 }
 
 /** The ink text reads in on the chart's page, for a label whose mark recedes into it. */
@@ -775,7 +795,10 @@ export function injectVegaGeoNavigationSignals(
     // fit (the whole sphere) does not depend on the rotation, so it holds its size.
     if (isGlobeProjection(projection.type)) {
         const authored = Array.isArray(projection.rotate) ? projection.rotate : [0, 0, 0];
-        vegaSpec.signals.push({ name: GEO_ROTATE_SIGNAL, value: authored });
+        // A globe that hides its far side declares the signal itself, at the same rotation.
+        if (!vegaSpec.signals.some((signal: any) => signal?.name === GEO_ROTATE_SIGNAL)) {
+            vegaSpec.signals.push({ name: GEO_ROTATE_SIGNAL, value: authored });
+        }
         projection.rotate = { signal: GEO_ROTATE_SIGNAL };
     }
     const result: Partial<Record<'x' | 'y', import('./contracts').VegaNavigationAxis>> = {};
@@ -806,8 +829,17 @@ export function vegaGeoFocusSource(vegaSpec: Record<string, any>): string | unde
         }
         return false;
     };
+    // The lines a map draws over its regions (the disputed borders) are no region to focus.
+    const lines = (name: string | undefined): boolean => {
+        const seen = new Set<string>();
+        for (let dataset = name ? byName.get(name) : undefined; dataset && !seen.has(dataset.name); dataset = byName.get(dataset.source)) {
+            seen.add(dataset.name);
+            if (dataset.format?.feature === DISPUTED_FEATURE) return true;
+        }
+        return false;
+    };
     const shapes = (Array.isArray(vegaSpec.marks) ? vegaSpec.marks : [])
-        .filter((mark: any) => mark?.type === 'shape' && typeof mark.from?.data === 'string');
+        .filter((mark: any) => mark?.type === 'shape' && typeof mark.from?.data === 'string' && !lines(mark.from.data));
     return (shapes.find((mark: any) => keyed(mark.from.data)) ?? shapes[shapes.length - 1])?.from.data;
 }
 

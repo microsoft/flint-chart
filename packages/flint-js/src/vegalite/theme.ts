@@ -6779,7 +6779,7 @@ function clamp(v: number, lo: number, hi: number): number {
 export function applySourceLine(spec: any, plan: SourcePlan | undefined): void {
     if (!plan?.lines.length) return;
     const base = normalizePadding(spec.padding);
-    takeFromPlotHeight(spec, plan.room);
+    if (!plan.reserved) takeFromPlotHeight(spec, plan.room);
     growPadding(spec, 'bottom', plan.room);
     const start = plan.frame === 'canvas' ? 0 : base.left;
     const end = plan.frame === 'canvas' ? 0 : base.right;
@@ -6806,6 +6806,7 @@ export function applySourceLine(spec: any, plan: SourcePlan | undefined): void {
                 ...(run.fontStyle ? { fontStyle: run.fontStyle } : {}),
                 ...(plan.color ? { color: plan.color } : {}),
                 ...(line.href ? { href: line.href } : {}),
+                ...(line.title ? { title: line.title } : {}),
             });
         }
     }

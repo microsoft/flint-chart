@@ -1,10 +1,9 @@
 /**
  * Theme improvement: fixes grouped by area (colour first), stage by stage. Each stage shows the cases
- * it added (scripts/theme-matrix/cases.mjs), then every chart of the theme matrix it changed — before
- * and after, side by side — so a fix can be reviewed for what it improves and what it moves in
- * existing themes. Matrix specs come from scripts/theme-matrix: the preview cases, presets, houses and
- * every case added so far, compiled before and after each stage; only charts whose rendered SVG
- * changed are listed as visual, the rest as spec-only.
+ * it added, then every chart of the theme matrix it changed — before and after, side by side — so a
+ * fix can be reviewed for what it improves and what it moves in existing themes. The matrix holds the
+ * preview cases, presets, houses and every case added so far, compiled before and after each stage;
+ * only charts whose rendered SVG changed are listed as visual, the rest as spec-only.
  */
 import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
@@ -133,7 +132,7 @@ function StageCases({ area, stage }: { area: Area; stage: Stage }) {
       {!file && <p style={{ fontSize: 13 }}>loading…</p>}
       {file && cases.map((c) => {
         const r = file.cases[c.id];
-        if (!r) return <p key={c.id} style={{ fontSize: 13, color: '#b42318' }}>{c.id}: not generated — run scripts/theme-matrix/cases.mjs</p>;
+        if (!r) return <p key={c.id} style={{ fontSize: 13, color: '#b42318' }}>{c.id}: not generated</p>;
         const change: Change = { key: c.id, group: 'case', theme: c.theme, label: c.title, ...r };
         return <ChangeCard key={c.id} change={change} look={c.look} beforeLabel={beforeLabel(c)} />;
       })}
@@ -261,9 +260,7 @@ function Overview({ area, onOpen }: { area: Area; onOpen: (id: string) => void }
         </tbody>
       </table>
       <div style={{ ...card, marginTop: 16, fontSize: 13.5, lineHeight: 1.55 }}>
-        {md(`${area.note}
-
-**Reproduce.** \`node scripts/theme-matrix/run.mjs <dir>\` compiles the matrix (\`MATRIX_STRIP=ink.series.x,…\` removes theme fields for an option stage's “before”); \`node scripts/theme-matrix/diff.mjs <before> <after> <out.json>\` compares two runs as rendered SVG; \`node scripts/theme-matrix/pack.mjs site/src/playground/theme-improvement/stages r6=<diff.json>\` writes a stage's data; \`node scripts/theme-matrix/cases.mjs <work> <baseline>\` writes the cases' before/after.`)}
+        {md(area.note)}
       </div>
     </div>
   );

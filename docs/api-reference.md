@@ -273,6 +273,7 @@ interface AssembleOptions {
   baseTitleFontSize?: number;  // header font — axis title / legend / chart title (VL 11, EC/CJS 12, Plotly 14)
   canvasFit?: 'off' | 'auto'; // what the layout does when the chart will not read well in its box (default 'auto')
   canvasRefit?: boolean;       // once the fit settles the title and keys, lay the plot out once more in the room left (default true)
+  basemaps?: MapBasemaps;      // the built-in maps' boundaries, in place of the defaults (see Map boundaries)
 }
 ```
 
@@ -336,6 +337,45 @@ shrink/rotate/truncate to avoid overlap. Set `baseLabelFontSize` /
 for larger tick labels across the whole chart.
 
 Full list: `packages/flint-js/src/core/types.ts` (`AssembleOptions`). Behavior: [Auto Layout Algorithm](/documentation/layout-model).
+
+### Map boundaries
+
+The world maps draw World Bank Official Boundaries by default (`chartProperties.boundaries:
+'world-bank'`) or Natural Earth's (`'natural-earth'`); the US maps draw the Census Bureau's, via
+us-atlas. A compiled spec names them by URL on Flint's site,
+`https://microsoft.github.io/flint-chart/geo/v1/…` — a version whose files never change — so it
+draws wherever it is rendered. Flint's own renderers (`mountChart`, `<FlintChart>`, `renderSvg`)
+fetch nothing: they load the copies bundled in the package. Sources and licences:
+`packages/flint-js/src/geo/NOTICE.md`.
+
+Flint takes no position on disputed boundaries, and a country's law may require its own (India's and
+China's do). A host draws the boundaries its audience needs with `basemaps`, one part per built-in map:
+
+```ts
+interface MapBasemaps {
+  worldBank?: Source | { coarse?: Source; medium?: Source }; // objects `countries`, `land`; optional `disputed`
+  naturalEarth?: Source;  // objects `countries`, `land`
+  us?: Source;            // object `states`, in longitude and latitude
+  usAlbers?: Source;      // objects `states`, `counties`, projected with albersUsa into 975 × 610
+  attribution?: string;   // who drew the boundaries given here, credited at the map's foot
+}
+type Source = string | TopoJSONTopology; // a URL to load, or the topology inline
+```
+
+- **Your own boundaries.** Keep the default's object names and ids (ISO 3166-1 numeric for
+  countries, FIPS for the US), which the maps join and draw by; Flint still resolves names and codes
+  in the data to those ids. Give `attribution` for the source to be credited — boundaries given
+  without one are credited to no one, and are not taken for the World Bank's: no World Bank credit,
+  no dotted disputed borders unless the topology has a `disputed` object, and no warning about which
+  countries the map leaves out.
+- **No network at all.** Pass the topologies from `flint-chart/geo` (`basemaps`, or each part
+  alone): the spec carries them inline, for vl-convert, sandboxed iframes and offline apps.
+- **Your own origin.** Serve the files from `flint-chart/src/geo` and pass their URLs. Copies of the
+  World Bank files kept under their names (`world-bank-coarse.json`, `world-bank-medium.json`) are
+  still drawn and credited as the World Bank's.
+- **A geography of your own** (a country's provinces, say): the Choropleth's `chartProperties.levels`
+  (`{ value, url, feature? }`, coarsest first) and `featureKey` join the rows to your features by
+  your own keys, and `baseMapUrl` draws land beneath them.
 
 ---
 
@@ -482,6 +522,7 @@ Inspect `_warnings` or `ChartWarning` arrays in integration code to surface trun
 | `flint-chart/react` | `<FlintChart>` component (React is an optional peer dependency) |
 | `flint-chart/react/<backend>` | The same, reaching only that backend: for one-file bundles |
 | `flint-chart/render` | `renderSvg` for static SVG without a DOM |
+| `flint-chart/geo` | The built-in maps' boundaries as TopoJSON (`basemaps`), to pass as `options.basemaps` |
 | `flint-chart/test-data` | Gallery generators (`TEST_GENERATORS`) |
 
 ---

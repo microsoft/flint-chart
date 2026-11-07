@@ -21,9 +21,9 @@
  */
 
 import { projection as vegaProjection } from 'vega';
-import { GEO_LEVEL_SIGNAL, geoLevelGate, isGlobeProjection, type GeoLevel, type GeoPreProjection } from './geo-levels';
+import { GEO_LEVEL_SIGNAL, GEO_ROTATE_SIGNAL, geoLevelGate, isGlobeProjection, type GeoLevel, type GeoPreProjection } from './geo-levels';
 
-export { GEO_LEVEL_SIGNAL, geoLevelGate, isGlobeProjection, type GeoLevel, type GeoPreProjection };
+export { GEO_LEVEL_SIGNAL, GEO_ROTATE_SIGNAL, geoLevelGate, isGlobeProjection, type GeoLevel, type GeoPreProjection };
 import type { UpdateRegionSelector } from '../../core/interaction-contracts';
 import type { NavigationDomainGuard, NavigationUpdate } from '../../interactive/interactions';
 import type { VegaNavigationAxis } from './contracts';
@@ -38,8 +38,6 @@ import {
 
 export const GEO_EXTENT_SIGNAL = '__flint_geo_extent';
 export const GEO_PROJECTION_SIGNAL = '__flint_geo_projection';
-/** The rotation of a globe's projection, which a drag turns. Present only on a globe. */
-export const GEO_ROTATE_SIGNAL = '__flint_geo_rotate';
 
 export const GEO_AXIS_SCALES = { x: '__flint_geo_x', y: '__flint_geo_y' } as const;
 
@@ -270,20 +268,34 @@ export function remapExtentPoint(point: Point, from: GeoExtent, to: GeoExtent): 
 }
 
 /**
+ * How far past its edges a flat map may be dragged, as a share of the plot on each side, in screen
+ * pixels at any zoom: a map that fits its plot still moves under the hand, and a corner a key
+ * covers can be brought into view, but the map is never dragged out of sight. Data Formulator's.
+ */
+export const MAP_PAN_SLACK = 0.5;
+
+/**
  * Clamp a proposed extent with the navigation domain guard. The plot rectangle
  * is expressed as a fraction interval of the extent (the initial frame is
  * `[0, 1]` on both axes), which is exactly the shape the scale guard expects.
  * Both axes carry the same visible fraction, so the span clamp keeps the
  * extent uniform.
+ *
+ * Without `slack`, a map that fits its plot stays put (the guard's overscroll applies only once it
+ * is zoomed in); with it, the map may be dragged `slack` of the plot past each edge, at any zoom.
  */
 export function guardGeoExtent(
     proposed: GeoExtent,
     size: { width: number; height: number },
     guard: NavigationDomainGuard,
+    slack = 0,
 ): GeoExtent {
     const guardAxis = (origin: number, extentSize: number, plotSize: number): [number, number] => {
         const visible: [number, number] = [(0 - origin) / extentSize, (plotSize - origin) / extentSize];
-        const axisGuard = extentSize <= plotSize * (1 + 1e-10) ? { ...guard, overscrollFraction: 0 } : guard;
+        // The overscroll is a share of the extent; the slack, of the plot.
+        const fits = extentSize <= plotSize * (1 + 1e-10);
+        const overscroll = Math.max(fits ? 0 : guard.overscrollFraction, slack * plotSize / extentSize);
+        const axisGuard = overscroll === guard.overscrollFraction ? guard : { ...guard, overscrollFraction: overscroll };
         const [start, end] = guardNavigationDomain(visible, [0, 1], 'linear', axisGuard).map(Number);
         const guardedSize = plotSize / (end - start);
         // `-start * size` yields -0 at the frame edge; keep the origin a plain 0.
@@ -791,7 +803,8 @@ export function createVegaGeoNavigationController(
                 ];
             }
             if (!proposed) return null;
-            const guarded = guardGeoExtent(proposed, { width, height }, guard);
+            // A drag may carry the map past its edges; a zoom settles it inside them, so zooming out comes home.
+            const guarded = guardGeoExtent(proposed, { width, height }, guard, event.operation === 'pan' ? MAP_PAN_SLACK : 0);
             const value = geographicBox(guarded);
             remember(value, guarded, levelForRange(value.x));
             return { op: 'set-viewport', axes: event.axes, value };

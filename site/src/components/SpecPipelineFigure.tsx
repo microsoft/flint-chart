@@ -138,7 +138,7 @@ function buildCompiledSpecExcerpt(testCase: TestCase, maxLines: number): string 
 }
 
 /** Short objects stay on one line, and value lists (a sort order) pack into a few lines. */
-function condensedJson(value: unknown, width: number): string {
+export function condensedJson(value: unknown, width: number): string {
   const arrays: unknown[][] = [];
   const replaced = JSON.parse(JSON.stringify(value), (_key, entry) => {
     if (Array.isArray(entry) && entry.length > 4 && entry.every((item) => item === null || typeof item !== 'object')) {

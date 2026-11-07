@@ -38,6 +38,15 @@ export default defineConfig({
         find: 'flint-chart/test-data',
         replacement: path.resolve(__dirname, '../packages/flint-js/src/test-data/index.ts'),
       },
+      // The boundaries Flint's renderers load on a map's first draw.
+      {
+        find: /^flint-chart\/geo\/lazy\/([\w-]+)$/,
+        replacement: path.resolve(__dirname, '../packages/flint-js/src/geo/lazy') + '/$1.js',
+      },
+      {
+        find: 'flint-chart/geo',
+        replacement: path.resolve(__dirname, '../packages/flint-js/src/geo/index.ts'),
+      },
       {
         find: 'flint-chart',
         replacement: path.resolve(__dirname, '../packages/flint-js/src/index.ts'),

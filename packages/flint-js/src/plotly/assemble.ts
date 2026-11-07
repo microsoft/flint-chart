@@ -57,7 +57,7 @@ import { tableTextMeasurer } from '../core/text-width';
 import { BACKEND_MIN_LABEL_SIZE, BACKEND_TITLE_FLOOR, canvasFitSummary, fitBox, judgeBackendCanvas, refitCanvas, scaledTypeSize, treatedKeyFontSize, withTreatment } from '../core/backend-frame';
 import { PLOTLY_FONT, plDrawLargestFirst, plDropEmptyTitles, plFitPie, plFlowRowKey, plNiceAxes, plSizeKey, plFacetFurniture, plMeasure, plWriteHeader, plWriteSource, PLOTLY_FACET_GAP } from './frame';
 import { resolveThemeSpec } from '../core/theme/presets';
-import { withChrome } from '../core/theme/chrome';
+import { chartChrome, withChrome } from '../core/theme/chrome';
 import {
     plFloatingFloor, realizeThemePlotly, realizeValueLabelsPlotly, plCollectMarkTypes, plCollectPositional, fitPlotlyTitle,
 } from './theme';
@@ -106,7 +106,7 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
     const semanticTypes = withEncodingColorAnnotations(input.semantic_types ?? {}, input.chart_spec.encodings as Record<string, unknown>);
     // `theme_spec` may name a house Flint ships rather than spell one out.
     // A chart may turn off part of its house's chrome (a logo, the header, the footer).
-    const themeSpec = withChrome(resolveThemeSpec(input.theme_spec), input.chart_spec.chrome);
+    const themeSpec = withChrome(resolveThemeSpec(input.theme_spec), chartChrome(input.chart_spec.chartType, input.chart_spec.chrome));
     // A house may prefer a size, a stretch budget, a facet gap. Those settle
     // before anything is measured, and in a fixed order: the chart spec first,
     // the theme's presets under it, flint's own defaults under that.

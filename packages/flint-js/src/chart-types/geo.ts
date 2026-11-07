@@ -250,6 +250,71 @@ export const resolveUsState: GeoResolver = (value) => resolveWith(US_STATE_LOOKU
 export const resolveCountry: GeoResolver = (value) => resolveWith(COUNTRY_LOOKUP, value);
 
 // ---------------------------------------------------------------------------
+// Declared key types — a choropleth's `keyType` says what its region key is,
+// so the map skips guessing its region and reads the key in that namespace
+// only: "CA" as an ISO 2 code is Canada, as a US state it is California.
+// ---------------------------------------------------------------------------
+
+/** What a choropleth's region key holds. `auto` reads it as names, codes or ids and infers the map. */
+export const MAP_KEY_TYPES = ['auto', 'iso3', 'iso2', 'iso-numeric', 'country-name', 'us-state', 'fips'] as const;
+export type MapKeyType = typeof MAP_KEY_TYPES[number];
+
+const COUNTRY_BY_ALPHA2 = new Map(COUNTRIES.map(([id, , a2]) => [a2, id]));
+const COUNTRY_BY_ALPHA3 = new Map(COUNTRIES.map(([id, , , a3]) => [a3, id]));
+const COUNTRY_IDS = new Set(COUNTRIES.map(([id]) => id));
+COUNTRY_BY_ALPHA2.set('UK', 826);
+
+/** The map a declared key type draws, or undefined for `auto`. */
+export function keyTypeScope(keyType: unknown): MapScope | undefined {
+    if (keyType === 'us-state' || keyType === 'fips') return 'us';
+    if (keyType === 'iso3' || keyType === 'iso2' || keyType === 'iso-numeric' || keyType === 'country-name') return 'world';
+    return undefined;
+}
+
+/** The resolver a declared key type reads its keys with; undefined for `auto` or an unknown type. */
+export function keyTypeResolver(keyType: unknown): GeoResolver | undefined {
+    const text = (value: unknown) => (value == null ? '' : String(value).trim());
+    const digits = (value: unknown) => (/^\d+$/.test(text(value)) ? parseInt(text(value), 10) : undefined);
+    switch (keyType) {
+        case 'iso3': return (value) => COUNTRY_BY_ALPHA3.get(text(value).toUpperCase());
+        case 'iso2': return (value) => COUNTRY_BY_ALPHA2.get(text(value).toUpperCase());
+        case 'iso-numeric': return (value) => {
+            const id = digits(value);
+            return id !== undefined && COUNTRY_IDS.has(id) ? id : undefined;
+        };
+        case 'country-name': return (value) => (digits(value) === undefined ? resolveCountry(value) : undefined);
+        case 'us-state': return (value) => (digits(value) === undefined ? resolveUsState(value) : undefined);
+        // A state's FIPS code runs 1–78, a county's five digits.
+        case 'fips': return (value) => digits(value);
+        default: return undefined;
+    }
+}
+
+/**
+ * Groups of countries that statistics tables list beside the countries themselves — the world,
+ * income groups, blocs, continents and World Bank regions, by name or code. Such a row is not a
+ * typo to report as unmatched: no single region on the map is it.
+ */
+const AGGREGATE_REGIONS = new Set([
+    'world', 'oecd', 'oecdmembers', 'europeanunion', 'eu', 'eu27', 'eu28', 'euroarea', 'eurozone', 'g7', 'g20',
+    'highincome', 'lowincome', 'middleincome', 'lowermiddleincome', 'uppermiddleincome', 'lowandmiddleincome',
+    'highincomecountries', 'lowincomecountries', 'africa', 'asia', 'europe', 'oceania', 'americas', 'antarcticregion',
+    'northamerica', 'southamerica', 'latinamerica', 'latinamericaandcaribbean', 'latinamericacaribbean',
+    'subsaharanafrica', 'middleeast', 'middleeastandnorthafrica', 'middleeastnorthafrica', 'eastasiaandpacific',
+    'eastasiapacific', 'southasia', 'europeandcentralasia', 'europecentralasia', 'arabworld', 'leastdevelopedcountries',
+    'smallstates', 'fragileandconflictaffectedsituations', 'heavilyindebtedpoorcountries', 'idatotal', 'ibrdonly',
+    'wld', 'oed', 'euu', 'emu', 'hic', 'lic', 'lmc', 'umc', 'mic', 'lmy', 'ssf', 'ssa', 'eas', 'eap', 'ecs', 'eca',
+    'lcn', 'lac', 'mea', 'mna', 'nac', 'sas', 'arb', 'ldc', 'owid_wrl',
+]);
+
+/** Whether a region key names a group of countries rather than one. */
+export function isAggregateRegion(value: unknown): boolean {
+    if (value == null) return false;
+    const key = norm(String(value));
+    return AGGREGATE_REGIONS.has(key) || AGGREGATE_REGIONS.has(String(value).trim().toLowerCase());
+}
+
+// ---------------------------------------------------------------------------
 // Code resolvers — for backends (Plotly) whose native geo traces key on a
 // short code rather than a TopoJSON numeric feature id.
 //
@@ -335,6 +400,13 @@ const US_TERRITORY_FIPS = new Set([60, 66, 69, 72, 78]);
  */
 export function inferChoroplethScope(rows: any[], idField?: string): MapScope {
     if (!idField) return 'us';
+    // Named keys are weighed: the US map where US states are at least half of them and outnumber the
+    // keys that are only countries, so a total row ("United States") or a stray foreign key among
+    // states keeps the states' map, and is reported as unmatched there.
+    let named = 0;
+    let states = 0;
+    let countries = 0;
+    const seen = new Set<string>();
     for (const r of rows) {
         const v = r[idField];
         if (v == null || v === '') continue;
@@ -344,11 +416,14 @@ export function inferChoroplethScope(rows: any[], idField?: string): MapScope {
             if (n >= 57 && n <= 999 && !US_TERRITORY_FIPS.has(n)) return 'world';
             continue;
         }
-        // A value that resolves as a US state (by name or USPS code) keeps us in the US;
-        // the first value that doesn't flips the whole map to world.
-        if (resolveUsState(v) === undefined) return 'world';
+        if (seen.has(s)) continue;
+        seen.add(s);
+        named++;
+        if (resolveUsState(v) !== undefined) states++;
+        else if (resolveCountry(v) !== undefined) countries++;
     }
-    return 'us';
+    if (named === 0) return 'us';
+    return states >= named / 2 && states > countries ? 'us' : 'world';
 }
 
 /**
@@ -370,7 +445,7 @@ export function semanticScope(semType: string | undefined): MapScope | undefined
         : undefined;
 }
 
-/** Honor an explicit `region` choice, else the id field's semantic type, else inference. */
+/** Honor an explicit `region` choice, else a declared `keyType`, else the id field's semantic type, else inference. */
 export function pickMapScope(
     chartProperties: any,
     semScope: MapScope | undefined,
@@ -378,6 +453,8 @@ export function pickMapScope(
 ): MapScope {
     const choice = chartProperties?.region;
     if (choice === 'us' || choice === 'world') return choice;
+    const declared = keyTypeScope(chartProperties?.keyType);
+    if (declared) return declared;
     if (semScope) return semScope;
     return infer();
 }

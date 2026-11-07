@@ -86,7 +86,7 @@ describe('array-valued options', () => {
                 chartProperties: JSON.parse('{"region":"world","projection":"orthographic","projectionCenter":[10,50]}'),
             },
         } as any);
-        expect(spec.layer[0].projection.rotate).toEqual([-10, -50, 0]);
+        expect(spec.projection.rotate).toEqual([-10, -50, 0]);
         expect((spec._warnings ?? []).some((w: any) => w.code === 'invalid-option-value')).toBe(false);
     });
 });

@@ -77,7 +77,7 @@ import { templateStatesAxisLabels, vlApplyLayoutToSpec, vlApplyTooltips, vlFinal
 import { normalizeChartProperties } from '../core/normalize-properties';
 import { resolveChartDefaults, resolveCompileDefaults, resolveGeometry, resolveValueLabelChoice } from '../core/theme/ground';
 import { resolveThemeSpec } from '../core/theme/presets';
-import { withChrome } from '../core/theme/chrome';
+import { chartChrome, withChrome } from '../core/theme/chrome';
 import { alignBandOrders, applyHeaderFurniture, applySourceLine, realizeThemeVegaLite, realizeValueLabelsVegaLite, vegaLiteBuiltFacts } from './theme';
 import { applyChartValueColors } from './value-colors';
 import { vlCaseKeyLabels, vlWriteKeyLayout } from './key-layout';
@@ -268,7 +268,7 @@ function prepareVegaLite(input: ChartAssemblyInput): VegaLitePreparation {
     const semanticTypes = withEncodingColorAnnotations(input.semantic_types ?? {}, input.chart_spec.encodings as Record<string, unknown>);
     // `theme_spec` may name a house Flint ships rather than spell one out.
     // A chart may turn off part of its house's chrome (a logo, the header, the footer).
-    const themeSpec = withChrome(resolveThemeSpec(input.theme_spec), input.chart_spec.chrome);
+    const themeSpec = withChrome(resolveThemeSpec(input.theme_spec), chartChrome(input.chart_spec.chartType, input.chart_spec.chrome));
     // A house may prefer a size, a stretch budget, a facet gap. Those settle
     // before anything is measured, and in a fixed order: the chart spec first,
     // the theme's presets under it, flint's own defaults under that.
@@ -584,7 +584,9 @@ function emitVegaLite(input: ChartAssemblyInput, prepared: VegaLitePreparation, 
     // fits, so it must see the finished spec. Only realization is gated on a
     // named house, so an untheme'd chart gets its numbers without also getting
     // a house's ink, type and furniture.
-    const plannedPlotSize = plotSizeFields(vgObj, plan.title, plan.rules?.room, (plan.header ? plan.header.edge + plan.header.line : 0) + (plan.source?.room ?? 0));
+    // A source line the plot was sized round takes nothing from it.
+    const sourceTakes = plan.source && !plan.source.reserved ? plan.source.room : 0;
+    const plannedPlotSize = plotSizeFields(vgObj, plan.title, plan.rules?.room, (plan.header ? plan.header.edge + plan.header.line : 0) + sourceTakes);
     // Some templates write their own text on the marks. Where they do, the
     // label layer stands down (it will not print a second number beside the
     // template's), so the toggle would be a control that changes nothing.

@@ -55,7 +55,9 @@ export function mountedInteractionList(
 }
 import { INTERACTION_STORES } from './interactions/stores';
 import { compile } from 'vega-lite';
-import { Error as VegaError, expressionFunction, parse, View } from 'vega';
+import { Error as VegaError, expressionFunction, loader as vegaLoader, parse, View } from 'vega';
+import { withBundledBasemaps } from './basemap-loader';
+import { followGeoDetail, injectVegaGeoDetail } from './interactions/geo-detail';
 import { createDefaultStyle, DEFAULT_OPTIONS, Handler } from 'vega-tooltip';
 
 let tooltipSerial = 0;
@@ -408,6 +410,7 @@ export function createVegaInteractiveRenderer(
                     } else if (interactionPlan.geoNavigation) {
                         interactionPlan.geoFocusSource = vegaGeoFocusSource(vegaSpec);
                     }
+                    if (interactionPlan.geoNavigation) interactionPlan.geoDetail = injectVegaGeoDetail(vegaSpec);
                     interactionPlan.reorderAxes = (interactionPlan.reorderAxes ?? [])
                         .map((axis) => injectVegaReorderSignal(vegaSpec, axis))
                         .filter((axis): axis is NonNullable<typeof axis> => !!axis);
@@ -493,6 +496,7 @@ export function createVegaInteractiveRenderer(
                     // A pattern fill is an SVG reference a canvas cannot draw.
                     renderer: readCanvasPatterns(vlSpec).length ? 'svg' : options.renderer ?? 'canvas',
                     container,
+                    loader: withBundledBasemaps(vegaLoader()),
                     ...(options.expressionInterpreter ? { expr: options.expressionInterpreter } : {}),
                 } as any,
             );
@@ -505,6 +509,7 @@ export function createVegaInteractiveRenderer(
             scaleAwareCanvasPicking((view as any)._handler);
             await view.runAsync();
             mountCanvasFurniture(container, readCanvasFurniture(vlSpec), readCanvasPatterns(vlSpec));
+            const stopGeoDetail = interactionPlan?.geoDetail ? followGeoDetail(view) : undefined;
             const mountedInteractions = mountedInteractionList(interactions, interactionPlan?.interactions ?? canvasInteractions);
             const interactionController = interactionPlan
                 ? mountVegaInteractions(
@@ -688,6 +693,7 @@ export function createVegaInteractiveRenderer(
                     destroyed = true;
                     if (updateTimer !== undefined) window.clearTimeout(updateTimer);
                     interactionController?.destroy();
+                    stopGeoDetail?.();
                     view.finalize();
                     tooltip.destroy();
                     container.replaceChildren();

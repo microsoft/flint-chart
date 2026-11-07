@@ -10,6 +10,7 @@ import { ScaleToFit } from '../components/ScaleToFit';
 import { FlintView } from '../components/FlintView';
 import { testCaseToAssemblyInput, withHouse } from '../shared/test-case-utils';
 import { siteTheme } from '../shared/theme';
+import { basemaps } from 'flint-chart/geo';
 
 const rows = [
   ['惠普', 2025, 49933.56], ['惠普', 2026, 30973.54],
@@ -767,6 +768,109 @@ function CanvasBoxGym() {
   );
 }
 
+// ---------------------------------------------------------------- maps P0
+const DATA_CENTERS = [
+  { location: 'Dublin', longitude: -6.26, latitude: 53.35, continent: 'Europe' },
+  { location: 'Singapore', longitude: 103.8, latitude: 1.35, continent: 'Asia' },
+  { location: 'Council Bluffs', longitude: -95.86, latitude: 41.26, continent: 'North America' },
+  { location: 'Quilicura', longitude: -70.73, latitude: -33.36, continent: 'South America' },
+  { location: 'Hamina', longitude: 27.19, latitude: 60.57, continent: 'Europe' },
+  { location: 'Changhua', longitude: 120.54, latitude: 24.08, continent: 'Asia' },
+];
+const RATES = [
+  ['United States', 0.62], ['Canada', 0.58], ['Brazil', 0.41], ['France', 0.55], ['Germany', 0.6], ['India', 0.22],
+  ['China', 0.38], ['Nigeria', 0.12], ['Australia', 0.66], ['Japan', 0.71], ['South Africa', 0.29], ['World', 0.4], ['Narnia', 0.9],
+].map(([Country, Share]) => ({ Country, Share }));
+const EUROPE = [['France', 0.55], ['Germany', 0.6], ['Italy', 0.48], ['Spain', 0.51], ['Poland', 0.37], ['FRA', 0.57]]
+  .map(([Country, Share]) => ({ Country, Share }));
+const STATES = [['California', 7.2], ['Texas', 6.1], ['New York', 8.3], ['Florida', 5.4], ['Washington', 6.6]]
+  .map(([State, Rate]) => ({ State, Rate }));
+
+interface MapCase { id: string; title: string; input: ChartAssemblyInput }
+const MAP_BOX = { width: 600, height: 450 };
+const mapCase = (input: Record<string, any>): ChartAssemblyInput => ({
+  ...input,
+  chart_spec: { baseSize: { width: 400, height: 300 }, canvasSize: MAP_BOX, ...input.chart_spec },
+  options: { maxStretch: 1.5, basemaps, ...(input.options ?? {}) },
+} as ChartAssemblyInput);
+const MAP_CASES: MapCase[] = [
+  {
+    id: 'world-rates', title: 'World shares: land without Antarctica, no-data countries kept, "World" and "Narnia" reported',
+    input: mapCase({ data: { values: RATES }, semantic_types: { Country: 'Country', Share: 'Percentage' }, chart_spec: { chartType: 'Choropleth', encodings: { id: 'Country', color: 'Share' } } }),
+  },
+  {
+    id: 'europe', title: 'Europe only: framed on its countries, the rest clipped; France and FRA averaged',
+    input: mapCase({ data: { values: EUROPE }, semantic_types: { Country: 'Country', Share: 'Percentage' }, chart_spec: { chartType: 'Choropleth', encodings: { id: 'Country', color: 'Share' } } }),
+  },
+  {
+    id: 'us-states', title: 'US states: the atlas shape, states without a value kept',
+    input: mapCase({ data: { values: STATES }, semantic_types: { State: 'State', Rate: 'Percentage' }, chart_spec: { chartType: 'Choropleth', encodings: { id: 'State', color: 'Rate' } } }),
+  },
+  {
+    id: 'points-world', title: 'Data centres, flat: framed on the points',
+    input: mapCase({ data: { values: DATA_CENTERS }, semantic_types: { longitude: 'Longitude', latitude: 'Latitude', continent: 'Category' }, chart_spec: { chartType: 'Map', encodings: { longitude: 'longitude', latitude: 'latitude', color: 'continent' } } }),
+  },
+  {
+    id: 'points-globe', title: 'Data centres, globe (drag to turn): square, sea and rim, far side hidden',
+    input: mapCase({
+      data: { values: DATA_CENTERS }, semantic_types: { longitude: 'Longitude', latitude: 'Latitude', continent: 'Category' },
+      chart_spec: { chartType: 'Map', encodings: { longitude: 'longitude', latitude: 'latitude', color: 'continent' }, chartProperties: { projection: 'orthographic' } },
+      interaction_spec: { interactions: [{ type: 'navigate' }] },
+    }),
+  },
+];
+
+function MapCaseView({ item }: { item: MapCase }) {
+  const warnings = useMemo(() => ((assembleVegaLite(item.input) as any)._warnings ?? []) as { code: string; message: string }[], [item]);
+  const host = useRef<HTMLDivElement>(null);
+  const [drawn, setDrawn] = useState<{ width: number; height: number } | null>(null);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const svg = host.current?.querySelector('svg');
+      if (!svg) return;
+      const rect = svg.getBoundingClientRect();
+      setDrawn((now) => (now && now.width === Math.round(rect.width) && now.height === Math.round(rect.height) ? now : { width: Math.round(rect.width), height: Math.round(rect.height) }));
+    }, 250);
+    return () => clearInterval(timer);
+  }, [item]);
+  return (
+    <div style={{ border: '1px solid #e1e4e8', borderRadius: 6, padding: 8, background: '#fff' }} data-map-case={item.id}>
+      <div style={{ fontSize: 11, marginBottom: 6 }}>
+        <strong>{item.title}</strong> · drawn <code>{drawn ? `${drawn.width} × ${drawn.height}` : '…'}</code>
+      </div>
+      <div style={{ position: 'relative', width: MAP_BOX.width, minHeight: MAP_BOX.height }}>
+        <div ref={host} style={{ position: 'relative', zIndex: 1 }}>
+          <FlintView spec={item.input} renderer="svg" compact />
+        </div>
+        <div style={{ position: 'absolute', left: 0, top: 0, width: MAP_BOX.width, height: MAP_BOX.height, outline: '2px dashed #d93f0b', pointerEvents: 'none', zIndex: 2 }} />
+      </div>
+      {warnings.length ? (
+        <ul style={{ fontSize: 11, color: '#9a6700', margin: '6px 0 0', paddingLeft: 16 }}>
+          {warnings.map((warning) => <li key={warning.code}><code>{warning.code}</code> {warning.message}</li>)}
+        </ul>
+      ) : null}
+    </div>
+  );
+}
+
+function MapsGym() {
+  return (
+    <section style={{ width: 'min(100%, 1260px)' }} data-gym="maps">
+      <header style={{ marginBottom: 8 }}>
+        <h2 style={{ margin: 0, fontSize: 16 }}>Maps · framing, globe, no-data, join report, offline boundaries</h2>
+        <p style={{ margin: '2px 0 0', fontSize: 11, color: siteTheme.textMuted }}>
+          Base 400 × 300, stretch 1.5 (the dashed frame is the 600 × 450 box). Boundaries come from{' '}
+          <code>flint-chart/geo</code>, inline, so nothing is fetched. Warnings under each map are the compile&apos;s
+          own, which <code>validate_chart</code> returns.
+        </p>
+      </header>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(620px, 1fr))', gap: 10 }}>
+        {MAP_CASES.map((item) => <MapCaseView key={item.id} item={item} />)}
+      </div>
+    </section>
+  );
+}
+
 /** Mirrors RESULT_COPY_LIMIT and fitsInResult in packages/flint-mcp/src/board.ts (which needs Node). */
 const RESULT_COPY_LIMIT = 4096;
 type CardCase = { id: string; label: string; rows: Record<string, unknown>[]; fromFile?: boolean };
@@ -851,6 +955,7 @@ export function DebugGym() {
         <CasePanel typed />
         <CasePanel typed={false} />
       </div>
+      <MapsGym />
       <CanvasBoxGym />
       <PlotlyCurveGym />
       <McpRedrawGym />

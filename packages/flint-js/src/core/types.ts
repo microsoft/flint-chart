@@ -560,7 +560,10 @@ export interface LayoutTrace {
  * inputs.
  */
 /** What a template reads to size its plot in the plan. */
-export type PlotPlanContext = Pick<InstantiateContext, 'layout' | 'canvasSize' | 'assembleOptions' | 'channelSemantics' | 'table' | 'fullTable' | 'semanticTypes' | 'chartProperties' | 'measureText'>;
+export type PlotPlanContext = Pick<InstantiateContext, 'layout' | 'canvasSize' | 'assembleOptions' | 'channelSemantics' | 'table' | 'fullTable' | 'semanticTypes' | 'chartProperties' | 'measureText'> & {
+    /** The room the title, keys and axes take round the plot, where the plan measured it (a template that `fillsCanvas`). */
+    reserve?: { width: number; height: number };
+};
 
 /** What a template reads to plan its views: the plot the plan sized and the gap it keeps between facet panels. */
 export type ViewPlanContext = PlotPlanContext & {
@@ -1146,6 +1149,16 @@ export interface ChartTemplateDef {
     planPlot?: (context: PlotPlanContext) => { width: number; height: number } | undefined;
 
     /**
+     * The plot grows to the canvas less its furniture, as a map does, rather than holding its base
+     * size where nothing presses on it. The plan measures the title, keys and axes on both sides
+     * and hands `planPlot` that room as `context.reserve`.
+     */
+    fillsCanvas?: boolean;
+
+    /** What the chart's drawing owes a credit for — a map, the boundaries it draws — set at its foot. */
+    credit?: (context: PlotPlanContext) => ChartCredit | undefined;
+
+    /**
      * How far this chart type draws past its plot on each side, in px — a radar's spoke labels stand
      * outside its outer ring — and whether it fills the plot, so a key beside the plot stands clear
      * of what it draws there and a key inside the plot knows it has no empty corner. Runs in the
@@ -1340,7 +1353,8 @@ export interface ChartAssemblyInput {
          */
         source?: string | { text: string; href?: string };
         /**
-         * The house chrome this chart keeps. Unset follows the theme. `false` drops it all; an object
+         * The house chrome this chart keeps. Unset follows the theme, except on a map (`Map`,
+         * `Choropleth`), which keeps none unless it asks. `false` drops it all; an object
          * turns off parts: `header` (rules, tabs, wordmarks and logos above or beside the title),
          * `footer` (the closing rule and the house's credit beside the source) and `logos` (every
          * logo, header or footer — a footer credit then shows its words). The source line itself is
@@ -1489,6 +1503,45 @@ export interface CanvasTreatment {
      * at, where the fit set no edge of its own, so a smaller plot does not send them to another.
      */
     contain?: { width: number; height: number; keys?: 'side' | 'top' | 'bottom' };
+}
+
+/** A map's boundaries: a TopoJSON topology, or the URL of one. */
+export type BasemapSource = string | Record<string, unknown>;
+
+/** A credit a chart's drawing owes, drawn at the foot of the chart: words, a link, and a note shown on hover. */
+export interface ChartCredit {
+    text: string;
+    href?: string;
+    title?: string;
+}
+
+/**
+ * Boundaries for the built-in maps (`AssembleOptions.basemaps`). Each part keeps the object names
+ * and ids of the default it replaces, which the maps join and draw by. Unset, each is read from its
+ * URL on Flint's site (`https://microsoft.github.io/flint-chart/geo/v1/…`, a version that never
+ * changes once published); Flint's renderers (`mountChart`, `<FlintChart>`, `renderSvg`) serve
+ * those URLs from copies bundled in the package instead, loaded the first time a map draws. A host
+ * gives its own where its audience needs other boundaries: Flint takes no position on disputed ones.
+ */
+export interface MapBasemaps {
+    /**
+     * World Bank Official Boundaries, the default world map (`chartProperties.boundaries:
+     * 'world-bank'`): objects `countries` (ISO 3166-1 numeric ids; areas of non-determined legal
+     * status are features of their own, flagged `ndlsa`), `land` and `disputed` (the borders those
+     * areas share, drawn dotted). One source for every frame, or `coarse` for the world and
+     * `medium` for a region or a zoom. Default: `world-bank-coarse.json` and `world-bank-medium.json`, CC BY 4.0.
+     * Boundaries of the host's own need only `countries` and `land`: they are drawn and credited as
+     * the host's (see `attribution`), with dotted borders only where they have a `disputed` object.
+     */
+    worldBank?: BasemapSource | { coarse?: BasemapSource; medium?: BasemapSource };
+    /** Natural Earth's countries at 1:110m (`boundaries: 'natural-earth'`): objects `countries` (ISO 3166-1 numeric ids) and `land`. Default: `world-110m.json`, from vega-datasets. */
+    naturalEarth?: BasemapSource;
+    /** The US states in longitude and latitude, for point maps: object `states`. Default: `states-10m.json`, from us-atlas. */
+    us?: BasemapSource;
+    /** The US already projected with albersUsa into 975 × 610, for choropleths: objects `states` and `counties` (FIPS ids). Default: `counties-albers-10m.json`, from us-atlas. */
+    usAlbers?: BasemapSource;
+    /** Who drew the boundaries given here, reported as the map's `_attribution` and credited under it. Unset, the host's own boundaries are credited to no one. */
+    attribution?: string;
 }
 
 export interface AssembleOptions {
@@ -1666,6 +1719,13 @@ export interface AssembleOptions {
      * `'off'` lays every chart out as planned.
      */
     canvasFit?: 'off' | 'auto';
+    /**
+     * The boundaries the built-in maps draw, in place of their default URLs. A TopoJSON object is
+     * drawn inline, so the compiled spec needs no network wherever it is rendered; a string is the
+     * URL to load instead. Flint's own renderers need neither: they serve the defaults from the
+     * package. `flint-chart/geo` exports `basemaps`, every default topology ready to pass.
+     */
+    basemaps?: MapBasemaps;
     /**
      * Whether the canvas fit, once it has settled what is around the chart, lays the plot out once
      * more in the room the box leaves it — kept only where the chart reads better for it (default true).

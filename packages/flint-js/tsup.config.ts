@@ -1,6 +1,9 @@
 import { defineConfig } from 'tsup';
 
-export default defineConfig({
+/** The boundaries the renderers import on a map's first draw: one ES module each, split off by the host's bundler. */
+const LAZY_TOPOLOGIES = ['world-bank-coarse', 'world-bank-medium', 'world-110m', 'states-10m', 'counties-albers-10m'];
+
+export default defineConfig([{
   entry: {
     index: 'src/index.ts',
     'core/index': 'src/core/index.ts',
@@ -14,6 +17,7 @@ export default defineConfig({
     'validate/links': 'src/validate/links.ts',
     'interactive/index': 'src/interactive/index.ts',
     'render/index': 'src/render/index.ts',
+    'geo/index': 'src/geo/index.ts',
     'react/index': 'src/react/index.ts',
     'react/vegalite': 'src/react/vegalite.ts',
     'react/echarts': 'src/react/echarts.ts',
@@ -41,5 +45,15 @@ export default defineConfig({
     'vega', 'vega-lite', 'vega-tooltip', 'echarts', 'chart.js', 'plotly.js', 'plotly.js-dist-min', 'react',
     '../vegalite/interactive', '../echarts/interactive', '../chartjs/interactive', '../plotly/interactive',
     '../validate/links',
+    // The bundled boundaries, imported by the package's own name (see src/vegalite/basemap-loader.ts).
+    /^flint-chart\/geo\/lazy\//,
   ],
-});
+}, {
+  entry: Object.fromEntries(LAZY_TOPOLOGIES.map((name) => [`geo/lazy/${name}`, `src/geo/lazy/${name}.js`])),
+  format: ['esm'],
+  dts: false,
+  sourcemap: false,
+  clean: false,
+  splitting: false,
+  target: 'es2020',
+}]);

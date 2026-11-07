@@ -89,6 +89,8 @@ export interface VegaInteractionPlan {
     geoPreProjection?: GeoPreProjection;
     /** The dataset a single-level map reads its focus and region viewports from (set once compiled). */
     geoFocusSource?: string;
+    /** The map's World Bank boundaries follow the zoom from coarse to medium (set once compiled). */
+    geoDetail?: boolean;
     /** Polar templates realize the primary X brush as an angular sector. */
     angularXBrush?: boolean;
     navigationAxes?: Partial<Record<'x' | 'y', VegaNavigationAxis>>;

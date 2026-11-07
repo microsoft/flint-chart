@@ -14,7 +14,7 @@ import type { ChannelSemantics, LayoutResult } from './types';
 /** What a chart draws around its plot that takes room from it. */
 export type ReservePart =
     | 'yLabels' | 'yTitle' | 'sideKeys' | 'seriesEnd'
-    | 'xLabels' | 'xTitle' | 'title' | 'flatYTitle' | 'stackedKeys' | 'facetHeaders';
+    | 'xLabels' | 'xTitle' | 'title' | 'flatYTitle' | 'stackedKeys' | 'facetHeaders' | 'footer';
 
 /** The room a chart's furniture takes beside and above or below its plot, in px. */
 export interface FurnitureReserve {
@@ -41,6 +41,8 @@ export const NO_RESERVE: FurnitureReserve = { width: 0, height: 0, parts: {} };
 export interface ReserveInputs {
     /** The dimensions to measure: the ones a fitted axis runs along. */
     along: { width: boolean; height: boolean };
+    /** The source line's and credit's room at the foot, where the plot is sized round it rather than giving it up after. */
+    footer?: number;
     structure: ChartStructure;
     design: DesignDecisions;
     themed: boolean;
@@ -226,6 +228,7 @@ export function measureReserve(inputs: ReserveInputs): FurnitureReserve {
         if (furniture.yTitle?.top) parts.flatYTitle = furniture.yTitle.top;
         const keys = keyRoom(inputs, ROWS, 'height');
         if (keys) parts.stackedKeys = keys;
+        if (inputs.footer) parts.footer = inputs.footer;
         if (layout.facet && inputs.channelSemantics.column?.field && design.facets.header.show !== false) {
             parts.facetHeaders = Math.round((design.facets.header.fontSize ?? 11) * 1.7);
         }
@@ -238,7 +241,7 @@ export function measureReserve(inputs: ReserveInputs): FurnitureReserve {
     const sum = (names: ReservePart[]) => names.reduce((total, name) => total + (parts[name] ?? 0), 0);
     return {
         width: Math.ceil(sum(['yLabels', 'yTitle', 'sideKeys', 'seriesEnd'])),
-        height: Math.ceil(sum(['xLabels', 'xTitle', 'title', 'flatYTitle', 'stackedKeys', 'facetHeaders'])),
+        height: Math.ceil(sum(['xLabels', 'xTitle', 'title', 'flatYTitle', 'stackedKeys', 'facetHeaders', 'footer'])),
         parts,
         ...(unmeasured.length ? { unmeasured } : {}),
     };

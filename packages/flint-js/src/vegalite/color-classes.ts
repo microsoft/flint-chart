@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { classColors, roundColorClasses, type NeutralBand } from '../core/color-controls';
+import { classColors, jenksColorClasses, quantileColorClasses, roundColorClasses, type NeutralBand } from '../core/color-controls';
 import { DIVERGING_SCHEME_STOPS } from '../core/diverging-schemes';
 import { exactLegendLabels } from './exact-labels';
 
@@ -16,11 +16,12 @@ const DOMAIN_KEYS = ['domain', 'domainMid', 'domainMin', 'domainMax', 'domainRaw
  * About `target` classes, exactly where `exact` and a round step allows; a field that crosses
  * `pivot` has it as a break, or as the centre of a `neutral` class. False where the rows cannot say
  * where the classes fall — an aggregated or binned measure, a column the rows do not hold, values
- * that do not spread — and the encoding is left as it was.
+ * that do not spread — and the encoding is left as it was. `method` places the breaks at the
+ * quantiles or natural breaks instead, each printed to two significant figures.
  */
 export function stepColorScale(
     enc: any, ramp: string[] | { scheme: string }, target: number, table: readonly any[], pivot?: number,
-    options: { exact?: boolean; neutral?: NeutralBand } = {},
+    options: { exact?: boolean; neutral?: NeutralBand; method?: 'round' | 'quantile' | 'jenks' } = {},
 ): boolean {
     if (!enc?.field || enc.aggregate || enc.bin || enc.type !== 'quantitative') return false;
     if (Array.isArray(ramp) && ramp.length < 2) return false;
@@ -29,7 +30,10 @@ export function stepColorScale(
         const value = row?.[enc.field];
         if (typeof value === 'number' && Number.isFinite(value)) values.push(value);
     }
-    const classes = roundColorClasses(values, target, pivot, options);
+    // Quantiles and natural breaks follow the values, not a pivot; a diverging field keeps round classes about it.
+    const classes = options.method === 'quantile' ? quantileColorClasses(values, target)
+        : options.method === 'jenks' ? jenksColorClasses(values, target)
+        : roundColorClasses(values, target, pivot, options);
     if (!classes) return false;
     const scale = { ...(enc.scale ?? {}) };
     for (const key of DOMAIN_KEYS) delete scale[key];

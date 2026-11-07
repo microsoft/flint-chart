@@ -8,6 +8,7 @@
  */
 import type { TextMeasurer } from './legend-layout';
 import type { DesignDecisions } from './theme/types';
+import type { ChartCredit } from './types';
 import { applyTextCase } from './text-case';
 
 /** A run of text on a source line, in one weight and slope. */
@@ -26,11 +27,15 @@ export interface SourceLine {
     /** px from the foot of the footer to the top of the line. */
     bottom: number;
     href?: string;
+    /** Shown on hover: a disclaimer the line stands for. */
+    title?: string;
 }
 
 export interface SourcePlan {
     /** px the footer takes: the gap, the rule and the lines. */
     room: number;
+    /** The plot was sized with the footer's room already kept, so it gives none up. */
+    reserved?: boolean;
     lines: SourceLine[];
     /** The credit's logo at the other end, level with the first line: px from the foot to its bottom. */
     creditImage?: { src: string; alt: string; width: number; height: number; bottom: number; align: 'start' | 'end' };
@@ -48,6 +53,11 @@ export interface SourceInputs {
     /** The width the line may run: the title block's. */
     block: number;
     measure: TextMeasurer;
+    /**
+     * The credit the chart's own drawing owes, as a map owes the boundaries it draws: a line of its
+     * own closing the foot, at its start, drawn whether or not the chart gives a source or the house draws it.
+     */
+    credit?: ChartCredit;
 }
 
 /** The space between words (and between runs of different weight), in em. */
@@ -70,8 +80,9 @@ export function planSource(inputs: SourceInputs): SourcePlan | undefined {
     const { design, block, measure } = inputs;
     const s = design.source;
     const given = typeof inputs.source === 'string' ? { text: inputs.source } : inputs.source;
-    const words = withoutLeadIn(given?.text?.trim(), s.leadIn);
-    if (!s.show || !words) return undefined;
+    const words = s.show ? withoutLeadIn(given?.text?.trim(), s.leadIn) : undefined;
+    const owed = inputs.credit?.text.trim() ? inputs.credit : undefined;
+    if (!words && !owed) return undefined;
     const t = s.text;
     const fontSize = t.fontSize ?? 10;
     const font = t.font ?? design.font ?? 'sans-serif';
@@ -83,12 +94,13 @@ export function planSource(inputs: SourceInputs): SourcePlan | undefined {
     // The tokens of the line in order: the lead-in, the source's words, an inline credit.
     type Token = { text: string; fontWeight?: SourceRun['fontWeight']; fontStyle?: SourceRun['fontStyle'] };
     const tokens: Token[] = [];
-    if (s.leadIn) {
+    if (words && s.leadIn) {
         const lead = s.leadInCase ? applyTextCase(s.leadIn, s.leadInCase) : s.leadIn;
         tokens.push({ text: lead, ...(s.leadInWeight !== undefined ? { fontWeight: s.leadInWeight } : {}), ...(s.leadInStyle ? { fontStyle: s.leadInStyle } : {}) });
     }
-    for (const word of cased(words).split(/\s+/)) tokens.push({ text: word });
-    const credit = s.credit;
+    if (words) for (const word of cased(words).split(/\s+/)) tokens.push({ text: word });
+    // The house credits itself beside the chart's source only.
+    const credit = words ? s.credit : undefined;
     if (credit?.placement === 'inline') {
         const sep = credit.separator.trim();
         if (sep) tokens.push({ text: sep });
@@ -102,19 +114,23 @@ export function planSource(inputs: SourceInputs): SourcePlan | undefined {
     const room = (line: number) => Math.max(fontSize * 6, block - (line === 0 && endCredit ? endCredit.width + fontSize * 1.5 : 0));
 
     // Words, greedily, into lines no wider than the block; runs merge words of one weight and slope.
-    const lines: Token[][] = [[]];
-    let used = 0;
-    for (const token of tokens) {
-        const w = widthOf(token.text, token.fontWeight, token.fontStyle);
-        const line = lines[lines.length - 1];
-        if (line.length && used + space + w > room(lines.length - 1)) {
-            lines.push([token]);
-            used = w;
-        } else {
-            used += (line.length ? space : 0) + w;
-            line.push(token);
+    const wrap = (words: readonly Token[], width: (line: number) => number): Token[][] => {
+        const wrapped: Token[][] = [[]];
+        let used = 0;
+        for (const token of words) {
+            const w = widthOf(token.text, token.fontWeight, token.fontStyle);
+            const line = wrapped[wrapped.length - 1];
+            if (line.length && used + space + w > width(wrapped.length - 1)) {
+                wrapped.push([token]);
+                used = w;
+            } else {
+                used += (line.length ? space : 0) + w;
+                line.push(token);
+            }
         }
-    }
+        return wrapped;
+    };
+    const lines = wrap(tokens, room);
     const toRuns = (line: Token[]): Array<Omit<SourceRun, 'offset'>> => {
         const runs: Array<Omit<SourceRun, 'offset'>> = [];
         for (const token of line) {
@@ -144,6 +160,15 @@ export function planSource(inputs: SourceInputs): SourcePlan | undefined {
     }));
     if (credit?.placement === 'nextLine') {
         built.push({ align: s.align, runs: place([{ text: credit.text, fontWeight: credit.weight, width: widthOf(credit.text, credit.weight) }], s.align), bottom: 0 });
+    }
+    // The owed credit closes the foot, at its start, as a map's attribution sits in its corner.
+    if (owed) {
+        for (const line of wrap(owed.text.split(/\s+/).map((text) => ({ text })), () => Math.max(fontSize * 6, block))) {
+            built.push({
+                align: 'start', runs: place(toRuns(line), 'start'), bottom: 0,
+                ...(owed.href ? { href: owed.href } : {}), ...(owed.title ? { title: owed.title } : {}),
+            });
+        }
     }
     // Bottom-up: the last line sits on the foot of the footer.
     built.forEach((line, i) => { line.bottom = (built.length - 1 - i) * lineHeight; });

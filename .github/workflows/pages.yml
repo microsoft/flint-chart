@@ -33,6 +33,9 @@ jobs:
         run: |
           mkdir -p _site
           cp -R site/dist/* _site/
+      - name: Publish map boundaries
+        # Compiled maps name these URLs: a published file must never change or disappear.
+        run: node scripts/publish-site-geo.mjs _site
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site

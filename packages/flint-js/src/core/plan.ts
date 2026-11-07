@@ -1277,6 +1277,8 @@ function canvasParts(plan: LayoutPlan, channelSemantics: Record<string, ChannelS
     const headerRoom = plan.header ? plan.header.edge + plan.header.line : 0;
     const rulesRoom = plan.rules?.room ?? 0;
     const sourceRoom = plan.source?.room ?? 0;
+    // A plot sized round its source line gives it nothing.
+    const sourceTaken = plan.source?.reserved ? 0 : sourceRoom;
     // Where the plot gives its height to them, the plot drawn is shorter by it.
     const gives = plan.rules?.fromPlot ?? !(plan.layout.yNominalCount > 0);
     const facet = plan.layout.facet;
@@ -1284,7 +1286,7 @@ function canvasParts(plan: LayoutPlan, channelSemantics: Record<string, ChannelS
     return {
         panel: {
             width: plan.plot.width,
-            height: gives && !facet ? Math.max(1, plan.plot.height - brokenTitle - rulesRoom - headerRoom - sourceRoom) : plan.plot.height,
+            height: gives && !facet ? Math.max(1, plan.plot.height - brokenTitle - rulesRoom - headerRoom - sourceTaken) : plan.plot.height,
         },
         designed: { width: plan.plot.width, height: plan.plot.height },
         grid: { columns: facet?.columns ?? 1, rows: facet?.rows ?? 1, gapX: gap, gapY: gap },
@@ -1507,7 +1509,11 @@ function planLayoutOnce(analysis: PlanAnalysis, context: PlanContext): LayoutPla
             message: 'widening the bands into the canvas\'s spare room was not enough for the labels — the bands are kept, and the labels withheld' });
     }
     const reserveReason = (chain: PlanStage[], decision: string): PlanReason => ({ part: 'reserve', decision, chain });
-    const along = { width: first.layout.xStepFitted === true, height: first.layout.yStepFitted === true };
+    // A plot that fills the canvas (a map) has the room round it measured on both sides, as a fitted step does.
+    const fills = prepared.analysis.template.fillsCanvas === true && !first.layout.facet && !first.composite;
+    const along = fills
+        ? { width: true, height: true }
+        : { width: first.layout.xStepFitted === true, height: first.layout.yStepFitted === true };
     if (pinned) {
         return { ...first, reserve: pinned, reasons: [...first.reasons, reserveReason([{ rule: 'pinned', value: `${Math.round(pinned.width)} × ${Math.round(pinned.height)}`, note: 'the room kept for the furniture is held from the plan the chart was opened with' }], 'held')] };
     }
@@ -1516,6 +1522,8 @@ function planLayoutOnce(analysis: PlanAnalysis, context: PlanContext): LayoutPla
     }
     const reserve = measureReserve({
         along,
+        // A plot that fills the canvas holds its shape: the foot's room is kept before it is sized, not taken from it after.
+        ...(fills && first.source ? { footer: first.source.room } : {}),
         structure: first.structure,
         design: first.design,
         themed: Boolean(theme),
@@ -1538,7 +1546,9 @@ function planLayoutOnce(analysis: PlanAnalysis, context: PlanContext): LayoutPla
         ...second,
         reserve,
         reasons: [...second.reasons, reserveReason([
-            { rule: 'fitted step', value: along.width && along.height ? 'both axes' : along.width ? 'x' : 'y', note: 'a banded axis fitted its step to the room, so the room is measured' },
+            fills
+                ? { rule: 'fills the canvas', value: 'both sides', note: 'the plot grows to the canvas less its furniture, so the furniture is measured' }
+                : { rule: 'fitted step', value: along.width && along.height ? 'both axes' : along.width ? 'x' : 'y', note: 'a banded axis fitted its step to the room, so the room is measured' },
             { rule: 'measured', value: `${Math.round(reserve.width)} wide, ${Math.round(reserve.height)} tall`, read: Object.fromEntries(Object.entries(reserve.parts).map(([part, px]) => [part, Math.round(px)])), note: `the furniture beside and above or below the plot, as the text measures${reserve.unmeasured?.length ? `; not measured: ${reserve.unmeasured.join(', ')}` : ''}` },
             { rule: 'laid out again', value: `${Math.round(second.plot.width)} × ${Math.round(second.plot.height)}`, note: 'the plot is planned once more into the canvas less that room, capped at 40% of it; one pass' },
         ], `${Math.round(reserve.width)} × ${Math.round(reserve.height)} kept`)],
@@ -1796,6 +1806,7 @@ function planAroundPlot(prepared: PreparedPlan, reserve: FurnitureReserve): Layo
     }
 
     const plotContext: PlotPlanContext = {
+        ...(reserve.width > 0 || reserve.height > 0 ? { reserve: { width: reserve.width, height: reserve.height } } : {}),
         layout: layoutResult,
         canvasSize: size.baseSize,
         assembleOptions: effectiveOptions,
@@ -2130,8 +2141,10 @@ function planAroundPlot(prepared: PreparedPlan, reserve: FurnitureReserve): Layo
     const sourcePlan = planSource({
         design, source: context.source, block: chartBlock({ ...titleInputs, ...(extent ? { viewsWidth: extent.width } : {}) }) ?? size.baseSize.width,
         measure: tableTextMeasurer,
+        credit: template.credit?.(plotContext),
     });
-    const headerRoom = (header ? header.edge + header.line : 0) + (sourcePlan?.room ?? 0);
+    if (sourcePlan && reserve.parts.footer) sourcePlan.reserved = true;
+    const headerRoom = (header ? header.edge + header.line : 0) + (sourcePlan && !sourcePlan.reserved ? sourcePlan.room : 0);
     const drawViews = (title: TitlePlan | undefined) => {
         const drawn = views && (ruled || title || headerRoom) && plotGives
             ? shortenViews(views, (height) => {

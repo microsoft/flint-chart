@@ -99,7 +99,8 @@ describe('the labels a size key prints', () => {
         const spec: any = assembleVegaLite({ ...sizedBy(1), chart_spec: {
             chartType: 'Map', encodings: { longitude: { field: 'lon' }, latitude: { field: 'lat' }, size: { field: 'v' } }, canvasSize: { width: 500, height: 400 },
         } } as any);
-        expect((await legendLabels(spec)).slice(0, -1)).toEqual(['0.2', '0.5', '1', '2.5']);
+        // The map is planned inside its box at its frame's shape, so its bubbles size to that plot.
+        expect((await legendLabels(spec)).slice(0, -1)).toEqual(['0.5', '1', '2.5']);
     });
 
     it('keep the field’s own format — a share, a currency — at the precision the samples need', async () => {

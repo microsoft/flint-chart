@@ -11,6 +11,7 @@ const pages: NavEntry[] = [
     children: [
       { to: 'illustrations', label: 'Gallery', end: true },
       { to: 'illustrations/architecture', label: 'Architecture' },
+      { to: '/dev/design', label: 'Design blueprint' },
       { to: 'demo-wall', label: 'Demo wall' },
       { to: 'full-test-cases', label: 'Full test cases' },
     ],
@@ -30,6 +31,7 @@ const pages: NavEntry[] = [
       { to: 'calendar-axis', label: 'Calendar axes' },
       { to: 'categorical-temporal', label: 'Categorical temporal' },
       { to: 'canvas-squeeze', label: 'Canvas squeeze' },
+      { to: 'maps', label: 'Maps' },
       { to: 'density', label: 'Density' },
       { to: 'legend', label: 'Legend' },
       { to: 'binning', label: 'Binned colour' },

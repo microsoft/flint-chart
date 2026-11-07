@@ -240,6 +240,98 @@ function rampAt(stops: string[], t: number): string {
  * colours and the shorter side keeps to its pale end. Each class takes the colour at its far edge,
  * so the classes either side of the pivot already show its sign; a neutral class takes the centre.
  */
+/**
+ * A class break printed short: two significant figures, as a map key reads it (12,000 not
+ * 11,873.4). Zero and the data's own ends stay as they are.
+ */
+function shortBreak(value: number): number {
+    return value === 0 ? 0 : Number(value.toPrecision(2));
+}
+
+/**
+ * Breaks above the data's least value and no higher than its greatest, ascending, in print form;
+ * fewer where rounding merges two. A break at the greatest value is a class of the greatest alone.
+ */
+function tidyBreaks(raw: readonly number[], min: number, max: number): number[] {
+    const breaks: number[] = [];
+    for (const value of raw.map(shortBreak)) {
+        if (value <= min || value > max) continue;
+        if (breaks.length && value <= breaks[breaks.length - 1]) continue;
+        breaks.push(value);
+    }
+    return breaks;
+}
+
+/**
+ * Classes holding about equal numbers of values: the breaks at the quantiles, printed short. The
+ * choropleth's default, after Data Formulator's maps: a skewed measure (GDP, population) spread
+ * evenly by value leaves most regions in the first class, where quantiles give each class its
+ * share of regions. Undefined where the values do not spread into two classes.
+ */
+export function quantileColorClasses(values: readonly number[], count: number): ColorClasses | undefined {
+    const sorted = values.filter(Number.isFinite).sort((a, b) => a - b);
+    if (sorted.length < 2 || !(count >= 2)) return undefined;
+    const [min, max] = [sorted[0], sorted[sorted.length - 1]];
+    const at = (q: number) => {
+        const position = q * (sorted.length - 1);
+        const lower = Math.floor(position);
+        return sorted[lower] + (sorted[Math.min(lower + 1, sorted.length - 1)] - sorted[lower]) * (position - lower);
+    };
+    const breaks = tidyBreaks(Array.from({ length: count - 1 }, (_, i) => at((i + 1) / count)), min, max);
+    return breaks.length ? { breaks, lo: min, hi: max } : undefined;
+}
+
+/** The most values natural breaks weigh; more are sampled evenly, as Data Formulator samples them. */
+const JENKS_SAMPLE = 2000;
+
+/**
+ * Natural breaks (Jenks): classes that keep each one's values close together and the classes
+ * apart, by least squared deviation within classes. Printed short. Undefined where the values do
+ * not spread into two classes.
+ */
+export function jenksColorClasses(values: readonly number[], count: number): ColorClasses | undefined {
+    let sorted = values.filter(Number.isFinite).sort((a, b) => a - b);
+    if (sorted.length < 2 || !(count >= 2)) return undefined;
+    const [min, max] = [sorted[0], sorted[sorted.length - 1]];
+    if (sorted.length > JENKS_SAMPLE) {
+        const stride = (sorted.length - 1) / (JENKS_SAMPLE - 1);
+        sorted = Array.from({ length: JENKS_SAMPLE }, (_, i) => sorted[Math.round(i * stride)]);
+    }
+    const n = sorted.length;
+    const k = Math.min(count, n);
+    // cost[j][i]: least within-class deviation for the first i values in j classes; from[j][i]: where the last class starts.
+    const prefix = [0];
+    const prefixSq = [0];
+    for (const value of sorted) {
+        prefix.push(prefix[prefix.length - 1] + value);
+        prefixSq.push(prefixSq[prefixSq.length - 1] + value * value);
+    }
+    const deviation = (start: number, end: number) => {
+        const size = end - start;
+        const sum = prefix[end] - prefix[start];
+        return prefixSq[end] - prefixSq[start] - (sum * sum) / size;
+    };
+    const cost = Array.from({ length: k + 1 }, () => new Float64Array(n + 1).fill(Infinity));
+    const from = Array.from({ length: k + 1 }, () => new Int32Array(n + 1));
+    cost[0][0] = 0;
+    for (let j = 1; j <= k; j++) {
+        for (let i = j; i <= n; i++) {
+            for (let start = j - 1; start < i; start++) {
+                const candidate = cost[j - 1][start] + deviation(start, i);
+                if (candidate < cost[j][i]) { cost[j][i] = candidate; from[j][i] = start; }
+            }
+        }
+    }
+    const raw: number[] = [];
+    for (let j = k, i = n; j > 1; j--) {
+        const start = from[j][i];
+        raw.unshift(sorted[start]);
+        i = start;
+    }
+    const breaks = tidyBreaks(raw, min, max);
+    return breaks.length ? { breaks, lo: min, hi: max } : undefined;
+}
+
 export function classColors(stops: string[], classes: ColorClasses): string[] {
     const { below, above } = classes;
     if (below === undefined || above === undefined) return resampleStops(stops, classes.breaks.length + 1);

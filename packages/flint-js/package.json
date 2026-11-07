@@ -105,6 +105,15 @@
       "import": "./dist/render/index.js",
       "require": "./dist/render/index.cjs"
     },
+    "./geo": {
+      "types": "./dist/geo/index.d.ts",
+      "import": "./dist/geo/index.js",
+      "require": "./dist/geo/index.cjs"
+    },
+    "./geo/lazy/*": {
+      "types": "./src/geo/lazy/*.d.ts",
+      "default": "./dist/geo/lazy/*.js"
+    },
     "./react": {
       "types": "./dist/react/index.d.ts",
       "import": "./dist/react/index.js",
@@ -189,6 +198,7 @@
     }
   },
   "devDependencies": {
+    "@types/d3-geo": "^3.1.1",
     "@types/d3-time": "^3.0.4",
     "@types/d3-time-format": "^4.0.3",
     "@types/node": "^20.14.10",
@@ -217,6 +227,7 @@
   "dependencies": {
     "@floating-ui/dom": "^1.7.4",
     "chart.js": "^4.0.0",
+    "d3-geo": "^3.1.1",
     "d3-time": "^3.1.0",
     "d3-time-format": "^4.1.0",
     "echarts": "^5.0.0 || ^6.0.0",
