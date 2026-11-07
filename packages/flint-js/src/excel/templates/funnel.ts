@@ -5,6 +5,7 @@ import { formatSpecToExcel } from '../chart-types';
 import type { ExcelTemplateDef } from './types';
 
 export const excelFunnelChartDef: ExcelTemplateDef = {
+    additionalPropertyKeys: ['sort'],
     chart: 'Funnel Chart',
     channels: ['y', 'size'],
     typeMapping: { vertical: 'Funnel', noAxes: true },

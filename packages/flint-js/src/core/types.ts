@@ -1183,6 +1183,9 @@ export interface ChartTemplateDef {
     /** Optional configurable properties for the chart type */
     properties?: ChartPropertyDef[];
 
+    /** Non-control chartProperties keys consumed directly by the template. */
+    additionalPropertyKeys?: string[];
+
     /**
      * The geometries this template actually builds.
      *

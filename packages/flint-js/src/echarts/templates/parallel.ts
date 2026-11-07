@@ -58,6 +58,7 @@ export const ecParallelCoordinatesDef: ChartTemplateDef = {
     template: { mark: 'line', encoding: {} },
     channels: ['color', 'detail'],
     markCognitiveChannel: 'position',
+    additionalPropertyKeys: ['dimensions'],
     instantiate: (spec, ctx) => {
         const { channelSemantics, table, chartProperties } = ctx;
         if (table.length === 0) return;

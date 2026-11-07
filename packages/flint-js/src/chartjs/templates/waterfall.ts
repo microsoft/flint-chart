@@ -28,6 +28,7 @@ const COLOR = {
 };
 
 export const cjsWaterfallChartDef: ChartTemplateDef = {
+    additionalPropertyKeys: ['totals'],
     chart: 'Waterfall Chart',
     template: { mark: 'bar', encoding: {} },
     channels: ['x', 'y', 'color', 'column', 'row'],
