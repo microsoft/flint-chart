@@ -117,7 +117,7 @@ const countryDetails: CanvasInteractionDef = {
           targets: [target],
           value: { state: 'emphasized', mutedOpacity: 0.25 },
         },
-        { op: 'set-annotation', target, value: { text: country } },
+        { op: 'annotate-text', target, value: { text: country } },
       ],
     };
   },
@@ -159,7 +159,7 @@ const countrySelection = externalInteraction<{ Country: string }>({
           targets: [target],
           value: { state: 'emphasized', mutedOpacity: 0.25 },
         },
-        { op: 'set-annotation', target, value: { text: Country } },
+        { op: 'annotate-text', target, value: { text: Country } },
       ],
     };
   },
@@ -223,7 +223,7 @@ container.addEventListener('flint-interaction', (event) => {
 
 ## Update operators and host responses
 
-`set-style` controls emphasis or visibility, `set-annotation` adds or clears a label, and `set-viewport` changes the visible domains. Other operators reorder categories, add overlays, or replace data. A single handler can return multiple operators in one update.
+`set-style` controls emphasis or visibility, `annotate-text` adds or clears a label, and `set-viewport` changes the visible domains. Other operators reorder categories, add overlays, or replace data. A single handler can return multiple operators in one update.
 
 The container emits `flint-interaction` events with the interaction id and semantic target. Your application can listen to those events to filter a table or update other widgets; Flint renders only the canvas updates. Applications can also submit operators directly through `surface.applyUpdate()` or `surface.setUpdates()`. See [Components](interaction-components.md) for the event envelope, action families, listener examples, and chart update API.
 

@@ -501,7 +501,7 @@ Object.assign(SKETCHES, {
       } },
       { title: 'Update operators', draw: (b, x) => {
         chip(ctx, b, x + 24, 200, 'set-style', C.amber, 'highlight', 581, 190);
-        chip(ctx, b, x + 24, 320, 'set-annotation', C.teal, 'annotate', 583, 190);
+        chip(ctx, b, x + 24, 320, 'annotate-text', C.teal, 'annotate', 583, 190);
         chip(ctx, b, x + 24, 440, 'set-viewport', C.blue, 'pan & zoom', 585, 190);
       } },
       { title: 'Chart', draw: (b, x) => {

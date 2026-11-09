@@ -134,10 +134,10 @@ describe('choropleth auto level assembly', () => {
             semantic_types: { Region: 'State', Place: 'Category', Value: 'Quantity' },
             chart_spec: { chartType: 'Choropleth', encodings: { id: 'Region', color: 'Value' } },
         } as any) as any;
-        expect(spec.layer).toBeUndefined();
+        // The states and the mesh of borders between them: no level gates, no level signal.
+        expect(spec.layer.map((layer: any) => layer.data.format.feature ?? `mesh:${layer.data.format.mesh}`)).toEqual(['states', 'mesh:states']);
         expect(spec.params).toBeUndefined();
         expect(spec._interactionSemantics.geoLevels).toBeUndefined();
-        expect(spec.data.format.feature).toBe('states');
     });
 });
 

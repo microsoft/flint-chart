@@ -129,6 +129,7 @@ interface ChartAssemblyInput {
   };
   theme_spec?: ThemeSpec | string;                     // presentation, Vega-Lite only
   interaction_spec?: InteractionSpec;                  // behaviour, Vega-Lite interactive surface only
+  updates?: ChartUpdate[];                             // notes, overlays, emphasis applied once drawn; interactive runtime only
   options?: AssembleOptions;
   field_display_names?: Record<string, string>;
 }
@@ -179,6 +180,28 @@ interface InteractionSpec {
 cannot honour is dropped with an `unsupported_interaction` warning, and `validateChart`
 reports the same warnings before anything renders. `supportedInteractionPresets(def.interactionSupport)`
 lists the presets a template supports by declaration. See [Using interactions](/documentation/interaction-spec).
+
+### `updates`
+
+Updates the chart applies once it is drawn — notes, overlays, emphasis, a viewport — kept with the
+spec, so a copied spec keeps them. They are the same `ChartUpdate` layers a host passes to
+`mountChart(…, { updates })` or `<FlintChart updates>`; the spec's are applied first, and a host
+update with the same `id` replaces the spec's. `validateChart` checks them with the host's, op by op.
+
+The interactive runtime applies them (Vega-Lite). A static output — `assembleVegaLite`'s spec,
+`renderSvg`, the other backends — draws the chart without them and says so with an `info` warning,
+`updates-not-compiled`: notes and overlays are drawn by the runtime, not compiled into Vega-Lite.
+
+```jsonc
+{
+  "data": { … }, "chart_spec": { … },
+  "updates": [
+    { "id": "story", "ops": [
+      { "op": "annotate-text", "target": { "select": { "key": { "Stop": 2 } } }, "value": { "text": "Ismarus sacked" } }
+    ] }
+  ]
+}
+```
 
 ### `chart_spec`
 
@@ -273,7 +296,6 @@ interface AssembleOptions {
   baseTitleFontSize?: number;  // header font — axis title / legend / chart title (VL 11, EC/CJS 12, Plotly 14)
   canvasFit?: 'off' | 'auto'; // what the layout does when the chart will not read well in its box (default 'auto')
   canvasRefit?: boolean;       // once the fit settles the title and keys, lay the plot out once more in the room left (default true)
-  basemaps?: MapBasemaps;      // the built-in maps' boundaries, in place of the defaults (see Map boundaries)
 }
 ```
 
@@ -340,42 +362,86 @@ Full list: `packages/flint-js/src/core/types.ts` (`AssembleOptions`). Behavior: 
 
 ### Map boundaries
 
-The world maps draw World Bank Official Boundaries by default (`chartProperties.boundaries:
-'world-bank'`) or Natural Earth's (`'natural-earth'`); the US maps draw the Census Bureau's, via
-us-atlas. A compiled spec names them by URL on Flint's site,
-`https://microsoft.github.io/flint-chart/geo/v1/…` — a version whose files never change — so it
-draws wherever it is rendered. Flint's own renderers (`mountChart`, `<FlintChart>`, `renderSvg`)
-fetch nothing: they load the copies bundled in the package. Sources and licences:
-`packages/flint-js/src/geo/NOTICE.md`.
+A map draws the boundaries `chartProperties.boundaries` names. Unset, a world map draws World Bank
+Official Boundaries and a US map the Census Bureau's (via us-atlas).
 
-Flint takes no position on disputed boundaries, and a country's law may require its own (India's and
-China's do). A host draws the boundaries its audience needs with `basemaps`, one part per built-in map:
+```jsonc
+"chartProperties": { "boundaries": "natural-earth" }   // a named set: "world-bank" (default) or "natural-earth"
 
-```ts
-interface MapBasemaps {
-  worldBank?: Source | { coarse?: Source; medium?: Source }; // objects `countries`, `land`; optional `disputed`
-  naturalEarth?: Source;  // objects `countries`, `land`
-  us?: Source;            // object `states`, in longitude and latitude
-  usAlbers?: Source;      // objects `states`, `counties`, projected with albersUsa into 975 × 610
-  attribution?: string;   // who drew the boundaries given here, credited at the map's foot
+"chartProperties": {
+  "boundaries": {                                      // a file of the chart's own
+    "url": "/maps/india-view.topojson",                // or { "coarse": …, "medium": … }; or "values": <inline shapes>
+    "feature": "countries",                            // TopoJSON object of the regions (omit for GeoJSON)
+    "ids": "iso3",                                     // iso-numeric (default) | iso3 | iso2 | fips | as-is
+    "key": "properties.iso",                           // where each feature keeps its id (default "id")
+    "disputed": "lines",                               // optional: an object of borders drawn dotted
+    "attribution": "Survey of India"                   // or { "text", "href", "title" }: credited at the map's foot
+  }
 }
-type Source = string | TopoJSONTopology; // a URL to load, or the topology inline
 ```
 
-- **Your own boundaries.** Keep the default's object names and ids (ISO 3166-1 numeric for
-  countries, FIPS for the US), which the maps join and draw by; Flint still resolves names and codes
-  in the data to those ids. Give `attribution` for the source to be credited — boundaries given
-  without one are credited to no one, and are not taken for the World Bank's: no World Bank credit,
-  no dotted disputed borders unless the topology has a `disputed` object, and no warning about which
-  countries the map leaves out.
-- **No network at all.** Pass the topologies from `flint-chart/geo` (`basemaps`, or each part
-  alone): the spec carries them inline, for vl-convert, sandboxed iframes and offline apps.
-- **Your own origin.** Serve the files from `flint-chart/src/geo` and pass their URLs. Copies of the
-  World Bank files kept under their names (`world-bank-coarse.json`, `world-bank-medium.json`) are
-  still drawn and credited as the World Bank's.
-- **A geography of your own** (a country's provinces, say): the Choropleth's `chartProperties.levels`
-  (`{ value, url, feature? }`, coarsest first) and `featureKey` join the rows to your features by
-  your own keys, and `baseMapUrl` draws land beneath them.
+- **Named sets.** `world-bank` draws areas of non-determined legal status as regions of their own,
+  dots the borders they share, and credits the World Bank (CC BY 4.0) with its disclaimer;
+  `natural-earth` draws de facto borders and credits no one (public domain). A compiled spec names
+  them by URL on Flint's site, `https://microsoft.github.io/flint-chart/geo/v1/…` — a version whose
+  files never change — so it draws wherever it is rendered. Flint's renderers (`mountChart`,
+  `<FlintChart>`, `renderSvg`) fetch nothing: they load the copies bundled in the package, and
+  `withBundledBoundaries(loader)` from `flint-chart/vegalite` does the same for a Vega view of your
+  own. For a renderer with no network (vl-convert, a sandboxed iframe, an offline app),
+  `inlineBoundaries(spec)` from `flint-chart/geo` writes the shapes into a compiled spec. Sources
+  and licences: `packages/flint-js/src/geo/NOTICE.md`.
+- **A file of your own.** Flint takes no position on disputed boundaries, and a country's law may
+  require its own (India's and China's do): a chart whose audience needs other boundaries gives
+  them. `ids` says what the file's feature ids are, and the rows are read into that form: with
+  country codes (`iso-numeric`, `iso3`, `iso2`) the map frames, projects and joins as the world map
+  does, names and codes in the data resolving to the file's ids; with `fips` it draws the US in
+  longitude and latitude; with `as-is` the rows match the file's keys exactly. A file keyed by FIPS
+  or by its own keys is fitted to its shapes. Its credit is its `attribution`; its borders are
+  dotted only where `disputed` names an object; and Flint does not warn which countries it leaves
+  out, which only the file knows.
+- **Unknown or malformed.** A name Flint does not ship, or a file with neither `url` nor `values`,
+  draws the default with an `invalid-option-value` warning.
+- **Several levels of your own geography** (provinces, then counties): the Choropleth's
+  `chartProperties.levels` (`{ value, url, feature? }`, coarsest first) and `featureKey` join the
+  rows to your features by your own keys, and `baseMapUrl` draws land beneath them.
+
+### Map routes
+
+A `Map` with an `order` encoding joins its points into routes, in that field's order (numbers by
+value, dates by time, text with its numbers read). Rows split into one route per `detail` value,
+else per value of a categorical `color`, which the route then takes; otherwise the route is drawn
+in a neutral ink and the points keep their colour.
+
+```jsonc
+"chart_spec": {
+  "chartType": "Map",
+  "encodings": { "longitude": "lon", "latitude": "lat", "order": "Stop" },
+  "chartProperties": { "arrows": true, "curve": "auto" }
+}
+```
+
+- `curve`: `auto` bows the legs of a route of stops into arcs (to the left of travel, so a leg out
+  and the leg back part ways) and follows great circles on a globe or along a track of more than 24
+  legs; `arc`, `great-circle` and `straight` (a constant compass bearing) choose one.
+- `strokeWidth` is the routes' width, leg by leg from the row each leaves: zero-based, linear, 1 to
+  8 px, with a line-width key. On a map without `order` it has no legs to widen and is left out, with
+  a warning. `size` stays the dots' area, so one map can carry both.
+- A route is drawn as its arrows alone: its stops are not drawn, but keep the tooltips, hover, notes
+  and colour key. `stops: 'all'` (or `true`) draws them as dots; `stops: 'ends'` only where each
+  run of legs in one colour starts and ends, the stops between marked by their arrows. Dots are one
+  size (from the routes' typical width, 2.5–4 px); `size` sizes them by value (zero-based by area,
+  2.5–7 px, with a key, and draws them at every stop unless `stops` is set), and `stopRadius` fixes
+  one radius. A leg leaves from the edge of its
+  dot's halo, and its head's tip stops at the next one's. A route without a series colour is drawn in the theme's mark colour (a neutral ink
+  beside points coloured by another field), square-ended and mitred, with a hairline halo (white on
+  a light map, the ground on a dark one) round each line and its head.
+- `arrows` (default `true`): an arrowhead at the end of each leg, or at the end of a track only,
+  sized to its line and set on it: its tip at the stop, the middle of its base on the line a head's
+  length back, the line ending square inside it. A leg too short on screen for its head shrinks it
+  to fit, and below 60% of its size keeps its line alone. Each head reads its heading, and each line its length, from
+  the live projection inside the spec, so both follow a pan, zoom or globe drag in any Vega renderer.
+- The lines are geoshapes: the projection draws them, cut at the antimeridian and hidden past a
+  globe's horizon. They and their heads take no tooltip; the points keep theirs.
 
 ---
 
@@ -423,6 +489,26 @@ Object.keys(vlTemplateDefs);
 
 vlGetTemplateChannels('Scatter Plot');
 // ["x", "y", "color", "size", "opacity", "column", "row"]
+```
+
+### Map labels and shapes
+
+- `text` on a `Map` names each point beside it — right of its dot, else left, above or below,
+  whichever clears every dot, every label placed before it, the plot's edge and (where it can) a
+  route's lines. Placement is worked out once, at compile time, through the projection the map will
+  draw; the largest dots (by `size`) are named first. A point whose label has no room stays unnamed,
+  and an `info` warning (`map-labels-dropped`) says how many. Labels stay beside their points through
+  pan, zoom and a globe's turn.
+- `text` on a `Choropleth` names each region with a row at its middle, shown while the region on
+  screen is wider and taller than its label (small regions' names appear on zoom). It is white or a
+  dark ink, whichever reads better on its region's fill, with a halo in that fill.
+- `shape` on a `Map` draws its points as filled symbols, one per category, with a key.
+
+```jsonc
+{
+  "chartType": "Map",
+  "encodings": { "longitude": "lon", "latitude": "lat", "size": "Population", "text": "City", "shape": "Kind" }
+}
 ```
 
 ---
@@ -522,7 +608,7 @@ Inspect `_warnings` or `ChartWarning` arrays in integration code to surface trun
 | `flint-chart/react` | `<FlintChart>` component (React is an optional peer dependency) |
 | `flint-chart/react/<backend>` | The same, reaching only that backend: for one-file bundles |
 | `flint-chart/render` | `renderSvg` for static SVG without a DOM |
-| `flint-chart/geo` | The built-in maps' boundaries as TopoJSON (`basemaps`), to pass as `options.basemaps` |
+| `flint-chart/geo` | The named boundaries as TopoJSON, and `inlineBoundaries` to write them into a compiled spec |
 | `flint-chart/test-data` | Gallery generators (`TEST_GENERATORS`) |
 
 ---

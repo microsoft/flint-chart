@@ -325,8 +325,8 @@ export function createFlintChart(loaders: InteractiveRendererLoaders) {
         const latestDefinitions = useRef(new Map<string, InteractionDef>());
         latestDefinitions.current = new Map(resolved.definitions.map((definition) => [definition.id, definition]));
         const definitionsKey = flintInteractionsKey(resolved.definitions);
-        // A chart with no interactions renders static unless the host passes `updates`, even `[]`.
-        const updatable = updates !== undefined;
+        // A chart with no interactions renders static unless the host passes `updates`, even `[]`, or the spec carries some.
+        const updatable = updates !== undefined || (spec.updates?.length ?? 0) > 0;
         // A malformed spec counts as interactive, so the mount reports it.
         const specCount = fromSpec === null ? 1 : typeof interactions === 'function' ? 0 : fromSpec.length;
         const runtime = updatable || resolved.definitions.length > 0 || specCount > 0;

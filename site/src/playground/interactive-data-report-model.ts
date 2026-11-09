@@ -72,7 +72,7 @@ export interface ChatMessage {
 }
 
 /** The update op an interaction preset produces, and the kind of op a sentence carries. */
-export type PresetOp = 'set-style' | 'set-viewport' | 'set-order' | 'set-annotation';
+export type PresetOp = 'set-style' | 'set-viewport' | 'set-order' | 'annotate-text';
 
 export interface Preset {
   op: PresetOp;
@@ -99,7 +99,7 @@ export const OPS: Record<PresetOp, { title: string; description: string }> = {
   'set-style': { title: 'Emphasis', description: 'Emphasizes the rows it names and mutes the rest.' },
   'set-viewport': { title: 'Viewport', description: 'Sets the visible domain on x, y, or both.' },
   'set-order': { title: 'Order', description: 'Sets the category order along an axis.' },
-  'set-annotation': { title: 'Annotation', description: 'Attaches a note to one data key.' },
+  'annotate-text': { title: 'Annotation', description: 'Attaches a note to one data key.' },
 };
 
 /** CSS hook for an op: `idr-op-style`, `idr-op-viewport`, and so on. */
@@ -123,12 +123,15 @@ const EMPHASIS = { state: 'emphasized', mutedOpacity: 0.25 } as const;
 /** Emphasizes the rows the selectors name and mutes the rest. */
 export const emphasis = (...match: Selector[]): ChartUpdateOp =>
   ({ op: 'set-style', targets: match.map((key) => ({ select: { key } })), value: EMPHASIS });
-/** Attaches a note to one data key. The key must resolve to exactly one element. */
-export const note = (match: Selector, text: string): ChartUpdateOp =>
-  ({ op: 'set-annotation', target: { select: { key: match } }, value: { text } });
-/** A note anchored to the point mark of the key, where a line chart draws its points. */
+/**
+ * Attaches a note to one data key. The key must resolve to exactly one element. `highlight` says how
+ * the note marks it: `'exclusive'` also recedes the rest, as an emphasis does.
+ */
+export const note = (match: Selector, text: string, highlight?: 'light' | 'exclusive'): ChartUpdateOp =>
+  ({ op: 'annotate-text', target: { select: { key: match } }, value: { text, ...(highlight ? { highlight } : {}) } });
+/** A note anchored to the point of the key, where a line chart draws its points. */
 export const pointNote = (match: Selector, text: string): ChartUpdateOp =>
-  ({ op: 'set-annotation', target: { select: { key: match } }, value: { text, subject: { kind: 'mark' } } });
+  ({ op: 'annotate-text', target: { select: { key: match } }, value: { text, anchor: 'point' } });
 /** Sets the visible domain on x, y, or both. */
 export const view = (range: { x?: Domain; y?: Domain }): ChartUpdateOp => ({
   op: 'set-viewport',
@@ -218,7 +221,7 @@ export function presetCatalog(fixture: InteractionDemoFixture): PresetOption[] {
   }
   if (reorder) options.push({ id: 'reorder', op: 'set-order', label: 'Drag reorder', icon: GripVertical, make: () => dragReorder({ id: 'reorder' }) });
   if (group) options.push({ id: 'legend', op: 'set-style', label: 'Legend toggle', icon: EyeOff, make: () => legendToggle({ id: 'legend' }) });
-  options.push({ id: 'annotate', op: 'set-annotation', label: 'Annotate', icon: MessageSquareText, make: () => clickAnnotate({ id: 'annotate' }) });
+  options.push({ id: 'annotate', op: 'annotate-text', label: 'Annotate', icon: MessageSquareText, make: () => clickAnnotate({ id: 'annotate' }) });
   return options;
 }
 
@@ -243,7 +246,7 @@ export const presetOf = (option: PresetOption): Preset => preset(option.op, opti
 export function sentenceOps(item: Sentence): PresetOp[] {
   const kinds: PresetOp[] = [];
   for (const { op } of item.ops) {
-    const kind: PresetOp = op === 'set-viewport' || op === 'set-order' || op === 'set-annotation' ? op : 'set-style';
+    const kind: PresetOp = op === 'set-viewport' || op === 'set-order' || op === 'annotate-text' ? op : 'set-style';
     if (!kinds.includes(kind)) kinds.push(kind);
   }
   return kinds.length > 0 ? kinds : ['set-style'];
@@ -400,7 +403,7 @@ export function sentenceRows(item: Sentence, chart: ChartRows): RowSet {
   const rows: Row[] = [];
   for (const op of item.ops) {
     if (op.op === 'set-style') for (const target of op.targets) rows.push(...targetRows(target, chart));
-    else if (op.op === 'set-annotation') rows.push(...targetRows(op.target, chart));
+    else if (op.op === 'annotate-text') rows.push(...targetRows(op.target, chart));
     else if (op.op === 'set-viewport') rows.push(...rowsInView(chart, { x: toDomain(op.value.x), y: toDomain(op.value.y) }));
   }
   return new Set(rows.map(rowId));
@@ -672,8 +675,8 @@ function selectorsFor(update: AgentUpdate, chart: AgentChart, fields: readonly s
 
 /**
  * The sentence for one part of an answer. Each update becomes the op the report would
- * write itself: a highlight is an emphasis, an annotate is a note (with an emphasis on its
- * key when no highlight accompanies it), a viewport is a view. Null when no update names
+ * write itself: a highlight is an emphasis, an annotate is a note (which marks its own mark,
+ * and recedes the rest when no highlight accompanies it), a viewport is a view. Null when no update names
  * anything the chart shows.
  */
 export function toSentence(id: string, text: string, updates: readonly AgentUpdate[], chart: AgentChart): Sentence | null {
@@ -688,8 +691,8 @@ export function toSentence(id: string, text: string, updates: readonly AgentUpda
       case 'annotate': {
         const [selector] = selectorsFor(update, chart, chart.annotationFields);
         if (!selector) break;
-        ops.push(note(selector, String(update.text ?? '').slice(0, 80) || text.trim().slice(0, 40)));
-        if (!updates.some((other) => other.op === 'highlight')) ops.push(emphasis(selector));
+        const alone = !updates.some((other) => other.op === 'highlight');
+        ops.push(note(selector, String(update.text ?? '').slice(0, 80) || text.trim().slice(0, 40), alone ? 'exclusive' : 'light'));
         break;
       }
       case 'viewport': {

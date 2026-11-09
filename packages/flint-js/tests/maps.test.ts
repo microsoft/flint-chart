@@ -148,13 +148,13 @@ describe('choropleth maps from names', () => {
       { state: 'California', pop: 39.5 },
       { state: 'Texas', pop: 29.1 },
     ];
-    const { spec } = buildChoropleth(rows, 'state', 'pop', 'State');
+    const regions = regionsOf(buildChoropleth(rows, 'state', 'pop', 'State').spec);
 
-    expect(spec.data?.url).toContain('counties-albers-10m');
-    expect(spec.mark?.type).toBe('geoshape');
-    expect(spec.encoding?.color?.field).toBe('pop');
-    expect(spec.transform?.find((transform: any) => transform.lookup)?.lookup).toBe('id');
-    expect(spec.transform?.find((transform: any) => transform.lookup)?.from?.key).toBe('__geo_id');
+    expect(regions.data?.url).toContain('counties-albers-10m');
+    expect(regions.mark?.type).toBe('geoshape');
+    expect(regions.encoding?.color?.field).toBe('pop');
+    expect(regions.transform?.find((transform: any) => transform.lookup)?.lookup).toBe('id');
+    expect(regions.transform?.find((transform: any) => transform.lookup)?.from?.key).toBe('__geo_id');
   });
 
   it('keeps a declared quantitative color domain stable and centered', () => {
@@ -170,7 +170,7 @@ describe('choropleth maps from names', () => {
       },
     }) as any;
 
-    expect(spec.encoding.color.scale).toMatchObject({
+    expect(regionsOf(spec).encoding.color.scale).toMatchObject({
       domain: [-100, 100],
       clamp: true,
       scheme: 'redblue',
@@ -283,16 +283,17 @@ describe('Choropleth level', () => {
 
   it('draws counties from the same pre-projected US atlas and passes numeric FIPS ids through', () => {
     const spec = build({ region: 'us', level: 'county' });
-    expect(spec.data.url).toContain('counties-albers-10m');
-    expect(spec.data.format.feature).toBe('counties');
+    const regions = regionsOf(spec);
+    expect(regions.data.url).toContain('counties-albers-10m');
+    expect(regions.data.format.feature).toBe('counties');
     expect(spec.projection.type).toBe('identity');
-    expect(spec.mark.strokeWidth).toBe(0.2);
-    const joined = spec.transform.find((transform: any) => transform.lookup).from.data.values;
+    expect(regions.mark.strokeWidth).toBe(0.2);
+    const joined = regions.transform.find((transform: any) => transform.lookup).from.data.values;
     expect(joined.map((row: any) => row.__geo_id)).toEqual([1079, 6037]);
   });
 
   it('keeps the state layer by default and on the world map', () => {
-    expect(build({ region: 'us' }).data.format.feature).toBe('states');
+    expect(regionsOf(build({ region: 'us' })).data.format.feature).toBe('states');
     expect(regionsOf(build({ region: 'world', level: 'county' })).data.format.feature).toBe('countries');
   });
 });
@@ -367,6 +368,6 @@ describe('a colour key formats its numbers like an axis would', () => {
       semantic_types: { State: 'State', N: 'Count' },
       chart_spec: { chartType: 'Choropleth', encodings: { id: 'State', color: 'N' } },
     } as any);
-    expect(spec.encoding.color.legend?.format ?? '').not.toMatch(/%/);
+    expect(regionsOf(spec).encoding.color.legend?.format ?? '').not.toMatch(/%/);
   });
 });

@@ -56,6 +56,8 @@ export function mountChartWith(
     // The spec and the code are two sources of one configuration; the spec comes first.
     const { interactions, updates, assistedTargeting, keyboardTargeting, warnings } =
         composeInteractiveOptions(input, options);
+    // The spec's updates are applied here, after the chart is drawn: the chart is drawn without them.
+    const { updates: _specUpdates, ...chart } = input;
     const canvasInteractions = interactions.filter(isCanvasInteraction);
     const hoverTolerance = Math.max(0, ...canvasInteractions
         .filter((interaction) => interaction.eventSource.gesture === 'hover')
@@ -64,7 +66,7 @@ export function mountChartWith(
         case 'vegalite':
             return mountInteractiveChartSurface(
                 container,
-                input,
+                chart,
                 {
                     async mount(chartContainer, chartInput) {
                         const createVegaInteractiveRenderer = await factory('vegalite');
@@ -101,7 +103,7 @@ export function mountChartWith(
         case 'echarts':
             return mountInteractiveChartSurface(
                 container,
-                input,
+                chart,
                 {
                     async mount(chartContainer, chartInput) {
                         const createEChartsInteractiveRenderer = await factory('echarts');
@@ -113,7 +115,7 @@ export function mountChartWith(
         case 'chartjs':
             return mountInteractiveChartSurface(
                 container,
-                input,
+                chart,
                 {
                     async mount(chartContainer, chartInput) {
                         const createChartjsInteractiveRenderer = await factory('chartjs');
@@ -125,7 +127,7 @@ export function mountChartWith(
         case 'plotly':
             return mountInteractiveChartSurface(
                 container,
-                input,
+                chart,
                 {
                     async mount(chartContainer, chartInput) {
                         const createPlotlyInteractiveRenderer = await factory('plotly');

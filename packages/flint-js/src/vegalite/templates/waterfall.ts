@@ -16,9 +16,9 @@ import { resolveTotalsMode } from '../../chart-types/waterfall';
 
 function waterfallAnnotationCandidates(): readonly AnnotationCandidate[] {
     return [
-        { connection: 'value-end', valueAxis: 'y', priority: 0 },
-        { connection: 'value-side', valueAxis: 'y', crossSide: 'start', valueInset: 1 / 2, priority: 1 },
-        { connection: 'value-side', valueAxis: 'y', crossSide: 'end', valueInset: 1 / 2, priority: 1 },
+        { connection: 'value-end', valueAxis: 'y' },
+        { connection: 'value-side', valueAxis: 'y', crossSide: 'start', valueInset: 1 / 2 },
+        { connection: 'value-side', valueAxis: 'y', crossSide: 'end', valueInset: 1 / 2 },
     ];
 }
 

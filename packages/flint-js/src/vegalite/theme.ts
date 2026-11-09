@@ -5806,10 +5806,8 @@ function applyReadableSeriesText(spec: any, d: DesignDecisions, say: ReportDepar
 }
 
 function growPadding(spec: any, side: 'left' | 'right' | 'top' | 'bottom', amount: number): void {
-    const base = typeof spec.padding === 'number'
-        ? { left: spec.padding, right: spec.padding, top: spec.padding, bottom: spec.padding }
-        : { left: 8, right: 8, top: 8, bottom: 8, ...(spec.padding ?? {}) };
-    base[side] = (base[side] ?? 8) + Math.round(amount);
+    const base = normalizePadding(spec.padding);
+    base[side] = (base[side] ?? VEGA_LITE_PADDING) + Math.round(amount);
     spec.padding = base;
 }
 
@@ -6740,9 +6738,13 @@ function applyFurniture(spec: any, d: DesignDecisions, planned: LayoutPlan['rule
 }
 
 /** Normalise Vega-Lite's number|object padding into a full-sided object. */
+/** The padding Vega-Lite draws a spec with when it states none (an unthemed chart), as the canvas fit counts it. */
+const VEGA_LITE_PADDING = 5;
+
 function normalizePadding(p: any): { left: number; right: number; top: number; bottom: number } {
     if (typeof p === 'number') return { left: p, right: p, top: p, bottom: p };
-    return { left: 8, right: 8, top: 8, bottom: 8, ...(p ?? {}) };
+    const d = VEGA_LITE_PADDING;
+    return { left: d, right: d, top: d, bottom: d, ...(p ?? {}) };
 }
 
 /**
@@ -6796,11 +6798,14 @@ export function applySourceLine(spec: any, plan: SourcePlan | undefined): void {
         });
     }
     for (const line of plan.lines) {
+        // A line may be set smaller than the source (a map's credit).
+        const size = line.fontSize ?? plan.fontSize;
+        const height = line.lineHeight ?? plan.lineHeight;
         for (const run of line.runs) {
             items.push({
-                kind: 'text', text: run.text, bottom: foot + line.bottom + (plan.lineHeight - plan.fontSize) / 2, height: plan.fontSize,
+                kind: 'text', text: run.text, bottom: foot + line.bottom + (height - size) / 2, height: size,
                 ...(line.align === 'start' ? { left: start + run.offset } : { right: end + run.offset }),
-                fontSize: plan.fontSize,
+                fontSize: size,
                 ...(plan.font ? { font: plan.font } : {}),
                 ...(run.fontWeight != null ? { fontWeight: run.fontWeight } : {}),
                 ...(run.fontStyle ? { fontStyle: run.fontStyle } : {}),

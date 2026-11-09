@@ -7,7 +7,7 @@ import {
     clusterColor,
     neutralInk,
     defaultEnclosureShape,
-    distinctRegionColor,
+    regionColor,
     enclosureOutline,
     noteSize,
     noteStyle,
@@ -31,10 +31,13 @@ import {
 import type { EnclosureAnnotationSpec, RegionAnnotationSpec, SemanticTargetRef } from '../../../core/interaction-contracts';
 import { semanticElementRenderKeys } from '../../../core/interaction-semantics';
 import { rendererTextMeasurer } from '../../../core/text-width';
+import type { AnnotationDesign } from '../../../core/theme/types';
 import type { PlotPoint } from '../../../interactive/interactions';
 import { PATH_KEY_SUFFIX, clientToLayoutPoint, plotToClientPoint, sceneItems, type RendererCoordinateSpace } from '../hit-adapter';
 import { INTERACTION_KEY } from '../stores';
-import { chartTextStyle, sceneInk, tiledRects, type PlacedCaption } from './annotation-overlay';
+import { canvasFurnitureBoxes, chartTextStyle, sceneInk, tiledRects, type PlacedCaption } from './annotation-overlay';
+import { lonLatBox, type OverlayProjection } from './data-overlay';
+import { geoPath } from 'd3-geo';
 
 /**
  * Regions and enclosures on a mounted Vega-Lite chart (`annotate-region`, `annotate-enclosure`), after
@@ -58,6 +61,10 @@ export interface MarkupOverlayOptions {
     axisValue(axis: 'x' | 'y', value: unknown): unknown;
     /** Where the captions drawn here are recorded, for the notes placed after them to keep clear of. */
     placedCaptions?: { fixed?: PlacedCaption[] };
+    /** The house's accent, for a region's wash, and its note text. */
+    design?: Readonly<AnnotationDesign>;
+    /** On a map, its projection as drawn now: a region given in longitude and latitude is drawn through it. */
+    geoProjection?: () => OverlayProjection | undefined;
 }
 
 export interface MarkupOverlayController {
@@ -71,7 +78,6 @@ export interface MarkupOverlayController {
 }
 
 const SVG = 'http://www.w3.org/2000/svg';
-const NEUTRAL = '#5a5a5a';
 let maskSequence = 0;
 
 function segmentTouches(line: NoteSegment, box: Box): boolean {
@@ -103,12 +109,19 @@ function boxOf(bounds: { x1: number; x2: number; y1: number; y2: number }): Box 
     return { x: Math.min(bounds.x1, bounds.x2), y: Math.min(bounds.y1, bounds.y2), width: Math.abs(bounds.x2 - bounds.x1), height: Math.abs(bounds.y2 - bounds.y1) };
 }
 
+/** The part of one box inside another; empty where they do not meet. */
+function intersectBox(a: Box, b: Box): Box {
+    const x = Math.max(a.x, b.x);
+    const y = Math.max(a.y, b.y);
+    return { x, y, width: Math.max(0, Math.min(a.x + a.width, b.x + b.width) - x), height: Math.max(0, Math.min(a.y + a.height, b.y + b.height) - y) };
+}
+
 function paint(value: unknown): string | undefined {
     return typeof value === 'string' && value !== 'transparent' && value !== 'none' ? value : undefined;
 }
 
 export function createMarkupOverlay(options: MarkupOverlayOptions): MarkupOverlayController {
-    const { view, container, coordinateSpace, containerLayoutSize, scales, axisValue, placedCaptions } = options;
+    const { view, container, coordinateSpace, containerLayoutSize, scales, axisValue, placedCaptions, geoProjection } = options;
     const wash = layer('3');
     const ink = layer('4');
     wash.root.dataset.flintMarkup = 'wash';
@@ -147,6 +160,27 @@ export function createMarkupOverlay(options: MarkupOverlayOptions): MarkupOverla
         return spans.x || spans.y ? { spans } : { problem: 'the region names no x or y stretch.' };
     };
 
+    /**
+     * A map region, its box of longitude and latitude as the projection draws it now — edges along
+     * meridians and parallels — as a path and its bounds in plot px; or why it cannot be shaded.
+     */
+    const geoRegionOf = (region: RegionAnnotationSpec): { d: string; bounds: Box } | { problem: string } | undefined => {
+        if (region.longitude === undefined && region.latitude === undefined) return undefined;
+        const projection = geoProjection?.();
+        if (typeof projection !== 'function') return { problem: 'the chart is no map: a region in longitude and latitude needs one.' };
+        const [west, east] = region.longitude ?? [];
+        const [south, north] = region.latitude ?? [];
+        if (![west, east, south, north].every((value) => typeof value === 'number' && Number.isFinite(value))) {
+            return { problem: 'a map region needs longitude: [west, east] and latitude: [south, north], in degrees.' };
+        }
+        const shape = geoPath(projection as any);
+        const polygon = { type: 'Polygon', coordinates: [lonLatBox(west!, south!, east!, north!)] } as any;
+        const d = shape(polygon);
+        const [[x1, y1], [x2, y2]] = shape.bounds(polygon);
+        if (!d || ![x1, y1, x2, y2].every(Number.isFinite)) return { problem: 'the region is not on the map as drawn.' };
+        return { d, bounds: { x: x1, y: y1, width: x2 - x1, height: y2 - y1 } };
+    };
+
     const detach = (): void => {
         wash.root.remove();
         ink.root.remove();
@@ -179,21 +213,32 @@ export function createMarkupOverlay(options: MarkupOverlayOptions): MarkupOverla
         // The chart as drawn: its plot, its ink, its text face and its page.
         const scene = sceneInk(view);
         const items = sceneItems(view);
-        const style = noteStyle(chartTextStyle(view, scene.boxes));
+        const design = options.design;
+        const style = noteStyle(chartTextStyle(view, scene.boxes), { ...(design?.text ? { text: design.text } : {}), ...(design?.ink ? { ink: design.ink } : {}) });
         const fontSize = style.fontSize * scale;
         const measure = rendererTextMeasurer(fontSize, style.font, style.fontWeight, 'normal');
-        const background = paint(typeof view.background === 'function' ? view.background() : undefined) ?? '#ffffff';
+        // The page the plot is read on: the house's plot surface where it has one, else the canvas.
+        const background = (design?.background ? paint(design.background) : undefined)
+            ?? paint(typeof view.background === 'function' ? view.background() : undefined) ?? '#ffffff';
         const plot = toBox({ x: 0, y: 0, width: space.plotWidth, height: space.plotHeight });
-        const canvas = { x: 0, y: 0, width: layoutSize.width, height: layoutSize.height };
+        // A map keeps its captions inside the plot it is panned and zoomed in, as its notes do.
+        const canvas = geoProjection ? plot : { x: 0, y: 0, width: layoutSize.width, height: layoutSize.height };
         const plotArea = Math.max(1, space.plotWidth * space.plotHeight);
         const tiled = tiledRects(scene.boxes, plotArea);
         // A legend's swatches and an axis's ticks are furniture a caption keeps off, as it does their words.
         const furniture = (item: any) => /^(legend|axis)/.test(String(item.mark?.role ?? ''));
-        const obstacles: NoteObstacle[] = scene.boxes.map(({ item, bounds }) => ({
-            box: toBox(boxOf(bounds)),
-            kind: item.mark?.marktype === 'text' || furniture(item) ? 'text'
-                : (typeof item.opacity === 'number' ? item.opacity : 1) < 0.5 || tiled(item.mark) ? 'faint' : 'mark',
-        }));
+        // A map's land is structure, not data (its shapes carry no key): a caption stands over it freely.
+        const sceneObstacles = scene.boxes
+            .filter(({ item }) => !(item.mark?.marktype === 'shape' && item.datum?.[INTERACTION_KEY] == null))
+            .map(({ item, bounds }) => ({
+                item,
+                obstacle: {
+                    box: toBox(boxOf(bounds)),
+                    kind: item.mark?.marktype === 'text' || furniture(item) ? 'text'
+                        : (typeof item.opacity === 'number' ? item.opacity : 1) < 0.5 || tiled(item.mark) ? 'faint' : 'mark',
+                } as NoteObstacle,
+            }));
+        const obstacles: NoteObstacle[] = sceneObstacles.map(({ obstacle }) => obstacle);
         const segments: NoteSegment[] = scene.segments.map((segment) => ({ a: toLayout(segment.a), b: toLayout(segment.b) }));
         // An area's edge is data a region's or an enclosure's caption must not cut, as a line's is.
         for (const item of items) {
@@ -212,6 +257,8 @@ export function createMarkupOverlay(options: MarkupOverlayOptions): MarkupOverla
                 });
             }
         }
+        // The source line, a map's credit, a house's header: drawn beside the chart, read as its text.
+        for (const box of canvasFurnitureBoxes(container, containerRect, layoutSize)) obstacles.push({ box, kind: 'text' });
         const captions: PlacedCaption[] = [];
         const outlineLines: NoteSegment[] = [];
         const layoutsFor = (text: string, widths: readonly number[]): CaptionLayout[] => {
@@ -227,13 +274,14 @@ export function createMarkupOverlay(options: MarkupOverlayOptions): MarkupOverla
             }
             return layouts;
         };
-        const drawCaption = (placed: CaptionPlacement, layouts: readonly CaptionLayout[], colour: string, halo: string, leaderColour: string): void => {
+        /** A caption and its leaders; `halo`, the page's colour, is left out where the caption stands on a wash. */
+        const drawCaption = (placed: CaptionPlacement, layouts: readonly CaptionLayout[], colour: string, halo: string | undefined, leaderColour: string): void => {
             const { box, align, leaders } = placed;
             const group = svg('g', { 'data-flint-markup-caption': '' });
             for (const leader of leaders) {
                 const d = `M ${leader.from.x} ${leader.from.y} L ${leader.to.x} ${leader.to.y}`;
                 group.append(
-                    svg('path', { d, fill: 'none', stroke: halo, 'stroke-width': 3 * scale, 'stroke-linecap': 'round' }),
+                    svg('path', { d, fill: 'none', stroke: halo ?? background, 'stroke-width': 3 * scale, 'stroke-linecap': 'round' }),
                     svg('path', { d, fill: 'none', stroke: leaderColour, 'stroke-width': scale, 'stroke-linecap': 'round' }),
                 );
             }
@@ -242,7 +290,7 @@ export function createMarkupOverlay(options: MarkupOverlayOptions): MarkupOverla
             const text = svg('text', {
                 'font-family': style.font, 'font-size': fontSize, 'font-weight': String(style.fontWeight),
                 'text-anchor': align === 'left' ? 'start' : align === 'right' ? 'end' : 'middle',
-                fill: colour, stroke: halo, 'stroke-width': style.halo.width * scale, 'stroke-linejoin': 'round', 'paint-order': 'stroke',
+                fill: colour, ...(halo ? { stroke: halo, 'stroke-width': style.halo.width * scale, 'stroke-linejoin': 'round', 'paint-order': 'stroke' } : {}),
             });
             const lineHeight = style.lineHeight * scale;
             layouts[placed.layout].lines.forEach((line, index) => {
@@ -261,6 +309,9 @@ export function createMarkupOverlay(options: MarkupOverlayOptions): MarkupOverla
         const regionColours: string[] = [];
         const backdrop = [...new Set(items.filter((item) => item.mark?.marktype === 'rect' || item.mark?.marktype === 'area')
             .map((item) => paint(item.fill)).filter((fill): fill is string => fill !== undefined))].slice(0, 32);
+        // Every ink the data is drawn in, which the house's accent must stand apart from to wash a region.
+        const markInks = [...new Set(items.flatMap((item) => ['symbol', 'line', 'rule', 'arc', 'trail'].includes(item.mark?.marktype)
+            ? [paint(item.fill), paint(item.stroke)] : []).filter((ink): ink is string => ink !== undefined))].slice(0, 32);
         const overArea = items.some((item) => item.mark?.marktype === 'area');
         const overTiles = items.some((item) => item.mark?.marktype === 'rect' && tiled(item.mark));
         // The filled marks and the lines an under-wash is cut away beneath: drawn in black in its mask.
@@ -269,6 +320,8 @@ export function createMarkupOverlay(options: MarkupOverlayOptions): MarkupOverla
                 const type = item.mark?.marktype;
                 if (type !== 'rect' && type !== 'symbol' && type !== 'arc' && type !== 'shape' && type !== 'path') return [];
                 if ((typeof item.opacity === 'number' ? item.opacity : 1) < 0.5 || !paint(item.fill)) return [];
+                // Structure (a map's water, its land) is the ground a wash lies on, not a mark it is cut from.
+                if (item.datum?.[INTERACTION_KEY] === null) return [];
                 const box = toBox(boxOf(bounds));
                 return [{
                     box,
@@ -286,23 +339,44 @@ export function createMarkupOverlay(options: MarkupOverlayOptions): MarkupOverla
         // The series a period's caption keeps clear of: the vertices of its lines and areas.
         const vertices = items.flatMap((item) => (item.interactionGeometry?.points as PlotPoint[] | undefined)?.map(toLayout) ?? []);
         for (const [name, region] of regions) {
-            const { spans, problem } = spansOf(region);
+            const plotBox = { x: 0, y: 0, width: space.plotWidth, height: space.plotHeight };
+            // On a map the region is its box as the projection draws it, cut at the plot.
+            const geo = geoRegionOf(region);
+            if (geo && 'problem' in geo) {
+                problems.set(name, geo.problem);
+                continue;
+            }
+            const { spans, problem } = geo ? { spans: { x: [0, 0], y: [0, 0] } as Partial<Record<'x' | 'y', [number, number]>>, problem: undefined } : spansOf(region);
             if (problem || !spans) {
                 problems.set(name, problem ?? 'the region names no x or y stretch.');
                 continue;
             }
-            const plotBox = { x: 0, y: 0, width: space.plotWidth, height: space.plotHeight };
-            const shaded = toBox({
-                x: spans.x ? spans.x[0] : plotBox.x, width: spans.x ? spans.x[1] - spans.x[0] : plotBox.width,
-                y: spans.y ? spans.y[0] : plotBox.y, height: spans.y ? spans.y[1] - spans.y[0] : plotBox.height,
-            });
-            const colour = region.color ?? distinctRegionColor([...backdrop, ...regionColours], background);
+            const shaded = geo
+                ? toBox(intersectBox(geo.bounds, plotBox))
+                : toBox({
+                    x: spans.x ? spans.x[0] : plotBox.x, width: spans.x ? spans.x[1] - spans.x[0] : plotBox.width,
+                    y: spans.y ? spans.y[0] : plotBox.y, height: spans.y ? spans.y[1] - spans.y[0] : plotBox.height,
+                });
+            if (geo && (shaded.width <= 0 || shaded.height <= 0)) continue;
+            const colour = region.color ?? regionColor(regionColours, [...backdrop, ...markInks], background, design?.accent, design?.palette);
             if (!region.color) regionColours.push(colour);
             // Over an area, or cells that tile the plot, a wash under the marks would not be seen.
             const layerOver = region.layer ? region.layer === 'over' : overArea || overTiles;
             const opacity = region.opacity ?? (overArea || overTiles ? 0.18 : 0.16);
-            const rect = svg('rect', { x: shaded.x, y: shaded.y, width: shaded.width, height: shaded.height, fill: colour, 'fill-opacity': opacity, 'data-flint-region': name });
-            if (layerOver) ink.svg.prepend(rect);
+            // A map region's path is drawn in the plot's px, scaled into the layout inside a group, so
+            // the mask set on the group is read in the layout as the rect's is.
+            const rect = geo
+                ? svg('g', { 'data-flint-region': name })
+                : svg('rect', { x: shaded.x, y: shaded.y, width: shaded.width, height: shaded.height, fill: colour, 'fill-opacity': opacity, 'data-flint-region': name });
+            if (geo) rect.append(svg('path', { d: geo.d, transform: `translate(${origin.x},${origin.y}) scale(${scale})`, fill: colour, 'fill-opacity': opacity }));
+            if (layerOver && geo) {
+                // Over the marks, a map region is still cut at the plot.
+                const id = `flint-region-mask-${maskSequence += 1}`;
+                const mask = svg('mask', { id, maskUnits: 'userSpaceOnUse', x: shaded.x, y: shaded.y, width: shaded.width, height: shaded.height });
+                mask.append(svg('rect', { x: shaded.x, y: shaded.y, width: shaded.width, height: shaded.height, fill: '#fff' }));
+                rect.setAttribute('mask', `url(#${id})`);
+                ink.svg.prepend(mask, rect);
+            } else if (layerOver) ink.svg.prepend(rect);
             else {
                 // Under the marks: the wash is cut away wherever a mark or a line is drawn, so they read over it.
                 const id = `flint-region-mask-${maskSequence += 1}`;
@@ -326,7 +400,9 @@ export function createMarkupOverlay(options: MarkupOverlayOptions): MarkupOverla
             if (!placed) continue;
             const within = overlapArea(placed.box, shaded) >= placed.box.width * placed.box.height * 0.5;
             const tint = within ? over(colour, background, opacity) : background;
-            drawCaption(placed, layouts, readableShade(colour, tint, 4.5), tint, NEUTRAL);
+            // A caption on the wash reads on it as it is: a halo would be a coloured smudge where it leaves the wash.
+            const halo = overlapArea(placed.box, shaded) > 0 ? undefined : background;
+            drawCaption(placed, layouts, readableShade(colour, tint, 4.5), halo, neutralInk(background));
         }
 
         // Enclosures: each target a group, one outline each, their caption shared.
@@ -412,7 +488,7 @@ export function createMarkupOverlay(options: MarkupOverlayOptions): MarkupOverla
             const layouts = layoutsFor(enclosure.text, noteWrapWidths(enclosure.text, (text) => measure(text) / scale));
             // The enclosed marks themselves are the outline's business, not obstacles to its caption.
             const enclosed = new Set(flat);
-            const captionObstacles = obstacles.filter((_, at) => at >= scene.boxes.length || !enclosed.has(scene.boxes[at].item));
+            const captionObstacles = obstacles.filter((_, at) => at >= sceneObstacles.length || !enclosed.has(sceneObstacles[at].item));
             const sectors = all.flatMap((mark) => mark.sector ? [mark.sector] : []);
             const pie = sectors.length === all.length && sectors.length > 0
                 ? { cx: sectors[0].cx, cy: sectors[0].cy, outer: Math.max(...sectors.map((sector) => sector.outer)), angles: sectors.map((sector) => (sector.start + sector.end) / 2) }
@@ -444,7 +520,10 @@ export function createMarkupOverlay(options: MarkupOverlayOptions): MarkupOverla
             draw();
         },
         problems: () => problems,
-        check: (region) => spansOf(region).problem,
+        check: (region) => {
+            const geo = geoRegionOf(region);
+            return geo ? ('problem' in geo ? geo.problem : undefined) : spansOf(region).problem;
+        },
         sync: () => {
             if (regions.size > 0 || enclosures.size > 0) draw();
         },

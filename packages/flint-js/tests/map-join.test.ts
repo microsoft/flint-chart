@@ -99,7 +99,7 @@ describe('declared key types', () => {
         const us: any = assembleVegaLite(input(rows, { Code: 'Category', Value: 'Percentage' }, { keyType: 'us-state' }));
         expect(regionsOf(world).data.url).toMatch(/world-bank/);
         expect(joined(world).map((row) => row.__geo_id).sort((a, b) => a - b)).toEqual([124, 356]);
-        expect(us.data.url).toMatch(/counties-albers/);
+        expect(regionsOf(us).data.url).toMatch(/counties-albers/);
         expect(joined(us).map((row) => row.__geo_id).sort((a, b) => a - b)).toEqual([6, 18]);
     });
 

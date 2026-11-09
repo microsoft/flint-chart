@@ -21,7 +21,10 @@ function keyLegend(legend: any, layout: KeyLayout, labels: string[] | undefined,
     const out = { ...(legend ?? {}) };
     // The key's air to the plot, as planned; an author's offset stands.
     if (offset !== undefined && out.offset === undefined) out.offset = offset;
-    if (layout.moved) {
+    // A key moved off its edge, or pinned to one by its author (`legend.orient` on a Flint encoding,
+    // which the encoding Vega-Lite reads does not carry), stands on the edge planned for it; Vega-Lite
+    // would otherwise draw it on the right.
+    if (layout.moved || (out.orient === undefined && layout.orient !== 'right')) {
         out.orient = layout.orient;
         if (out.direction === undefined) out.direction = ['top', 'bottom'].includes(layout.orient) ? 'horizontal' : 'vertical';
         if (out.titleOrient === undefined) out.titleOrient = 'top';

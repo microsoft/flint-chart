@@ -16,6 +16,7 @@ import type {
     RegionOperation,
 } from '../../interactive/language/events';
 import { angularSegments } from '../../interactive/geometry/angular';
+import { ROUTE_PART } from '../templates/map-routes';
 import {
     constrainCartesianRegion,
     type CartesianRegionAxis,
@@ -151,7 +152,55 @@ export function pathHoverPresentationKey(items: readonly any[], semanticKey: str
     return pathKey ? `${pathKey}${PATH_KEY_SUFFIX}` : semanticKey;
 }
 
+/** Whether an item is a map route's leg: a shape that is a path, as a line's segment is. */
+export function isRouteLeg(item: any): boolean {
+    return item?.mark?.marktype === 'shape' && item?.datum?.[ROUTE_PART] === 'leg';
+}
+
+/** A route's casing or head: drawn with its leg and receding with it, but no target of its own. */
+function isRouteAccessory(item: any): boolean {
+    const part = item?.datum?.[ROUTE_PART];
+    return part === 'casing' || part === 'head';
+}
+
+/** The polyline a leg is drawn as, replayed from its own shape, cached until its drawing moves. */
+const LEG_POINTS = new WeakMap<object, { bounds: string; points: PlotPoint[] }>();
+
+/**
+ * A route leg's drawn line, as the projection draws it now: its shape replayed into a recorder.
+ * Where the projection cuts the line (at the antimeridian, a globe's horizon), the longest piece
+ * stands for it.
+ */
+export function legPoints(item: any): PlotPoint[] {
+    const bounds = item.bounds ? `${item.bounds.x1},${item.bounds.y1},${item.bounds.x2},${item.bounds.y2}` : '';
+    const cached = LEG_POINTS.get(item);
+    if (cached && cached.bounds === bounds) return cached.points;
+    const pieces: PlotPoint[][] = [];
+    const shape = item.shape;
+    if (typeof shape?.context === 'function') {
+        const recorder = {
+            moveTo: (x: number, y: number) => { pieces.push([{ x, y }]); },
+            lineTo: (x: number, y: number) => { (pieces[pieces.length - 1] ?? pieces[pieces.push([]) - 1]).push({ x, y }); },
+            closePath: () => {}, beginPath: () => {}, arc: () => {}, rect: () => {},
+        };
+        try {
+            shape.context(recorder)(item);
+        } finally {
+            shape.context(null);
+        }
+    }
+    const length = (piece: PlotPoint[]) => piece.slice(1).reduce((sum, point, index) => sum + Math.hypot(point.x - piece[index].x, point.y - piece[index].y), 0);
+    const points = pieces.reduce<PlotPoint[]>((longest, piece) => (length(piece) > length(longest) ? piece : longest), []);
+    LEG_POINTS.set(item, { bounds, points });
+    return points;
+}
+
 function pathGeometry(item: any, offsetX: number, offsetY: number, siblingIndex?: number): PathGeometry | null {
+    if (isRouteLeg(item)) {
+        const points = legPoints(item).map((point) => ({ x: point.x + offsetX, y: point.y + offsetY }));
+        if (points.length < 2) return null;
+        return { kind: 'segment', points, annotationPoints: points, offset: { x: offsetX, y: offsetY } };
+    }
     const items = item?.mark?.items;
     if (!Array.isArray(items)) return null;
     const index = siblingIndex ?? items.indexOf(item);
@@ -242,13 +291,13 @@ export function sceneItems(view: any): any[] {
     const pathDataByMark = new Map<object, Record<string, unknown>[]>();
     const visit = (item: any, offsetX: number, offsetY: number, siblingIndex?: number, clip?: SelectionRect): void => {
         if (!item) return;
-        if (SUPPORTED_RENDER_MARKS.has(item.mark?.marktype) && keyOfDatum(item.datum) && item.bounds) {
+        if (SUPPORTED_RENDER_MARKS.has(item.mark?.marktype) && keyOfDatum(item.datum) && item.bounds && !isRouteAccessory(item)) {
             const interactionGeometry = pathGeometry(item, offsetX, offsetY, siblingIndex);
-            const isPath = item.mark.marktype === 'line' || item.mark.marktype === 'area';
+            const isPath = item.mark.marktype === 'line' || item.mark.marktype === 'area' || isRouteLeg(item);
             if (isPath && !interactionGeometry) return;
             const points = interactionGeometry?.points;
             let interactionPathData: Record<string, unknown>[] | undefined;
-            if (isPath) {
+            if (isPath && !isRouteLeg(item)) {
                 interactionPathData = pathDataByMark.get(item.mark);
                 if (!interactionPathData) {
                     interactionPathData = pathDataOf(item.mark);
@@ -804,7 +853,8 @@ export function normalizeVegaAngularRegionEvent(
  * point, or the segment when `preferPath`; hits on different rows are left for the caller to judge.
  */
 export function oneMarkHits(hits: readonly RenderHit[], preferPath = false): RenderHit[] {
-    const isPath = (hit: RenderHit): boolean => hit.markType === 'line' || hit.markType === 'area';
+    const isPath = (hit: RenderHit): boolean => hit.markType === 'line' || hit.markType === 'area'
+        || (hit.markType === 'shape' && hit.datum?.[ROUTE_PART] === 'leg');
     const rowKey = (hit: RenderHit): string => {
         const key = String(hit.datum[INTERACTION_KEY]);
         return isPath(hit) && key.endsWith(PATH_KEY_SUFFIX) ? key.slice(0, -PATH_KEY_SUFFIX.length) : key;
@@ -1203,7 +1253,7 @@ export function normalizeVegaElementEvent(
 export function sceneItemsUnder(view: any, plotPoint: PlotPoint): any[] {
     return sceneItems(view).filter((item) => {
         if (!item?.bounds || !isPickable(item) || item.datum?.[INTERACTION_ROLE] === 'legend-label') return false;
-        const path = item.mark?.marktype === 'line' || item.mark?.marktype === 'area';
+        const path = item.mark?.marktype === 'line' || item.mark?.marktype === 'area' || isRouteLeg(item);
         const reach = path ? Math.max(1, (typeof item.strokeWidth === 'number' ? item.strokeWidth : 1) / 2) : 0.5;
         return distanceToItem(plotPoint, item) <= reach;
     });

@@ -118,12 +118,8 @@ import {
     routeAnnotationLeaders,
 } from '../src/vegalite/interactions/presentation/annotation-leader-routing';
 import {
-    annotationCandidateAngles,
     annotationItem,
-    annotationObstacleOverlapCost,
-    annotationObstacleTier,
     annotationSourceBounds,
-    sourceEdgeAttachment,
     isAnnotationSourceItem,
     isAnnotationObstacle,
     segmentMidpointConnectionPoint,
@@ -163,7 +159,7 @@ function annotationUpdate(
     return {
         id: 'test-annotation',
         ops: [{
-            op: 'set-annotation' as const,
+            op: 'annotate-text' as const,
             target: { visual, elements: [element] },
             value: text === undefined ? {} : { text },
         }],
@@ -462,7 +458,7 @@ describe('public chart updates', () => {
             targets: [target, { select: { key: { Country: 'Japan' } } }],
             value: { state: 'emphasized', mutedOpacity: 0.25 },
         }, {
-            op: 'set-annotation', target, value: { text: 'Selected' },
+            op: 'annotate-text', target, value: { text: 'Selected' },
         }, {
             op: 'set-viewport', axes: 'x', value: { x: [0, 10] },
         }, {
@@ -473,7 +469,7 @@ describe('public chart updates', () => {
             targets: [target, { select: { key: { Country: 'Japan' } } }],
             value: { state: 'emphasized', mutedOpacity: 0.25 },
         }, {
-            op: 'set-annotation', target, value: { text: 'Selected' },
+            op: 'annotate-text', target, value: { text: 'Selected' },
         }, {
             op: 'set-viewport', axes: 'x', value: { x: [0, 10] },
         }, {
@@ -1870,7 +1866,7 @@ describe('interaction definitions', () => {
         )).toEqual({
             id: 'test-annotation',
             ops: [{
-                op: 'set-annotation',
+                op: 'annotate-text',
                 target: { visual: { kind: 'mark', role: 'test' }, elements: [element] },
                 value: {
                     text: '1.4',
@@ -1894,7 +1890,7 @@ describe('interaction definitions', () => {
             annotationUpdate(element),
             { chartType: 'Strip Plot', selected: [], categoryField: 'Species' },
         ).ops[0]).toMatchObject({
-            op: 'set-annotation',
+            op: 'annotate-text',
             value: { text: '1.4' },
         });
     });
@@ -1932,7 +1928,7 @@ describe('interaction definitions', () => {
             annotationUpdate(element),
             { chartType: 'Histogram', selected: [] },
         ).ops[0]).toMatchObject({
-            op: 'set-annotation',
+            op: 'annotate-text',
             value: { text: '8', candidates: [{ connection: 'value-end' }] },
         });
     });
@@ -1950,29 +1946,17 @@ describe('interaction definitions', () => {
             annotationUpdate(element),
             { chartType: 'Histogram', selected: [] },
         ).ops[0]).toEqual({
-            op: 'set-annotation',
+            op: 'annotate-text',
             target: { visual: { kind: 'mark', role: 'test' }, elements: [element] },
             value: {
                 text: '9',
                 subject: { kind: 'mark', role: 'test' },
                 candidates: [
-                    { connection: 'value-end', valueAxis: 'y', priority: 0 },
-                    {
-                        connection: 'value-side',
-                        valueAxis: 'y',
-                        crossSide: 'start',
-                        valueInset: 1 / 8,
-                        priority: 1,
-                    },
-                    {
-                        connection: 'value-side',
-                        valueAxis: 'y',
-                        crossSide: 'end',
-                        valueInset: 1 / 8,
-                        priority: 1,
-                    },
-                    { connection: 'top', priority: 2 },
-                    { connection: 'bottom', priority: 2 },
+                    { connection: 'value-end', valueAxis: 'y' },
+                    { connection: 'value-side', valueAxis: 'y', crossSide: 'start', valueInset: 1 / 8 },
+                    { connection: 'value-side', valueAxis: 'y', crossSide: 'end', valueInset: 1 / 8 },
+                    { connection: 'top' },
+                    { connection: 'bottom' },
                 ],
             },
         });
@@ -2027,9 +2011,9 @@ describe('interaction definitions', () => {
             value: {
                 text: '37',
                 candidates: [
-                    { connection: 'value-end', valueAxis: 'y', anglePreference: 'oblique', priority: 0 },
-                    { connection: 'right', anglePreference: 'oblique', priority: 1 },
-                    { connection: 'left', anglePreference: 'oblique', priority: 2 },
+                    { connection: 'value-end', valueAxis: 'y' },
+                    { connection: 'right' },
+                    { connection: 'left' },
                 ],
             },
         });
@@ -2054,9 +2038,9 @@ describe('interaction definitions', () => {
             value: {
                 text: '2,536 → 5,773',
                 candidates: [
-                    { connection: 'value-end', valueAxis: 'y', priority: 0 },
-                    { connection: 'value-side', valueAxis: 'y', crossSide: 'start', valueInset: 1 / 2, priority: 1 },
-                    { connection: 'value-side', valueAxis: 'y', crossSide: 'end', valueInset: 1 / 2, priority: 1 },
+                    { connection: 'value-end', valueAxis: 'y' },
+                    { connection: 'value-side', valueAxis: 'y', crossSide: 'start', valueInset: 1 / 2 },
+                    { connection: 'value-side', valueAxis: 'y', crossSide: 'end', valueInset: 1 / 2 },
                 ],
             },
         });
@@ -2067,31 +2051,6 @@ describe('interaction definitions', () => {
         expect(isAnnotationObstacle({ bounds: { x1: 0, x2: 100, y1: 0, y2: 100 } })).toBe(false);
         expect(isAnnotationObstacle({ mark: { role: 'axis-label', marktype: 'text' } })).toBe(true);
         expect(isAnnotationObstacle({ mark: { role: 'mark', marktype: 'rule' } })).toBe(true);
-    });
-
-    it('excludes the stem direction from lollipop leader angles', () => {
-        const stemDirection = Math.PI * 1.5;
-        const angles = annotationCandidateAngles(stemDirection, 'oblique');
-
-        expect(angles).toHaveLength(4);
-        expect(angles.every((angle) => Math.abs(angle - stemDirection) > 0.001)).toBe(true);
-    });
-
-    it('searches the full circle for normal edge-target annotations', () => {
-        const preferred = Math.PI / 3;
-        const angles = annotationCandidateAngles(preferred);
-
-        expect(angles).toHaveLength(12);
-        expect(angles.some((angle) => Math.abs(angle - (preferred + Math.PI)) < 1e-10)).toBe(true);
-    });
-
-    it('ranks legend, solid, and dimmed annotation obstacles', () => {
-        expect(annotationObstacleTier({ mark: { role: 'legend-label' }, opacity: 0.25 })).toBe(3);
-        expect(annotationObstacleTier({ mark: { role: 'axis-label' }, opacity: 1 })).toBe(3);
-        expect(annotationObstacleTier({ mark: { role: 'mark' }, opacity: 1 })).toBe(2);
-        expect(annotationObstacleTier({ mark: { role: 'mark' }, opacity: 0.25 })).toBe(1);
-        expect(annotationObstacleOverlapCost(1, 10)).toBeLessThan(annotationObstacleOverlapCost(2, 10));
-        expect(annotationObstacleOverlapCost(2, 10)).toBeLessThan(annotationObstacleOverlapCost(3, 10));
     });
 
     describe('annotation leader routing', () => {
@@ -2143,14 +2102,6 @@ describe('interaction definitions', () => {
             expect(first).toEqual(second);
             expect(first).toHaveLength(sources.length);
             expect(new Set(first.map((route) => `${route.port.x},${route.port.y}`)).size).toBe(sources.length);
-        });
-
-        it('avoids the top-middle of a rectangular source mark', () => {
-            const source = { left: 240, top: 144, width: 32, height: 52 };
-            const upperLeftCard = { left: 20, top: 40, width: 270, height: 66 };
-
-            expect(sourceEdgeAttachment(source, upperLeftCard, 'top', { x: 256, y: 144 }))
-                .toEqual({ x: 248, y: 144 });
         });
     });
 
@@ -2231,7 +2182,7 @@ describe('interaction definitions', () => {
         expect((semantics.presentUpdate!(
             annotationUpdate(pathElement, { kind: 'path', role: 'line' }),
             { chartType: 'Line Chart', selected: [] },
-        ).ops[0] as any).value.candidates[0]).toEqual({ connection: 'segment-midpoint', priority: 0 });
+        ).ops[0] as any).value.candidates[0]).toEqual({ connection: 'segment-midpoint' });
         expect(semantics.presentUpdate!(
             annotationUpdate(pointElement, { kind: 'mark', role: 'symbol' }),
             { chartType: 'Line Chart', selected: [] },
@@ -2239,7 +2190,7 @@ describe('interaction definitions', () => {
         expect((semantics.presentUpdate!(
             annotationUpdate(pointElement, { kind: 'mark', role: 'symbol' }),
             { chartType: 'Line Chart', selected: [] },
-        ).ops[0] as any).value.candidates[0]).toEqual({ connection: 'center', priority: 0 });
+        ).ops[0] as any).value.candidates[0]).toEqual({ connection: 'center' });
     });
 
     it('gives connected-scatter paths transitions and vertices single-value glyph presentation', () => {
@@ -2268,9 +2219,9 @@ describe('interaction definitions', () => {
         );
 
         expect(pathUpdate.ops[0]).toMatchObject({ value: { text: '2.14 → 2.53' } });
-        expect((pathUpdate.ops[0] as any).value.candidates[0]).toEqual({ connection: 'segment-midpoint', priority: 0 });
+        expect((pathUpdate.ops[0] as any).value.candidates[0]).toEqual({ connection: 'segment-midpoint' });
         expect(pointUpdate.ops[0]).toMatchObject({ value: { text: '2.14' } });
-        expect((pointUpdate.ops[0] as any).value.candidates[0]).toEqual({ connection: 'center', priority: 0 });
+        expect((pointUpdate.ops[0] as any).value.candidates[0]).toEqual({ connection: 'center' });
     });
 
     it('resolves a path-suffixed annotation key to segment geometry instead of its point glyph', () => {
@@ -2497,16 +2448,16 @@ describe('interaction definitions', () => {
         );
 
         expect(update.ops[0]).toMatchObject({
-            op: 'set-annotation',
+            op: 'annotate-text',
             value: { candidates: [{ connection }] },
         });
     });
 
     it('lets a ChartDef offer an ordered space of annotation connections', () => {
         expect(annotationCandidates('value-end', 'center', 'top')).toEqual([
-            { connection: 'value-end', priority: 0 },
-            { connection: 'center', priority: 1 },
-            { connection: 'top', priority: 2 },
+            { connection: 'value-end' },
+            { connection: 'center' },
+            { connection: 'top' },
         ]);
     });
 });
@@ -2990,7 +2941,7 @@ describe('effective annotation composition', () => {
     const annotation = (id: string, category: string) => ({
         id,
         ops: [{
-            op: 'set-annotation' as const,
+            op: 'annotate-text' as const,
             target: target(category),
             value: { text: category, candidates: [{ connection: 'top' as const }] },
         }],
@@ -3011,7 +2962,7 @@ describe('effective annotation composition', () => {
         expect(effectiveAnnotationEntries([{
             id: retained.id,
             ops: [...retained.ops, {
-                op: 'set-annotation' as const,
+                op: 'annotate-text' as const,
                 target: target('A'),
                 value: null,
             }],
@@ -3702,13 +3653,13 @@ describe('retained viewport precedence', () => {
                 { op: 'set-viewport', axes: 'x', value: { x: [2, 3] } },
                 { op: 'set-style', targets: [], value: { state: 'emphasized' } },
             ] }],
-            ['note', { id: 'note', ops: [{ op: 'set-annotation', target: { select: { key: { a: 1 } } }, value: { text: 'x' } }] }],
+            ['note', { id: 'note', ops: [{ op: 'annotate-text', target: { select: { key: { a: 1 } } }, value: { text: 'x' } }] }],
         ]);
         supersedeRetainedViewports(retained, 'host-reset');
         // The viewport-only update goes; the mixed one keeps its other ops.
         expect(retained.has('navigate')).toBe(false);
         expect(retained.get('report')?.ops.map((op) => op.op)).toEqual(['set-style']);
-        expect(retained.get('note')?.ops.map((op) => op.op)).toEqual(['set-annotation']);
+        expect(retained.get('note')?.ops.map((op) => op.op)).toEqual(['annotate-text']);
         // The update being stored is left alone.
         retained.set('host-reset', { id: 'host-reset', ops: [{ op: 'set-viewport', axes: 'xy', value: {} }] });
         supersedeRetainedViewports(retained, 'host-reset');

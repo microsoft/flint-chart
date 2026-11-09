@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import embed from 'vega-embed';
 import { loader } from 'vega';
-import { appendCanvasFurniture, enableGuideLabelTooltips, readCanvasFurniture, readCanvasPatterns, withBundledBasemaps } from 'flint-chart';
+import { appendCanvasFurniture, enableGuideLabelTooltips, readCanvasFurniture, readCanvasPatterns, withBundledBoundaries } from 'flint-chart';
 import type { View } from 'vega';
 
 
@@ -30,7 +30,7 @@ export function VegaLiteView({ spec, renderer = 'canvas', onReady }: VegaLiteVie
       actions: false,
       renderer: useRenderer,
       patch: enableGuideLabelTooltips,
-      loader: withBundledBasemaps(loader()),
+      loader: withBundledBoundaries(loader()),
     })
       .then((result) => {
         embeddedView = result.view;

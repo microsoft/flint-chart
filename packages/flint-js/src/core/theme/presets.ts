@@ -10,6 +10,7 @@
  */
 
 import type { ThemePreset, ThemeSpec } from './types';
+import { contrastRatio, readableTextInk } from './presence';
 import { FLINT_ICON } from './presets/icons';
 import { nyt } from './presets/nyt';
 import { economist } from './presets/economist';
@@ -78,7 +79,41 @@ export function resolveThemeSpec(theme: ThemeSpec | string | undefined): ThemeSp
     if (theme.extends === undefined) return theme;
 
     const { extends: presetId, ...overrides } = theme;
-    return deepMerge(resolveThemeSpec(presetSpec(presetId))!, overrides);
+    const base = resolveThemeSpec(presetSpec(presetId))!;
+    return followInk(base, overrides, deepMerge(base, overrides));
+}
+
+/** Type roles set on the page; a value label is set on its mark, whose fill the page does not decide. */
+const PAGE_ROLES = ['headline', 'deck', 'axisLabel', 'axisTitle', 'keyLabel', 'keyTitle', 'annotation', 'footnote', 'kicker', 'display'] as const;
+
+const sameColor = (a: unknown, b: unknown) => typeof a === 'string' && typeof b === 'string' && a.trim().toLowerCase() === b.trim().toLowerCase();
+
+/**
+ * A house that recolours the one it extends takes its type with it. A role the base states in one of
+ * its text inks (the NYT sets its headline in its primary ink) follows that ink as recoloured; on a
+ * page recoloured, a role whose own colour no longer reads on it is moved until it does. A role
+ * whose colour the extension states itself is left as stated.
+ */
+function followInk(base: ThemeSpec, overrides: Partial<ThemeSpec>, merged: ThemeSpec): ThemeSpec {
+    const text = overrides.ink?.text;
+    const surface = overrides.ink?.surface;
+    if (!text && !surface || !merged.type) return merged;
+    const baseText = (base.ink?.text ?? {}) as Record<string, string | undefined>;
+    const newText = (merged.ink?.text ?? {}) as Record<string, string | undefined>;
+    const page = surface?.canvas ?? surface?.plot;
+    const type: Record<string, any> = { ...merged.type };
+    for (const role of PAGE_ROLES) {
+        const stated = type[role];
+        if (!stated || typeof stated.color !== 'string' || (overrides.type as any)?.[role]?.color !== undefined) continue;
+        const echoed = Object.keys(baseText).find((key) => sameColor(baseText[key], stated.color));
+        let color: string = echoed && text?.[echoed as keyof typeof text] ? newText[echoed]! : stated.color;
+        if (page && contrastRatio(color, page) < 3) {
+            const fallback = newText[echoed ?? 'primary'];
+            color = fallback && contrastRatio(fallback, page) >= 3 ? fallback : readableTextInk(color, page);
+        }
+        if (color !== stated.color) type[role] = { ...stated, color };
+    }
+    return { ...merged, type };
 }
 
 function presetSpec(id: string): ThemeSpec {

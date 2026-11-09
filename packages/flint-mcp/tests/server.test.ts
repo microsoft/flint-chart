@@ -364,27 +364,34 @@ describe('MCP server', () => {
       data: { values: [{ region: 'East', revenue: 120 }, { region: 'West', revenue: 90 }] },
       chart_spec: { chartType: 'Bar Chart', encodings: { x: 'region', y: 'revenue' } },
     };
-    const note = { op: 'set-annotation', target: { select: { key: { region: 'West' } } }, value: { text: 'Lowest' } };
+    const note = { op: 'annotate-text', target: { select: { key: { region: 'West' } } }, value: { text: 'Lowest' } };
     const ok: any = await client.callTool({
       name: 'validate_chart',
       arguments: { ...base, backend: 'vegalite', updates: [{ id: 'agent', ops: [note] }] },
     });
     expect(ok.content[0].text).toContain('- All 1 update ops apply.');
+    const old: any = await client.callTool({
+      name: 'validate_chart',
+      arguments: { ...base, backend: 'vegalite', updates: [{ id: 'agent', ops: [{ ...note, op: 'set-annotation' }] }] },
+    });
+    expect(old.isError).toBeFalsy();
+    expect(old.content[0].text).toContain('op "set-annotation" is deprecated');
     for (const op of [
-      { op: 'set-annotation', foo: 1 },
-      { op: 'set-annotation', annotations: [{ kind: 'rule', x: '2022-12-01', label: 'ChatGPT launch' }] },
+      { op: 'annotate-text', foo: 1 },
+      { op: 'annotate-text', annotations: [{ kind: 'rule', x: '2022-12-01', label: 'ChatGPT launch' }] },
     ]) {
       const bad: any = await client.callTool({
         name: 'show',
         arguments: { chart: { ...base, updates: [{ id: 'agent', ops: [op] }] } },
       });
       expect(bad.isError).toBe(true);
-      expect(bad.content[0].text).toContain('set-annotation has a missing or malformed "target". Shape:');
+      expect(bad.content[0].text).toContain('annotate-text has a missing or malformed "target". Shape:');
     }
     const { tools } = await client.listTools();
     const view = tools.find((tool) => tool.name === 'show')!;
     const schemaText = JSON.stringify(view.inputSchema);
-    expect(schemaText).toContain("annotate-text { target: UpdateTarget, value: { text, anchor?: 'segment' | 'point', highlight?: 'none' | 'light' | 'strong' | 'exclusive' } | null } (set-annotation is its older name)");
+    expect(schemaText).toContain("annotate-text { target: UpdateTarget, value: { text, anchor?: 'segment' | 'point', highlight?: 'none' | 'light' | 'strong' | 'exclusive' } | null }: words beside one mark, never a card");
+    expect(schemaText).toContain('set-annotation is deprecated, still read until 2.0: it means annotate-text.');
     expect(schemaText).toContain('annotate-region { name, value: { x?: [lo, hi] | categories');
     expect(schemaText).toContain('annotate-enclosure { name, value: { targets: UpdateTarget[]');
   });

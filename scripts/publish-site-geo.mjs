@@ -10,7 +10,7 @@
  * `<site-dir>/geo/manifest.json` (every published file's SHA-256), and checks the result against
  * the manifest the live site serves: a file published once must be published again, unchanged, or
  * the specs that name it would draw another map or none. New boundaries go out under the next
- * version (bump `GEO_VERSION` in `basemap-sources.ts`); before that, keep the old version's files
+ * version (bump `GEO_VERSION` in `boundaries.ts`); before that, keep the old version's files
  * in `site/public/geo/<version>/` so the site goes on serving them. `--offline` skips the check.
  */
 
@@ -21,11 +21,11 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const sourceDir = join(root, 'packages/flint-js/src/geo');
-const sources = readFileSync(join(root, 'packages/flint-js/src/chart-types/basemap-sources.ts'), 'utf8');
+const sources = readFileSync(join(root, 'packages/flint-js/src/chart-types/boundaries.ts'), 'utf8');
 
 const constant = (name) => {
     const match = sources.match(new RegExp(`export const ${name} = '([^']+)'`));
-    if (!match) throw new Error(`basemap-sources.ts has no "export const ${name} = '…'"`);
+    if (!match) throw new Error(`boundaries.ts has no "export const ${name} = '…'"`);
     return match[1];
 };
 const SITE_GEO = constant('SITE_GEO');
@@ -87,7 +87,7 @@ if (!offline) {
 if (errors.length) {
     console.error('Published boundaries must never change or disappear:');
     for (const error of errors) console.error(`  ${error}`);
-    console.error(`Keep a published version's files in site/public/geo/<version>/, and publish new boundaries by bumping GEO_VERSION in packages/flint-js/src/chart-types/basemap-sources.ts.`);
+    console.error(`Keep a published version's files in site/public/geo/<version>/, and publish new boundaries by bumping GEO_VERSION in packages/flint-js/src/chart-types/boundaries.ts.`);
     process.exit(1);
 }
 

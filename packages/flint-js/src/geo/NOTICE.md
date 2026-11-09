@@ -48,5 +48,5 @@ THIS SOFTWARE.
 
 Flint takes no position on any boundary or territorial claim. Natural Earth's borders are de facto
 boundaries; the World Bank's mark areas of non-determined legal status. Neither may meet the mapping
-law of every country. A host that needs other boundaries passes its own as `options.basemaps`
-(see `MapBasemaps` in `src/core/types.ts`).
+law of every country. A chart that needs other boundaries gives its own file as `chartProperties.boundaries`
+(see `Boundaries` in `src/core/types.ts`).

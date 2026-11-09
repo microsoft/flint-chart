@@ -32,7 +32,7 @@ import { plotHeightAfter } from './title-fit';
 import { planAxisLabels, resolveLabelOverflow, type AxisLabelPlan } from './axis-labels';
 import { sequenceKindOf } from './label-sequence';
 import { LAYOUT_COSTS } from './layout-costs';
-import { CANVAS_FIT_LIMITS, LEGIBILITY_MARGIN, describeTreatment, plotFitScale, judgeCanvas, readingCost, treatmentCost, type CanvasFitEstimate, type CanvasFitResult, type CanvasParts } from './canvas-fit';
+import { CANVAS_FIT_LIMITS, DRAWING_PADDING, LEGIBILITY_MARGIN, describeTreatment, plotFitScale, judgeCanvas, readingCost, treatmentCost, type CanvasFitEstimate, type CanvasFitResult, type CanvasParts } from './canvas-fit';
 import { measureReserve, NO_RESERVE, type FurnitureReserve, type FurnitureSpacing } from './furniture-reserve';
 import { facetViews, gapOf, shortenViews, viewsExtent, type ViewNode } from './views';
 import { denseLineWidth, linesPerPanel, panelCount } from './line-density';
@@ -1000,6 +1000,10 @@ const LABEL_STEPS = 3;
  */
 const SHORT_NAMES = { keyWidth: 120 };
 
+/** How much larger a map must be shown for its keys to move to the side it leaves empty: with no theme, and where a theme set their edge. */
+const MAP_KEYS_GAIN = 1.1;
+const MAP_KEYS_THEMED_GAIN = 1.2;
+
 /**
  * The canvas-fit pass, for charts that will not read well in their box. Three goals, judged on the
  * plan before anything is drawn ({@link judgeCanvas}): the drawing fits its box, legibly; the parts
@@ -1032,7 +1036,9 @@ function fitToCanvas(plan: LayoutPlan, analysis: PlanAnalysis, context: PlanCont
     // A chart that reads well but is drawn a little larger than its box — the host shrinks it, not
     // past legibility — is mended only by the gentlest edits, and only where they bring it inside.
     const overflowing = !before.flags.length && before.scale < SOFT_FIT_SCALE;
-    if (!before.flags.length && !overflowing) return { ...plan, canvasFit: result };
+    // A map keeps its shape and grows until one side meets the room: its keys may stand on the side it leaves empty.
+    const mapKeys = analysis.template.fillsCanvas === true && !plan.layout.facet && Boolean(plan.legend.layout?.keys.some(Boolean));
+    if (!before.flags.length && !overflowing && !mapKeys) return { ...plan, canvasFit: result };
 
     const keyed = Boolean(plan.legend.layout?.keys.some(Boolean));
     const named = keyed;
@@ -1070,6 +1076,29 @@ function fitToCanvas(plan: LayoutPlan, analysis: PlanAnalysis, context: PlanCont
     const best = () => [...tries].sort((a, b) => score(a) - score(b))[0];
     // Clear: nothing around the chart squeezes it, and the plot's own shape is no worse for it.
     const clears = (tried: Tried) => !tried.estimate.flags.length && tried.estimate.plotExcess <= before.plotExcess + 0.01 && tries.includes(tried);
+
+    /**
+     * A map's keys on the side its shape leaves empty: a map grows until one side meets the room, so
+     * keys beside a wide map take width it needs while height goes spare, and keys above a tall one
+     * the reverse. Each other edge is tried, and the one that shows the map largest — its plot at the
+     * scale the drawing is shown — kept where that is clearly larger: a tenth, or a fifth where a
+     * theme set the keys' edge as its house style. Keys the author placed stay.
+     */
+    function roomierMapKeys(): Tried | undefined {
+        const shown = (planned: LayoutPlan, estimate: CanvasFitEstimate) => planned.plot.width * planned.plot.height * Math.min(1, estimate.scale) ** 2;
+        const now = shown(plan, before);
+        const at = edge === 'left' || edge === 'right' ? 'side' : edge;
+        let pick: Tried | undefined;
+        let largest = now * (context.theme ? MAP_KEYS_THEMED_GAIN : MAP_KEYS_GAIN);
+        for (const to of ['top', 'bottom', 'side'] as const) {
+            if (to === at) continue;
+            const tried = attempt({ keys: to });
+            if (!tries.includes(tried) || tried.estimate.flags.length || cutsKeyNames(tried.plan)) continue;
+            const size = shown(tried.plan, tried.estimate);
+            if (size > largest) { largest = size; pick = tried; }
+        }
+        return pick;
+    }
 
     /**
      * The plot laid out again in the room the box leaves it, at the scale the drawing is shown at,
@@ -1135,6 +1164,20 @@ function fitToCanvas(plan: LayoutPlan, analysis: PlanAnalysis, context: PlanCont
         const better = after.excess < estimate.excess - 1e-3 || (after.excess <= estimate.excess + 1e-9 && readingCost(after) < readingCost(estimate) - 0.01);
         return noSmaller && nothingNew && better ? tried : undefined;
     };
+
+    if (!before.flags.length) {
+        const roomier = mapKeys ? roomierMapKeys() : undefined;
+        if (roomier) {
+            result.treatment = roomier.treatment;
+            result.after = roomier.estimate;
+            const report: ThemeReport = {
+                stage: 'realize', path: 'layout.canvasFit', code: 'canvas-fit',
+                message: `the map is drawn larger with its keys on the side it leaves empty in its ${Math.round(box.width)} × ${Math.round(box.height)} canvas — laid out with ${describeTreatment(roomier.treatment)}`,
+            };
+            return { ...roomier.plan, canvasFit: result, report: [...roomier.plan.report, report] };
+        }
+        if (!overflowing) return { ...plan, canvasFit: result };
+    }
 
     let chosen: Tried | undefined;
     // The edits that answer what is wrong, nearest to the chart as planned first: each problem is
@@ -1541,7 +1584,9 @@ function planLayoutOnce(analysis: PlanAnalysis, context: PlanContext): LayoutPla
         spacing: profile.spacing,
         measure: profile.measureText ?? tableTextMeasurer,
     });
-    const second = planAroundPlot(prepared, reserve);
+    // A plot that fills the canvas also leaves the drawing its padding on every side, as the drawing is padded.
+    const pad = fills ? (theme ? first.design.layout?.padding ?? 0 : DRAWING_PADDING) : 0;
+    const second = planAroundPlot(prepared, pad ? { ...reserve, width: reserve.width + 2 * pad, height: reserve.height + 2 * pad } : reserve);
     return {
         ...second,
         reserve,

@@ -2144,6 +2144,13 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
                 haloWidth: Math.max(0, selectionBoundary?.haloWidth ?? 2.5),
                 haloOpacity: clamp(selectionBoundary?.haloOpacity ?? 0.35, 0, 1),
             },
+            annotation: {
+                ...(theme.ink?.accent ? { accent: theme.ink.accent } : {}),
+                ...(theme.ink?.series?.categorical?.length ? { palette: [...theme.ink.series.categorical] } : {}),
+                ...(theme.type?.annotation ? { text: resolveType(theme.type.annotation, (axisLabelText.fontSize ?? 10) + 1, text.primary) } : {}),
+                ink: text.primary,
+                background: plot,
+            },
         },
         facets,
         layout: {

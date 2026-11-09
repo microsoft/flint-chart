@@ -487,34 +487,38 @@ _No template-specific parameters._
 
 ### ![](chart-icon-world-map.svg) Map
 
-**Encoding channels:** `longitude`, `latitude`, `color`, `size`, `opacity`
+**Encoding channels:** `longitude`, `latitude`, `color`, `size`, `shape`, `opacity`, `order`, `detail`, `strokeWidth`, `text`
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `region` | choice | `auto` (Auto-detect), `us` (United States), `world` (World) | `auto` | always | Region |
-| `boundaries` | choice | `world-bank` (World Bank (official)), `natural-earth` (Natural Earth (de facto)) | `world-bank` | conditional | Boundaries |
+| `boundaries` | choice | `world-bank` (World Bank (official)), `natural-earth` (Natural Earth (de facto)), or a file { url | values, feature?, ids? (iso-numeric, iso3, iso2, fips, as-is), key?, disputed?, attribution? } | `world-bank` | conditional | Boundaries |
 | `projection` | choice | `default` (Default), `mercator` (Mercator), `equalEarth` (Equal Earth), `orthographic` (Orthographic (Globe)), `stereographic` (Stereographic), `conicEqualArea` (Conic Equal Area), `conicEquidistant` (Conic Equidistant), `azimuthalEquidistant` (Azimuthal Equidistant), `mollweide` (Mollweide) | `default` | conditional | Projection |
 | `projectionCenter` | choice | Default _(default)_, `0,0` (World (Atlantic) [0, 0]), `150,0` (World (Pacific) [150, 0]), `105,35` (China [105, 35]), `-98,39` (USA [-98, 39]), `10,50` (Europe [10, 50]), `138,36` (Japan [138, 36]), `78,22` (India [78, 22]), `-52,-14` (Brazil [-52, -14]), `134,-25` (Australia [134, -25]), `100,60` (Russia [100, 60]), `20,0` (Africa [20, 0]), `45,28` (Middle East [45, 28]), `115,5` (Southeast Asia [115, 5]), `-60,-15` (South America [-60, -15]), `-100,45` (North America [-100, 45]), `-2,54` (UK [-2, 54]), `10,51` (Germany [10, 51]), `2,47` (France [2, 47]), `128,36` (Korea [128, 36]) | — | conditional | Center |
-| `fit` | choice | `auto` (Auto: the country, the region, or the continent the data covers), `data` (The data, padded), `continent` (The data’s continents), `basemap` (Whole map) | `auto` | conditional | Frame |
-| `mapStyle` | choice | `auto` (From the theme), `light` (Light), `muted` (Muted), `atlas` (Atlas (blue water, paper land)), `dark` (Dark), `minimal` (Minimal (outlines)) | `auto` | always | Map style |
+| `fit` | choice | `auto` (Auto: the country, the region, or the continent the data covers), `data` (The data, padded), `continent` (The data’s continents), `whole` (Whole map) | `auto` | conditional | Frame |
+| `mapStyle` | choice | `auto` (From the theme), `light` (Light), `muted` (Muted), `atlas` (Atlas (blue water, paper land)), `dark` (Dark), `minimal` (Minimal (outlines)), or a style of your own { base? (auto, light, muted, atlas, dark, minimal), sea?, land?, coast?, border?, noData?, graticule?, disputed? } in CSS colours | `auto` | always | Map style |
 | `graticule` | toggle | on / off | `false` | always | Graticule |
 | `borderWidth` | number | 0 – 2 (step 0.1) | — | always | Border width |
+| `arrows` | toggle | on / off | `true` | conditional | Arrows |
+| `curve` | choice | `auto` (Auto: arcs between stops, great circles on a globe or along a track), `arc` (Arcs, bowed left of travel), `great-circle` (Great circles), `straight` (Straight (constant bearing)) | `auto` | conditional | Route curve |
+| `stops` | choice | `none` (None: the arrows mark them), `all` (A dot at every stop), `ends` (A dot where each run of one colour starts and ends), or true (all) or false (none) | `none` | conditional | Stops |
+| `stopRadius` | number | 0 – 12 (step 0.5) | — | conditional | Stop radius |
 
 ### ![](chart-icon-us-map.svg) Choropleth
 
-**Encoding channels:** `id`, `color`, `detail`
+**Encoding channels:** `id`, `color`, `detail`, `text`
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `region` | choice | `auto` (Auto-detect), `us` (United States), `world` (World) | `auto` | always | Region |
 | `keyType` | choice | `auto` (Auto-detect), `iso3` (ISO 3166-1 alpha-3 (USA)), `iso2` (ISO 3166-1 alpha-2 (US)), `iso-numeric` (ISO 3166-1 numeric (840)), `country-name` (Country name), `us-state` (US state name or USPS code), `fips` (US FIPS code (state or county)) | `auto` | always | Region key |
 | `level` | choice | `state` (States), `county` (Counties (FIPS ids)), `auto` (Zoom: states, then counties) | `state` | conditional | Level |
-| `boundaries` | choice | `world-bank` (World Bank (official)), `natural-earth` (Natural Earth (de facto)) | `world-bank` | conditional | Boundaries |
+| `boundaries` | choice | `world-bank` (World Bank (official)), `natural-earth` (Natural Earth (de facto)), or a file { url | values, feature?, ids? (iso-numeric, iso3, iso2, fips, as-is), key?, disputed?, attribution? } | `world-bank` | conditional | Boundaries |
 | `projection` | choice | `default` (Default), `mercator` (Mercator), `equalEarth` (Equal Earth), `orthographic` (Orthographic (Globe)), `stereographic` (Stereographic), `conicEqualArea` (Conic Equal Area), `conicEquidistant` (Conic Equidistant), `azimuthalEquidistant` (Azimuthal Equidistant), `mollweide` (Mollweide) | `default` | conditional | Projection |
 | `projectionCenter` | choice | Default _(default)_, `0,0` (World (Atlantic) [0, 0]), `150,0` (World (Pacific) [150, 0]), `105,35` (China [105, 35]), `-98,39` (USA [-98, 39]), `10,50` (Europe [10, 50]), `138,36` (Japan [138, 36]), `78,22` (India [78, 22]), `-52,-14` (Brazil [-52, -14]), `134,-25` (Australia [134, -25]), `100,60` (Russia [100, 60]), `20,0` (Africa [20, 0]), `45,28` (Middle East [45, 28]), `115,5` (Southeast Asia [115, 5]), `-60,-15` (South America [-60, -15]), `-100,45` (North America [-100, 45]), `-2,54` (UK [-2, 54]), `10,51` (Germany [10, 51]), `2,47` (France [2, 47]), `128,36` (Korea [128, 36]) | — | conditional | Center |
-| `fit` | choice | `auto` (Auto: the country, the region, or the continent the data covers), `data` (The data, padded), `continent` (The data’s continents), `basemap` (Whole map) | `auto` | conditional | Frame |
+| `fit` | choice | `auto` (Auto: the country, the region, or the continent the data covers), `data` (The data, padded), `continent` (The data’s continents), `whole` (Whole map) | `auto` | conditional | Frame |
 | `classes` | choice | `auto` (Auto (quantiles; round steps when diverging)), `quantile` (Quantiles (equal counts)), `equal` (Equal round steps), `jenks` (Natural breaks (Jenks)), `continuous` (Continuous) | `auto` | conditional | Classes |
 | `classCount` | number | 3 – 9 (step 1) | `5` | conditional | Class count |
-| `mapStyle` | choice | `auto` (From the theme), `light` (Light), `muted` (Muted), `atlas` (Atlas (blue water, paper land)), `dark` (Dark), `minimal` (Minimal (outlines)) | `auto` | always | Map style |
+| `mapStyle` | choice | `auto` (From the theme), `light` (Light), `muted` (Muted), `atlas` (Atlas (blue water, paper land)), `dark` (Dark), `minimal` (Minimal (outlines)), or a style of your own { base? (auto, light, muted, atlas, dark, minimal), sea?, land?, coast?, border?, noData?, graticule?, disputed? } in CSS colours | `auto` | always | Map style |
 | `graticule` | toggle | on / off | `false` | always | Graticule |
 | `borderWidth` | number | 0 – 2 (step 0.1) | — | always | Border width |

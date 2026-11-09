@@ -38,7 +38,7 @@ const legendSelection: CanvasInteractionDef = {
 					op: 'set-style', targets: [event.target],
 					value: { state: 'emphasized' },
 				},
-				{ op: 'set-annotation', target: event.target, value: { text: 'Selected series' } },
+				{ op: 'annotate-text', target: event.target, value: { text: 'Selected series' } },
 			],
 		};
 	},

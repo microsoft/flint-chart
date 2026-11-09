@@ -357,6 +357,13 @@ export const resolveUsStateCode: GeoCodeResolver = (value) =>
 export const resolveCountryCode: GeoCodeResolver = (value) =>
     resolveCodeWith(COUNTRY_LOOKUP, COUNTRY_ALPHA3_BY_ID, value);
 
+const COUNTRY_ALPHA2_BY_ID = new Map(COUNTRIES.map(([id, , a2]) => [id, a2]));
+
+/** A country's ISO alpha-2 or alpha-3 code, from its ISO numeric id. */
+export function countryAlpha(id: number, form: 'iso2' | 'iso3'): string | undefined {
+    return (form === 'iso2' ? COUNTRY_ALPHA2_BY_ID : COUNTRY_ALPHA3_BY_ID).get(id);
+}
+
 // ---------------------------------------------------------------------------
 // Map scope inference (US vs World) — shared by every backend's Map /
 // Choropleth templates so "which base geography do we draw" is decided the

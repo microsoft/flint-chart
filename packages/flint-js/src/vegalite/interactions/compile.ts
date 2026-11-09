@@ -1,4 +1,5 @@
-import { DISPUTED_FEATURE } from '../../chart-types/basemap-sources';
+import { DISPUTED_FEATURE } from '../../chart-types/boundaries';
+import { ROUTE_DATUM } from '../templates/map-routes';
 import type { ChartInteractionResolver } from '../../core/interaction-semantics';
 import type { InteractionCapability } from '../../core/interaction-spec';
 import {
@@ -13,6 +14,7 @@ import { INTERACTION_ROW } from '../../core/interaction-semantics';
 import { affordsTarget } from '../../interactive/affordances';
 import { DEFAULT_DIM_OPACITY } from '../../interactive/presets/utils';
 import { INTERACTION_PROVENANCE, type InteractionProvenance } from '../interaction-provenance';
+import type { AnnotationDesign } from '../../core/theme/types';
 import type {
     HoverStyle,
     SelectionBoundaryStyle,
@@ -85,6 +87,7 @@ interface TemplateInteractionSemantics {
     renderSelectionStyles?: Record<string, SelectionStyle>;
     selectionBoundary?: SelectionBoundaryStyle;
     continuousColorFocus?: ContinuousColorFocusStyle;
+    annotationDesign?: AnnotationDesign;
     neutralizeContinuousColor?: boolean;
     resolve?: ChartInteractionResolver;
     presentUpdate?: ChartUpdatePresenter;
@@ -660,6 +663,7 @@ export function addVegaLiteInteractions(
         renderSelectionStyles: templateSemantics.renderSelectionStyles,
         selectionBoundary: templateSemantics.selectionBoundary,
         continuousColorFocus: templateSemantics.continuousColorFocus,
+        annotationDesign: templateSemantics.annotationDesign,
         navigationChannels: [...requestedNavigationAxes],
         geoNavigation: templateSemantics.geoNavigation ?? false,
         geoLevels: templateSemantics.geoLevels,
@@ -829,12 +833,15 @@ export function vegaGeoFocusSource(vegaSpec: Record<string, any>): string | unde
         }
         return false;
     };
-    // The lines a map draws over its regions (the disputed borders) are no region to focus.
+    // The lines a map draws over its regions (the disputed borders, its routes) are no region to focus.
     const lines = (name: string | undefined): boolean => {
         const seen = new Set<string>();
         for (let dataset = name ? byName.get(name) : undefined; dataset && !seen.has(dataset.name); dataset = byName.get(dataset.source)) {
             seen.add(dataset.name);
             if (dataset.format?.feature === DISPUTED_FEATURE) return true;
+            // A mesh of borders is lines, not regions.
+            if (typeof dataset.format?.mesh === 'string') return true;
+            if (Array.isArray(dataset.values) && dataset.values[0]?.[ROUTE_DATUM] === true) return true;
         }
         return false;
     };

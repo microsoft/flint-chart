@@ -907,7 +907,7 @@ function InteractiveChart({
     void chart.applyUpdate({
       id: 'select-context',
       ops: [{
-        op: 'set-annotation',
+        op: 'annotate-text',
         target: { visual: menuTarget.visual, elements: [menuElement] },
         value: { text },
       }],

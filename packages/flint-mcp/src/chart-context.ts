@@ -252,7 +252,7 @@ function opTargets(op: ChartUpdateOp): readonly unknown[] {
     case 'set-style':
       return op.targets;
     case 'annotate-text':
-    case 'set-annotation':
+    case 'set-annotation': // deprecated name of annotate-text
       return [op.target];
     case 'annotate-enclosure':
       return op.value?.targets ?? [];

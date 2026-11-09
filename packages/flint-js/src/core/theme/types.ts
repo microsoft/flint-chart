@@ -1198,6 +1198,21 @@ export interface ResolvedSource {
     gap: number;
 }
 
+/**
+ * The house's say in an annotation's colours and words: its `ink.accent` and categorical hues for a
+ * region's wash, its `type.annotation` role for a note's words, and the primary text ink a note is
+ * set in otherwise.
+ */
+export interface AnnotationDesign {
+    accent?: string;
+    /** The house's categorical hues, the first a region's wash is chosen from. */
+    palette?: readonly string[];
+    text?: ResolvedText;
+    ink: string;
+    /** The page an annotation is read on: the plot's own surface, else the canvas. */
+    background: string;
+}
+
 export interface ResolvedText {
     font?: string;
     fontSize?: number;
@@ -1550,6 +1565,8 @@ export interface DesignDecisions {
             haloWidth: number;
             haloOpacity: number;
         };
+        /** How the house sets the notes, regions and enclosures an update draws. */
+        annotation: AnnotationDesign;
     };
     facets: {
         header: { show: boolean; fieldTitle: boolean } & ResolvedText;

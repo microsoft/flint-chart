@@ -1,4 +1,4 @@
-import { isTextAnnotationOp, type RegionAnnotationSpec } from '../../core/interaction-contracts';
+import { isTextAnnotationOp, type PresentedAnnotationSpec, type RegionAnnotationSpec } from '../../core/interaction-contracts';
 import type {
     AnnotationCandidate,
     AnnotationConnection,
@@ -11,10 +11,7 @@ import type {
 export function annotationCandidates(
     ...connections: readonly AnnotationConnection[]
 ): readonly AnnotationCandidate[] {
-    return connections.map((connection, priority) => ({
-        connection,
-        priority,
-    }));
+    return connections.map((connection) => ({ connection }));
 }
 
 export function valueEndAnnotationCandidates(
@@ -22,8 +19,8 @@ export function valueEndAnnotationCandidates(
     ...fallbacks: readonly AnnotationConnection[]
 ): readonly AnnotationCandidate[] {
     return [
-        { connection: 'value-end', valueAxis, priority: 0 },
-        ...fallbacks.map((connection, index) => ({ connection, priority: index + 1 })),
+        { connection: 'value-end', valueAxis },
+        ...fallbacks.map((connection) => ({ connection })),
     ];
 }
 
@@ -34,12 +31,8 @@ export function lollipopAnnotationCandidates(
         ? ['right', 'left']
         : ['top', 'bottom'];
     return [
-        { connection: 'value-end', valueAxis, anglePreference: 'oblique', priority: 0 },
-        ...sideConnections.map((connection, index) => ({
-            connection,
-            anglePreference: 'oblique' as const,
-            priority: index + 1,
-        })),
+        { connection: 'value-end', valueAxis },
+        ...sideConnections.map((connection) => ({ connection })),
     ];
 }
 
@@ -50,10 +43,10 @@ export function barAnnotationCandidates(
         ? ['top', 'bottom']
         : ['right', 'left'];
     return [
-        { connection: 'value-end', valueAxis, priority: 0 },
-        { connection: 'value-side', valueAxis, crossSide: 'start', valueInset: 1 / 8, priority: 1 },
-        { connection: 'value-side', valueAxis, crossSide: 'end', valueInset: 1 / 8, priority: 1 },
-        ...crossAxisEdges.map((connection) => ({ connection, priority: 2 })),
+        { connection: 'value-end', valueAxis },
+        { connection: 'value-side', valueAxis, crossSide: 'start', valueInset: 1 / 8 },
+        { connection: 'value-side', valueAxis, crossSide: 'end', valueInset: 1 / 8 },
+        ...crossAxisEdges.map((connection) => ({ connection })),
     ];
 }
 
@@ -72,7 +65,7 @@ export function presentAnnotationUpdate(
     return (update, context) => ({
         id: update.id,
         ops: update.ops.flatMap((op) => {
-            if ((op.op !== 'annotate-text' && op.op !== 'set-annotation') || op.value === null || 'select' in op.target) return op;
+            if (!isTextAnnotationOp(op) || op.value === null || 'select' in op.target) return op;
             const element = op.target.elements[0];
             if (!element) return [];
             const presentation = presentAnnotation(
@@ -82,15 +75,13 @@ export function presentAnnotationUpdate(
             );
             const text = op.value.text ?? formatAnnotation(element, context, op.target.visual);
             if (!text) return [];
-            return {
-                ...op,
-                value: {
-                    ...op.value,
-                    text,
-                    candidates: Array.isArray(presentation) ? presentation : [presentation],
-                    subject: op.target.visual,
-                },
+            const value: PresentedAnnotationSpec = {
+                ...op.value,
+                text,
+                candidates: Array.isArray(presentation) ? presentation : [presentation],
+                subject: op.target.visual,
             };
+            return { ...op, value };
         }),
     });
 }

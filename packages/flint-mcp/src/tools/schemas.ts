@@ -4,6 +4,7 @@
 import { z } from 'zod';
 import {
   CHART_UPDATE_OPS,
+  DEPRECATED_UPDATE_OPS,
   INTERACTION_PRESET_TYPES,
   type ChartAssemblyInput,
   type InteractionPresetType,
@@ -186,12 +187,16 @@ export const updatesShape = {
         ops: z
           .array(
             z
-              .object({ op: z.enum(CHART_UPDATE_OPS) })
+              .object({
+                op: z
+                  .enum([...CHART_UPDATE_OPS, ...(Object.keys(DEPRECATED_UPDATE_OPS) as Extract<keyof typeof DEPRECATED_UPDATE_OPS, string>[])])
+                  .describe('The op. set-annotation is deprecated, still read until 2.0: it means annotate-text. Write annotate-text.'),
+              })
               .passthrough()
               .describe(
                 'One ChartUpdate op, by op: ' +
                   'set-style { targets: UpdateTarget[], value: { state?, emphasis?: "light" | "strong" | "exclusive" (how far the rest recede when state is "emphasized"; default "light"), opacity?, visible?, fill?, stroke? } }; ' +
-                  "annotate-text { target: UpdateTarget, value: { text, anchor?: 'segment' | 'point', highlight?: 'none' | 'light' | 'strong' | 'exclusive' } | null } (set-annotation is its older name); " +
+                  "annotate-text { target: UpdateTarget, value: { text, anchor?: 'segment' | 'point', highlight?: 'none' | 'light' | 'strong' | 'exclusive' } | null }: words beside one mark, never a card (draw a card or callout with set-overlay or set-freeform-overlay); " +
                   "annotate-region { name, value: { x?: [lo, hi] | categories, y?: [lo, hi] | categories, text?, color?, opacity?, layer?: 'under' | 'over', placement? } | null }; " +
                   "annotate-enclosure { name, value: { targets: UpdateTarget[], text?, shape?: 'hull' | 'rect' | 'ellipse' | 'circle', connect?: 'auto' | 'all' | 'none', color? } | null }; " +
                   "set-viewport { axes: 'x' | 'y' | 'xy', value: { x?: [lo, hi], y?: [lo, hi] } }; " +

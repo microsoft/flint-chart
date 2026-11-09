@@ -40,7 +40,8 @@ import { TitleWrapLab } from './playground/TitleWrapLab';
 import { CalendarAxisLab } from './playground/CalendarAxisLab';
 import { CategoricalTemporalLab } from './playground/CategoricalTemporalLab';
 import { ReleaseExamples100 } from './playground/release-examples/1.0.0';
-import { TestExamples } from './playground/release-examples/test-examples';
+import { ReleaseExamples102 } from './playground/release-examples/1.0.2';
+import { GreekStories } from './playground/fun/GreekStories';
 import { OverflowViewportLab } from './playground/OverflowViewportLab';
 import { ZoomClippingLab } from './playground/ZoomClippingLab';
 import { LayoutInspector } from './playground/LayoutInspector';
@@ -139,12 +140,18 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="calendar-axis" element={<CalendarAxisLab />} />
           <Route path="categorical-temporal" element={<CategoricalTemporalLab />} />
           <Route path="release-examples">
-            <Route index element={<Navigate to="1.0.0" replace />} />
+            <Route index element={<Navigate to="1.0.2" replace />} />
+            <Route path="1.0.2" element={<ReleaseExamples102 />} />
             <Route path="1.0.0" element={<ReleaseExamples100 />} />
             <Route path="application-demos" element={<Navigate to={localePath('/interactions/advanced', locale)} replace />} />
-            <Route path="test-examples" element={<TestExamples />} />
           </Route>
           <Route path="wrapping-examples" element={<Navigate to="../release-examples/1.0.0" replace />} />
+          <Route path="fun">
+            <Route path="greek" element={<GreekStories />} />
+            {['odyssey', 'argonauts', 'heracles', 'iliad'].map((story) => (
+              <Route key={story} path={story} element={<Navigate to="../greek" replace />} />
+            ))}
+          </Route>
           <Route path="overflow-viewport" element={<OverflowViewportLab />} />
           <Route path="zoom-clipping" element={<ZoomClippingLab />} />
           <Route path="layout-inspector" element={<LayoutInspector />} />

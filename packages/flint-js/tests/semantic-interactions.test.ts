@@ -99,7 +99,6 @@ import {
 import {
     annotationBounds,
     annotationConnectionPoint,
-    annotationPrimaryAnchor,
 } from '../src/vegalite/interactions/presentation/annotation-overlay';
 import { createVegaNavigationController } from '../src/vegalite/interactions/navigation-scale';
 import { INTERACTION_PROVENANCE } from '../src/vegalite/interaction-provenance';
@@ -150,7 +149,7 @@ function annotationUpdate(
     return {
         id: 'test-annotation',
         ops: [{
-            op: 'set-annotation' as const,
+            op: 'annotate-text' as const,
             target: { visual, elements: [element] },
             value: {},
         }],
@@ -265,7 +264,7 @@ describe('Vega-Lite semantic interactions', () => {
             value: { text: '2' },
         });
         expect((update.ops[0] as any).value.candidates[0]).toEqual({
-            connection: 'value-end', valueAxis: 'y', priority: 0,
+            connection: 'value-end', valueAxis: 'y',
         });
     });
 
@@ -309,7 +308,7 @@ describe('Vega-Lite semantic interactions', () => {
                 text: 'Median: 5,000\nIQR: 4,700 → 5,400',
             },
         });
-        expect((update.ops[0] as any).value.candidates[0]).toEqual({ connection: 'center', priority: 0 });
+        expect((update.ops[0] as any).value.candidates[0]).toEqual({ connection: 'center' });
     });
 
     it('keeps a Regression\u2019s dots selectable when a house redraws its circles as squares', async () => {
@@ -637,13 +636,6 @@ describe('Vega-Lite semantic interactions', () => {
         expect(midpoint.point).toEqual({ x: 126, y: 136 });
         expect(rightFallback.point).toEqual(midpoint.point);
         expect(rightFallback.preferredAngle).toBe(0);
-        expect(annotationPrimaryAnchor(
-            item,
-            { left: 56, top: 52, width: 140, height: 168 },
-            { left: 220, top: 120, width: 30, height: 20 },
-            'right',
-            rightFallback.point,
-        )).toEqual(midpoint.point);
     });
 
     it('uses a borderless spotlight for area hover', () => {
@@ -1712,7 +1704,7 @@ describe('Vega-Lite semantic interactions', () => {
 
         expect(update.ops[0]).toMatchObject({ value: { text: '140' } });
         expect((update.ops[0] as any).value.candidates).toEqual([
-            { connection: 'outer-radial', priority: 0 },
+            { connection: 'outer-radial' },
         ]);
     });
 
@@ -1750,12 +1742,7 @@ describe('Vega-Lite semantic interactions', () => {
         expect(bulletUpdate.ops[0]).toMatchObject({
             value: {
                 text: 'Actual: 51.6\nExpected: 80',
-                candidates: expect.arrayContaining([expect.objectContaining({
-                    connectorAnchors: [
-                        { role: 'bullet-actual', connection: 'value-end', valueAxis: 'x' },
-                        { role: 'bullet-expected', connection: 'center' },
-                    ],
-                })]),
+                candidates: [{ connection: 'value-end', valueAxis: 'x' }],
             },
         });
 
@@ -2128,7 +2115,7 @@ describe('Vega-Lite semantic interactions', () => {
         ).ops[0]).toMatchObject({
             value: {
                 text: '60 → 67',
-                candidates: [{ connection: 'segment-midpoint', priority: 0 }],
+                candidates: [{ connection: 'segment-midpoint' }],
             },
         });
     });
@@ -3000,7 +2987,7 @@ describe('Vega-Lite semantic interactions', () => {
         ).ops[0]).toMatchObject({
             value: {
                 text: 'Male: 81.5, Female: 87.6',
-                candidates: [{ connection: 'segment-midpoint', priority: 0 }],
+                candidates: [{ connection: 'segment-midpoint' }],
             },
         });
     });
@@ -3024,8 +3011,8 @@ describe('Vega-Lite semantic interactions', () => {
 
         expect(update.ops[0]).toMatchObject({ value: { text: 'Chrome: 65' } });
         expect((update.ops[0] as any).value.candidates).toEqual([
-            { connection: 'radial-midpoint', priority: 0 },
-            { connection: 'outer-radial', priority: 1 },
+            { connection: 'radial-midpoint' },
+            { connection: 'outer-radial' },
         ]);
     });
 
@@ -4220,7 +4207,7 @@ describe('Vega-Lite semantic interactions', () => {
             },
         });
         expect((update.ops[0] as any).value.candidates[0]).toEqual({
-            connection: 'segment-midpoint', priority: 0,
+            connection: 'segment-midpoint',
         });
     });
 
@@ -4278,7 +4265,7 @@ describe('Vega-Lite semantic interactions', () => {
         ['Slope Chart', slopeChartDef, ['line', 'point'], 'X'],
         ['Regression', regressionDef, ['circle'], 'X'],
         ['Streamgraph', streamgraphDef, ['area'], 'X'],
-        ['Map', mapDef, ['circle'], 'Longitude'],
+        ['Map', mapDef, ['circle', 'geoshape'], 'Longitude'],
         ['Density Plot', densityPlotDef, ['area'], 'value'],
         ['ECDF Plot', ecdfPlotDef, ['line', 'point'], 'X'],
         ['Calendar Heatmap', vlCalendarHeatmapDef, ['rect'], '__flintCalendarWeek'],

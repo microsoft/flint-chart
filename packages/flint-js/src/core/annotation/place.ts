@@ -62,12 +62,32 @@ export interface PlaceNoteInput {
     fontSize?: number;
 }
 
+/**
+ * A leader from a caption (`from`) to its mark (`to`), turning at its `elbows` (in order from the
+ * caption to the mark) where it has any.
+ */
+export interface NoteLeader {
+    from: Point;
+    to: Point;
+    elbows?: readonly Point[];
+}
+
+/** A leader's straight runs, from the caption to the mark. */
+export function leaderSegments(leader: NoteLeader): NoteSegment[] {
+    const points = [leader.from, ...(leader.elbows ?? []), leader.to];
+    return points.slice(1).map((point, index) => ({ a: points[index], b: point }));
+}
+
 export interface NotePlacement {
     box: Box;
     /** How the caption's lines align: toward the mark beside it, centred above or below it. */
     align: 'left' | 'center' | 'right';
-    /** From the caption's edge to the mark's outline, where one is drawn. */
-    leader?: { from: Point; to: Point };
+    /**
+     * From the caption's edge to the mark's outline, where one is drawn. It leaves the outline square
+     * to it: where the caption is not straight out from the side it names, the leader runs out from
+     * that side first and turns at its `elbows`, square, so it is never drawn along the mark's own edge.
+     */
+    leader?: NoteLeader;
     /** The seat's direction from the mark's centre, in radians, and its clear gap from the outline, in px. */
     angle: number;
     gap: number;
@@ -99,6 +119,8 @@ const COST = {
     /** Per px² beyond a comfortable reach: past it, a leader is a hunt across the plot. */
     leaderReach: 0.06,
     stub: 200,
+    /** Per turn a leader takes: a straight one reads quicker. */
+    elbow: 12,
     gapLinear: 1.2,
     gapSquare: 0.3,
     /** Per radian away from the side the mark suggests. */
@@ -119,7 +141,7 @@ interface Seat {
     gap: number;
     align: NotePlacement['align'];
     /** A direct seat past a bar's value face, with the leader it always draws. */
-    direct?: { from: Point; to: Point };
+    direct?: NoteLeader;
     escape?: boolean;
 }
 
@@ -191,6 +213,65 @@ function textAlign(angle: number): NotePlacement['align'] {
     return cos > 0.38 ? 'left' : cos < -0.38 ? 'right' : 'center';
 }
 
+/** How far a leader runs straight out from the side it names before it turns, in font sizes; at least 6 px. */
+const ELBOW_REACH = 0.7;
+/** A leader that meets a side at more than this from square to it (60°) runs out square first. */
+const GRAZING_COS = 0.5;
+
+/**
+ * A leader that leaves `to`, on a side whose outward normal is `normal` (one axis), square to it. A
+ * caption straight out from the side is joined by one straight run. Otherwise the leader runs out a
+ * stub to an elbow and turns there: on toward a caption beyond the elbow; straight across into the
+ * caption's near edge where the caption spans the elbow (a caption below a bar's end, under it); or
+ * square again, along and then into its side, where it does not — never back along the mark's edge.
+ */
+function squareLeader(to: Point, normal: Point, box: Box, reach: number): NoteLeader {
+    const centre = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+    const along = (centre.x - to.x) * normal.x + (centre.y - to.y) * normal.y;
+    const across = Math.abs((centre.x - to.x) * normal.y - (centre.y - to.y) * normal.x);
+    if (along >= reach && across <= along * 0.27) return { from: portToward(box, to), to };
+    const elbow = { x: to.x + normal.x * reach, y: to.y + normal.y * reach };
+    // Where the caption's near edge lies past the elbow, the leader turns toward it from there.
+    const near = normal.x !== 0
+        ? (normal.x > 0 ? box.x - elbow.x : elbow.x - (box.x + box.width))
+        : (normal.y > 0 ? box.y - elbow.y : elbow.y - (box.y + box.height));
+    if (near >= 0) return { from: portToward(box, elbow), to, elbows: [elbow] };
+    if (normal.x !== 0) {
+        if (box.x <= elbow.x && elbow.x <= box.x + box.width) {
+            return { from: { x: elbow.x, y: centre.y > elbow.y ? box.y - PORT_GAP : box.y + box.height + PORT_GAP }, to, elbows: [elbow] };
+        }
+        const side = elbow.x < box.x ? box.x - PORT_GAP : box.x + box.width + PORT_GAP;
+        const from = { x: side, y: centre.y };
+        return { from, to, elbows: [{ x: elbow.x, y: centre.y }, elbow] };
+    }
+    if (box.y <= elbow.y && elbow.y <= box.y + box.height) {
+        return { from: { x: centre.x > elbow.x ? box.x - PORT_GAP : box.x + box.width + PORT_GAP, y: elbow.y }, to, elbows: [elbow] };
+    }
+    const side = elbow.y < box.y ? box.y - PORT_GAP : box.y + box.height + PORT_GAP;
+    return { from: { x: centre.x, y: side }, to, elbows: [{ x: centre.x, y: elbow.y }, elbow] };
+}
+
+/**
+ * The leader from a caption to its mark, leaving the mark square to the side it names. A bar's value
+ * face (`forward`, the way it looks) is named at its centre and left along the bar. Any other
+ * rectangle is met at its outline, and left square to the side it meets where a straight leader
+ * would graze it. A dot or a point is met straight.
+ */
+function leaderTo(target: NoteTarget, box: Box, forward: Point | undefined, reach: number): NoteLeader {
+    if (forward) return squareLeader({ x: target.x, y: target.y }, forward, box, reach);
+    const from = portToward(box, target);
+    const to = rimPoint(target, from);
+    if (target.shape !== 'rect' || target.rx <= 0 || target.ry <= 0) return { from, to };
+    const on = (a: number, b: number) => Math.abs(a - b) < 0.5;
+    const nx = on(to.x, target.x + target.rx) ? 1 : on(to.x, target.x - target.rx) ? -1 : 0;
+    const ny = on(to.y, target.y + target.ry) ? 1 : on(to.y, target.y - target.ry) ? -1 : 0;
+    // A corner is left diagonally, which grazes neither side.
+    if ((nx === 0) === (ny === 0)) return { from, to };
+    const length = Math.hypot(from.x - to.x, from.y - to.y) || 1;
+    if (((from.x - to.x) * nx + (from.y - to.y) * ny) / length >= GRAZING_COS) return { from, to };
+    return squareLeader(to, { x: nx, y: ny }, box, reach);
+}
+
 export function placeNote(input: PlaceNoteInput): NotePlacement {
     const { target, label, plot, canvas } = input;
     const obstacles = input.obstacles ?? [];
@@ -243,19 +324,20 @@ export function placeNote(input: PlaceNoteInput): NotePlacement {
             const own = targetGap(target, box);
             ambiguous = marks.some((mark) => boxDistance(box, mark.box) < own + margin);
             if (leaderAllowed && (gap > MAX_UNLED_GAP || ambiguous)) {
-                const from = portToward(box, target);
-                drawn = { from, to: rimPoint(target, from) };
+                drawn = leaderTo(target, box, forward, Math.max(6, ELBOW_REACH * fontSize));
             }
             cost += COST.gapLinear * gap + COST.gapSquare * gap * gap;
         }
         if (drawn) {
-            const { from, to } = drawn;
-            const length = Math.hypot(from.x - to.x, from.y - to.y);
-            cost += COST.leaderFixed + COST.leaderLength * length
+            const runs = leaderSegments(drawn);
+            const length = runs.reduce((sum, run) => sum + Math.hypot(run.a.x - run.b.x, run.a.y - run.b.y), 0);
+            cost += COST.leaderFixed + COST.elbow * (drawn.elbows?.length ?? 0) + COST.leaderLength * length
                 + COST.leaderReach * Math.max(0, length - COMFORTABLE_REACH) ** 2;
             if (length < MIN_LEADER && !seat.direct) cost += COST.stub;
-            for (const obstacle of nearObstacles) if (segmentCrossesBox(from, to, obstacle.box)) cost += COST.leaderCross;
-            for (const segment of nearSegments) if (segmentsCross(from, to, segment.a, segment.b)) cost += COST.leaderCross;
+            for (const run of runs) {
+                for (const obstacle of nearObstacles) if (segmentCrossesBox(run.a, run.b, obstacle.box)) cost += COST.leaderCross;
+                for (const segment of nearSegments) if (segmentsCross(run.a, run.b, segment.a, segment.b)) cost += COST.leaderCross;
+            }
         } else if (ambiguous) {
             // Without a leader to say which, a caption between two marks names neither.
             cost += COST.stub * 2;

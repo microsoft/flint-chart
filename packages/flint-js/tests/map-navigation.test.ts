@@ -38,7 +38,7 @@ import {
 } from '../src/vegalite/interactions/navigation-geo';
 import { domainForPlotGeometry, resolveSupportedOperation } from '../src/vegalite/interactions/runtime';
 import { followGeoDetail, GEO_DETAIL_SIGNAL, injectVegaGeoDetail } from '../src/vegalite/interactions/geo-detail';
-import { withBundledBasemaps } from '../src/vegalite/basemap-loader';
+import { withBundledBoundaries } from '../src/vegalite/boundary-loader';
 
 const GUARD = { minVisibleFraction: 0.02, maxVisibleFraction: 1, overscrollFraction: 0 };
 
@@ -68,7 +68,7 @@ function worldBubbleMap(): any {
         chart_spec: {
             chartType: 'Map',
             encodings: { longitude: 'Lon', latitude: 'Lat', size: 'Pop' },
-            chartProperties: { region: 'world', projection: 'mercator', fit: 'basemap' },
+            chartProperties: { region: 'world', projection: 'mercator', fit: 'whole' },
         },
     } as any) as any;
     // Replace the remote TopoJSON base with inline features.
@@ -353,8 +353,8 @@ async function mountedGlobe(center: [number, number] = [0, 0]) {
             chartProperties: { region: 'world', projection: 'orthographic', projectionCenter: center },
         },
     } as any) as any;
-    // The inline blocks stand in for the countries; the disputed borders have none to draw.
-    spec.layer = spec.layer.filter((layer: any) => layer.data?.format?.feature !== 'disputed');
+    // The inline blocks stand in for the countries; the disputed borders and the mesh of borders have none to draw.
+    spec.layer = spec.layer.filter((layer: any) => layer.data?.format?.feature !== 'disputed' && !layer.data?.format?.mesh);
     for (const layer of spec.layer) {
         if (layer.data?.url) layer.data = { values: BASE_FEATURES };
     }
@@ -404,10 +404,12 @@ describe('point map as a globe', () => {
         expect(spec.projection).toEqual(expect.objectContaining({ type: 'orthographic', fit: { type: 'Sphere' } }));
         expect(spec.layer.every((layer: any) => layer.projection === undefined)).toBe(true);
         expect(spec.layer[0].data).toEqual({ sphere: true });
-        // The sea, the land, the land's dotted disputed borders, then the points.
-        expect(spec.layer[2].mark.strokeDash).toBeDefined();
-        expect(spec.layer[3].mark?.type ?? spec.layer[3].mark).toBe('circle');
-        expect(spec.layer[3].encoding.opacity.condition.value).toBe(0);
+        // The sea under all, then the land and its borders, the dotted disputed borders, and the points over them.
+        const circle = spec.layer.findIndex((layer: any) => (layer.mark?.type ?? layer.mark) === 'circle');
+        expect(circle).toBe(spec.layer.length - 1);
+        expect(spec.layer[circle - 1].mark.strokeDash).toBeDefined();
+        expect(spec.layer.slice(1, circle - 1).every((layer: any) => (layer.mark?.type ?? layer.mark) === 'geoshape')).toBe(true);
+        expect(spec.layer[circle].encoding.opacity.condition.value).toBe(0);
         expect(spec.params).toContainEqual({ name: GEO_ROTATE_SIGNAL, value: [0, 0, 0] });
     });
 
@@ -475,9 +477,11 @@ describe('point map as a globe', () => {
 
     it('leaves a flat point map without a sea, a rotation signal, or hidden points', () => {
         const flat = pointGlobe({ projection: 'equalEarth' });
-        expect(flat.layer).toHaveLength(3);
+        // The water's frame, the land, its borders, the disputed borders on the land's colour, the points: no sphere.
+        expect(flat.layer.some((layer: any) => layer.data?.sphere)).toBe(false);
         expect(flat.params ?? []).not.toContainEqual(expect.objectContaining({ name: GEO_ROTATE_SIGNAL }));
-        expect(flat.layer[2].encoding.opacity).toBeUndefined();
+        const points = flat.layer.find((layer: any) => (layer.mark?.type ?? layer.mark) === 'circle');
+        expect(points.encoding.opacity).toBeUndefined();
     });
 });
 
@@ -495,11 +499,13 @@ describe('globe navigation', () => {
             type: 'orthographic', rotate: [-10, -50, 0], fit: { type: 'Sphere' },
         }));
         expect(spec.width).toBe(spec.height);
-        expect(spec.layer).toHaveLength(4);
+        // The sea, the land without data, the countries, the borders between them, the disputed borders.
+        expect(spec.layer).toHaveLength(5);
         expect(spec.layer[0].data).toEqual({ sphere: true });
         expect(spec.layer[1].mark.fill).toBeDefined();
         expect(spec.layer[2].encoding.color.field).toBe('Warming');
-        expect(spec.layer[3].data.format.feature).toBe('disputed');
+        expect(spec.layer[3].data.format).toMatchObject({ mesh: 'countries', filter: 'interior' });
+        expect(spec.layer[4].data.format.feature).toBe('disputed');
     });
 
     it('keeps a flat world choropleth to its regions and their disputed borders, and offers the projection only on the world map', () => {
@@ -508,7 +514,7 @@ describe('globe navigation', () => {
             semantic_types: { Country: 'Country', Warming: 'Quantity' },
             chart_spec: { chartType: 'Choropleth', encodings: { id: 'Country', color: 'Warming' }, chartProperties: { region: 'world', projection: 'mercator' } },
         } as any) as any;
-        expect(flat.layer.filter((layer: any) => layer.data?.format).map((layer: any) => layer.data.format.feature)).toEqual(['countries', 'disputed']);
+        expect(flat.layer.filter((layer: any) => layer.data?.format).map((layer: any) => layer.data.format.feature ?? 'mesh')).toEqual(['countries', 'mesh', 'disputed']);
         expect(flat.projection.type).toBe('mercator');
     });
 
@@ -665,7 +671,7 @@ describe('boundaries that sharpen with the zoom', () => {
             requested.push(uri);
             return load(uri, options);
         }) as typeof base.load;
-        const view = new View(parse(compiled), { renderer: 'none', loader: withBundledBasemaps(base) } as any);
+        const view = new View(parse(compiled), { renderer: 'none', loader: withBundledBoundaries(base) } as any);
         await view.runAsync();
         const stop = followGeoDetail(view);
         const controller = createVegaGeoNavigationController(view, axes, undefined, undefined, { focusSource: vegaGeoFocusSource(compiled) });
@@ -691,18 +697,17 @@ describe('boundaries that sharpen with the zoom', () => {
         view.finalize();
     });
 
-    it('leave a map framed on a region, or drawn from the host’s own boundaries, as it is', () => {
-        const compiledOf = (rows: string[], options: Record<string, unknown> = {}) => {
+    it('leave a map framed on a region, or drawn from a file of its own, as it is', () => {
+        const compiledOf = (rows: string[], chartProperties: Record<string, unknown> = {}) => {
             const spec = assembleVegaLite({
                 data: { values: rows.map((Country, i) => ({ Country, Value: i })) },
                 semantic_types: { Country: 'Country', Value: 'Quantity' },
-                chart_spec: { chartType: 'Choropleth', encodings: { id: 'Country', color: 'Value' } },
-                options,
+                chart_spec: { chartType: 'Choropleth', encodings: { id: 'Country', color: 'Value' }, chartProperties },
             } as any) as any;
             addVegaLiteInteractions(spec, [navigate()]);
             return compile(spec).spec as any;
         };
         expect(injectVegaGeoDetail(compiledOf(['France', 'Germany']))).toBe(false);
-        expect(injectVegaGeoDetail(compiledOf(['United States', 'China', 'Brazil'], { basemaps: { worldBank: '/maps/world.json' } }))).toBe(false);
+        expect(injectVegaGeoDetail(compiledOf(['United States', 'China', 'Brazil'], { boundaries: { url: '/maps/world.json', feature: 'countries' } }))).toBe(false);
     });
 });

@@ -8,7 +8,7 @@
  * swap is Vega's own reload; Flint's loader serves the finer file from the package.
  */
 
-import { BASEMAP_URLS } from '../../chart-types/basemap-sources';
+import { BOUNDARY_URLS } from '../../chart-types/boundaries';
 import { GEO_PROJECTION_SIGNAL } from './navigation-geo';
 
 export const GEO_DETAIL_SIGNAL = '__flint_geo_detail';
@@ -22,7 +22,7 @@ const MEDIUM_EXIT = 2600;
  * gave its own boundaries, or one framed on a region (drawn at medium detail already), is left alone.
  */
 export function injectVegaGeoDetail(vegaSpec: Record<string, any>): boolean {
-    const { coarse, medium } = BASEMAP_URLS.worldBank;
+    const { coarse, medium } = BOUNDARY_URLS.worldBank;
     let bound = false;
     for (const dataset of Array.isArray(vegaSpec.data) ? vegaSpec.data : []) {
         if (dataset?.url !== coarse) continue;

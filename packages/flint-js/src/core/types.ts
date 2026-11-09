@@ -8,7 +8,7 @@ import type { SemanticAnnotation, FormatSpec, DomainConstraint, TickConstraint }
 import type { ColorDecisionResult } from './color-decisions';
 import type { GeometryKind, ThemeGeometry, ThemeSpec } from './theme/types';
 import type { ChartInteractionSupport, InteractionSpec } from './interaction-spec';
-import type { ChartUpdateOp, UpdateTarget } from './interaction-contracts';
+import type { ChartUpdate, ChartUpdateOp, UpdateTarget } from './interaction-contracts';
 import type { ChartStructure, StructureContext } from './structure';
 import type { ViewNode } from './views';
 import type { FamilyMeasure } from './text-width';
@@ -735,6 +735,14 @@ export type ChartPropertyDef = ChartProperty & {
      * only in the data-aware quick-config bar — without needing a separate flag.
      */
     check?: (ctx: OptionEvalContext) => { applicable: boolean; recommendedValue?: any };
+    /**
+     * Values a discrete property takes beside its options — a map's boundaries, as a file of its
+     * own — kept as given where this test accepts them. Any other value not among the options is
+     * dropped for the default, with a warning that quotes `acceptsLabel`.
+     */
+    accepts?: (value: unknown) => boolean;
+    /** What `accepts` takes, for the warning when a value is neither an option nor that. */
+    acceptsLabel?: string;
 };
 
 /**
@@ -1434,6 +1442,18 @@ export interface ChartAssemblyInput {
     interaction_spec?: InteractionSpec;
 
     /**
+     * Updates the chart applies once it is drawn — notes, overlays, emphasis, a viewport — the
+     * same updates a host passes to `mountChart` (`options.updates`) or `<FlintChart updates>`,
+     * kept with the spec so a copied spec keeps them. A host's own update with the same `id`
+     * replaces the spec's.
+     *
+     * Applied by the interactive runtime only (Vega-Lite). A static output — `assembleVegaLite`'s
+     * spec, `renderSvg`, the other backends — draws the chart without them, with an `info`
+     * warning (`updates-not-compiled`).
+     */
+    updates?: readonly ChartUpdate[];
+
+    /**
      * Options for the assembler — layout tuning, tooltips, etc.
      * All fields are optional and have sensible defaults.
      */
@@ -1505,9 +1525,6 @@ export interface CanvasTreatment {
     contain?: { width: number; height: number; keys?: 'side' | 'top' | 'bottom' };
 }
 
-/** A map's boundaries: a TopoJSON topology, or the URL of one. */
-export type BasemapSource = string | Record<string, unknown>;
-
 /** A credit a chart's drawing owes, drawn at the foot of the chart: words, a link, and a note shown on hover. */
 export interface ChartCredit {
     text: string;
@@ -1516,33 +1533,52 @@ export interface ChartCredit {
 }
 
 /**
- * Boundaries for the built-in maps (`AssembleOptions.basemaps`). Each part keeps the object names
- * and ids of the default it replaces, which the maps join and draw by. Unset, each is read from its
- * URL on Flint's site (`https://microsoft.github.io/flint-chart/geo/v1/…`, a version that never
- * changes once published); Flint's renderers (`mountChart`, `<FlintChart>`, `renderSvg`) serve
- * those URLs from copies bundled in the package instead, loaded the first time a map draws. A host
- * gives its own where its audience needs other boundaries: Flint takes no position on disputed ones.
+ * What a boundary file's feature ids are, so the rows' keys are matched to them: ISO 3166-1
+ * numeric (840), alpha-3 (`USA`) or alpha-2 (`US`) country codes, US FIPS codes (6, 06037), or the
+ * file's own keys, matched exactly as the rows give them (`as-is`).
  */
-export interface MapBasemaps {
-    /**
-     * World Bank Official Boundaries, the default world map (`chartProperties.boundaries:
-     * 'world-bank'`): objects `countries` (ISO 3166-1 numeric ids; areas of non-determined legal
-     * status are features of their own, flagged `ndlsa`), `land` and `disputed` (the borders those
-     * areas share, drawn dotted). One source for every frame, or `coarse` for the world and
-     * `medium` for a region or a zoom. Default: `world-bank-coarse.json` and `world-bank-medium.json`, CC BY 4.0.
-     * Boundaries of the host's own need only `countries` and `land`: they are drawn and credited as
-     * the host's (see `attribution`), with dotted borders only where they have a `disputed` object.
-     */
-    worldBank?: BasemapSource | { coarse?: BasemapSource; medium?: BasemapSource };
-    /** Natural Earth's countries at 1:110m (`boundaries: 'natural-earth'`): objects `countries` (ISO 3166-1 numeric ids) and `land`. Default: `world-110m.json`, from vega-datasets. */
-    naturalEarth?: BasemapSource;
-    /** The US states in longitude and latitude, for point maps: object `states`. Default: `states-10m.json`, from us-atlas. */
-    us?: BasemapSource;
-    /** The US already projected with albersUsa into 975 × 610, for choropleths: objects `states` and `counties` (FIPS ids). Default: `counties-albers-10m.json`, from us-atlas. */
-    usAlbers?: BasemapSource;
-    /** Who drew the boundaries given here, reported as the map's `_attribution` and credited under it. Unset, the host's own boundaries are credited to no one. */
-    attribution?: string;
+export type BoundaryIds = 'iso-numeric' | 'iso3' | 'iso2' | 'fips' | 'as-is';
+
+/**
+ * Boundaries a map draws from a file of its own — by `url`, or inline as `values` — rather than a
+ * set Flint ships (`chartProperties.boundaries` as an object).
+ *
+ * Files whose ids are country codes draw as the world map does: framed on the countries the rows
+ * name, a globe where the projection asks, the rows read as names or codes. Files keyed by FIPS or
+ * by their own keys are fitted to their shapes.
+ */
+export interface BoundaryFile {
+    /** The file: TopoJSON (give `feature`) or a GeoJSON FeatureCollection. One URL, or one per detail: `coarse` for the world, `medium` for a region. */
+    url?: string | { coarse?: string; medium?: string };
+    /** The shapes inline, so the compiled spec needs no network: a TopoJSON topology (give `feature`) or a GeoJSON FeatureCollection. */
+    values?: Record<string, unknown>;
+    /** The TopoJSON object holding the regions. Unset, the file is GeoJSON. */
+    feature?: string;
+    /** What the features' ids are. Default: `fips` on a US map, else `iso-numeric`. */
+    ids?: BoundaryIds;
+    /** Where each feature keeps its id, as a dotted path (`properties.code`). Default: `id`. */
+    key?: string;
+    /** A TopoJSON object of lines drawn dotted over the regions: borders in dispute. */
+    disputed?: string;
+    /** Who drew the boundaries, credited at the map's foot (`Boundaries: …`); or the credit itself, with a link and a note on hover. */
+    attribution?: string | ChartCredit;
 }
+
+/**
+ * The boundaries a map draws (`chartProperties.boundaries`): a set Flint ships, by name, or a file
+ * of the chart's own. Unset, a world map draws `world-bank` and a US map the US Census Bureau's.
+ *
+ * - `'world-bank'`: World Bank Official Boundaries (CC BY 4.0), areas of non-determined legal
+ *   status as regions of their own, the borders they share dotted, credited at the map's foot.
+ * - `'natural-earth'`: Natural Earth's de facto boundaries at 1:110m (public domain).
+ *
+ * A named set compiles to its URL on Flint's site (`https://microsoft.github.io/flint-chart/geo/v1/…`,
+ * a version that never changes once published). Flint's renderers (`mountChart`, `<FlintChart>`,
+ * `renderSvg`) serve those URLs from copies bundled in the package; `inlineBoundaries` from
+ * `flint-chart/geo` writes them into a compiled spec for a renderer with no network. Flint takes no
+ * position on disputed boundaries: a chart whose audience needs others gives its own file.
+ */
+export type Boundaries = 'world-bank' | 'natural-earth' | BoundaryFile;
 
 export interface AssembleOptions {
     /** Whether to add tooltips to the chart (default: false) */
@@ -1719,13 +1755,6 @@ export interface AssembleOptions {
      * `'off'` lays every chart out as planned.
      */
     canvasFit?: 'off' | 'auto';
-    /**
-     * The boundaries the built-in maps draw, in place of their default URLs. A TopoJSON object is
-     * drawn inline, so the compiled spec needs no network wherever it is rendered; a string is the
-     * URL to load instead. Flint's own renderers need neither: they serve the defaults from the
-     * package. `flint-chart/geo` exports `basemaps`, every default topology ready to pass.
-     */
-    basemaps?: MapBasemaps;
     /**
      * Whether the canvas fit, once it has settled what is around the chart, lays the plot out once
      * more in the room the box leaves it — kept only where the chart reads better for it (default true).

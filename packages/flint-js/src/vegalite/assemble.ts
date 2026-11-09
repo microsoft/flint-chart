@@ -44,6 +44,7 @@
  * This module has NO React, Redux, or UI framework dependencies.
  */
 
+import { noteSpecUpdates } from '../core/spec-updates';
 import { authoredColorScale, schemeName, withEncodingColorAnnotations, colorNeutralBand } from '../core/color-controls';
 import { applyAuthoredColorScaleVL, restoreColorScales, snapshotColorScales } from './color-controls';
 import {
@@ -792,6 +793,7 @@ function emitVegaLite(input: ChartAssemblyInput, prepared: VegaLitePreparation, 
         reorderAxes,
         selectionBoundary: design.interaction.selectionBoundary,
         continuousColorFocus: design.interaction.continuousColorFocus,
+        annotationDesign: design.interaction.annotation,
         neutralizeContinuousColor: chartTemplate.chart === 'Map' || chartTemplate.chart === 'Choropleth',
     };
     result._width = plan.plot.width;
@@ -852,9 +854,9 @@ function emitVegaLite(input: ChartAssemblyInput, prepared: VegaLitePreparation, 
             : ev ? ev.applicable : true;
         const recommended = layoutCoupledRecommendation[def.key] ?? ev?.recommendedValue;
         const value = chartProperties?.[def.key] ?? recommended ?? def.defaultValue;
-        // Strip the `check` rule — a ChartOption is the resolved, serializable
-        // answer (`applicable`/`value`), not the predicate that produced it.
-        const { check, ...rest } = def;
+        // Strip the rules — a ChartOption is the resolved, serializable
+        // answer (`applicable`/`value`), not the predicates that produced it.
+        const { check, accepts, ...rest } = def;
         return { ...rest, applicable, value };
     });
     // Layout-level facet-wrap control: offered whenever a column facet has
@@ -943,7 +945,7 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
     const prepared = prepareVegaLite(input);
     const analysis = analyzeChart(input, prepared.template, prepared.chartProperties, vlGetTemplateDef);
     const plan = planLayout(analysis, vegaLitePlanContext(input, prepared, analysis));
-    return emitVegaLite(input, prepared, analysis, plan).spec;
+    return noteSpecUpdates(emitVegaLite(input, prepared, analysis, plan).spec, input);
 }
 
 /** The rows a re-plan lays out: a subset of the analysis rows, the rows a window on x shows, or rows the host supplies. */

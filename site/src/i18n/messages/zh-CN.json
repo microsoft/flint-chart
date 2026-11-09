@@ -452,9 +452,8 @@
     "leadHighlight1": "AI 智能体从简洁、可人工编辑的规范出发，稳定生成表现力强、观感出色且可交互的图表",
     "leadStop": "。",
     "leadInsight": "其核心设计是把底层图表库中混在一起的视觉逻辑、样式逻辑和交互逻辑解耦：你或你的智能体分别用简短的语义规范描述它们，由编译器将它们组合起来。",
-    "leadAvailability": "你可以把它作为 <mcp>MCP 服务器</mcp>配合智能体使用，也可以作为 <npm>npm 库</npm>构建交互式应用。",
-    "leadHighlight2": "Flint 在 {{backends}} 种渲染后端上支持 {{chartTypes}} 种图表类型，并提供 {{themes}} 套主题和 {{presets}} 种交互预设",
-    "leadAfter": "如需定制可视化，可以在<themeLab>主题实验室</themeLab>中设计自己的主题，并用 Flint API 构建<advanced>高级交互</advanced>。",
+    "leadAvailability": "你可以把它作为 <mcp>MCP 服务器</mcp>配合智能体使用，也可以作为 <npm>npm 库</npm>用在你的应用中。",
+    "leadCustomize": "Flint 在 {{backends}} 种渲染后端上支持 {{chartTypes}} 种图表类型，并提供 {{themes}} 套主题和 {{presets}} 种交互预设；还可以在<themeLab>主题实验室</themeLab>中设计自己的主题，并用 Flint API 构建<advanced>高级交互</advanced>。",
     "backendRosterLabel": "渲染后端",
     "themeRosterLabel": "主题",
     "interactionRosterLabel": "交互",
@@ -516,8 +515,8 @@
         "title": "鸡蛋大起大落，面包缓慢上涨",
         "subtitle": "美国平均价格（美元），一打鸡蛋与一磅白面包（BLS）"
       },
-      "drawIt": {
-        "label": "你来画"
+      "odyssey": {
+        "label": "奥德赛之旅"
       },
       "facetedLine": {
         "label": "分面折线",

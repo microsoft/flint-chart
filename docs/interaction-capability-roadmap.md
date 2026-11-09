@@ -65,7 +65,7 @@ cancel before asking the renderer to display the resulting collection.
 | Operator | State described | Vega-Lite status |
 | --- | --- | --- |
 | `set-style` | Visibility, appearance, and semantic style state for targets | Visibility, opacity, fill, stroke, stroke width, and emphasized/focused state supported |
-| `set-annotation` | Annotation specification for one target, or `null` | Supported; effective annotations compose by update and target identity |
+| `annotate-text` | Annotation specification for one target, or `null` | Supported; effective annotations compose by update and target identity |
 | `set-viewport` | Exact X and/or Y domains | Supported on declared continuous navigation axes |
 | `set-order` | Absolute category, series, or facet order | Category order supported; series and facet order missing |
 
@@ -101,7 +101,7 @@ lower-level interaction and update remain independently available.
 | --- | --- |
 | `clickHighlight()` | Activate a configured mark, legend, or discrete-axis target -> `set-style` |
 | `clickGroupFocus()` | Activate target -> expand its cohort -> `set-style` |
-| `clickAnnotate()` | Activate target -> `set-annotation` and `set-style` |
+| `clickAnnotate()` | Activate target -> `annotate-text` and `set-style` |
 | `select()` | Rectangle selection -> temporary or retained `set-style` |
 | `brushX()` / `brushY()` | Axis interval -> temporary or retained `set-style` |
 | `brushAngle()` | Polar angular interval -> temporary or retained `set-style` |

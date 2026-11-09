@@ -3,9 +3,18 @@ import type { SemanticTarget } from '../../../core/interaction-semantics';
 import type { PlotPoint } from '../../../interactive/language/geometry';
 import type { PathProjection } from '../../../interactive/language/projections';
 import { pointInClip, type RendererCoordinateSpace } from '../hit-adapter';
-import { overlayChannels } from './overlay-channels';
+import { geoDistance, geoPath } from 'd3-geo';
+import { geoOverlayChannels, isGeoOverlay, overlayChannels } from './overlay-channels';
+import { INTERACTION_KEY } from '../stores';
+import { ROUTE_PART } from '../../templates/map-routes';
 
 export { overlayChannels };
+
+/** A map's live projection, as Vega holds it: longitude and latitude to the plot's pixels. */
+export type OverlayProjection = ((point: [number, number]) => [number, number] | null) & {
+    rotate?: () => number[];
+    clipAngle?: () => number | null;
+};
 
 export interface DataOverlayController {
     render(overlays: ReadonlyMap<string, ChartOverlaySpec>): void;
@@ -24,6 +33,31 @@ export interface DataOverlayOptions {
     containerLayoutSize(): { width: number; height: number };
     /** Whether the chart clips its marks to the plot, as a navigated chart does; overlays then follow. */
     clipToPlot?: boolean;
+    /** On a map, its projection as drawn now: overlays placed by `longitude`/`latitude` go through it. */
+    geoProjection?: () => OverlayProjection | undefined;
+}
+
+/** A place in degrees, or undefined where a row gives none. */
+function lonLat(row: Record<string, unknown>, longitude: string | undefined, latitude: string | undefined): [number, number] | undefined {
+    if (!longitude || !latitude) return undefined;
+    const lon = Number(row[longitude]);
+    const lat = Number(row[latitude]);
+    if (row[longitude] === null || row[latitude] === null || !Number.isFinite(lon) || !Number.isFinite(lat) || Math.abs(lat) > 90) return undefined;
+    return [lon, lat];
+}
+
+/**
+ * A box between two corners in degrees as a GeoJSON ring: up its west meridian, east along its
+ * north parallel, down its east meridian, west along its south parallel — clockwise, as d3-geo reads
+ * an outer ring — the parallels walked in short steps, since they are no great circles. A west edge
+ * east of the east edge runs across the antimeridian.
+ */
+export function lonLatBox(west: number, south: number, east: number, north: number): [number, number][] {
+    const [s, n] = south <= north ? [south, north] : [north, south];
+    const e = east < west ? east + 360 : east;
+    const steps = Math.max(1, Math.ceil((e - west) / 2));
+    const along = (lat: number, from: number, to: number) => Array.from({ length: steps + 1 }, (_, i) => [from + ((to - from) * i) / steps, lat] as [number, number]);
+    return [[west, s], ...along(n, west, e), ...along(s, e, west)];
 }
 
 
@@ -96,10 +130,76 @@ export function createDataOverlay({
     coordinateSpace,
     containerLayoutSize,
     clipToPlot = false,
+    geoProjection,
 }: DataOverlayOptions): DataOverlayController {
     const layer = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     const clipId = `flint-overlay-clip-${dataOverlayClipSequence += 1}`;
     let current = new Map<string, ChartOverlaySpec>();
+    /** The groups of overlays drawn under the marks, masked once the layer is placed. */
+    const underHolders: SVGGElement[] = [];
+    let underMaskSequence = 0;
+
+    /**
+     * Cut each under-overlay away wherever the chart draws a mark over it: a mask of the page, with the
+     * chart's drawn marks — its route legs, their casings and heads, its keyed marks — cloned into it in
+     * black, mapped from their place on screen into the layer's. Map ground (land, sea, borders) carries no
+     * key and is left out. Vega's SVG renderer keeps each item's element; on canvas there is none, and the
+     * overlay stays over the marks.
+     */
+    const cutUnderMarks = (): void => {
+        if (underHolders.length === 0) return;
+        const toLayer = layer.getScreenCTM()?.inverse();
+        if (!toLayer) return;
+        const elements: SVGGraphicsElement[] = [];
+        const visit = (node: any): void => {
+            if (!node) return;
+            const element = node._svg as SVGGraphicsElement | undefined;
+            const marktype = node.mark?.marktype;
+            if (element && marktype && marktype !== 'group' && (node.opacity ?? 1) > 0) {
+                const datum = node.datum;
+                const keyed = datum && typeof datum === 'object'
+                    && ((datum as Record<string, unknown>)[ROUTE_PART] !== undefined || (datum as Record<string, unknown>)[INTERACTION_KEY] != null);
+                if (keyed && element instanceof SVGGraphicsElement) elements.push(element);
+            }
+            if (Array.isArray(node.items)) for (const child of node.items) visit(child);
+        };
+        visit(view.scenegraph?.()?.root);
+        if (elements.length === 0) return;
+        const width = Number(layer.getAttribute('viewBox')?.split(' ')[2]) || 0;
+        const height = Number(layer.getAttribute('viewBox')?.split(' ')[3]) || 0;
+        const defs = svgElement('g');
+        for (const holder of underHolders) {
+            const id = `flint-overlay-under-${underMaskSequence += 1}`;
+            const mask = document.createElementNS('http://www.w3.org/2000/svg', 'mask');
+            mask.setAttribute('id', id);
+            mask.setAttribute('maskUnits', 'userSpaceOnUse');
+            mask.setAttribute('x', '0');
+            mask.setAttribute('y', '0');
+            mask.setAttribute('width', String(width));
+            mask.setAttribute('height', String(height));
+            const page = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            page.setAttribute('width', String(width));
+            page.setAttribute('height', String(height));
+            page.setAttribute('fill', '#fff');
+            mask.append(page);
+            for (const element of elements) {
+                const ctm = element.getScreenCTM();
+                if (!ctm) continue;
+                const clone = element.cloneNode(false) as SVGGraphicsElement;
+                const m = toLayer.multiply(ctm);
+                clone.setAttribute('transform', `matrix(${m.a} ${m.b} ${m.c} ${m.d} ${m.e} ${m.f})`);
+                for (const attribute of ['opacity', 'fill-opacity', 'stroke-opacity', 'class', 'style', 'aria-label', 'role']) clone.removeAttribute(attribute);
+                const fill = element.getAttribute('fill');
+                const stroke = element.getAttribute('stroke');
+                clone.setAttribute('fill', fill && fill !== 'none' && fill !== 'transparent' ? '#000' : 'none');
+                if (stroke && stroke !== 'none' && stroke !== 'transparent') clone.setAttribute('stroke', '#000');
+                mask.append(clone);
+            }
+            defs.append(mask);
+            holder.setAttribute('mask', `url(#${id})`);
+        }
+        layer.prepend(defs);
+    };
     const projectedVertices = new Map<string, { point: PlotPoint; record: Record<string, unknown> }[]>();
     const targetFor = (
         name: string,
@@ -117,22 +217,156 @@ export function createDataOverlay({
         pointerEvents: 'none', overflow: 'hidden',
     });
 
+    const svgElement = <K extends 'path' | 'circle' | 'text' | 'g'>(tag: K): SVGElementTagNameMap[K] =>
+        document.createElementNS('http://www.w3.org/2000/svg', tag);
+    const identifyOverlay = (element: SVGElement, name: string, spec: ChartOverlaySpec, rowIndex?: number): void => {
+        element.setAttribute('data-flint-overlay', name);
+        element.setAttribute('data-flint-role', spec.role);
+        if (rowIndex !== undefined) element.setAttribute('data-flint-row', String(rowIndex));
+        element.setAttribute('opacity', String(spec.style?.opacity ?? 1));
+        element.style.pointerEvents = 'none';
+    };
+
+    /**
+     * A map overlay through its projection: lines, rules and rects as GeoJSON the projection draws —
+     * great circles between places, cut at the antimeridian and a globe's horizon — points and text
+     * at their places, none past the horizon. All of it inside the plot.
+     */
+    const drawGeo = (
+        name: string, spec: ChartOverlaySpec, rows: readonly Record<string, unknown>[], projection: OverlayProjection,
+        space: RendererCoordinateSpace, plot: { x1: number; y1: number; x2: number; y2: number } | undefined,
+        colorScale: any, chartBackground: string,
+    ): void => {
+        const channels = geoOverlayChannels(spec);
+        if (!channels) return;
+        const field = (channel: 'longitude' | 'latitude' | 'longitude2' | 'latitude2') => spec.encodings[channel]?.field;
+        const colourOf = (row: Record<string, unknown> | undefined) => (spec.encodings.color && row ? colorScale?.(row[spec.encodings.color.field]) : undefined);
+        const shapes = geoPath(projection as any);
+        // A place past a globe's horizon is not drawn; Vega's orthographic clips at 90°.
+        const angle = typeof projection.clipAngle === 'function' ? projection.clipAngle() : null;
+        const rotate = typeof projection.rotate === 'function' ? projection.rotate() : [0, 0];
+        const facing = (place: [number, number]) => !angle || geoDistance(place, [-rotate[0], -rotate[1]]) <= (angle * Math.PI) / 180;
+        // Paths are drawn in the projection's frame, the plot's, and cut at the plot by a group round them.
+        const holder = svgElement('g');
+        if (plot) holder.setAttribute('clip-path', `url(#${clipId})`);
+        // Beneath the marks: cut away under them once the layer is on the page (see `cutUnderMarks`).
+        if (spec.layer === 'under' && (spec.mark === 'line' || spec.mark === 'rule')) underHolders.push(holder);
+        const frame = svgElement('g');
+        frame.setAttribute('transform', `translate(${space.originX},${space.originY})`);
+        holder.append(frame);
+        const stroke = (path: SVGPathElement, row?: Record<string, unknown>, width = 2) => {
+            path.setAttribute('stroke', spec.style?.stroke ?? colourOf(row) ?? '#4c78a8');
+            path.setAttribute('stroke-width', String(spec.style?.strokeWidth ?? width));
+            const dash = dashArray(spec.style?.strokeDash);
+            if (dash) path.setAttribute('stroke-dasharray', dash);
+            path.setAttribute('stroke-linecap', 'round');
+            path.setAttribute('stroke-linejoin', 'round');
+        };
+        if (spec.mark === 'line') {
+            const placed = rows.flatMap((row) => {
+                const place = lonLat(row, field('longitude'), field('latitude'));
+                return place ? [{ place, row }] : [];
+            });
+            const d = placed.length >= 2 ? shapes({ type: 'LineString', coordinates: placed.map(({ place }) => place) } as any) : null;
+            projectedVertices.set(name, placed.flatMap(({ place, row }) => {
+                const point = facing(place) ? projection(place) : null;
+                return point ? [{ point: { x: point[0], y: point[1] }, record: row }] : [];
+            }));
+            if (!d) return;
+            const path = svgElement('path');
+            identifyOverlay(path, name, spec);
+            path.setAttribute('d', d);
+            path.setAttribute('fill', 'none');
+            stroke(path, rows[0]);
+            frame.append(path);
+        } else if (spec.mark === 'rule' || spec.mark === 'rect') {
+            rows.forEach((row, rowIndex) => {
+                const from = lonLat(row, field('longitude'), field('latitude'));
+                const to = lonLat(row, field('longitude2'), field('latitude2'));
+                if (!from || !to) return;
+                const geometry = spec.mark === 'rule'
+                    ? { type: 'LineString', coordinates: [from, to] }
+                    : { type: 'Polygon', coordinates: [lonLatBox(from[0], from[1], to[0], to[1])] };
+                const d = shapes(geometry as any);
+                if (!d) return;
+                const path = svgElement('path');
+                identifyOverlay(path, name, spec, rowIndex);
+                path.setAttribute('d', d);
+                if (spec.mark === 'rule') {
+                    path.setAttribute('fill', 'none');
+                    stroke(path, row, 1);
+                } else {
+                    path.setAttribute('fill', spec.style?.fill ?? colourOf(row) ?? '#4c78a8');
+                    path.setAttribute('fill-opacity', String(spec.style?.fillOpacity ?? 0.2));
+                    if (spec.style?.stroke) path.setAttribute('stroke', spec.style.stroke);
+                    if (spec.style?.strokeWidth !== undefined) path.setAttribute('stroke-width', String(spec.style.strokeWidth));
+                }
+                frame.append(path);
+            });
+        } else {
+            rows.forEach((row, rowIndex) => {
+                const place = lonLat(row, field('longitude'), field('latitude'));
+                const point = place && facing(place) ? projection(place) : null;
+                if (!point || !Number.isFinite(point[0]) || !Number.isFinite(point[1])) return;
+                const x = point[0] + space.originX;
+                const y = point[1] + space.originY;
+                if (!pointInClip({ x, y }, plot)) return;
+                if (spec.mark === 'point') {
+                    const circle = svgElement('circle');
+                    identifyOverlay(circle, name, spec, rowIndex);
+                    circle.setAttribute('cx', String(x));
+                    circle.setAttribute('cy', String(y));
+                    circle.setAttribute('r', String(spec.style?.pointRadius ?? 4));
+                    circle.setAttribute('fill', spec.style?.fill ?? colourOf(row) ?? '#4c78a8');
+                    circle.setAttribute('fill-opacity', String(spec.style?.fillOpacity ?? 1));
+                    if (spec.style?.stroke) circle.setAttribute('stroke', spec.style.stroke);
+                    if (spec.style?.strokeWidth !== undefined) circle.setAttribute('stroke-width', String(spec.style.strokeWidth));
+                    // A map is a window on the world: a place by its edge is cut there, as the land is.
+                    if (plot) circle.setAttribute('clip-path', `url(#${clipId})`);
+                    layer.append(circle);
+                    return;
+                }
+                const text = svgElement('text');
+                identifyOverlay(text, name, spec, rowIndex);
+                if (plot) text.setAttribute('clip-path', `url(#${clipId})`);
+                text.setAttribute('x', String(x + (spec.style?.dx ?? 0)));
+                text.setAttribute('y', String(y + (spec.style?.dy ?? 0)));
+                text.setAttribute('text-anchor', spec.style?.textAlign ?? 'middle');
+                const fontSize = spec.style?.fontSize ?? 11;
+                text.setAttribute('font-size', String(fontSize));
+                text.setAttribute('font-weight', String(spec.style?.fontWeight ?? 'normal'));
+                if (spec.style?.fontStyle) text.setAttribute('font-style', spec.style.fontStyle);
+                text.setAttribute('fill', spec.style?.fill ?? colourOf(row) ?? '#333333');
+                const halo = spec.style?.stroke ?? chartBackground;
+                if (halo !== 'none') {
+                    text.setAttribute('stroke', halo);
+                    text.setAttribute('stroke-width', String(spec.style?.strokeWidth ?? Math.min(4, Math.max(2, fontSize / 4))));
+                    text.setAttribute('stroke-linejoin', 'round');
+                    text.setAttribute('paint-order', 'stroke');
+                }
+                text.textContent = String(spec.encodings.text ? row[spec.encodings.text.field] ?? '' : '');
+                layer.append(text);
+            });
+        }
+        if (frame.childElementCount > 0) layer.append(holder);
+    };
+
     const draw = (): void => {
         layer.replaceChildren();
         projectedVertices.clear();
-        if (current.size === 0 || !scales.x || !scales.y) {
+        underHolders.length = 0;
+        const xScale = scales.x ? view.scale(scales.x) : undefined;
+        const yScale = scales.y ? view.scale(scales.y) : undefined;
+        const cartesian = typeof xScale === 'function' && typeof yScale === 'function';
+        const projection = geoProjection?.();
+        const mapped = typeof projection === 'function';
+        if (current.size === 0 || (!cartesian && !mapped)) {
             layer.remove();
             return;
         }
-        const xScale = view.scale(scales.x);
-        const yScale = view.scale(scales.y);
         const colorScale = scales.color ? view.scale(scales.color) : undefined;
         const background = typeof view.background === 'function' ? view.background() : undefined;
         const chartBackground = typeof background === 'string' && background !== 'transparent' ? background : '#ffffff';
-        if (typeof xScale !== 'function' || typeof yScale !== 'function') {
-            layer.remove();
-            return;
-        }
         const space = coordinateSpace();
         const containerRect = container.getBoundingClientRect();
         const rendererRect = space.rect;
@@ -150,16 +384,19 @@ export function createDataOverlay({
         // Lines, rules, and rects are cut at the edge of the plot the scales draw into, like the
         // chart's own marks; a point or a label is drawn whole while its anchor is in the plot,
         // and not at all once it leaves.
-        const xRange = (xScale.range() as number[]).map(Number);
-        const yRange = (yScale.range() as number[]).map(Number);
-        const plot = clipToPlot && [...xRange, ...yRange].every(Number.isFinite)
-            ? {
-                x1: space.originX + Math.min(...xRange),
-                y1: space.originY + Math.min(...yRange),
-                x2: space.originX + Math.max(...xRange),
-                y2: space.originY + Math.max(...yRange),
-            }
-            : undefined;
+        const xRange = cartesian ? (xScale.range() as number[]).map(Number) : [];
+        const yRange = cartesian ? (yScale.range() as number[]).map(Number) : [];
+        // A map is a window on the world: what it places runs to the plot's edge and is cut there.
+        const plot = !cartesian
+            ? { x1: space.originX, y1: space.originY, x2: space.originX + space.plotWidth, y2: space.originY + space.plotHeight }
+            : clipToPlot && [...xRange, ...yRange].every(Number.isFinite)
+                ? {
+                    x1: space.originX + Math.min(...xRange),
+                    y1: space.originY + Math.min(...yRange),
+                    x2: space.originX + Math.max(...xRange),
+                    y2: space.originY + Math.max(...yRange),
+                }
+                : undefined;
         const clipped = (element: SVGElement): void => {
             if (plot) element.setAttribute('clip-path', `url(#${clipId})`);
         };
@@ -170,6 +407,11 @@ export function createDataOverlay({
         const bandCentre = (scale: any): number => (typeof scale.bandwidth === 'function' ? Number(scale.bandwidth()) || 0 : 0) / 2;
         for (const [name, spec] of current) {
             const rows = orderedOverlayRows(spec);
+            if (isGeoOverlay(spec)) {
+                if (typeof projection === 'function') drawGeo(name, spec, rows, projection, space, plot, colorScale, chartBackground);
+                continue;
+            }
+            if (!cartesian) continue;
             const centreX = spec.mark === 'rect' ? 0 : bandCentre(xScale);
             const centreY = spec.mark === 'rect' ? 0 : bandCentre(yScale);
             const identify = (element: SVGElement, rowIndex?: number): void => {
@@ -304,6 +546,7 @@ export function createDataOverlay({
                     text.setAttribute('text-anchor', spec.style?.textAlign ?? 'middle');
                     text.setAttribute('font-size', String(spec.style?.fontSize ?? 11));
                     text.setAttribute('font-weight', String(spec.style?.fontWeight ?? 'normal'));
+                    if (spec.style?.fontStyle) text.setAttribute('font-style', spec.style.fontStyle);
                     const colorValue = spec.encodings.color
                         ? colorScale?.(row[spec.encodings.color.field])
                         : undefined;
@@ -338,6 +581,7 @@ export function createDataOverlay({
             }
             if (!layer.isConnected) container.append(layer);
             if (getComputedStyle(container).position === 'static') container.style.position = 'relative';
+            cutUnderMarks();
         }
     };
 

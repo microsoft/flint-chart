@@ -30,11 +30,13 @@ import { TimeboxStage } from '../playground/TimeboxStage';
 import { YouDrawItStage } from '../playground/YouDrawItStage';
 import { ChinaSemanticZoomStage } from '../playground/ChinaSemanticZoomStage';
 import { GlobeWarmingStage } from '../playground/GlobeWarmingStage';
+import { OdysseyStoryStage } from '../playground/OdysseyStoryStage';
 import { RetailDrilldownStage } from '../playground/RetailDrilldownStage';
 import { MovingAverageStage } from '../playground/MovingAverageStage';
 import mapSource from '../playground/MapSemanticZoomStage.tsx?raw';
 import chinaSource from '../playground/ChinaSemanticZoomStage.tsx?raw';
 import globeSource from '../playground/GlobeWarmingStage.tsx?raw';
+import odysseySource from '../playground/OdysseyStoryStage.tsx?raw';
 import retailSource from '../playground/RetailDrilldownStage.tsx?raw';
 import fisheyeSource from '../playground/FisheyeZoomStage.tsx?raw';
 import explodedSource from '../playground/ExplodedDetailStage.tsx?raw';
@@ -99,6 +101,15 @@ const SECTIONS: { title: string; cases: Case[] }[] = [
   {
     title: 'Maps',
     cases: [
+      {
+        id: 'journey-of-odysseus',
+        title: 'Odyssey journey',
+        icon: Route,
+        body: 'Odysseus’s ten years from Troy home to Ithaca, told in six chapters beside the map. Each chapter is one chart update: the map eases to its stretch of the voyage, the rest of the route recedes, and notes name its episodes, kept clear of the route, its arrowheads and the sea names. Each leg is as wide as the crew that sailed it, from about six hundred men to Odysseus alone. Pick a chapter, or step with the arrow keys.',
+        credit: { label: 'Homer, Odyssey, Books 5–13, places after the traditional identifications', url: 'https://www.perseus.tufts.edu/hopper/text?doc=Perseus:text:1999.01.0136' },
+        demo: <OdysseyStoryStage />,
+        code: odysseySource,
+      },
       {
         id: 'turn-the-globe',
         title: 'Turn the globe',

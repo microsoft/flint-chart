@@ -27,6 +27,7 @@
  * This module has NO React, Redux, or UI framework dependencies.
  */
 
+import { noteSpecUpdates } from '../core/spec-updates';
 import { authoredColorScale, withEncodingColorAnnotations } from '../core/color-controls';
 import { applyAuthoredColorScalePlotly } from './color-controls';
 import {
@@ -733,7 +734,7 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
         figure._pivot = legacyPivot.surface;
     }
 
-    return figure;
+    return noteSpecUpdates(figure, input);
 }
 
 /** Inspect the Plotly legacy (composed) view transformation surface for an input. */export function getPlotlyPivot(input: ChartAssemblyInput): PivotSurface | undefined {

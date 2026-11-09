@@ -295,7 +295,7 @@ export const violinPlotDef: ChartTemplateDef = {
             renderHoverStyles: { area: { opacity: 'spotlight' } },
             resolve: (event, context) => resolveSeriesTarget(event, context, seriesField),
             presentUpdate: presentAnnotationUpdate(
-                () => ({ connection: 'segment-midpoint', maxDistance: 120, maxWidth: 120 }),
+                () => ({ connection: 'segment-midpoint', maxWidth: 120 }),
                 categoryValueAnnotationText(categoryField, measureField),
             ),
         };

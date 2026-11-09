@@ -112,14 +112,14 @@ describe('chartContext agent updates', () => {
   });
 
   it('reports each note once, at its key', () => {
-    const note = (weight: number, label: string) => ({ op: 'set-annotation' as const, target: { select: { key: { weight } } }, value: { text: label } });
+    const note = (weight: number, label: string) => ({ op: 'annotate-text' as const, target: { select: { key: { weight } } }, value: { text: label } });
     const updates: ChartUpdate[] = [{ id: 'best', ops: [note(2000, 'Best mileage'), note(3200, 'Heaviest')] }];
     const lines = text({ state: state({}), updates }).split('\n');
     expect(lines.slice(3, 6)).toEqual(['- best:', '  ✓ note "Best mileage" at weight = 2000', '  ✓ note "Heaviest" at weight = 3200']);
   });
 
   it('says which notes a zoom has left out of view', () => {
-    const note = (weight: number, label: string) => ({ op: 'set-annotation' as const, target: { select: { key: { weight } } }, value: { text: label } });
+    const note = (weight: number, label: string) => ({ op: 'annotate-text' as const, target: { select: { key: { weight } } }, value: { text: label } });
     const updates: ChartUpdate[] = [{ id: 'best', ops: [note(2000, 'Best mileage'), note(3200, 'Heaviest')] }];
     const annotations = [
       { id: 'best', target: note(2000, '').target, text: 'Best mileage', inView: false },

@@ -307,6 +307,126 @@ export function guardGeoExtent(
     return [[x0, y0], [x0 + width, y0 + height]];
 }
 
+/**
+ * A tween across a flat map without re-projecting it: between two extents the fit is a scale and an
+ * offset (`fitExtent` is linear in the extent), so each frame moves the scene as drawn instead of
+ * running Vega. Paths (land, borders, a route's legs) are scaled and offset, their strokes kept at
+ * their width (`vector-effect`); a leg's dash, which leaves its stop's dot and ends its line at its
+ * head, is lengthened to its new length; symbols and text (dots, heads, labels) are moved to their new place at their size.
+ * Everything is set in inline styles, which Vega never reads, so its cache of the attributes it wrote
+ * stays true and its next render, the tween's last frame, draws the target and the styles are cleared.
+ * Only with the SVG renderer, whose items keep their element; elsewhere, undefined.
+ */
+interface SceneTransform {
+    /** Show the scene drawn at `from` as it would be drawn at `to`. */
+    apply(from: GeoExtent, to: GeoExtent): void;
+    /** Clear every style the tween set. */
+    restore(): void;
+}
+
+/**
+ * A Flint route's dash: its first `D` px drawn, then a gap past any length — or, where its stops are
+ * drawn, a gap of `L` px first (the dot it leaves): `0 L D gap`.
+ */
+const ROUTE_DASH_GAP = 100_000;
+
+/** A route's dash as what it leaves out at its start (`lead`) and draws (`drawn`); undefined for any other dash. */
+function routeDashOf(dash: number[] | undefined): { lead: number; drawn: number } | undefined {
+    if (!dash || !dash.every(Number.isFinite) || dash[dash.length - 1] < ROUTE_DASH_GAP) return undefined;
+    if (dash.length === 2) return { lead: 0, drawn: dash[0] };
+    if (dash.length === 4 && dash[0] === 0) return { lead: dash[1], drawn: dash[2] };
+    return undefined;
+}
+
+function cssTransformOf(attribute: string | null): string {
+    if (!attribute) return '';
+    return attribute
+        .replace(/translate\(\s*([-+\d.eE]+)[\s,]+([-+\d.eE]+)\s*\)/g, 'translate($1px, $2px)')
+        .replace(/translate\(\s*([-+\d.eE]+)\s*\)/g, 'translate($1px)')
+        .replace(/rotate\(\s*([-+\d.eE]+)\s*\)/g, 'rotate($1deg)');
+}
+
+/** Whether the view is drawn by Vega's SVG renderer, whose scene items keep their element. */
+function drawnAsSvg(view: any): boolean {
+    const visit = (node: any, depth: number): boolean => {
+        if (!node || depth > 8) return false;
+        if (node._svg) return true;
+        return Array.isArray(node.items) && node.items.some((child: any) => visit(child, depth + 1));
+    };
+    return visit(view.scenegraph?.()?.root, 0);
+}
+
+function sceneTransform(view: any): SceneTransform | undefined {
+    const paths: { element: SVGGeometryElement; transform: string; length?: number; lead?: number; drawn?: number }[] = [];
+    const placed: { element: SVGElement; x: number; y: number; rest: string }[] = [];
+    let anyElement = false;
+    const visitMark = (mark: any): void => {
+        if (!mark || !Array.isArray(mark.items)) return;
+        if (mark.marktype === 'group') {
+            // Legends, titles and axes stand beside the map; they do not move with it.
+            if (/legend|title|axis/.test(String(mark.role ?? ''))) return;
+            for (const item of mark.items) for (const child of item.items ?? []) visitMark(child);
+            return;
+        }
+        for (const item of mark.items) {
+            const element = item?._svg as SVGElement | undefined;
+            if (!element) continue;
+            anyElement = true;
+            if (mark.marktype === 'shape' || mark.marktype === 'path') {
+                const routeDash = routeDashOf(element.getAttribute('stroke-dasharray')?.split(/[\s,]+/).map(Number));
+                const geometry = element as SVGGeometryElement;
+                paths.push({
+                    element: geometry,
+                    transform: cssTransformOf(element.getAttribute('transform')),
+                    ...(routeDash && typeof geometry.getTotalLength === 'function' ? { length: geometry.getTotalLength(), ...routeDash } : {}),
+                });
+            } else if (mark.marktype === 'symbol' || mark.marktype === 'text') {
+                const transform = element.getAttribute('transform') ?? '';
+                const at = /translate\(\s*([-+\d.eE]+)[\s,]+([-+\d.eE]+)\s*\)/.exec(transform);
+                if (!at) continue;
+                placed.push({ element, x: Number(at[1]), y: Number(at[2]), rest: cssTransformOf(transform.replace(at[0], '').trim()) });
+            }
+        }
+    };
+    visitMark(view.scenegraph?.()?.root);
+    if (!anyElement) return undefined;
+    let styled = false;
+    return {
+        apply(from, to) {
+            const k = (to[1][0] - to[0][0]) / ((from[1][0] - from[0][0]) || 1);
+            const ox = to[0][0] - k * from[0][0];
+            const oy = to[0][1] - k * from[0][1];
+            const matrix = `matrix(${k}, 0, 0, ${k}, ${ox}, ${oy})`;
+            for (const path of paths) {
+                path.element.style.transform = path.transform ? `${matrix} ${path.transform}` : matrix;
+                path.element.style.vectorEffect = 'non-scaling-stroke';
+                // The line still leaves its stop's dot and meets its head where it did: dots and heads keep
+                // their size on screen, so what it leaves out at each end does too.
+                if (path.length !== undefined && path.drawn !== undefined) {
+                    const drawn = Math.max(0, k * path.length - (path.length - path.drawn));
+                    path.element.style.strokeDasharray = path.lead
+                        ? `0 ${path.lead} ${drawn} ${ROUTE_DASH_GAP * 10}`
+                        : `${drawn} ${ROUTE_DASH_GAP * 10}`;
+                }
+            }
+            for (const item of placed) {
+                item.element.style.transform = `translate(${k * item.x + ox}px, ${k * item.y + oy}px)${item.rest ? ` ${item.rest}` : ''}`;
+            }
+            styled = true;
+        },
+        restore() {
+            if (!styled) return;
+            for (const path of paths) {
+                path.element.style.transform = '';
+                path.element.style.vectorEffect = '';
+                path.element.style.strokeDasharray = '';
+            }
+            for (const item of placed) item.element.style.transform = '';
+            styled = false;
+        },
+    };
+}
+
 export function createVegaGeoNavigationController(
     view: any,
     axes: Partial<Record<Axis, VegaNavigationAxis>>,
@@ -710,6 +830,14 @@ export function createVegaGeoNavigationController(
         const startLevel = levelBeforeBaseline ?? currentLevel;
         levelBeforeBaseline = undefined;
         setLevel(startLevel);
+        // On a flat map the frames move the scene as drawn, and Vega runs once, for the last. Vega is held
+        // at `from` meanwhile — the runtime resets the view before it re-applies this tween's frame on a
+        // render — and the scene is read on the first frame, once any render this pass started has drawn.
+        const moving = !globe && !toRotation && transition.duration > 0 && drawnAsSvg(view);
+        if (moving) view.signal(GEO_EXTENT_SIGNAL, from);
+        let moved: SceneTransform | undefined;
+        // What is on screen: while moving, Vega's scene stays at `from` until the last frame.
+        let shown = from;
         let cancelled = false;
         let finish!: () => void;
         const done = new Promise<void>((resolve) => { finish = resolve; });
@@ -720,13 +848,34 @@ export function createVegaGeoNavigationController(
             ...(toRotation ? { frameRotation: fromRotation } : {}),
             startLevel,
             done,
-            cancel: () => { cancelled = true; finish(); },
+            cancel: () => {
+                cancelled = true;
+                if (moved) {
+                    // Interrupted mid-tween: the scene is drawn where it stands on screen, so what follows
+                    // starts there rather than back at the tween's start.
+                    moved.restore();
+                    entry.frame = shown;
+                    renderedExtent = shown;
+                    view.signal(GEO_EXTENT_SIGNAL, shown);
+                    // The frame drawn is reported as this tween's end, so what was hidden over it is placed again.
+                    void Promise.resolve(view.runAsync()).then(() => transition.onFrame?.('commit', to === null ? 'reset' : 'zoom'));
+                }
+                finish();
+            },
         };
         active = entry;
         const step = (): void => {
             if (cancelled) return;
             const t = transition.duration > 0 ? Math.min(1, (now() - startedAt) / transition.duration) : 1;
             const last = t >= 1;
+            if (moving && !moved && !last) moved = sceneTransform(view);
+            if (moved && !last) {
+                shown = extentOf(path(easeInOut(t)));
+                moved.apply(from, shown);
+                transition.onFrame?.('preview', to === null ? 'reset' : 'zoom', 'moved');
+                nextFrame(step);
+                return;
+            }
             entry.frame = last ? target : extentOf(path(easeInOut(t)));
             view.signal(GEO_EXTENT_SIGNAL, last ? to : entry.frame);
             if (toRotation) {
@@ -738,6 +887,8 @@ export function createVegaGeoNavigationController(
                 setLevel(level);
             }
             void Promise.resolve(view.runAsync()).then(() => {
+                // Vega has drawn the target over the moved scene; the moving styles come off before the paint.
+                moved?.restore();
                 if (cancelled) return;
                 transition.onFrame?.(last ? 'commit' : 'preview', to === null ? 'reset' : 'zoom');
                 if (last) finish();

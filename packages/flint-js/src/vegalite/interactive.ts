@@ -56,8 +56,9 @@ export function mountedInteractionList(
 import { INTERACTION_STORES } from './interactions/stores';
 import { compile } from 'vega-lite';
 import { Error as VegaError, expressionFunction, loader as vegaLoader, parse, View } from 'vega';
-import { withBundledBasemaps } from './basemap-loader';
+import { withBundledBoundaries } from './boundary-loader';
 import { followGeoDetail, injectVegaGeoDetail } from './interactions/geo-detail';
+import { GEO_PROJECTION_SIGNAL } from './interactions/navigation-geo';
 import { createDefaultStyle, DEFAULT_OPTIONS, Handler } from 'vega-tooltip';
 
 let tooltipSerial = 0;
@@ -442,6 +443,17 @@ export function createVegaInteractiveRenderer(
                             return matches.length === 1 ? matches[0].name : undefined;
                         })(),
                 };
+                // A map's overlays and regions are placed through its projection as drawn: a signal
+                // copies it (navigation declares the same one), so they follow a pan, a zoom or a turn.
+                const projections: any[] = Array.isArray(vegaSpec.projections) ? vegaSpec.projections : [];
+                const projection = projections.find((entry) => entry?.name === 'projection') ?? projections[0];
+                if (projection?.name) {
+                    vegaSpec.signals = vegaSpec.signals ?? [];
+                    if (!vegaSpec.signals.some((signal: any) => signal?.name === GEO_PROJECTION_SIGNAL)) {
+                        vegaSpec.signals.push({ name: GEO_PROJECTION_SIGNAL, update: `copy(${JSON.stringify(projection.name)})` });
+                    }
+                    interactionPlan.overlayProjectionSignal = GEO_PROJECTION_SIGNAL;
+                }
                 interactionPlan.mutableDataSource = source;
                 // The compiled data holds the rows as Flint shaped them (an aggregate collapses them), so swapped-in rows are shaped alike.
                 interactionPlan.prepareDataRows = (rows) => drawn.shapeRows(rows);
@@ -496,7 +508,7 @@ export function createVegaInteractiveRenderer(
                     // A pattern fill is an SVG reference a canvas cannot draw.
                     renderer: readCanvasPatterns(vlSpec).length ? 'svg' : options.renderer ?? 'canvas',
                     container,
-                    loader: withBundledBasemaps(vegaLoader()),
+                    loader: withBundledBoundaries(vegaLoader()),
                     ...(options.expressionInterpreter ? { expr: options.expressionInterpreter } : {}),
                 } as any,
             );

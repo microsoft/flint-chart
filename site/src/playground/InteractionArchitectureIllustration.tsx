@@ -234,7 +234,7 @@ export function InteractionArchitectureIllustration() {
             lines={[
               { text: '- Update target' },
               { text: '- Ops (set-style,' },
-              { text: 'set-annotation, set-viewport,', indent: true },
+              { text: 'annotate-text, set-viewport,', indent: true },
               { text: 'set-order)', indent: true },
             ]}
           />

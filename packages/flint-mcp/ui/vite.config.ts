@@ -30,6 +30,9 @@ export default defineConfig({
   // dispatcher is never set, so useState() throws at runtime.
   resolve: {
     dedupe: ['react', 'react-dom', 'react/jsx-runtime'],
+    // A one-file build inlines every dynamic import: the bundled boundaries stay out, and a map
+    // fetches its named boundaries from Flint's site (declared in the view resource's CSP).
+    alias: [{ find: /^flint-chart\/geo\/lazy\/[\w-]+$/, replacement: resolve(root, 'src/no-bundled-boundaries.ts') }],
   },
   build: {
     outDir: resolve(root, '../assets'),

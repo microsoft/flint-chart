@@ -23,6 +23,7 @@
  * This module has NO React, Redux, or UI framework dependencies.
  */
 
+import { noteSpecUpdates } from '../core/spec-updates';
 import { withEncodingColorAnnotations } from '../core/color-controls';
 import {
     ChartEncoding,
@@ -505,7 +506,7 @@ export function assembleChartjs(input: ChartAssemblyInput): any {
         cjsConfig._pivot = legacyPivot.surface;
     }
 
-    return cjsConfig;
+    return noteSpecUpdates(cjsConfig, input);
 }
 
 /** Inspect the Chart.js legacy (composed) view transformation surface for an input. */

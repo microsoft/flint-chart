@@ -22,9 +22,10 @@ export {
     type RawEncodingValue,
     type StaticSeriesMetadata,
     type AssembleOptions,
-    type BasemapSource,
+    type Boundaries,
+    type BoundaryFile,
+    type BoundaryIds,
     type ChartCredit,
-    type MapBasemaps,
     type ChartTemplateDef,
     type ChartWarning,
     type ChannelSemantics,
@@ -225,7 +226,7 @@ export {
     type TargetFeedbackOptions,
 } from './interaction-spec';
 export {
-    CHART_UPDATE_OPS, EMPHASIS_OPACITY, canonicalUpdateOp, isTextAnnotationOp,
+    CHART_UPDATE_OPS, DEPRECATED_UPDATE_OPS, EMPHASIS_OPACITY, canonicalUpdateOp, isDeprecatedUpdateOp, isTextAnnotationOp,
     type ChartUpdate, type ChartUpdateOp, type EnclosureAnnotationSpec, type RegionAnnotationSpec,
 } from './interaction-contracts';
 export { comparableValue, selectorConditions, selectorPredicate, selectorRowTest, selectorText, type RowComparison } from './target-selector';

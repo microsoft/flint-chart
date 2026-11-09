@@ -13,8 +13,8 @@
  */
 
 import {
-    geoAzimuthalEqualArea, geoAzimuthalEquidistant, geoConicEqualArea, geoConicEquidistant, geoEqualEarth, geoMercator,
-    geoNaturalEarth1, geoOrthographic, geoPath, geoStereographic, type GeoProjection,
+    geoAlbersUsa, geoAzimuthalEqualArea, geoAzimuthalEquidistant, geoConicEqualArea, geoConicEquidistant, geoDistance, geoEqualEarth,
+    geoMercator, geoNaturalEarth1, geoOrthographic, geoPath, geoStereographic, type GeoProjection,
 } from 'd3-geo';
 import { COUNTRY_BOUNDS } from './geo-bounds';
 import { CONTINENT_FRAMES, type Continent } from './geo-continents';
@@ -306,4 +306,47 @@ export function frontFacingExpr(lon: string, lat: string, rotate: string): strin
 export function mapPlotSize(room: { width: number; height: number }, aspect: number): { width: number; height: number } {
     const width = Math.min(room.width, room.height * aspect);
     return { width: Math.max(1, Math.round(width)), height: Math.max(1, Math.round(width / aspect)) };
+}
+
+/**
+ * The US base map's states as `albersUsa` draws them at scale 1, about the origin: what Vega-Lite
+ * fits a US map to, worked out once from the bundled `states-10m` file.
+ */
+const US_STATES_BOUNDS: readonly [[number, number], [number, number]] = [[-0.41934, -0.224638], [0.361206, 0.231981]];
+
+/**
+ * Where a map's points land in its plot, worked out as Vega will draw them: its projection (a
+ * Vega-Lite projection: type, rotation, parallels, and the shape it is fitted to) fitted to the
+ * plot's size. A projection fitted to nothing given is fitted as Vega-Lite fits it: the US to its
+ * states; a base map of the host's own, whose shapes are not known here, to `points` near enough. Undefined where the type is not one
+ * known here. A point a globe turns away returns undefined.
+ */
+export function planProjection(
+    projection: Record<string, any> | undefined, size: readonly [number, number], points: readonly (readonly [number, number])[] = [],
+): ((lonLat: readonly [number, number]) => [number, number] | undefined) | undefined {
+    const type = projection?.type ?? 'equalEarth';
+    const make = type === 'albersUsa' ? geoAlbersUsa : PROJECTIONS[type];
+    if (!make || !(size[0] > 0) || !(size[1] > 0)) return undefined;
+    const planned = make() as GeoProjection;
+    const rotate = Array.isArray(projection?.rotate) ? projection!.rotate.map(Number) : undefined;
+    if (rotate && 'rotate' in planned && type !== 'albersUsa') planned.rotate([rotate[0] ?? 0, rotate[1] ?? 0, rotate[2] ?? 0]);
+    if (Array.isArray(projection?.parallels) && 'parallels' in planned) (planned as any).parallels(projection!.parallels);
+    if (Array.isArray(projection?.center) && type !== 'albersUsa') planned.center([Number(projection!.center[0]), Number(projection!.center[1])]);
+    if (projection?.fit && typeof projection.fit === 'object') planned.fitSize([size[0], size[1]], projection.fit);
+    else if (type === 'albersUsa') {
+        // Fitted as d3 fits the states: scaled to the tighter side, centred.
+        const [[x0, y0], [x1, y1]] = US_STATES_BOUNDS;
+        const k = Math.min(size[0] / (x1 - x0), size[1] / (y1 - y0));
+        planned.scale(k).translate([(size[0] - k * (x0 + x1)) / 2, (size[1] - k * (y0 + y1)) / 2]);
+    } else {
+        if (!points.length) return undefined;
+        planned.fitSize([size[0], size[1]], { type: 'MultiPoint', coordinates: points.map(([lon, lat]) => [lon, lat]) } as any);
+    }
+    const globe = type === 'orthographic';
+    const facing: [number, number] = rotate ? [-(rotate[0] ?? 0), -(rotate[1] ?? 0)] : [0, 0];
+    return (lonLat) => {
+        if (globe && geoDistance([lonLat[0], lonLat[1]], facing) > Math.PI / 2) return undefined;
+        const at = planned([lonLat[0], lonLat[1]]);
+        return at && Number.isFinite(at[0]) && Number.isFinite(at[1]) ? [at[0], at[1]] : undefined;
+    };
 }

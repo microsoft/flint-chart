@@ -45,7 +45,7 @@ import { keyboardTrigger } from '../../interactive/triggers';
 import { normalizeInspectGuideOptions } from '../../interactive/guides';
 import { wheelZoomFactor } from '../../interactive/gestures/navigation';
 import type { CanvasInteractionEvent, DomainGeometry } from '../../interactive/language/events';
-import type { ChartAnnotation, ChartHiddenValue, ChartStateEntry, DomainValue } from '../../core/interaction-contracts';
+import type { ChartAnnotation, ChartHiddenValue, ChartStateEntry, DomainValue, PresentedAnnotationSpec } from '../../core/interaction-contracts';
 import { EMPHASIS_OPACITY, canonicalUpdateOp, isTextAnnotationOp } from '../../core/interaction-contracts';
 import { DEFAULT_DIM_OPACITY } from '../../interactive/presets/utils';
 import type { ChartChangeReport, ChartUpdateApplyOptions } from '../../interactive/types';
@@ -100,7 +100,8 @@ import { createLegendRangeOverlay } from './presentation/legend-range-overlay';
 import { createReorderResetControls } from './presentation/reorder-reset-controls';
 import { createViewportResetControl } from './presentation/viewport-reset-control';
 import { createInspectGuideOverlay } from './presentation/inspect-guide-overlay';
-import { createDataOverlay, overlayChannels } from './presentation/data-overlay';
+import { createDataOverlay, overlayChannels, type OverlayProjection } from './presentation/data-overlay';
+import { geoOverlayChannels, isGeoOverlay } from './presentation/overlay-channels';
 import { buildAccessibleTree, type AccessibleNode } from './accessible-navigation/model';
 import { mountAccessibleNavigation } from './accessible-navigation/controller';
 import {
@@ -440,12 +441,11 @@ export function longPressMovedBeyond(
     return Math.hypot(current.x - start.x, current.y - start.y) > tolerance;
 }
 
-type AnnotationUpdate = Extract<ChartUpdateOp, { op: 'annotate-text' }>;
-
 export interface EffectiveAnnotationEntry {
     key: string;
     element: SemanticTarget['elements'][number];
-    value: NonNullable<AnnotationUpdate['value']>;
+    /** The note as its template presented it: where on the mark it may connect. */
+    value: PresentedAnnotationSpec;
 }
 
 function annotationEntryKey(id: string, element: SemanticTarget['elements'][number]): string {
@@ -766,11 +766,23 @@ export function mountVegaInteractions(
         containerLayoutSize,
         annotationMarkType: plan.annotationMarkType,
         placedCaptions,
+        ...(plan.annotationDesign ? { design: plan.annotationDesign } : {}),
+        // A map (it has a projection) keeps its notes inside the plot it is panned and zoomed in.
+        containWithinPlot: Boolean(plan.overlayProjectionSignal),
     };
     const annotationOverlays = new Map<string, ReturnType<typeof createAnnotationOverlay>>();
     // Regions and enclosures: drawn before the notes, which keep clear of their captions.
+    // A map's projection as drawn now, through which overlays and regions placed by longitude and latitude go.
+    const overlayProjection = plan.overlayProjectionSignal
+        ? (): OverlayProjection | undefined => {
+            const projection = view.signal(plan.overlayProjectionSignal!);
+            return typeof projection === 'function' ? projection : undefined;
+        }
+        : undefined;
     const markupOverlay = createMarkupOverlay({
         view, container, coordinateSpace, containerLayoutSize, placedCaptions,
+        ...(overlayProjection ? { geoProjection: overlayProjection } : {}),
+        ...(plan.annotationDesign ? { design: plan.annotationDesign } : {}),
         scales: { ...(plan.overlayScales?.x ? { x: plan.overlayScales.x } : {}), ...(plan.overlayScales?.y ? { y: plan.overlayScales.y } : {}) },
         axisValue: (axis, value) => axisValue(axis, value),
     });
@@ -805,6 +817,7 @@ export function mountVegaInteractions(
     const dataOverlay = createDataOverlay({
         view, container, scales: plan.overlayScales ?? {}, coordinateSpace, containerLayoutSize,
         clipToPlot: Object.keys(plan.navigationAxes ?? {}).length > 0,
+        ...(overlayProjection ? { geoProjection: overlayProjection } : {}),
     });
     const initialDataRows = plan.initialDataRows ?? plan.sourceRecords;
     // Cached by identity: a retained update re-rendered must not swap in a fresh copy of the same rows.
@@ -1084,6 +1097,17 @@ export function mountVegaInteractions(
         return resolved;
     };
 
+    /** Whether a map overlay's rows each name a place for every channel its mark reads. */
+    const geoOverlayProjects = (spec: ChartOverlaySpec): boolean => {
+        const channels = geoOverlayChannels(spec);
+        if (!channels || spec.data.values.length === 0) return false;
+        return spec.data.values.every((row) => channels.every((channel) => {
+            const value = row[spec.encodings[channel]!.field];
+            const number = Number(value);
+            return value !== null && value !== '' && Number.isFinite(number) && (!channel.startsWith('latitude') || Math.abs(number) <= 90);
+        }));
+    };
+
     const overlayProjects = (spec: ChartOverlaySpec | null): boolean => {
         if (spec === null) return true;
         const channels = overlayChannels(spec);
@@ -1154,6 +1178,12 @@ export function mountVegaInteractions(
                 if (supported.unsupported) unsupportedOps.push(op.op);
                 if (supported.op) ops.push(supported.op);
             } else if (op.op === 'set-overlay') {
+                // A map's overlay is placed by longitude and latitude through its projection.
+                if (op.value !== null && isGeoOverlay(op.value)) {
+                    if (!overlayProjection || !geoOverlayProjects(op.value)) unsupportedOps.push(op.op);
+                    else ops.push(op);
+                    continue;
+                }
                 const overlay = { ...op, value: withTemporalOverlayRows(op.value) };
                 if (!plan.overlayScales?.x || !plan.overlayScales?.y || !overlayProjects(overlay.value)) unsupportedOps.push(op.op);
                 else ops.push(overlay);
@@ -1664,10 +1694,34 @@ export function mountVegaInteractions(
         return domain ? { ...base, geometry: { ...base.geometry, domain } } : base;
     };
     /** A frame of a host-requested viewport tween reports like a zoom or reset gesture. */
-    const emitTransitionFrame = (phase: 'preview' | 'commit', operation: 'zoom' | 'reset'): void => {
+    // While a tween moves the scene as drawn, what is drawn over the chart stands where the scene was:
+    // it is hidden, and shown again once the last frame has placed it.
+    let hiddenOverlays: Map<HTMLElement | SVGElement, string> | undefined;
+    const hideOverlays = (): void => {
+        hiddenOverlays ??= new Map();
+        const renderer = rendererElement(container);
+        for (const child of Array.from(container.children) as (HTMLElement | SVGElement)[]) {
+            if (hiddenOverlays.has(child) || (renderer && (child === renderer || child.contains(renderer)))) continue;
+            hiddenOverlays.set(child, child.style.visibility);
+            child.style.visibility = 'hidden';
+        }
+    };
+    const showOverlays = (): void => {
+        if (!hiddenOverlays) return;
+        for (const [element, visibility] of hiddenOverlays) element.style.visibility = visibility;
+        hiddenOverlays = undefined;
+    };
+    const emitTransitionFrame = (phase: 'preview' | 'commit', operation: 'zoom' | 'reset', moved?: 'moved'): void => {
+        if (moved) {
+            // The scene was moved, not drawn: no overlay or reading follows it until the commit.
+            hideOverlays();
+            return;
+        }
         // A tween moves the scales without a render pass, so overlays re-project on each frame.
-        if (phase === 'commit') syncOverlays();
-        else projectOverlays();
+        if (phase === 'commit') {
+            syncOverlays();
+            showOverlays();
+        } else projectOverlays();
         if (!navigationInteraction) return;
         const base = toCanvasInteractionEvent(
             { type: 'navigation', phase, operation, axes: 'xy' },
@@ -3179,9 +3233,10 @@ export function mountVegaInteractions(
     const projectOverlays = (): void => {
         renderPathFocus();
         renderLegendRange();
+        // The data overlay first: captions keep off its words where they now stand.
+        dataOverlay.sync();
         markupOverlay.sync();
         for (const overlay of annotationOverlays.values()) overlay.sync();
-        dataOverlay.sync();
         regionGesture?.sync();
         reorderResetControls.layout();
     };

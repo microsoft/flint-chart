@@ -426,7 +426,7 @@ function ExternalDemoRow({ demo, compact = false, bidirectional }: {
             targets: [{ select: { key: selectorKey(payload.match) } }],
             value: { state: 'emphasized', mutedOpacity: 0.25 },
           }, ...(payload.annotation ? [{
-            op: 'set-annotation' as const,
+            op: 'annotate-text' as const,
             target: { select: { key: selectorKey(payload.match) } },
             value: { text: payload.annotation },
           }] : [])]

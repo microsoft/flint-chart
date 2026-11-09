@@ -49,11 +49,12 @@ describe('an agent part becomes a sentence', () => {
     expect(item?.ops[0]).toMatchObject({ targets: [{ select: { key: { Country: 'Japan' } } }] });
   });
 
-  it('adds an emphasis to a lone note, and not to a note beside a highlight', () => {
+  it('lets a lone note recede the rest itself, and a note beside a highlight only mark its own mark', () => {
     const alone = toSentence('s3', 'Japan leads', [annotate('Country', 'Japan', '84.2 years')], countries);
-    expect(alone?.ops.map((op) => op.op)).toEqual(['set-annotation', 'set-style']);
+    expect(alone?.ops).toEqual([expect.objectContaining({ op: 'annotate-text', value: { text: '84.2 years', highlight: 'exclusive' } })]);
     const paired = toSentence('s4', 'Japan leads', [highlight('Country', 'Japan'), annotate('Country', 'Japan', '84.2 years')], countries);
-    expect(paired?.ops.map((op) => op.op)).toEqual(['set-style', 'set-annotation']);
+    expect(paired?.ops.map((op) => op.op)).toEqual(['set-style', 'annotate-text']);
+    expect(paired?.ops[1]).toMatchObject({ value: { highlight: 'light' } });
   });
 
   it('drops a viewport when no navigation preset is mounted, and the whole sentence when nothing resolves', () => {

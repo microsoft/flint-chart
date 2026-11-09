@@ -8,11 +8,13 @@ import {
     defaultEnclosureShape,
     distinctRegionColor,
     enclosureOutline,
+    inkOn,
     neutralInk,
     overlapArea,
     placeEnclosureCaption,
     placeRegionCaption,
     readableShade,
+    regionColor,
     regionSpan,
     ringDistance,
     type EnclosedMark,
@@ -167,6 +169,21 @@ describe('annotation colours', () => {
         expect(clusterColor([{ fill: '#e45756' }, { fill: '#4c78a8' }])).toBe(neutralInk());
         expect(neutralInk()).toBe('#5a5a5a');
         expect(contrastRatio(neutralInk('#1a1a1a'), '#1a1a1a')).toBeGreaterThanOrEqual(4.5);
+    });
+    it('washes a region in the house\'s accent only where it stands apart from the data and the page', () => {
+        // The accent is the data's own ink: the wash comes from the house's other hues, never a grey.
+        const swiss = regionColor([], ['#e2231a'], '#f4f1ea', '#e2231a', ['#e2231a', '#1a1a1a', '#0067a5']);
+        expect(swiss).toBe('#0067a5');
+        expect(regionColor([], ['#4c78a8'], '#ffffff', '#e3120b')).toBe('#e3120b');
+        // An orange wash would vanish on an orange-tinted page.
+        expect(regionColor([], ['#4c78a8'], '#fbd9b0', undefined, ['#f2a35e', '#2a7f4f'])).toBe('#2a7f4f');
+    });
+    it('draws a cue on a mark\'s edge in an ink that reads on the mark and the page alike', () => {
+        // A mid-blue area on white: the dark ink, not white, which would vanish where it leaves the area.
+        expect(inkOn(['#4c78a8', '#ffffff'], ['#1a1a1a', '#ffffff'])).toEqual({ ink: '#1a1a1a' });
+        // A navy area: no ink reads on both, so the dark ink is haloed in the page's white.
+        expect(inkOn(['#051c2c', '#ffffff'], ['#1a1a1a', '#ffffff'])).toEqual({ ink: '#1a1a1a', halo: '#ffffff' });
+        expect(inkOn(['#118dff', '#1b1a19'], ['#f3f2f1', '#1b1a19']).ink).toBe('#f3f2f1');
     });
 });
 

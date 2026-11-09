@@ -276,7 +276,7 @@ function domain(p: ChartPropertyDef): string {
                         ? `${o.label} _(default)_`
                         : `\`${o.value}\`${o.label ? ` (${o.label})` : ''}`,
                 )
-                .join(', ');
+                .join(', ') + (p.acceptsLabel ? `, or ${p.acceptsLabel}` : '');
         case 'binary':
             return 'on / off';
     }

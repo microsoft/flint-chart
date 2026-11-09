@@ -1,11 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { ChartTemplateDef, ChartPropertyDef, InstantiateContext, MapBasemaps, OptionEvalContext, PlotPlanContext } from '../../core/types';
+import { BoundaryFile, BoundaryIds, ChartCredit, ChartTemplateDef, ChartPropertyDef, InstantiateContext, OptionEvalContext, PlotPlanContext } from '../../core/types';
 import {
-    DISPUTED_FEATURE, basemapAttribution, basemapCredit, basemapSource, isPackageWorldBank, knownBoundaries, worldBoundaries, worldPart,
-    type BasemapPart, type WorldDetail,
-} from '../../chart-types/basemap-sources';
+    BOUNDARY_IDS, BOUNDARY_NAMES, BOUNDARY_URLS, DISPUTED_FEATURE, FILE_KEY_FIELD, NAMED_ATTRIBUTION, boundaryFile, fileAntarctica, fileAttribution,
+    fileCredit, fileData, fileIds, fileKeyExpr, fileKeyResolver, fileScope, isBoundaryFile, namedCredit, namedWorldUrl,
+    worldBoundaries, type WorldDetail,
+} from '../../chart-types/boundaries';
 import {
     resolveUsState, resolveCountry, GeoResolver, MAP_KEY_TYPES, isAggregateRegion, keyTypeResolver,
     type MapScope, inferBubbleScope, inferChoroplethScope, semanticScope, pickMapScope,
@@ -15,6 +16,7 @@ import {
     isWorldFeature, mapPlotSize, projectedAspect, regionalProjection, shapedFrame, type FrameLevel, type FrameProjection, type GeoBox,
 } from '../../chart-types/geo-frame';
 import { continentAt, continentOf, type Continent } from '../../chart-types/geo-continents';
+import { routeProperties } from '../../chart-types/map-routes';
 import { resolveAggregationDefault, toTypeString } from '../../core/field-semantics';
 import { getRegistryEntry } from '../../core/type-registry';
 import {
@@ -26,7 +28,13 @@ import {
     type GeoPreProjection,
 } from '../interactions/geo-levels';
 import { INTERACTION_PROVENANCE, withInteractionDecorative } from '../interaction-provenance';
-import { CLASS_METHODS, MAP_REGIONAL, MAP_ROLE, MAP_STYLES, NO_DATA_PLACEHOLDER, classChoropleth, groundFor, paintMapGround } from './map-style';
+import {
+    BORDER_COVER, CLASS_METHODS, CUSTOM_MAP_STYLE_LABEL, MAP_REGIONAL, MAP_ROLE, MAP_STYLES, NO_DATA_PLACEHOLDER,
+    baseMapStyle, classChoropleth, groundFor, isCustomMapStyle, isDark, paintMapGround, withCustomColors, type MapGround,
+} from './map-style';
+import { mixHex } from '../../core/theme/presence';
+import { ROUTE_PART, addRouteLayers, mapRoutes } from './map-routes';
+import { LABEL_W, addPointLabels, addRegionLabels, labelWidth } from './map-labels';
 import {
     fieldsFromEncodingChannels,
     firstDiscreteEncodingField,
@@ -111,30 +119,67 @@ const SCOPE_GEO: Record<MapScope, ScopeGeo> = {
 };
 
 /**
- * A built-in map's boundaries as Vega-Lite data: the host's topology inline (no fetch), the host's
- * URL, or the default URL (which Flint's renderers serve from the package).
+ * What a map draws its regions or land from: the chart's own boundary file, with what its ids are
+ * and how a feature's id is read; else a named world set, or the US Census Bureau's for a US map.
  */
-function basemapData(basemaps: MapBasemaps | undefined, part: BasemapPart, feature: string, detail: WorldDetail = 'coarse'): Record<string, unknown> {
-    const source = basemapSource(basemaps, part, detail);
-    const format = { type: 'topojson', feature };
-    return typeof source === 'object' ? { values: source, format } : { url: source, format };
+interface MapBoundaries {
+    /** The map's region: the world, the US, or a file's own geography, fitted to its shapes. */
+    scope: MapScope | 'own';
+    file?: BoundaryFile;
+    ids?: BoundaryIds;
+    /** The Vega expression reading a file feature's id, in the form rows are matched to it. */
+    keyExpr?: string;
 }
 
-/** Name the boundaries a built-in map draws, for the host to credit; nothing for the host's own, unattributed. */
-function attribute(spec: any, basemaps: MapBasemaps | undefined, part: BasemapPart): void {
-    const attribution = basemapAttribution(basemaps, part);
+/** A map's boundaries for a scope the data put it on: a file decides its own region by what its ids are. */
+function mapBoundaries(chartProperties: Record<string, any> | undefined, inferred: MapScope): MapBoundaries {
+    const file = boundaryFile(chartProperties);
+    if (!file) return { scope: inferred };
+    const ids = fileIds(file, inferred);
+    return { scope: fileScope(file, inferred), file, ids, keyExpr: fileKeyExpr(file, ids) };
+}
+
+/**
+ * A map's regions or land as Vega-Lite data: the chart's file (inline, or by its URL); else the
+ * named world set, or the US states — projected for a choropleth, in longitude and latitude for
+ * points. Flint's renderers serve the named URLs from the package.
+ */
+function boundaryData(
+    b: MapBoundaries, chartProperties: Record<string, any> | undefined, feature: string, detail: WorldDetail = 'coarse', projected = false,
+): Record<string, unknown> {
+    if (b.file) return fileData(b.file, b.file.feature, detail);
+    const url = b.scope === 'us'
+        ? (projected ? BOUNDARY_URLS.usAlbers : BOUNDARY_URLS.usStates)
+        : namedWorldUrl(worldBoundaries(chartProperties), detail);
+    return { url, format: { type: 'topojson', feature } };
+}
+
+/** The credit a map's boundaries ask for at its foot: the file's attribution, else the named set's. */
+function boundaryCredit(b: MapBoundaries, chartProperties: Record<string, any> | undefined): ChartCredit | undefined {
+    if (b.file) return fileCredit(b.file);
+    return b.scope === 'world' ? namedCredit(worldBoundaries(chartProperties)) : undefined;
+}
+
+/** Name who drew a map's boundaries, for the host to credit (`_attribution`); nothing for a file without one. */
+function attribute(spec: any, b: MapBoundaries, chartProperties: Record<string, any> | undefined, projected = false): void {
+    const attribution = b.file
+        ? fileAttribution(b.file)
+        : b.scope === 'us' ? NAMED_ATTRIBUTION[projected ? 'usAlbers' : 'us'] : NAMED_ATTRIBUTION[worldBoundaries(chartProperties)];
     if (attribution) spec._attribution = attribution;
     else delete spec._attribution;
 }
 
-/** Whether boundaries drawn from this data carry the World Bank's disputed borders: the package's own build does, a host's own need not. */
-const carriesDisputed = (data: Record<string, unknown> | undefined): boolean =>
-    Boolean(data) && isPackageWorldBank((data!.values ?? data!.url) as any);
+/** The TopoJSON object of borders a map dots over its regions: the World Bank's, or the one a file names. */
+function disputedFeature(b: MapBoundaries, chartProperties: Record<string, any> | undefined): string | undefined {
+    if (b.file) return b.file.feature ? b.file.disputed : undefined;
+    return b.scope === 'world' && worldBoundaries(chartProperties) === 'world-bank' ? DISPUTED_FEATURE : undefined;
+}
 
-/** The part of `basemaps` a map of this scope draws. */
-function scopePart(scope: MapScope, chartProperties: Record<string, any> | undefined, projected = false): BasemapPart {
-    if (scope === 'us') return projected ? 'usAlbers' : 'us';
-    return worldPart(chartProperties?.boundaries);
+/** Keep Antarctica off a world map whose frame leaves it out: by the feature's id, as the named sets or a file of country codes carry it. */
+function withoutAntarctica(b: MapBoundaries): Record<string, unknown> | undefined {
+    if (!b.file) return WITHOUT_ANTARCTICA;
+    const id = b.ids ? fileAntarctica(b.ids) : undefined;
+    return id === undefined || !b.keyExpr ? undefined : { filter: `${b.keyExpr} !== ${JSON.stringify(id)}` };
 }
 
 /** How fine a world frame is drawn: a region's coastlines read at the medium detail. */
@@ -234,7 +279,7 @@ interface MapFrame {
 /**
  * The world framed for countries' or points' boxes: the region they share, else the world's land
  * (Antarctica only where the data names it); the whole base map where the caller asks (`fit:
- * 'basemap'`); the whole sphere on a globe, turned to face the data unless the caller set a centre.
+ * 'whole'`); the whole sphere on a globe, turned to face the data unless the caller set a centre.
  */
 function worldFrame(
     chartProperties: Record<string, any> | undefined, boxes: readonly GeoBox[], namesAntarctica: boolean,
@@ -247,7 +292,7 @@ function worldFrame(
         return { scope: 'world', projection: { type, ...(rotate ? { rotate } : {}), fit: { type: 'Sphere' } }, aspect: 1, globe: true, regional: false, antarctica: true, level: 'world' };
     }
     const rotate = worldRotate(chartProperties);
-    const whole = chartProperties?.fit === 'basemap';
+    const whole = chartProperties?.fit === 'whole';
     const fit = chartProperties?.fit === 'data' || chartProperties?.fit === 'continent' ? chartProperties.fit : 'auto';
     const framed = whole ? { box: WORLD_ALL, world: true, level: 'world' as const } : frameOf(boxes, namesAntarctica, { continents, fit });
     // A region is drawn in a projection of its own, centred on it, unless the caller chose one or a centre.
@@ -293,10 +338,13 @@ function framePlot(ctx: PlotPlanContext, frame: MapFrame): { width: number; heig
 function pointFrame(ctx: PlotPlanContext): MapFrame {
     const lonField = ctx.channelSemantics.longitude?.field;
     const latField = ctx.channelSemantics.latitude?.field;
-    const scope = bubbleScope(ctx, lonField, latField);
-    const hostMap = typeof ctx.chartProperties?.baseMapUrl === 'string' && ctx.chartProperties.baseMapUrl !== '';
-    if (scope === 'us') {
-        return { scope, projection: { type: SCOPE_GEO.us.projection }, ...(hostMap ? {} : { aspect: US_FRAME_ASPECT }), globe: false, regional: false, antarctica: false };
+    const b = mapBoundaries(ctx.chartProperties, bubbleScope(ctx, lonField, latField));
+    // Land of the caller's own — a GeoJSON base map, or a file keyed by FIPS or its own keys — is
+    // fitted to its shapes, whose extent is not known here.
+    const fitted = (typeof ctx.chartProperties?.baseMapUrl === 'string' && ctx.chartProperties.baseMapUrl !== '')
+        || (b.file !== undefined && b.scope !== 'world');
+    if (b.scope === 'us') {
+        return { scope: 'us', projection: { type: SCOPE_GEO.us.projection }, ...(fitted ? {} : { aspect: US_FRAME_ASPECT }), globe: false, regional: false, antarctica: false };
     }
     const boxes: GeoBox[] = [];
     const continents: (Continent | undefined)[] = [];
@@ -310,10 +358,13 @@ function pointFrame(ctx: PlotPlanContext): MapFrame {
             continents.push(continentAt(lon, lat));
             if (lat < -60) namesAntarctica = true;
         }
+        // A route's legs bow off the line between its stops: the frame takes in the whole line.
+        for (const route of mapRoutes(ctx.fullTable ?? ctx.table ?? [], ctx.channelSemantics as Record<string, any>, ctx.chartProperties, false)) {
+            for (const [lon, lat] of route.path) boxes.push([lon, lat, lon, lat]);
+        }
     }
     const frame = worldFrame(ctx.chartProperties, boxes, namesAntarctica, continents);
-    // The host's own base map is fitted as Vega-Lite fits it, to its shapes: their extent is not known here.
-    if (hostMap && !frame.globe) {
+    if (fitted && !frame.globe) {
         const { fit: _fit, ...projection } = frame.projection;
         return { ...frame, projection, aspect: undefined, regional: false };
     }
@@ -361,7 +412,7 @@ function fitProperty(applicable: (ctx: OptionEvalContext) => boolean): ChartProp
             { value: 'auto', label: 'Auto: the country, the region, or the continent the data covers' },
             { value: 'data', label: 'The data, padded' },
             { value: 'continent', label: 'The data’s continents' },
-            { value: 'basemap', label: 'Whole map' },
+            { value: 'whole', label: 'Whole map' },
         ],
         defaultValue: 'auto',
         check: (ctx) => ({ applicable: applicable(ctx) }),
@@ -369,9 +420,10 @@ function fitProperty(applicable: (ctx: OptionEvalContext) => boolean): ChartProp
 }
 
 /**
- * Whose borders the world map draws: the World Bank's official boundaries (the default), which
+ * Whose borders a map draws: the World Bank's official boundaries (the default world map), which
  * follow the UN-system depiction — areas of non-determined legal status on their own, their borders
- * dotted — or Natural Earth's de facto ones. Offered wherever the map is the world.
+ * dotted — or Natural Earth's de facto ones; or a file of the chart's own (`{ url | values, feature,
+ * ids, key, disputed, attribution }`). The named sets are offered wherever the map is the world.
  */
 function boundariesProperty(applicable: (ctx: OptionEvalContext) => boolean): ChartPropertyDef {
     return {
@@ -381,9 +433,11 @@ function boundariesProperty(applicable: (ctx: OptionEvalContext) => boolean): Ch
         options: [
             { value: 'world-bank', label: 'World Bank (official)' },
             { value: 'natural-earth', label: 'Natural Earth (de facto)' },
-        ],
+        ] satisfies { value: typeof BOUNDARY_NAMES[number]; label: string }[],
         defaultValue: 'world-bank',
-        check: (ctx) => ({ applicable: applicable(ctx) }),
+        accepts: isBoundaryFile,
+        acceptsLabel: `a file { url | values, feature?, ids? (${BOUNDARY_IDS.join(', ')}), key?, disputed?, attribution? }`,
+        check: (ctx) => ({ applicable: applicable(ctx) || isBoundaryFile(ctx.chartProperties?.boundaries) }),
     };
 }
 
@@ -446,6 +500,11 @@ function applyPointEncodings(layer: any, resolved: Record<string, any>): void {
     }
 }
 
+/** A point map's data layer: its circles, wherever structure (land, borders, a globe's sea) puts them. */
+function pointLayer(spec: any): any {
+    return spec.layer.find((layer: any) => (typeof layer?.mark === 'string' ? layer.mark : layer?.mark?.type) === 'circle');
+}
+
 /**
  * Runtime detail levels for a bubble map, read from two chart properties:
  * `levelField` names the column that tags each row with its level, and
@@ -470,7 +529,7 @@ function configureBubbleLevels(spec: any, chartProperties: any, rows: readonly a
     });
     if (levels.length < 2) return;
     spec.params = [...(spec.params ?? []), { name: GEO_LEVEL_SIGNAL, value: levels[0].name }];
-    const points = spec.layer[1];
+    const points = pointLayer(spec);
     points.transform = [
         ...(points.transform ?? []),
         { filter: `datum[${JSON.stringify(levelField)}] === ${GEO_LEVEL_SIGNAL}` },
@@ -495,7 +554,7 @@ function configureBubbleLevels(spec: any, chartProperties: any, rows: readonly a
  */
 function configurePointGlobe(spec: any, frame: MapFrame, lonField: string | undefined, latField: string | undefined): void {
     spec.params = [...(spec.params ?? []), { name: GEO_ROTATE_SIGNAL, value: frame.projection.rotate ?? [0, 0, 0] }];
-    const points = spec.layer[1];
+    const points = pointLayer(spec);
     if (lonField && latField) {
         const front = frontFacingExpr(`datum[${JSON.stringify(lonField)}]`, `datum[${JSON.stringify(latField)}]`, GEO_ROTATE_SIGNAL);
         const behind = { test: `!(${front})`, value: 0 };
@@ -518,24 +577,41 @@ function configurePointGlobe(spec: any, frame: MapFrame, lonField: string | unde
 
 /**
  * Point the base and circle layers of a bubble map at their frame: the region's base map (or the
- * host's own), one projection both layers share, and, for a regional frame, both clipped to the plot.
+ * chart's own), one projection both layers share, and, for a regional frame, both clipped to the plot.
  */
-function configureBubble(spec: any, frame: MapFrame, chartProperties: Record<string, any> | undefined, basemaps: MapBasemaps | undefined): void {
+function configureBubble(spec: any, frame: MapFrame, chartProperties: Record<string, any> | undefined, b: MapBoundaries): void {
     const g = SCOPE_GEO[frame.scope];
     const baseMapUrl = chartProperties?.baseMapUrl;
     spec.width = g.width;
     spec.height = g.height;
-    const base = spec.layer[0];
+    // Structure: the land answers no pointer, whatever else on the map is a shape that does.
+    const base = spec.layer[0] = withInteractionDecorative(spec.layer[0]);
     base[MAP_ROLE] = 'land';
+    // The borders the choropleth draws at the same scope: a fixed hairline, whatever the frame or zoom.
+    base.mark = { ...(typeof base.mark === 'string' ? { type: base.mark } : base.mark), strokeWidth: g.strokeWidth };
     if (typeof baseMapUrl === 'string' && baseMapUrl) {
         base.data = { url: baseMapUrl, format: { type: 'json', property: 'features' } };
     } else {
-        const part = scopePart(frame.scope, chartProperties);
-        base.data = basemapData(basemaps, part, g.feature, frameDetail(frame));
-        attribute(spec, basemaps, part);
-        if (frame.scope === 'world' && !frame.antarctica) base.transform = [WITHOUT_ANTARCTICA];
+        base.data = boundaryData(b, chartProperties, g.feature, frameDetail(frame));
+        attribute(spec, b, chartProperties);
+        const without = b.scope === 'world' && !frame.antarctica ? withoutAntarctica(b) : undefined;
+        if (without) base.transform = [without];
+        // The land is outlined at its coast; the borders between its regions are a mesh of their own,
+        // drawn over that outline, so a style can tell a coast from a border.
+        const format = base.data?.format;
+        if (format?.type === 'topojson' && typeof format.feature === 'string') {
+            spec.layer.splice(1, 0, withInteractionDecorative({
+                [MAP_ROLE]: 'borders',
+                data: { ...base.data, format: { type: 'topojson', mesh: format.feature, filter: 'interior' } },
+                mark: { type: 'geoshape', filled: false, strokeWidth: g.strokeWidth + BORDER_COVER, strokeJoin: 'round' },
+                encoding: { tooltip: null },
+            }));
+        }
     }
     spec.projection = { ...frame.projection };
+    // Only the world's map holds every coast: a US map, or land of the caller's own, leaves its
+    // neighbours undrawn, and water round it would read them as sea.
+    if (frame.scope === 'world' && !(typeof baseMapUrl === 'string' && baseMapUrl) && !(b.file && b.scope !== 'world')) spec[MAP_WATER] = true;
     if (frame.level) spec._mapFrame = { level: frame.level };
     if (frame.regional) spec[MAP_REGIONAL] = true;
     for (const layer of spec.layer) {
@@ -592,12 +668,12 @@ const GEO_JOIN_DATASET = '__flint_geo_join';
  * itself never rebuilds, and the projection extent carries the viewer's
  * place across the swap.
  */
-function configureChoropleth(spec: any, scope: MapScope, level: ChoroplethLevel = 'state', basemaps?: MapBasemaps, chartProperties?: Record<string, any>, detail: WorldDetail = 'coarse'): void {
+function configureChoropleth(spec: any, b: MapBoundaries & { scope: MapScope }, level: ChoroplethLevel = 'state', chartProperties?: Record<string, any>, detail: WorldDetail = 'coarse'): void {
+    const scope = b.scope;
     const g = SCOPE_GEO[scope];
     spec.width = g.width;
     spec.height = g.height;
-    const part = scopePart(scope, chartProperties, true);
-    attribute(spec, basemaps, part);
+    attribute(spec, b, chartProperties, true);
     spec.projection = scope === 'us' ? { ...US_ATLAS.projection } : { type: g.projection };
     if (scope === 'us') spec._geoPreProjection = US_ATLAS.preProjection;
     if (scope === 'us' && level === 'auto') {
@@ -605,7 +681,7 @@ function configureChoropleth(spec: any, scope: MapScope, level: ChoroplethLevel 
         spec.data = { name: GEO_JOIN_DATASET };
         spec.params = [{ name: GEO_LEVEL_SIGNAL, value: US_CHOROPLETH_LEVELS[0].name }];
         spec.layer = US_CHOROPLETH_LEVELS.map(({ name, feature, strokeWidth }) => ({
-            data: basemapData(basemaps, part, feature),
+            data: boundaryData(b, chartProperties, feature, 'coarse', true),
             transform: [US_ATLAS_ID_TRANSFORM, { filter: geoLevelGate(GEO_LEVEL_SIGNAL, name) }],
             mark: { type: "geoshape", stroke: "white", strokeWidth },
             [MAP_ROLE]: 'regions',
@@ -622,9 +698,32 @@ function configureChoropleth(spec: any, scope: MapScope, level: ChoroplethLevel 
     }
     spec[MAP_ROLE] = 'regions';
     const county = scope === 'us' && level === 'county';
-    spec.data = basemapData(basemaps, part, county ? 'counties' : g.feature, detail);
-    if (scope === 'us') spec.transform = [US_ATLAS_ID_TRANSFORM];
+    spec.data = boundaryData(b, chartProperties, county ? 'counties' : g.feature, detail, true);
+    // A file's ids are read into one form, which the rows are matched in.
+    if (b.file && b.keyExpr) spec.transform = [{ calculate: b.keyExpr, as: FILE_KEY_FIELD }];
+    else if (scope === 'us') spec.transform = [US_ATLAS_ID_TRANSFORM];
     if (spec.mark && typeof spec.mark === 'object') spec.mark.strokeWidth = county ? 0.2 : g.strokeWidth;
+}
+
+/** The projection a fitted file is drawn in: the caller's, else albersUsa for US states, Mercator for any other. */
+function fittedProjection(b: MapBoundaries, chartProperties: Record<string, any> | undefined): string {
+    const type = chartProperties?.projection;
+    if (typeof type === 'string' && type !== 'default') return type;
+    return b.scope === 'us' ? 'albersUsa' : 'mercator';
+}
+
+/**
+ * Point a choropleth at a file of the chart's own keyed by FIPS or by its own keys: one layer of its
+ * regions, the projection fitted to their shapes, each feature's id read into the form the rows
+ * are matched in.
+ */
+function configureFileChoropleth(spec: any, b: MapBoundaries & { file: BoundaryFile }, chartProperties: Record<string, any> | undefined): void {
+    attribute(spec, b, chartProperties);
+    spec.projection = { type: fittedProjection(b, chartProperties) };
+    spec[MAP_ROLE] = 'regions';
+    spec.data = fileData(b.file, b.file.feature);
+    spec.transform = [{ calculate: b.keyExpr, as: FILE_KEY_FIELD }];
+    if (spec.mark && typeof spec.mark === 'object') spec.mark.strokeWidth = 0.4;
 }
 
 /** What the choropleth's region key holds, so it is read in that namespace only. */
@@ -664,11 +763,21 @@ function bubbleScope(ctx: PlotPlanContext, lonField: string | undefined, latFiel
     return pickMapScope(ctx.chartProperties, undefined, () => inferBubbleScope(rows, lonField, latField));
 }
 
+/** The boundaries a bubble map draws its land from. */
+function pointBoundaries(ctx: PlotPlanContext): MapBoundaries {
+    return mapBoundaries(ctx.chartProperties, bubbleScope(ctx, ctx.channelSemantics.longitude?.field, ctx.channelSemantics.latitude?.field));
+}
+
 /** The region a choropleth shows: the caller's choice, else the id field's semantic type, else its values. */
 function choroplethScope(ctx: PlotPlanContext, idField: string | undefined): MapScope {
     const rows = ctx.fullTable ?? ctx.table ?? [];
     const semType = idField ? toTypeString(ctx.semanticTypes?.[idField]) : '';
     return pickMapScope(ctx.chartProperties, semanticScope(semType), () => inferChoroplethScope(rows, idField));
+}
+
+/** The boundaries a choropleth draws its regions from: a file decides its own region by its ids. */
+function choroplethBoundaries(ctx: PlotPlanContext): MapBoundaries {
+    return mapBoundaries(ctx.chartProperties, choroplethScope(ctx, ctx.channelSemantics.id?.field));
 }
 
 function drawAtPlannedSize(spec: any, ctx: InstantiateContext): void {
@@ -714,21 +823,52 @@ function asLayered(spec: any): void {
 }
 
 /**
- * Dot the borders the World Bank's areas of non-determined legal status share — Jammu and Kashmir,
- * Aksai Chin, Western Sahara, Abyei, … — over the regions, as the World Bank draws them. The areas
- * are regions of their own, which data keyed to a country does not colour. Structure, not data.
+ * Dot the borders in dispute over the regions: the World Bank's areas of non-determined legal
+ * status share them — Jammu and Kashmir, Aksai Chin, Western Sahara, Abyei, … — as the World Bank
+ * draws them, or a file names its own (`disputed`). The areas are regions of their own, which data
+ * keyed to a country does not colour. Structure, not data.
  */
-function addDisputedBorders(spec: any, regions: Record<string, unknown>, clip: boolean): void {
+function addDisputedBorders(spec: any, regions: Record<string, unknown>, clip: boolean, feature: string, cover = false): void {
     asLayered(spec);
+    // A point map draws its borders as lines on land of one colour: where they are in dispute, a line
+    // of that colour hides the solid border beneath the dots. A choropleth's regions are coloured
+    // apart, so its dots stand on the border.
+    const borders = cover ? spec.layer.find((layer: any) => layer?.[MAP_ROLE] === 'borders') : undefined;
+    const base = borders ? withInteractionDecorative({
+        [MAP_ROLE]: 'disputedBase',
+        data: { ...regions, format: { type: 'topojson', feature } },
+        mark: { type: 'geoshape', filled: false, strokeWidth: (borders.mark?.strokeWidth ?? 0.5) + 0.6, strokeCap: 'butt', ...(clip ? { clip: true } : {}) },
+        encoding: { tooltip: null },
+    }) : undefined;
     const disputed = withInteractionDecorative({
         [MAP_ROLE]: 'disputed',
-        data: { ...regions, format: { type: 'topojson', feature: DISPUTED_FEATURE } },
+        data: { ...regions, format: { type: 'topojson', feature } },
         mark: { type: 'geoshape', filled: false, stroke: DISPUTED, strokeWidth: 1.1, strokeDash: [0.5, 2.5], strokeCap: 'round', ...(clip ? { clip: true } : {}) },
         encoding: { color: { value: DISPUTED }, tooltip: null },
     });
-    // Over the land and the regions, beneath the points.
-    const last = spec.layer.reduce((at: number, layer: any, i: number) => (['land', 'regions', 'noData'].includes(layer?.[MAP_ROLE]) ? i : at), -1);
-    spec.layer.splice(last + 1, 0, disputed);
+    // Over the land, its borders and the regions, beneath the points.
+    const last = spec.layer.reduce((at: number, layer: any, i: number) => (['land', 'borders', 'regions', 'noData'].includes(layer?.[MAP_ROLE]) ? i : at), -1);
+    spec.layer.splice(last + 1, 0, ...(base ? [base] : []), disputed);
+}
+
+/**
+ * The borders between a choropleth's regions as a mesh of their own, over the regions and their land
+ * without data: lines a style colours apart from the coast the regions are outlined at.
+ */
+function addBorderMesh(spec: any, regions: any, clip: boolean): void {
+    const format = regions?.format;
+    if (format?.type !== 'topojson' || typeof format.feature !== 'string') return;
+    asLayered(spec);
+    const shapes = spec.layer.filter((layer: any) => ['regions', 'noData'].includes(layer?.[MAP_ROLE]));
+    const widths = shapes.map((layer: any) => layer.mark?.strokeWidth).filter((width: unknown): width is number => typeof width === 'number');
+    const width = widths.length ? Math.min(...widths) : 0.5;
+    const last = spec.layer.reduce((at: number, layer: any, i: number) => (['regions', 'noData'].includes(layer?.[MAP_ROLE]) ? i : at), -1);
+    spec.layer.splice(last + 1, 0, withInteractionDecorative({
+        [MAP_ROLE]: 'borders',
+        data: { ...regions, format: { type: 'topojson', mesh: format.feature, filter: 'interior' } },
+        mark: { type: 'geoshape', filled: false, strokeWidth: width + BORDER_COVER, strokeJoin: 'round', ...(clip ? { clip: true } : {}) },
+        encoding: { tooltip: null },
+    }));
 }
 
 /** Whether a spec draws a globe: a layer holds the sphere. */
@@ -746,12 +886,31 @@ function drawsGlobe(spec: any): boolean {
 /** The rows a choropleth joined, one per region, kept for classing its colour after the theme. */
 const JOINED_ROWS = new WeakMap<object, any[]>();
 
-/** Paint a map's ground in its style, after the theme set the page it stands on. */
-function styleMap(spec: any, ctx: InstantiateContext): void {
+/**
+ * Paint a map's ground in its style, after the theme set the page it stands on. A point or route map
+ * (`reference`) is read for its geography, so its ground, when the theme decides it, is a reference map's.
+ */
+function styleMap(spec: any, ctx: InstantiateContext, reference = false): void {
     const properties = ctx.chartProperties ?? {};
     const width = typeof properties.borderWidth === 'number' ? properties.borderWidth : undefined;
-    paintMapGround(spec, groundFor(properties.mapStyle, spec), { globe: drawsGlobe(spec), ...(width !== undefined ? { borderWidth: width } : {}) });
+    const style = baseMapStyle(properties.mapStyle);
+    const ground = groundFor(style, spec, reference);
+    const view = [spec, ...['vconcat', 'hconcat', 'concat'].flatMap((key) => spec[key] ?? [])].find((node: any) => node?.[MAP_WATER] !== undefined);
+    const water = view?.[MAP_WATER] === true;
+    if (view) delete view[MAP_WATER];
+    // The reference ground's water fills a world map's frame only (a named style's frame is its own).
+    const painted = reference && !water && style !== undefined && style !== 'auto' ? ground
+        : reference && !water ? { ...ground, frame: undefined, land: landOnPage(spec, ground) } : ground;
+    paintMapGround(spec, withCustomColors(painted, properties.mapStyle), { globe: drawsGlobe(spec), ...(width !== undefined ? { borderWidth: width } : {}) });
 }
+
+/** Land with no water round it stands on the page: a light tone of the ink, so it reads as land. */
+function landOnPage(spec: any, ground: MapGround): string {
+    return isDark(ground.land) ? ground.land : mixHex(ground.land, ground.border, 0.35);
+}
+
+/** The tag a point map of the world puts on its view, whose water may fill the frame. */
+const MAP_WATER = '__flintMapWater';
 
 /** How a map's ground is painted and whether lines of latitude and longitude are drawn: offered on every map. */
 const groundProperties: ChartPropertyDef[] = [
@@ -768,6 +927,8 @@ const groundProperties: ChartPropertyDef[] = [
             { value: 'minimal', label: 'Minimal (outlines)' },
         ] satisfies { value: typeof MAP_STYLES[number]; label: string }[],
         defaultValue: 'auto',
+        accepts: isCustomMapStyle,
+        acceptsLabel: CUSTOM_MAP_STYLE_LABEL,
     },
     { key: 'graticule', label: 'Graticule', type: 'binary', defaultValue: false },
     { key: 'borderWidth', label: 'Border width', type: 'continuous', min: 0, max: 2, step: 0.1 },
@@ -809,7 +970,8 @@ export const mapDef: ChartTemplateDef = {
             },
         ],
     },
-    channels: ["longitude", "latitude", "color", "size", "opacity"],
+    // `size` is always the dots' area; `strokeWidth` the width of the legs `order` joins them by.
+    channels: ["longitude", "latitude", "color", "size", "shape", "opacity", "order", "detail", "strokeWidth", "text"],
     interactionSupport: {
         elements: true,
         region: ['cartesian'],
@@ -821,13 +983,20 @@ export const mapDef: ChartTemplateDef = {
         const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
         const colorField = resolvedEncodings.color?.field;
         const sizeField = resolvedEncodings.size?.field;
+        const widthField = resolvedEncodings.strokeWidth?.field;
+        const shapeField = resolvedEncodings.shape?.field;
         return {
-            fields: fieldsFromEncodingChannels(resolvedEncodings, ['longitude', 'latitude', 'color', 'size', 'opacity']),
+            fields: fieldsFromEncodingChannels(resolvedEncodings, ['longitude', 'latitude', 'color', 'size', 'shape', 'opacity', 'order', 'detail', 'strokeWidth', 'text']),
             seriesField,
-            legendFields: colorField || sizeField
-                ? { ...(colorField ? { color: colorField } : {}), ...(sizeField ? { size: sizeField } : {}) }
+            legendFields: colorField || sizeField || widthField || shapeField
+                ? {
+                    ...(colorField ? { color: colorField } : {}), ...(sizeField ? { size: sizeField } : {}),
+                    ...(shapeField ? { shape: shapeField } : {}), ...(widthField ? { strokeWidth: widthField } : {}),
+                }
                 : undefined,
-            selectableMarks: ['circle'],
+            // The dots (points where a shape tells them apart), and a route's legs (geoshapes keyed to
+            // the row each leaves from); the land beneath is structure.
+            selectableMarks: [shapeField ? 'point' : 'circle', 'geoshape'],
             renderHoverStyles: {
                 symbol: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
             },
@@ -836,18 +1005,23 @@ export const mapDef: ChartTemplateDef = {
                 const hits = event.role === 'legend-item' && legendField
                     ? legendMatchedHits(event, context, legendField)
                     : event.hits;
-                return targetFromHits(hits, context.keyField, { kind: 'mark', role: 'point' });
+                // A leg is a path, as a line chart's segment is: it names the row it leaves from. A set
+                // of rows names their dots, unless it asks for their legs or holds nothing but legs.
+                const isLeg = (hit: { datum?: Record<string, unknown> }) => hit.datum?.[ROUTE_PART] === 'leg';
+                const legs = event.role === 'leg'
+                    || (event.role !== 'legend-item' && hits.length > 0 && hits.every(isLeg));
+                const own = hits.filter((hit) => isLeg(hit) === legs);
+                return targetFromHits(own.length > 0 ? own : hits, context.keyField, legs ? { kind: 'path', role: 'leg' } : { kind: 'mark', role: 'point' });
             },
-            presentUpdate: presentAnnotationUpdate(() => annotationCandidates(
-                'center', 'top', 'right', 'bottom', 'left',
-            )),
+            presentUpdate: presentAnnotationUpdate((_element, _context, visual) => visual?.kind === 'path'
+                ? annotationCandidates('segment-midpoint', 'top', 'bottom', 'right', 'left')
+                : annotationCandidates('center', 'top', 'right', 'bottom', 'left')),
         };
     },
     planPlot: (ctx) => framePlot(ctx, pointFrame(ctx)),
     credit: (ctx) => {
         if (typeof ctx.chartProperties?.baseMapUrl === 'string' && ctx.chartProperties.baseMapUrl) return undefined;
-        const scope = bubbleScope(ctx, ctx.channelSemantics.longitude?.field, ctx.channelSemantics.latitude?.field);
-        return basemapCredit(ctx.assembleOptions?.basemaps, scopePart(scope, ctx.chartProperties));
+        return boundaryCredit(pointBoundaries(ctx), ctx.chartProperties);
     },
     instantiate: (spec, ctx) => {
         const rows = ctx.fullTable ?? ctx.table ?? [];
@@ -855,20 +1029,47 @@ export const mapDef: ChartTemplateDef = {
         // FeatureCollection of the host's own (a country's provinces, say);
         // the projection then fits to it.
         const frame = pointFrame(ctx);
-        configureBubble(spec, frame, ctx.chartProperties, ctx.assembleOptions?.basemaps);
+        const b = pointBoundaries(ctx);
+        configureBubble(spec, frame, ctx.chartProperties, b);
         drawAtPlannedSize(spec, ctx);
-        applyPointEncodings(spec.layer[1], ctx.resolvedEncodings);
+        applyPointEncodings(pointLayer(spec), ctx.resolvedEncodings);
         configureBubbleLevels(spec, ctx.chartProperties, rows);
         if (frame.globe) configurePointGlobe(spec, frame, ctx.resolvedEncodings.longitude?.field, ctx.resolvedEncodings.latitude?.field);
         if (ctx.chartProperties?.graticule === true) addGraticule(spec);
         const base = spec.layer.find((layer: any) => layer?.[MAP_ROLE] === 'land');
-        if (scopePart(frame.scope, ctx.chartProperties) === 'worldBank' && carriesDisputed(base?.data) && !ctx.chartProperties?.baseMapUrl) {
-            addDisputedBorders(spec, base.data, frame.regional);
+        const disputed = disputedFeature(b, ctx.chartProperties);
+        if (disputed && base?.data && !ctx.chartProperties?.baseMapUrl) addDisputedBorders(spec, base.data, frame.regional, disputed, true);
+        const routes = mapRoutes(rows, ctx.resolvedEncodings, ctx.chartProperties, frame.globe);
+        addRouteLayers(spec, routes, { rows, resolved: ctx.resolvedEncodings, chartProperties: ctx.chartProperties, globe: frame.globe });
+        // Without routes there are no legs for `strokeWidth` to widen.
+        const width = ctx.resolvedEncodings.strokeWidth?.field;
+        if (!routes.length && width) {
+            delete pointLayer(spec)?.encoding?.strokeWidth;
+            spec._warnings = [...(spec._warnings ?? []), {
+                severity: 'warning', code: 'map-width-without-routes', channel: 'strokeWidth', field: width,
+                message: `strokeWidth ('${width}') sets the width of a route's legs, and this map has none: add an order field to join its points. It was left out.`,
+            }];
+        }
+        // `text` names the points, beside each, where it has room; the dots never draw it themselves.
+        delete pointLayer(spec)?.encoding?.text;
+        const labels = addPointLabels(spec, { rows, resolved: ctx.resolvedEncodings, chartProperties: ctx.chartProperties, routes, globe: frame.globe });
+        if (labels?.dropped) {
+            spec._warnings = [...(spec._warnings ?? []), {
+                severity: 'info', code: 'map-labels-dropped', channel: 'text', field: ctx.resolvedEncodings.text.field,
+                message: `${labels.dropped} of ${labels.placed + labels.dropped} points are left unlabelled: their labels had no room beside them. Label fewer points, or give the map more room.`,
+            }];
+        }
+        // Last, once every step has found the dots by their circle mark. A shape tells the dots apart:
+        // a circle mark draws only circles, a filled point any symbol.
+        if (ctx.resolvedEncodings.shape?.field) {
+            const dots = pointLayer(spec);
+            if (dots) dots.mark = { ...(typeof dots.mark === 'string' ? { type: dots.mark } : dots.mark), type: 'point', filled: true };
         }
     },
-    postProcess: (spec, ctx) => styleMap(spec, ctx),
+    postProcess: (spec, ctx) => styleMap(spec, ctx, true),
     properties: [
         regionProperty, boundariesProperty(wouldBeWorld), ...projectionProperties(wouldBeWorld), fitProperty(wouldBeWorld), ...groundProperties,
+        ...routeProperties,
     ] as ChartPropertyDef[],
 };
 
@@ -1009,7 +1210,10 @@ function buildChoroplethJoin(
         }
 
         JOINED_ROWS.set(ctx, joined);
-        const lookupFields = [idField, valueField, labelField].filter(Boolean) as string[];
+        // A region's label travels with its row: its text, and its width, measured once here.
+        const textField: string | undefined = ctx.resolvedEncodings.text?.field;
+        if (textField) for (const row of joined) row[LABEL_W] = labelWidth(row[textField]);
+        const lookupFields = [...new Set([idField, valueField, labelField, ...(textField ? [textField, LABEL_W] : [])].filter(Boolean))] as string[];
         if (Array.isArray(spec.layer)) {
             // Every level joins the same table: state ids and county FIPS
             // codes share one numeric id space, so each layer matches its own.
@@ -1155,7 +1359,7 @@ export const choroplethDef: ChartTemplateDef = {
         mark: { type: "geoshape", stroke: "white", strokeWidth: 0.5 },
         encoding: {},
     },
-    channels: ["id", "color", "detail"],
+    channels: ["id", "color", "detail", "text"],
     interactionSupport: {
         elements: true,
         region: ['cartesian'],
@@ -1167,7 +1371,7 @@ export const choroplethDef: ChartTemplateDef = {
         const idField = resolvedEncodings.id?.field;
         const colorField = resolvedEncodings.color?.field;
         return {
-            fields: fieldsFromEncodingChannels(resolvedEncodings, ['id', 'color', 'detail']),
+            fields: fieldsFromEncodingChannels(resolvedEncodings, ['id', 'color', 'detail', 'text']),
             categoryField: idField,
             selectableMarks: ['geoshape'],
             renderHoverStyles: { shape: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 } },
@@ -1189,18 +1393,41 @@ export const choroplethDef: ChartTemplateDef = {
     },
     credit: (ctx) => {
         if (customChoroplethLevels(ctx.chartProperties)) return undefined;
-        const scope = choroplethScope(ctx, ctx.channelSemantics.id?.field);
-        return basemapCredit(ctx.assembleOptions?.basemaps, scopePart(scope, ctx.chartProperties, true));
+        return boundaryCredit(choroplethBoundaries(ctx), ctx.chartProperties);
     },
     planPlot: (ctx) => {
         if (customChoroplethLevels(ctx.chartProperties)) return framePlot(ctx, { scope: 'world', projection: { type: 'mercator' }, globe: false, regional: false, antarctica: true });
-        const scope = choroplethScope(ctx, ctx.channelSemantics.id?.field);
-        return scope === 'world'
+        const b = choroplethBoundaries(ctx);
+        // A file of the chart's own geography takes the room's shape: its shapes are fitted to it.
+        if (b.file && b.scope !== 'world') return framePlot(ctx, { scope: 'world', projection: { type: fittedProjection(b, ctx.chartProperties) }, globe: false, regional: false, antarctica: true });
+        return b.scope === 'world'
             ? framePlot(ctx, choroplethWorldFrame(ctx))
-            : framePlot(ctx, { scope, projection: US_ATLAS.projection, aspect: US_FRAME_ASPECT, globe: false, regional: false, antarctica: false });
+            : framePlot(ctx, { scope: 'us', projection: US_ATLAS.projection, aspect: US_FRAME_ASPECT, globe: false, regional: false, antarctica: false });
     },
     instantiate: (spec, ctx) => {
-        const idField = ctx.resolvedEncodings.id?.field;
+        instantiateChoropleth(spec, ctx);
+        // `text` names each region at its middle, where the region has room for it.
+        const textField = ctx.resolvedEncodings.text?.field;
+        if (textField) {
+            asLayered(spec);
+            const regions = spec.layer.find((layer: any) => layer.encoding?.color?.field);
+            addRegionLabels(spec, textField, regions?.encoding?.color);
+        }
+    },
+    postProcess: (spec, ctx) => {
+        styleMap(spec, ctx, true);
+        classChoropleth(spec, JOINED_ROWS.get(ctx) ?? ctx.fullTable ?? ctx.table ?? [], ctx.chartProperties?.classes, ctx.chartProperties?.classCount);
+    },
+    properties: [
+        regionProperty, keyTypeProperty, levelProperty, boundariesProperty(wouldBeWorldChoropleth),
+        ...projectionProperties(wouldBeWorldChoropleth), fitProperty(wouldBeWorldChoropleth),
+        ...classProperties, ...groundProperties,
+    ] as ChartPropertyDef[],
+};
+
+/** A choropleth's regions, joined to its rows: the caller's own levels, a file of its own, or a built-in map. */
+function instantiateChoropleth(spec: any, ctx: InstantiateContext): void {
+    {
         const custom = customChoroplethLevels(ctx.chartProperties);
         if (custom) {
             configureCustomChoropleth(spec, custom, ctx.chartProperties);
@@ -1212,33 +1439,49 @@ export const choroplethDef: ChartTemplateDef = {
             if (ctx.chartProperties?.graticule === true) addGraticule(spec);
             return;
         }
-        const scope = choroplethScope(ctx, idField);
+        const b = choroplethBoundaries(ctx);
+        const disputed = disputedFeature(b, ctx.chartProperties);
+        // The chart's own file keyed by FIPS or by its own keys: its regions, fitted to the plot.
+        if (b.file && b.scope !== 'world') {
+            configureFileChoropleth(spec, b as MapBoundaries & { file: BoundaryFile }, ctx.chartProperties);
+            const regions = spec.data;
+            drawAtPlannedSize(spec, ctx);
+            buildChoroplethJoin(spec, ctx, fileKeyResolver(b.ids!, ctx.chartProperties?.keyType), FILE_KEY_FIELD, { map: 'given boundaries' });
+            keepRegionsWithoutData(spec);
+            if (ctx.chartProperties?.graticule === true) addGraticule(spec);
+            if (disputed) addDisputedBorders(spec, regions, false, disputed);
+            return;
+        }
+        const mapped = b as MapBoundaries & { scope: MapScope };
+        const scope = mapped.scope;
 
         const requestedLevel = ctx.chartProperties?.level;
         const level: ChoroplethLevel = requestedLevel === 'county' || requestedLevel === 'auto'
             ? requestedLevel
             : 'state';
         const frame = scope === 'world' ? choroplethWorldFrame(ctx) : undefined;
-        configureChoropleth(spec, scope, level, ctx.assembleOptions?.basemaps, ctx.chartProperties, frame ? frameDetail(frame) : 'coarse');
+        configureChoropleth(spec, mapped, b.file ? 'state' : level, ctx.chartProperties, frame ? frameDetail(frame) : 'coarse');
         const regions = spec.data;
         drawAtPlannedSize(spec, ctx);
-        // County rows carry numeric FIPS ids, which the state resolver passes through.
-        const resolver: GeoResolver = keyTypeResolver(ctx.chartProperties?.keyType) ?? (scope === 'us' ? resolveUsState : resolveCountry);
         const boundaries = worldBoundaries(ctx.chartProperties);
-        // The host's own boundaries: which regions they draw is theirs to know, not this package's.
-        const known = knownBoundaries(ctx.assembleOptions?.basemaps, worldPart(boundaries));
-        buildChoroplethJoin(spec, ctx, resolver, 'id', scope === 'us'
-            ? { map: 'US map' }
-            : !known
-                ? { map: 'given map' }
+        if (b.file) {
+            // A file of country codes: which countries it draws is the file's to know, not this package's.
+            buildChoroplethJoin(spec, ctx, fileKeyResolver(b.ids!, ctx.chartProperties?.keyType), FILE_KEY_FIELD, { map: 'given boundaries' });
+        } else {
+            // County rows carry numeric FIPS ids, which the state resolver passes through.
+            const resolver: GeoResolver = keyTypeResolver(ctx.chartProperties?.keyType) ?? (scope === 'us' ? resolveUsState : resolveCountry);
+            buildChoroplethJoin(spec, ctx, resolver, 'id', scope === 'us'
+                ? { map: 'US map' }
                 : {
                     map: boundaries === 'world-bank' ? 'World Bank map' : 'Natural Earth map',
                     drawn: (id) => isWorldFeature(id, boundaries),
                     otherMaps: 'chartProperties.boundaries',
                 });
+        }
         if (frame) {
             spec.projection = { ...frame.projection };
-            if (!frame.antarctica) spec.transform = [WITHOUT_ANTARCTICA, ...(spec.transform ?? [])];
+            const without = frame.antarctica ? undefined : withoutAntarctica(b);
+            if (without) spec.transform = [without, ...(spec.transform ?? [])];
             if (frame.regional && spec.mark) spec.mark = clipped(spec.mark);
             if (frame.regional) spec[MAP_REGIONAL] = true;
             if (frame.level) spec._mapFrame = { level: frame.level };
@@ -1247,15 +1490,10 @@ export const choroplethDef: ChartTemplateDef = {
         // A globe draws its land without data as a layer of its own, beneath the countries.
         keepRegionsWithoutData(spec);
         if (ctx.chartProperties?.graticule === true) addGraticule(spec);
-        if (frame && boundaries === 'world-bank' && carriesDisputed(regions)) addDisputedBorders(spec, regions, frame.regional);
-    },
-    postProcess: (spec, ctx) => {
-        styleMap(spec, ctx);
-        classChoropleth(spec, JOINED_ROWS.get(ctx) ?? ctx.fullTable ?? ctx.table ?? [], ctx.chartProperties?.classes, ctx.chartProperties?.classCount);
-    },
-    properties: [
-        regionProperty, keyTypeProperty, levelProperty, boundariesProperty(wouldBeWorldChoropleth),
-        ...projectionProperties(wouldBeWorldChoropleth), fitProperty(wouldBeWorldChoropleth),
-        ...classProperties, ...groundProperties,
-    ] as ChartPropertyDef[],
-};
+        // The regions are outlined at the coast; the borders between them are a mesh of their own, as a
+        // point map's are. A map of runtime levels keeps its outlines: a mesh per level would swap too.
+        if (regions && level !== 'auto') addBorderMesh(spec, regions, !!frame?.regional);
+        if (scope === 'world' && !b.file) spec[MAP_WATER] = true;
+        if (frame && disputed && regions) addDisputedBorders(spec, regions, frame.regional, disputed);
+    }
+}

@@ -1,7 +1,7 @@
 import type { ChartAssemblyInput } from '../core/types';
 import { assembleECharts } from '../echarts/assemble';
 import { assembleVegaLite } from '../vegalite/assemble';
-import { withBundledBasemaps } from '../vegalite/basemap-loader';
+import { withBundledBoundaries } from '../vegalite/boundary-loader';
 import { injectCanvasFurnitureSVG, readCanvasFurniture, readCanvasPatterns } from '../vegalite/canvas-furniture';
 
 export type RenderSvgBackend = 'vegalite' | 'echarts';
@@ -53,7 +53,7 @@ export async function renderSvg(input: ChartAssemblyInput, options: RenderSvgOpt
     );
     const view = new vega.View(runtime, {
         renderer: 'none',
-        loader: withBundledBasemaps(vega.loader()),
+        loader: withBundledBoundaries(vega.loader()),
         ...(interpreter ? { expr: interpreter } : {}),
     } as any);
     view.logLevel(vega.Error);

@@ -1,5 +1,6 @@
 import type { ChartInteractionResolver } from '../../core/interaction-semantics';
 import type { ChartWarning } from '../../core/types';
+import type { AnnotationDesign } from '../../core/theme/types';
 import type { CanvasInteractionDef, ChartUpdatePresenter, InteractionContext } from '../../interactive/interactions';
 import type { GeoLevelConfig, GeoPreProjection } from './navigation-geo';
 
@@ -80,6 +81,8 @@ export interface VegaInteractionPlan {
     renderSelectionStyles?: Readonly<Record<string, SelectionStyle>>;
     selectionBoundary?: Readonly<SelectionBoundaryStyle>;
     continuousColorFocus?: Readonly<ContinuousColorFocusStyle>;
+    /** The house's accent and note text, for the annotation overlays. */
+    annotationDesign?: Readonly<AnnotationDesign>;
     navigationChannels?: readonly ('x' | 'y')[];
     /** Navigation moves a cartographic projection's extent rather than scale domains. */
     geoNavigation?: boolean;
@@ -96,6 +99,8 @@ export interface VegaInteractionPlan {
     navigationAxes?: Partial<Record<'x' | 'y', VegaNavigationAxis>>;
     /** Unambiguous existing Cartesian scales available to external overlays. */
     overlayScales?: Partial<Record<'x' | 'y' | 'color', string>>;
+    /** On a map, the signal holding its live projection, through which overlays and regions placed by longitude and latitude are drawn. */
+    overlayProjectionSignal?: string;
     /** Mutable compiled inline source used by `set-data`. */
     mutableDataSource?: string;
     initialDataRows?: readonly Record<string, unknown>[];

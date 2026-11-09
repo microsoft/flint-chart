@@ -50,6 +50,7 @@
  * This module has NO React, Redux, or UI framework dependencies.
  */
 
+import { noteSpecUpdates } from '../core/spec-updates';
 import { authoredColorScale, withEncodingColorAnnotations } from '../core/color-controls';
 import { applyAuthoredColorScaleEC } from './color-controls';
 import {
@@ -608,7 +609,7 @@ export function assembleECharts(input: ChartAssemblyInput): any {
     // Clean internal-only props
     delete ecOption._legendWidth;
 
-    return ecOption;
+    return noteSpecUpdates(ecOption, input);
 }
 
 /** Inspect the ECharts legacy (composed) view transformation surface for an input. */

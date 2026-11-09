@@ -102,7 +102,11 @@ export interface NavigationApplyOptions {
      */
     transition?: {
         duration: number;
-        onFrame?: (phase: 'preview' | 'commit', operation: 'zoom' | 'reset') => void;
+        /**
+         * `moved`: the frame moved the scene as drawn instead of rendering it, so what is drawn over the
+         * chart (overlays, notes) does not yet stand where the scene shows; it is placed on the commit.
+         */
+        onFrame?: (phase: 'preview' | 'commit', operation: 'zoom' | 'reset', moved?: 'moved') => void;
     };
     /** The runtime's own reset before it re-applies retained viewports; must not end a running tween. */
     baseline?: boolean;

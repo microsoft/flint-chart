@@ -20,6 +20,7 @@
 import { ChartTemplateDef, ChartPropertyDef, OptionEvalContext } from '../../core/types';
 import { inferBubbleScope, pickMapScope } from '../../chart-types/geo';
 import { getPlotlyPalette, getSeriesColor, groupBy } from './utils';
+import { ROUTE_WIDTH, bearing, buildRoutes, headSize, largestMagnitude, legWidths, innerStops, routeArrows, routeOpacity, routeProperties, routeStopMode, stopRadii } from '../../chart-types/map-routes';
 
 // ---------------------------------------------------------------------------
 // Projection mapping (Vega-Lite d3 projection name → Plotly geo projection type)
@@ -155,6 +156,9 @@ function buildGeoLayout(scope: 'us' | 'world', chartProperties: any): any {
     return geo;
 }
 
+/** The symbols a `shape` field's categories take, in turn, as the Plotly scatter's do. */
+const SYMBOLS = ['circle', 'square', 'triangle-up', 'diamond', 'cross', 'x', 'star'];
+
 /** Sqrt (area-truth) scale from data values to marker pixel diameters. */
 function bubbleDiameters(values: number[], minPx = 6, maxPx = 34): number[] {
     const finite = values.filter(v => Number.isFinite(v));
@@ -173,7 +177,8 @@ function bubbleDiameters(values: number[], minPx = 6, maxPx = 34): number[] {
 export const plMapDef: ChartTemplateDef = {
     chart: 'Map',
     template: { mark: 'circle', encoding: {} },
-    channels: ['longitude', 'latitude', 'color', 'size', 'opacity'],
+    // `size` is always the dots' area; `strokeWidth` the width of the legs `order` joins them by.
+    channels: ['longitude', 'latitude', 'color', 'size', 'shape', 'opacity', 'order', 'detail', 'strokeWidth', 'text'],
     markCognitiveChannel: 'position',
     instantiate: (spec, ctx) => {
         const { channelSemantics, chartProperties, colorDecisions } = ctx;
@@ -197,6 +202,8 @@ export const plMapDef: ChartTemplateDef = {
 
         const opacity = 0.85;
         const traces: any[] = [];
+        // The rows each marker trace draws, so a route map can size and hide its stops row by row.
+        const traceRows = new Map<any, any[]>();
 
         if (isContinuousColor && colorField) {
             const toColorVal = colorType === 'temporal'
@@ -227,6 +234,7 @@ export const plMapDef: ChartTemplateDef = {
                     + (sizeField ? `<br>${sizeField}: %{customdata}` : '') + '<extra></extra>',
                 customdata: sizeField ? sizeValues : undefined,
             });
+            traceRows.set(traces[traces.length - 1], rows);
         } else if (colorField) {
             // Nominal/ordinal color: one trace per group (legend by group name).
             // Bubble diameters come from the SAME global sqrt scale computed
@@ -254,6 +262,7 @@ export const plMapDef: ChartTemplateDef = {
                         + (sizeField ? `<br>${sizeField}: %{customdata}` : '') + '<extra></extra>',
                     customdata: groupSizes,
                 });
+                traceRows.set(traces[traces.length - 1], groupRows);
                 i++;
             }
         } else {
@@ -273,7 +282,52 @@ export const plMapDef: ChartTemplateDef = {
                     + (sizeField ? `<br>${sizeField}: %{customdata}` : '') + '<extra></extra>',
                 customdata: sizeValues,
             });
+            traceRows.set(traces[traces.length - 1], rows);
         }
+
+        // A shape tells the points apart, a symbol per category in the order the rows give them.
+        const shapeField = channelSemantics.shape?.field;
+        if (shapeField) {
+            const categories = [...new Set(rows.map((row: any) => String(row?.[shapeField])))];
+            for (const [trace, own] of traceRows) {
+                trace.marker = { ...trace.marker, symbol: own.map((row) => SYMBOLS[categories.indexOf(String(row?.[shapeField])) % SYMBOLS.length]) };
+            }
+        }
+
+        // `text` names each point beside it, as Plotly writes a trace's text (it does not keep labels apart).
+        const textField = channelSemantics.text?.field;
+        if (textField) {
+            for (const [trace, own] of traceRows) {
+                Object.assign(trace, {
+                    mode: 'markers+text', text: own.map((row) => (row?.[textField] == null ? '' : String(row[textField]))),
+                    textposition: 'middle right', textfont: { size: 10, color: '#2b2f33' },
+                });
+            }
+        }
+
+        const routes = routeTraces(ctx, rows, lonField, latField, isContinuousColor ? undefined : colorField);
+        // A route's stops are drawn as on the Vega-Lite map: `stops` says which (every one, by default
+        // where `size` sizes them; each run's ends; none), each a dot of `stopRadii`'s size, haloed. A stop
+        // not drawn keeps its hover.
+        if (routes.lines.length > 0) {
+            const mode = routeStopMode(chartProperties?.stops, Boolean(sizeField));
+            const radii = stopRadii(chartProperties, sizeField, rows, routes.widths);
+            const inner = mode === 'ends' ? new Set(routes.inner.map((row) => rows[row])) : new Set();
+            const indexOf = new Map(rows.map((row: any, index: number) => [row, index]));
+            for (const trace of traces) {
+                const own = traceRows.get(trace);
+                if (!own) continue;
+                trace.marker = {
+                    ...trace.marker,
+                    symbol: trace.marker?.symbol ?? 'circle',
+                    size: own.map((row) => 2 * radii.radius(indexOf.get(row) ?? 0)),
+                    opacity: mode === 'none' ? 0 : own.map((row) => (inner.has(row) ? 0 : 1)),
+                    line: { color: '#ffffff', width: 1 },
+                };
+            }
+        }
+        traces.unshift(...routes.lines);
+        traces.push(...routes.heads);
 
         const width = scope === 'us' ? 520 : 620;
         const height = scope === 'us' ? 320 : 360;
@@ -291,5 +345,81 @@ export const plMapDef: ChartTemplateDef = {
         delete spec.mark;
         delete spec.encoding;
     },
-    properties: [regionProperty, projectionProperty, projectionCenterProperty],
+    properties: [regionProperty, projectionProperty, projectionCenterProperty, ...routeProperties],
 };
+
+/** A route drawn in no series' colour, as the Vega-Lite map draws it. */
+const ROUTE_INK = '#4a5058';
+
+/**
+ * The routes an `order` field joins the points into (`chart-types/map-routes`), beneath the points:
+ * a white casing and the line — which Plotly draws along great circles between vertices — beneath
+ * the points, and, unless `arrows` is false, a head over them. Plotly cannot hold a head back off a
+ * stop's dot by pixels, so it stands mid-leg, turned to the leg's compass bearing there
+ * (`angleref: 'north'`). Structure: no hover, no legend entry.
+ */
+function routeTraces(ctx: any, rows: any[], lonField: string, latField: string, colorField: string | undefined): { lines: any[]; heads: any[]; widths: number[]; inner: number[] } {
+    const none = { lines: [], heads: [], widths: [], inner: [] };
+    const orderField = ctx.channelSemantics.order?.field;
+    if (!orderField) return none;
+    const series = ctx.channelSemantics.detail?.field ?? colorField;
+    const globe = ctx.chartProperties?.projection === 'orthographic';
+    const routes = buildRoutes(rows, { longitude: lonField, latitude: latField, order: orderField, series, curve: ctx.chartProperties?.curve, globe });
+    if (!routes.length) return none;
+    // The points' own colours: one trace per colour group, in the order they were grouped.
+    const palette = getPlotlyPalette(ctx, 'color');
+    const groups = colorField ? Array.from(groupBy(rows, colorField), ([name]) => name) : [];
+    // A category that names stretches of a route (a leg of a voyage), not the route: each leg takes
+    // the colour of the row it leaves, as the Vega-Lite map draws it. (A quantity's colour arrives unset.)
+    const byRow = Boolean(colorField && series !== colorField);
+    const ink = (value: unknown) => {
+        const at = groups.findIndex((name) => String(name) === String(value));
+        if (at >= 0) return getSeriesColor(palette, at);
+        // No series colour: the theme's mark colour, as a plain dot's — neutral beside dots coloured by another field.
+        return ctx.channelSemantics.color?.field ? ROUTE_INK : getSeriesColor(palette, 0);
+    };
+    const opacity = routeOpacity(routes.length);
+    const quiet = { type: 'scattergeo', hoverinfo: 'skip', showlegend: false };
+    // `strokeWidth` is a route's width, leg by leg from the row each leaves; Plotly draws a trace one
+    // width, so a widened route is a trace per leg.
+    const sizeField = ctx.channelSemantics.strokeWidth?.field;
+    const legs = routes.flatMap((route) => route.legs.map((leg) => ({ route, leg })));
+    const widths = sizeField
+        ? legWidths(legs.map(({ leg }) => rows[leg.from]?.[sizeField]), largestMagnitude(rows.map((row) => row[sizeField])))
+        : legs.map(() => ROUTE_WIDTH.plain);
+    const widthOf = new Map(legs.map(({ leg }, index) => [leg, widths[index]]));
+    const line = (path: readonly [number, number][], color: string, width: number, alpha: number) => ({
+        ...quiet, mode: 'lines', lon: path.map(([lon]) => lon), lat: path.map(([, lat]) => lat),
+        line: { color, width }, opacity: alpha,
+    });
+    const legInk = (series: unknown, from: number) => (byRow ? ink(rows[from]?.[colorField!]) : ink(series));
+    const lines = sizeField || byRow
+        ? [
+            ...legs.map(({ leg }) => line(leg.path, '#ffffff', widthOf.get(leg)! + 2, Math.min(0.9, opacity + 0.05))),
+            ...legs.map(({ route, leg }) => line(leg.path, legInk(route.series, leg.from), widthOf.get(leg)!, opacity)),
+        ]
+        : [
+            ...routes.map((route) => line(route.path, '#ffffff', ROUTE_WIDTH.plain + 2, Math.min(0.9, opacity + 0.05))),
+            ...routes.map((route) => line(route.path, ink(route.series), ROUTE_WIDTH.plain, opacity)),
+        ];
+    const heads: any[] = [];
+    if (ctx.chartProperties?.arrows !== false) {
+        const arrows = routeArrows(routes, ctx.chartProperties?.curve, globe, 'middle');
+        // One trace per colour, each head turned to its own bearing.
+        const arrowInk = (arrow: (typeof arrows)[number]) => legInk(arrow.series, arrow.from);
+        for (const color of new Set(arrows.map(arrowInk))) {
+            const own = arrows.filter((arrow) => arrowInk(arrow) === color);
+            heads.push({
+                ...quiet, mode: 'markers', lon: own.map((arrow) => arrow.tip[0]), lat: own.map((arrow) => arrow.tip[1]),
+                // Sized to its line, as the Vega-Lite map's heads are.
+                marker: {
+                    symbol: 'triangle-up', angleref: 'up', angle: own.map((arrow) => bearing(arrow.base, arrow.tip)),
+                    size: own.map((arrow) => headSize(widthOf.get(arrow.leg) ?? ROUTE_WIDTH.plain).length), color, line: { width: 0 },
+                },
+            });
+        }
+    }
+    // The stops within a run of one colour, which `stops: 'ends'` leaves undrawn.
+    const inner = routes.flatMap((route) => innerStops(route, byRow ? (row: number) => rows[row]?.[colorField!] : undefined));
+    return { lines, heads, widths, inner };
+}

@@ -452,9 +452,8 @@
     "leadHighlight1": "AI agents reliably create expressive, good-looking and interactive charts from simple, human-editable specs",
     "leadStop": ". ",
     "leadInsight": "The key design is to disentangle the visual, style and interaction logic that low-level chart libraries mix together: you or your agents describe each in a short semantic spec, and the compiler composes them.",
-    "leadAvailability": "Use it as an <mcp>MCP server</mcp> with your agent, or as an <npm>npm library</npm> for building interactive applications.",
-    "leadHighlight2": "Flint supports {{chartTypes}} chart types across {{backends}} rendering backends, {{themes}} themes and {{presets}} interaction presets",
-    "leadAfter": "For bespoke visualizations, design your own themes in the <themeLab>Theme Lab</themeLab> and build <advanced>advanced interactions</advanced> with the Flint API. ",
+    "leadAvailability": "Use it as an <mcp>MCP server</mcp> with your agent, or as an <npm>npm library</npm> in your app.",
+    "leadCustomize": "Flint supports {{chartTypes}} chart types across {{backends}} rendering backends, {{themes}} themes and {{presets}} interaction presets; go further by designing your own themes in the <themeLab>Theme Lab</themeLab> and building <advanced>advanced interactions</advanced> with the Flint API. ",
     "backendRosterLabel": "Backends",
     "themeRosterLabel": "Themes",
     "interactionRosterLabel": "Interactions",
@@ -516,8 +515,8 @@
         "title": "Eggs swung while bread crept up",
         "subtitle": "U.S. average price in USD, a dozen eggs and a pound of white bread (BLS)"
       },
-      "drawIt": {
-        "label": "You draw it"
+      "odyssey": {
+        "label": "Odyssey journey"
       },
       "facetedLine": {
         "label": "Faceted line",

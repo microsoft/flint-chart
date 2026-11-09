@@ -382,11 +382,11 @@ properties"). Required channels are noted.
 | `"Bar Table"` | y, x, color, column, row | compact bars + value labels |
 | `"KPI Card"` | metric, value, goal | big-number tile; prop `behindThreshold` |
 | `"Table"` | none (`encodings: {}`) | the rows as given, one column per field in row order; shape `data.values` to the rows and fields to list, name columns with `field_display_names`; numbers and dates print by `semantic_types`; receives links and `updates`, sends no selection |
-| `"Map"` | longitude, latitude, color, size, opacity | bubble map; props `region`, `projection` |
-| `"Choropleth"` | id, color, detail | `id` = region key (see **Maps** below); props `region` (`"world"`/`"us"`), `level` (US: `"state"`/`"county"`/`"auto"`), `projection` (world) |
+| `"Map"` | longitude, latitude, color, size, shape, opacity, order, detail, strokeWidth, text | bubble map; `text` names points beside them (placed clear of each other; crowded ones left unnamed); `shape` tells points apart; `order` joins the points into routes (one per `detail`, else per categorical `color`); `size` is always the dots' area, `strokeWidth` each leg's width; props `region`, `projection`, `boundaries`, `arrows`, `curve`, `stops`, `stopRadius` |
+| `"Choropleth"` | id, color, detail, text | `text` names each region at its middle where it fits (small ones on zoom); `id` = region key (see **Maps** below); props `region` (`"world"`/`"us"`), `level` (US: `"state"`/`"county"`/`"auto"`), `projection` (world), `boundaries` |
 
-**Maps: what `id` accepts.** Flint joins the key to its own base map; you never
-supply geometry or a lookup. A **world** map takes country names ("India",
+**Maps: what `id` accepts.** Flint joins the key to its own boundaries; you
+supply no geometry or lookup. A **world** map takes country names ("India",
 "DR Congo", "United Kingdom"), ISO 3166 alpha-2 / alpha-3 codes ("IN", "IND"),
 or ISO numeric codes (356), all in one column. A **US** map takes state names,
 USPS codes ("CA") or FIPS codes (6), and county FIPS (6037) with
@@ -396,6 +396,13 @@ USPS codes ("CA") or FIPS codes (6), and county FIPS (6037) with
 marks carry only `id`, `color` and `detail`: to link a map with charts keyed by
 a name column, encode that column as `id` (names resolve too) or put it on
 `detail` (e.g. `id: "map_id", detail: "country"`), which also labels the tooltip.
+
+**Maps: `boundaries`.** Leave it unset: world maps draw the World Bank's
+official boundaries, US maps the Census Bureau's. `"natural-earth"` draws de
+facto borders instead. Only when the user gives a boundary file, pass it:
+`{ "url": "...", "feature": "<TopoJSON object>", "ids": "iso-numeric" | "iso3"
+| "iso2" | "fips" | "as-is", "key": "properties.code", "attribution": "..." }`
+(`ids` says what the file's feature ids are; `as-is` matches the rows exactly).
 
 **Donut chart:** use `"Pie Chart"` with `chartProperties.innerRadius > 0`.
 
@@ -685,6 +692,10 @@ derived). Values are clamped to the ranges shown.
 | KPI Card | `behindThreshold` | 0–1 (0.5) | Value/goal ratio cutoff for color |
 | Map | `region` | `us` \| `world` \| `auto` (`auto`) | Geographic scope |
 | Map | `projection` | `mercator` \| `equalEarth` \| `orthographic` \| `stereographic` \| `conic` \| `mollweide` | Map projection |
+| Map | `arrows` | boolean (true) | Arrowheads on routes (with `order`) |
+| Map | `curve` | `auto` \| `arc` \| `great-circle` \| `straight` (`auto`) | Route legs: arcs between stops, great circles on a globe or along a long track |
+| Map | `stops` | `none` \| `all` \| `ends` (`none`; `true` = `all`) | Route stops as dots: every stop, or where each run of one colour starts and ends (one size; `size` sizes them by value and turns them on) |
+| Map | `stopRadius` | 0–12 px | One radius for all stop dots |
 
 **Cross-cutting properties** (apply to position/faceted charts when
 relevant; set only to force non-default behavior):
@@ -720,7 +731,7 @@ default:
   it aims for, default 400×320) and `canvasSize` (a *hard ceiling* it may never
   exceed). With dense data the chart stretches from base toward the ceiling.
   - Want a comfortable size that may grow for dense data → set `chart_spec.baseSize = { width, height }`.
-  - Want a fixed slot it must fit inside → set `chart_spec.canvasSize = { width, height }` alone; the chart fills it and shrinks to fit, never overflowing. *What you ask for is what you get.*
+  - Want a fixed slot it must fit inside → set `chart_spec.canvasSize = { width, height }` alone; the chart fills it and shrinks to fit (very long labels may run slightly over; the host scales it down).
   - Both → aims for `baseSize`, grows toward `canvasSize`, never beyond.
 - **Force log / zero baseline:** the `logScale_*` / `includeZero_*` chart
   properties above.

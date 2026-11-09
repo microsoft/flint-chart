@@ -72,7 +72,7 @@ function buildGeoLayout(scope: 'us' | 'world'): any {
 export const plChoroplethDef: ChartTemplateDef = {
     chart: 'Choropleth',
     template: { mark: 'geoshape', encoding: {} },
-    channels: ['id', 'color', 'detail'],
+    channels: ['id', 'color', 'detail', 'text'],
     markCognitiveChannel: 'color',
     instantiate: (spec, ctx) => {
         const { channelSemantics, chartProperties, colorDecisions } = ctx;
@@ -91,6 +91,9 @@ export const plChoroplethDef: ChartTemplateDef = {
         const locations: string[] = [];
         const z: number[] = [];
         const labels: string[] = [];
+        // `text` names each region at its middle, as Plotly places a location's text.
+        const textField = channelSemantics.text?.field;
+        const named: string[] = [];
         for (const r of rows) {
             const code = codeResolver(r[idField]);
             if (!code) continue;
@@ -99,6 +102,7 @@ export const plChoroplethDef: ChartTemplateDef = {
             locations.push(code);
             z.push(colorField ? (raw as number) : 1);
             labels.push(labelField ? String(r[labelField] ?? r[idField]) : String(r[idField]));
+            if (textField) named.push(r[textField] == null ? '' : String(r[textField]));
         }
         if (locations.length === 0) return;
 
@@ -119,7 +123,10 @@ export const plChoroplethDef: ChartTemplateDef = {
                 colorbar: { title: { text: valueLabel } },
                 marker: { line: { color: '#ffffff', width: 0.5 } },
                 hovertemplate: `%{text}<br>${valueLabel}: %{z}<extra></extra>`,
-            }],
+            }, ...(textField ? [{
+                type: 'scattergeo', mode: 'text', locations, locationmode, text: named,
+                textfont: { size: 10, color: '#2b2f33' }, hoverinfo: 'skip', showlegend: false,
+            }] : [])],
             layout: {
                 geo,
                 showlegend: false,

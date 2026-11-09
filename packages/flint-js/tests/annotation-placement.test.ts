@@ -4,6 +4,7 @@
 import { describe, expect, it } from 'vitest';
 import {
     balanceNote,
+    leaderSegments,
     noteSize,
     noteStyle,
     overlapArea,
@@ -80,6 +81,45 @@ describe('a note on one mark', () => {
         expect(across.leader?.to).toEqual({ x: 220, y: 150 });
     });
 
+    it('runs out along a bar from its value face and turns square there, never down the face, where the caption stands below', () => {
+        // A long bar across, its end against the canvas's right edge, with bars above and below it.
+        const row = { x: 0, y: 40, width: 430, height: 20 };
+        const end: NoteTarget = { shape: 'rect', x: 430, y: 50, rx: 0, ry: 10 };
+        const obstacles: NoteObstacle[] = [
+            { kind: 'mark', box: { x: 0, y: 14, width: 425, height: 20 } },
+            { kind: 'mark', box: { x: 0, y: 66, width: 420, height: 20 } },
+        ];
+        const placed = placeNote({ target: end, body: row, label: LABEL, plot: PLOT, canvas: CANVAS, obstacles, preferredAngle: 0, fontSize: 11 });
+        const leader = placed.leader!;
+        expect(leader.to).toEqual({ x: 430, y: 50 });
+        const runs = leaderSegments(leader);
+        // Out along the bar first, level with its end, at least a stub's length.
+        const first = runs[runs.length - 1];
+        expect(first.a.y).toBeCloseTo(50, 6);
+        expect(first.a.x - 430).toBeGreaterThanOrEqual(6);
+        for (const run of runs) {
+            // No run is drawn down the face, and each is square: across or up and down.
+            expect(Math.abs(run.a.x - 430) < 0.5 && Math.abs(run.b.x - 430) < 0.5).toBe(false);
+            expect(Math.abs(run.a.x - run.b.x) < 1e-6 || Math.abs(run.a.y - run.b.y) < 1e-6).toBe(true);
+        }
+    });
+
+    it('meets a cell square to its side, running out from it before it turns', () => {
+        // A cell in a grid of its neighbours: the caption must stand off, and its leader meets the cell's side.
+        const cell: NoteTarget = { shape: 'rect', x: 200, y: 150, rx: 30, ry: 12 };
+        const neighbours: NoteObstacle[] = [-1, 0, 1].flatMap((i) => [-1, 0, 1].flatMap((j) => (i === 0 && j === 0 ? [] : [{
+            kind: 'mark' as const, box: { x: 170 + i * 62, y: 138 + j * 26, width: 60, height: 24 },
+        }])));
+        const placed = placeNote({ target: cell, label: LABEL, plot: PLOT, canvas: CANVAS, obstacles: neighbours });
+        expect(placed.leader).toBeDefined();
+        const runs = leaderSegments(placed.leader!);
+        const last = runs[runs.length - 1];
+        const dx = last.a.x - last.b.x;
+        const dy = last.a.y - last.b.y;
+        const onSide = Math.abs(Math.abs(last.b.x - 200) - 30) < 0.5 ? Math.abs(dx) : Math.abs(dy);
+        expect(onSide / Math.hypot(dx, dy)).toBeGreaterThanOrEqual(0.5 - 1e-6);
+    });
+
     it('stands in the paper above the plot rather than over the bar where the plot has no room left', () => {
         const body = { x: 340, y: 2, width: 50, height: 298 };
         const end: NoteTarget = { shape: 'rect', x: 365, y: 2, rx: 25, ry: 0 };
@@ -109,7 +149,9 @@ describe('a note on one mark', () => {
         const earlier = [{ a: { x: 206, y: 156 }, b: { x: 300, y: 156 } }, { a: { x: 206, y: 156 }, b: { x: 206, y: 260 } }];
         const placed = placeNote({ target, label: LABEL, plot: PLOT, canvas: CANVAS, obstacles: crowd, segments: earlier });
         expect(placed.leader).toBeDefined();
-        for (const segment of earlier) expect(segmentsCross(placed.leader!.from, placed.leader!.to, segment.a, segment.b)).toBe(false);
+        for (const segment of earlier) {
+            for (const run of leaderSegments(placed.leader!)) expect(segmentsCross(run.a, run.b, segment.a, segment.b)).toBe(false);
+        }
     });
 
     it('stands haloed over tiled cells, with a leader, since the cell beside it could be read as the one named', () => {

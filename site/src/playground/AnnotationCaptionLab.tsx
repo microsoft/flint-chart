@@ -49,7 +49,7 @@ const cars = (theme?: string): ChartAssemblyInput => ({
 
 const note = (id: string, key: Record<string, unknown>, text: string, extra: Record<string, unknown> = {}): Update => ({
   id,
-  ops: [{ op: 'set-annotation', target: { select: { key } }, value: { text, ...extra } }],
+  ops: [{ op: 'annotate-text', target: { select: { key } }, value: { text, ...extra } }],
 });
 
 const FEW = [
@@ -257,7 +257,7 @@ export function AnnotationCaptionLab() {
         <p>
           <code>annotate-region</code> shades a stretch of the plot and <code>annotate-enclosure</code> outlines groups of marks,
           after Blabber's <code>region</code> and <code>enclose</code>, each with an optional caption, shape, connectors and colour.
-          <code>annotate-text</code> is the caption on one mark (<code>set-annotation</code> is its older name).
+          <code>annotate-text</code> is the caption on one mark (<code>set-annotation</code>, its older name, is deprecated).
         </p>
       </header>
       <div className="cf-grid caption-grid">

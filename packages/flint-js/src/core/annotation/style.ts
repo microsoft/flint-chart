@@ -1,11 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import { neutralInk } from './color';
+
 /**
  * How a note that names a mark is set: as words beside the mark, not a card over the chart. The
- * words take the chart's own label face (its axis labels', not its title's) a size up, in its
- * neutral text ink, with a halo of the background behind the glyphs so they read over gridlines and
- * marks; a leader, where one is drawn, is a thin line of the same ink, lighter.
+ * words take the chart's own label face (its axis labels', not its title's) a size up and a step
+ * heavier, in the primary text ink, with a halo of the background behind the glyphs so they read
+ * over gridlines and marks; a leader, where one is drawn, is a thin line of the neutral grey.
  */
 export interface NoteStyle {
     font: string;
@@ -51,18 +53,37 @@ export function noteWrapWidths(text: string, measure: (text: string) => number):
     return widths;
 }
 
-export function noteStyle(chart: ChartTextStyle = {}): NoteStyle {
-    const fontSize = Math.min(13, Math.max(10, Math.round((chart.fontSize ?? 10) + 1)));
-    const color = chart.color && chart.color !== '#000' && chart.color !== '#000000' ? chart.color : '#333333';
+/** What the house says of its notes: its `type.annotation` role, and the primary text ink. */
+export interface NoteDesign {
+    text?: { font?: string; fontSize?: number; fontWeight?: number | string; color?: string };
+    ink?: string;
+}
+
+const WEIGHT_NAMES: Record<string, number> = { normal: 400, bold: 700 };
+
+/**
+ * How a note is set. A note is read beside the chart's own labels, so it is set apart from them by
+ * weight first (a step heavier than the labels: semibold over regular ones) and by ink second (the
+ * page's primary text ink, darker than the labels' secondary grey), with a halo of the page under it.
+ * Hue is left to the data. A house's `type.annotation` role says otherwise where it says anything.
+ */
+export function noteStyle(chart: ChartTextStyle = {}, design: NoteDesign = {}): NoteStyle {
+    const stated = design.text ?? {};
+    const fontSize = stated.fontSize ?? Math.min(13, Math.max(10, Math.round((chart.fontSize ?? 10) + 1)));
+    const labelWeight = typeof chart.fontWeight === 'number' ? chart.fontWeight : WEIGHT_NAMES[String(chart.fontWeight ?? 'normal')] ?? 400;
+    const fontWeight = stated.fontWeight ?? (labelWeight < 600 ? 600 : Math.min(900, labelWeight + 100));
+    const fallback = chart.color && chart.color !== '#000' && chart.color !== '#000000' ? chart.color : '#333333';
+    const color = stated.color ?? design.ink ?? fallback;
+    const background = chart.background && chart.background !== 'transparent' ? chart.background : '#ffffff';
     return {
-        font: chart.font ?? 'sans-serif',
+        font: stated.font ?? chart.font ?? 'sans-serif',
         fontSize,
-        fontWeight: chart.fontWeight ?? 'normal',
+        fontWeight,
         color,
         lineHeight: Math.round(fontSize * 1.25),
         padding: 2,
-        halo: { color: chart.background && chart.background !== 'transparent' ? chart.background : '#ffffff', width: 3 },
-        leader: { color: '#666666', width: 1 },
+        halo: { color: background, width: 3 },
+        leader: { color: neutralInk(background), width: 1 },
     };
 }
 

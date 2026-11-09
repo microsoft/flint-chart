@@ -130,6 +130,21 @@ describe('naming a house Flint ships', () => {
         expect(inherited?.ink?.series?.categorical).toEqual(categorical);
     });
 
+    it('carries the type set in the house’s text ink over to the ink it is recoloured in', () => {
+        const night = resolveThemeSpec({
+            extends: 'nyt',
+            ink: { surface: { source: 'house', canvas: '#141a24' }, text: { primary: '#f1e6cc', secondary: '#c9bc9c' } },
+        });
+        // The NYT states its headline in its primary ink and its deck in grey: both follow onto the dark page.
+        expect(night?.type?.headline?.color).toBe('#f1e6cc');
+        expect(night?.type?.deck?.color).not.toBe('#6b6b6b');
+        // A colour the extension states itself is kept.
+        const stated = resolveThemeSpec({ extends: 'nyt', ink: { text: { primary: '#222222' } }, type: { headline: { color: '#8a3b12' } } });
+        expect(stated?.type?.headline?.color).toBe('#8a3b12');
+        // An extension that leaves the ink alone leaves the type alone.
+        expect(resolveThemeSpec({ extends: 'nyt', accent: '#000000' } as any)?.type).toEqual(resolveThemeSpec('nyt')?.type);
+    });
+
     it('rejects an unknown inherited house', () => {
         expect(() => resolveThemeSpec({ extends: 'the-guardian' })).toThrow(/Unknown theme/);
     });

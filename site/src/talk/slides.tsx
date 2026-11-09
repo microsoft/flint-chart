@@ -248,7 +248,7 @@ const INTERACTION_ROWS: CodeRow[] = [
   { text: '{ "ops": [' },
   { text: '  { "op": "set-style", "targets": [target],', hot: true },
   { text: '    "value": { "state": "emphasized" } },', hot: true },
-  { text: '  { "op": "set-annotation", "target": target,', hot: true },
+  { text: '  { "op": "annotate-text", "target": target,', hot: true },
   { text: '    "value": { "text": "Launch month" } }', hot: true },
   { text: '] }' },
 ];

@@ -235,12 +235,6 @@ function rampAt(stops: string[], t: number): string {
 }
 
 /**
- * One colour per class from a ramp's stops. Classes about a pivot step the ramp out from its centre
- * at one rate on both sides, set by the longer side, so equal distances from the pivot read as equal
- * colours and the shorter side keeps to its pale end. Each class takes the colour at its far edge,
- * so the classes either side of the pivot already show its sign; a neutral class takes the centre.
- */
-/**
  * A class break printed short: two significant figures, as a map key reads it (12,000 not
  * 11,873.4). Zero and the data's own ends stay as they are.
  */
@@ -332,6 +326,12 @@ export function jenksColorClasses(values: readonly number[], count: number): Col
     return breaks.length ? { breaks, lo: min, hi: max } : undefined;
 }
 
+/**
+ * One colour per class from a ramp's stops. Classes about a pivot step the ramp out from its centre
+ * at one rate on both sides, set by the longer side, so equal distances from the pivot read as equal
+ * colours and the shorter side keeps to its pale end. Each class takes the colour at its far edge,
+ * so the classes either side of the pivot already show its sign; a neutral class takes the centre.
+ */
 export function classColors(stops: string[], classes: ColorClasses): string[] {
     const { below, above } = classes;
     if (below === undefined || above === undefined) return resampleStops(stops, classes.breaks.length + 1);

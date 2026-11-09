@@ -54,9 +54,9 @@ describe('room for a note', () => {
 
     it('takes the notes a chart mounts with by their key or element row, not those the chart words', () => {
         expect(notesOfUpdates([
-            { id: 'a', ops: [{ op: 'set-annotation', target: { select: { key: { region: 'Online' } } }, value: { text: 'Online leads' } }] },
-            { id: 'b', ops: [{ op: 'set-annotation', target: { select: { key: { region: 'West' } } }, value: {} }] },
-            { id: 'c', ops: [{ op: 'set-annotation', target: { select: { key: { region: 'East' } } }, value: null }] },
+            { id: 'a', ops: [{ op: 'annotate-text', target: { select: { key: { region: 'Online' } } }, value: { text: 'Online leads' } }] },
+            { id: 'b', ops: [{ op: 'annotate-text', target: { select: { key: { region: 'West' } } }, value: {} }] },
+            { id: 'c', ops: [{ op: 'annotate-text', target: { select: { key: { region: 'East' } } }, value: null }] },
         ] as any)).toEqual([{ key: { region: 'Online' }, text: 'Online leads' }]);
     });
     it('names the bar a note is on, not the value label that shares its key', () => {

@@ -6,36 +6,73 @@
   width: min(100%, 1120px);
 }
 
-.annotation-title-row,
-.annotation-toolbar {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 18px;
-}
-
-.annotation-toolbar {
-  align-items: center;
-  margin-top: 8px;
-}
-
-.annotation-coverage {
+.annotation-controls {
+  /* Below the sticky dev header, as the maps page pins its panel. */
+  position: sticky;
+  top: 60px;
+  z-index: 5;
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  align-items: center;
+  gap: 10px 18px;
+  width: min(100%, 1440px);
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  background: rgba(250, 251, 252, 0.96);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  font-size: 12px;
 }
 
-.annotation-coverage span {
-  padding: 3px 7px;
-  border: 1px solid #d8dde2;
-  border-radius: 4px;
-  color: #5f6972;
-  background: #fff;
+.annotation-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.annotation-control > span {
+  color: #4b525a;
+}
+
+.annotation-segmented {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.annotation-segmented button {
+  border: 0;
+  border-radius: 5px;
+  padding: 3px 9px;
+  background: transparent;
+  color: #4b525a;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.annotation-segmented button small {
+  color: #87919a;
   font-size: 10px;
-  font-weight: 600;
+}
+
+.annotation-segmented button[aria-checked='true'] {
+  background: #fff;
+  color: #1f2328;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+.annotation-segmented button:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 
 .annotation-reset {
+  margin-left: auto;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -56,9 +93,11 @@
 }
 
 .annotation-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 16px;
   width: min(100%, 1440px);
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 8px;
 }
 
 /* Caption lab: each card is as wide as its 640 × 400 chart and legend, so nothing is clipped. */
@@ -88,17 +127,17 @@
 }
 
 .annotation-static-card .cf-probe-header {
-  min-height: 38px;
-  padding: 7px 9px;
+  min-height: 42px;
+  padding: 8px 12px;
 }
 
 .annotation-static-card .cf-probe-header h2 {
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .annotation-static-card .cf-probe-header p {
   margin-top: 1px;
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .annotation-static-card .cf-probe-header p span {
@@ -111,26 +150,24 @@
 }
 
 .annotation-static-stage {
-  padding: 6px;
+  padding: 12px;
   pointer-events: none;
+  /* The chart is compiled to the stage's width; nothing to scroll to. */
+  overflow: hidden;
 }
 
 .annotation-static-stage .cf-mount {
   min-height: 0;
 }
 
-/* The Vega SVG carries a viewBox, so it scales down like an image. */
-.annotation-static-stage svg.marks {
-  max-width: 100%;
-  height: auto;
-}
-@media (max-width: 640px) {
-  .annotation-title-row,
-  .annotation-toolbar {
-    align-items: stretch;
-    flex-direction: column;
-  }
 
+@media (max-width: 900px) {
+  .annotation-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
   .annotation-static-card .cf-probe-header {
     align-items: flex-start;
     flex-direction: row;

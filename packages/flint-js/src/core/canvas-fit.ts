@@ -96,7 +96,8 @@ export const HEADER_ALLOWANCE = 0.25;
 export const SIDE_ALLOWANCE = 0.33;
 
 /** The padding the backend sets around a drawing, each side, in px, where the house names none. */
-const DRAWING_PADDING = 5;
+/** The padding Vega-Lite draws an unthemed chart with, counted as part of the drawing. */
+export const DRAWING_PADDING = 5;
 
 /**
  * How far above the legibility limit a treatment must leave the drawing's scale, where the chart as

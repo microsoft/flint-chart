@@ -499,7 +499,7 @@ Canvas definitions have two declarative halves:
 2. Optional `handle()` declares **what update JSON to produce** after normalization.
     Target-bearing events first pass through ChartDef semantic resolution. The handler
     consumes the same `CanvasInteractionEvent` emitted to applications and returns a
-    `ChartUpdate` containing renderer-neutral `set-style`, `set-annotation`,
+    `ChartUpdate` containing renderer-neutral `set-style`, `annotate-text`,
     `set-viewport`, or `set-order` operations.
 
 The backend mount reads `eventSource`; it does not infer a gesture from pointer motion. It installs the required native listeners, supplies renderer coordinates and hit testing, and runs the recognizer requested by the interaction. This keeps an identical drag stream deterministic and author-controlled.
@@ -822,7 +822,7 @@ interface ChartUpdate {
 type ChartUpdateOp =
     | { op: 'set-style'; targets: readonly UpdateTarget[]; value: StyleSpec }
     | { op: 'annotate-text'; target: UpdateTarget; value: AnnotationSpec | null }
-    | { op: 'set-annotation'; target: UpdateTarget; value: AnnotationSpec | null } // older name of annotate-text
+    | { op: 'set-annotation'; target: UpdateTarget; value: AnnotationSpec | null } // deprecated: annotate-text; removed in 2.0
     | { op: 'annotate-region'; name: string; value: RegionAnnotationSpec | null }
     | { op: 'annotate-enclosure'; name: string; value: EnclosureAnnotationSpec | null }
     | { op: 'set-viewport'; axes: 'x' | 'y' | 'xy'; value: { x?: Domain; y?: Domain } }
@@ -904,19 +904,34 @@ type UpdateTarget =
 Selectors accept only ChartDef-declared semantic fields. At runtime they are resolved to
 the same `SemanticTargetRef` shape; the surrounding `ChartUpdateOp` does not change.
 
-ChartDefs may enrich an operator without changing its kind. For example,
-`set-annotation` can begin with text only and gain meaningful connection candidates in
-its `value`.
+`annotate-text` sets a caption on one mark, after Blabber's `text`: the words stand beside the
+mark in the chart's label face, haloed in the page, with a leader only where they are not
+plainly beside it. It is never a card or a callout box; draw those with `set-overlay` or
+`set-freeform-overlay`. `set-annotation` is its deprecated name: still read in 1.x, reported
+by `validateChart` as a `deprecated_op` warning and once on the console, and removed in 2.0.
 
-In Vega-Lite, a note that points at one mark (a dot, a bar's value end, a cell, a line's
-point) is drawn as a caption beside the mark. The note's `highlight` sets how much the
-mark itself stands out:
+ChartDefs may enrich an operator without changing its kind: a template's presenter adds where
+on its marks a note may connect (`AnnotationCandidate`), which an update does not write.
 
-- `'none'` leaves the mark as drawn.
-- `'light'` (the default) lifts the mark above its neighbours with a halo. A bar or cell
-  gets a faint outline.
-- `'strong'` also draws a thin ring round a dot or point, and a full outline round a bar
-  or cell.
+In Vega-Lite every note is placed the same lightweight way: a ring of seats round the place
+it names, each priced by what it would cover (marks, text, lines it cuts), how far it stands
+and the leader it needs, and the cheapest kept, one note after another. What it names decides
+the places it is tried from:
+
+- one mark (a dot, a bar's value end, a cell, a line's point): its outline;
+- a stretch of a line or area: its middle and a quarter along either way, an area's from
+  the side away from its fill;
+- a pie or donut slice: inside its wedge, preferring a seat out past the pie on a leader;
+- a whole shape, such as a violin: the ellipse its box holds;
+- a map's region: its middle, the other regions a ground the halo reads over.
+
+The note's `highlight` sets how much what it names stands out:
+
+- `'none'` leaves it as drawn.
+- `'light'` (the default) lifts a dot above its neighbours with a halo, draws a stretch of a
+  line or area again in its ink, and gives a bar, a cell, a slice or a shape a faint outline.
+- `'strong'` also draws a thin ring round a dot or point, and a full outline round a bar,
+  a cell, a slice or a shape.
 - `'exclusive'` is strong and also fades every other mark, as `set-style` `emphasized`
   does.
 
@@ -946,18 +961,15 @@ there, how it compares. It should not restate the mark's printed value or its ax
 chart prints on its mark.
 
 ```ts
+// Set by a template's presenter, not by an update. The caption is placed from the first.
 interface AnnotationCandidate {
     connection: 'center' | 'top' | 'right' | 'bottom' | 'left'
-        | 'value-end' | 'value-side' | 'segment-midpoint' | 'outer-radial';
+        | 'value-end' | 'value-side' | 'segment-midpoint' | 'radial-midpoint' | 'outer-radial';
     valueAxis?: 'x' | 'y';
     crossSide?: 'start' | 'end';
     valueInset?: number;
-    anglePreference?: 'normal' | 'oblique';
-    textAlign?: 'left' | 'center' | 'right';
     connector?: 'line' | 'none';
     maxWidth?: number;
-    maxDistance?: number;
-    priority?: number;
 }
 ```
 

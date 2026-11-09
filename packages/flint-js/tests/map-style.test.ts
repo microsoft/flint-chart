@@ -43,7 +43,8 @@ const noDataOf = (spec: any): string => {
 const dark = (color: string) => luminance(parseColor(color)!) < 0.35;
 /** The unit drawing the regions: the one whose colour comes from a field. */
 const regionsOf = (spec: any): any => units(spec).find((unit) => unit.encoding?.color?.field && unit.data);
-const roleOf = (layer: any) => (layer.data?.graticule ? 'graticule' : layer.data?.format?.feature === 'disputed' ? 'disputed' : 'regions');
+const roleOf = (layer: any) => (layer.data?.graticule ? 'graticule' : layer.data?.format?.feature === 'disputed' ? 'disputed'
+    : layer.data?.format?.mesh ? 'borders' : (layer.mark?.type ?? layer.mark) === 'rect' ? 'water' : 'regions');
 
 describe('the ground of a map', () => {
     it('follows a dark theme’s page: land without data, borders and sea are dark, not light grey and white', () => {
@@ -74,17 +75,48 @@ describe('the ground of a map', () => {
         } as any);
         expect(units(darkGlobe).find((unit) => unit.data?.sphere).mark.fill).toBe('#1d2227');
         const land = units(darkGlobe).find((unit) => unit.mark?.type === 'geoshape' && !unit.data?.sphere);
-        expect(land.mark.fill).toBe('#2e343a');
+        expect(land.mark.fill).toBe('#3c434a');
+        // Points on the dark ground carry a light ring.
+        const point = units(darkGlobe).find((unit) => (typeof unit.mark === 'string' ? unit.mark : unit.mark?.type) === 'circle');
+        expect(point.mark.stroke).toBe('#ffffff');
         // A globe floats on the page: no frame round it.
         expect(units(darkGlobe).some((unit) => unit.mark?.type === 'rect')).toBe(false);
     });
 
+    it('takes a style of the caller’s own: a base style with any colour restated, the sea filling the plot', () => {
+        const frameOf = (spec: any) => units(spec).find((unit) => unit.mark?.type === 'rect' && unit.encoding?.x2?.value === 'width');
+        const custom = choropleth({ mapStyle: { base: 'light', sea: '#1f3b4d', noData: '#e8dcc0', border: '#7a6a4f' }, graticule: true });
+        expect(frameOf(custom).mark.fill).toBe('#1f3b4d');
+        expect(noDataOf(custom)).toBe('#e8dcc0');
+        expect(custom.layer.find((layer: any) => roleOf(layer) === 'borders').mark.stroke).toBe('#7a6a4f');
+        // Unstated colours are the base style's.
+        expect(custom.layer.find((layer: any) => roleOf(layer) === 'graticule').mark.stroke).toBe('#e8ecef');
+        const point: any = assembleVegaLite({
+            data: { values: [{ Lon: 23, Lat: 38 }, { Lon: 20, Lat: 39 }] }, semantic_types: { Lon: 'Longitude', Lat: 'Latitude' },
+            chart_spec: { chartType: 'Map', encodings: { longitude: 'Lon', latitude: 'Lat' }, chartProperties: { mapStyle: { land: '#efe2c4', coast: '#5b4a33', sea: '#24485a' } } },
+        } as any);
+        const land = units(point).find((unit) => unit.mark?.type === 'geoshape' && unit.mark.fill === '#efe2c4');
+        expect(land?.mark.stroke).toBe('#5b4a33');
+        expect(frameOf(point).mark.fill).toBe('#24485a');
+        // On a dark sea, a route's halo and the points' ring are drawn for a dark ground.
+        expect(units(point).find((unit) => (unit.mark?.type ?? unit.mark) === 'circle').mark.stroke).toBe('#ffffff');
+    });
+
+    it('drops a custom style it cannot read, with a warning, for the theme’s ground', () => {
+        const spec = choropleth({ mapStyle: { sea: '#123456', glow: 'gold' } }, { theme_spec: 'nyt' });
+        expect(units(spec).some((unit) => unit.mark?.fill === '#123456')).toBe(false);
+        const warning = spec._warnings.find((w: any) => w.code === 'invalid-option-value');
+        expect(warning.message).toMatch(/mapStyle.*a style of your own \{ base\?/);
+    });
+
     it('draws a graticule under the land, and borders as wide as asked', () => {
         const spec = choropleth({ graticule: true, borderWidth: 0 });
-        expect(spec.layer.map(roleOf)).toEqual(['graticule', 'regions', 'disputed']);
-        expect(spec.layer[1].mark.strokeWidth).toBe(0);
-        // The disputed borders keep their own width, and are painted in the style.
-        expect(spec.layer[2].mark.strokeWidth).toBeGreaterThan(0);
+        // The water, the graticule on it, the regions, the borders between them, the disputed borders.
+        expect(spec.layer.map(roleOf)).toEqual(['water', 'graticule', 'regions', 'borders', 'disputed']);
+        expect(spec.layer[2].mark.strokeWidth).toBe(0);
+        // The borders a hair wider than asked, to cover the regions' outline; the disputed keep their own width.
+        expect(spec.layer[3].mark.strokeWidth).toBeCloseTo(0.15, 6);
+        expect(spec.layer[4].mark.strokeWidth).toBeGreaterThan(0);
         expect(choropleth({ mapStyle: 'dark' }).layer.find((layer: any) => roleOf(layer) === 'disputed').mark.stroke).toBe('#8a939b');
         const globe = choropleth({ graticule: true, projection: 'orthographic' });
         expect(globe.layer.findIndex((layer: any) => layer.data?.graticule)).toBe(1);

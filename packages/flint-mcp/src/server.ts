@@ -568,7 +568,8 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
           uri: VIEW_RESOURCE_URI,
           mimeType: RESOURCE_MIME_TYPE,
           text: readViewHtml(),
-          _meta: { ui: { permissions: { clipboardWrite: {} } } },
+          // Maps fetch their named boundaries from Flint's site: the view carries none of them.
+          _meta: { ui: { permissions: { clipboardWrite: {} }, csp: { connectDomains: ['https://microsoft.github.io'] } } },
         },
       ],
     }),

@@ -406,6 +406,11 @@ function checkSpecUpdates(
             code: 'note_repeats_chart',
             message: `Update "${check.id}" ${op.text}: ${op.advice}`,
         }] : []),
+        ...(op.deprecated ? [{
+            severity: 'warning' as const,
+            code: 'deprecated_op',
+            message: `Update "${check.id}": op "${op.op}" is deprecated and will be removed in 2.0; write "${op.deprecated}", which it means.`,
+        }] : []),
     ]));
     return { checks, warnings };
 }
@@ -421,8 +426,10 @@ export type { ChartLink, LinkCondition, LinkGesture, LinkPart, LinkSpec } from '
  * `semantic_types` labels are included as warnings (see
  * {@link validateSemanticTypes}) and do not affect `valid`. An
  * `interaction_spec` is checked the way the mount checks it (see
- * {@link validateInteractionSpec}). `options.updates` is checked for its shape
- * and then op by op against the chart (see {@link ValidateResult.updates}).
+ * {@link validateInteractionSpec}). The spec's own `updates` and `options.updates`
+ * are checked for their shape, then together — the spec's first, an `options` update
+ * replacing a spec update of its id, as the mount applies them — op by op against the
+ * chart (see {@link ValidateResult.updates}).
  */
 export function validateChart(
     input: ChartAssemblyInput,
@@ -433,13 +440,19 @@ export function validateChart(
         ? input.chart_spec.chartType
         : '(unknown)';
     const semanticTypeWarnings = validateSemanticTypes(input?.semantic_types);
-    const updateErrors = options.updates === undefined ? [] : updateShapeErrors(options.updates);
+    const specUpdates = input?.updates;
+    const updateErrors = [
+        ...(specUpdates === undefined ? [] : updateShapeErrors(specUpdates, 'input.updates')),
+        ...(options.updates === undefined ? [] : updateShapeErrors(options.updates)),
+    ];
+    // The spec's updates are the runtime's to apply: the chart is assembled, and checked, without them.
+    const { updates: _specUpdates, ...chart } = input ?? ({} as ChartAssemblyInput);
     try {
-        const { spec, warnings, width, height } = assembleForBackend(backend, input, options);
+        const { spec, warnings, width, height } = assembleForBackend(backend, chart, options);
         const interactions = admitSpecInteractions(input, backend, spec);
-        const updates: UpdatesOutcome = options.updates === undefined || updateErrors.length > 0
+        const updates: UpdatesOutcome = (specUpdates === undefined && options.updates === undefined) || updateErrors.length > 0
             ? { warnings: updateErrors }
-            : checkSpecUpdates(input, backend, spec, interactions.admitted, options.updates as ChartUpdate[]);
+            : checkSpecUpdates(chart, backend, spec, interactions.admitted, mergedUpdates(specUpdates, options.updates as ChartUpdate[] | undefined));
         const all = [...warnings, ...semanticTypeWarnings, ...interactions.warnings, ...updates.warnings];
         const errors = all.filter((w) => w.severity === 'error');
         return {
@@ -462,6 +475,12 @@ export function validateChart(
             errors: [{ severity: 'error', code: 'assembly_failed', message }, ...updateErrors],
         };
     }
+}
+
+/** The spec's updates, then the host's: a host update replaces the spec's of its id, as the mount applies them. */
+function mergedUpdates(spec: readonly ChartUpdate[] | undefined, own: readonly ChartUpdate[] | undefined): ChartUpdate[] {
+    const host = own ?? [];
+    return [...(spec ?? []).filter((update) => !host.some((other) => other.id === update.id)), ...host];
 }
 
 /**

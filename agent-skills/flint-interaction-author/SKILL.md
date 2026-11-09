@@ -21,7 +21,7 @@ other backends leave `interaction_spec` and updates untouched.
 | The request says | You produce | Section |
 | --- | --- | --- |
 | A gesture or a behaviour on the chart: "highlight on click", "zoom", "brush a period", "make it interactive", "add behaviour to this chart". | One `interaction_spec`: `{ "interactions": [ ... ] }`, presets only. | Add interactions to the chart |
-| A chart that makes a point: notes on marks, a shaded period, an outlined group, emphasis, a reference line, drawn with the chart from the start. | `updates` beside the input: ChartUpdate layers, no `interaction_spec`. | Update the chart |
+| A chart that makes a point: notes on marks, a shaded period, an outlined group, emphasis, a reference line, drawn with the chart from the start. | `updates` beside the input (or inside it, as `input.updates`, for one self-contained spec): ChartUpdate layers, no `interaction_spec`. | Update the chart |
 | A change to a chart that is already on screen, from outside: "point out Japan", "frame 2010 to 2020", "note this value", "reorder by value", an agent answering a user with the chart. | One `ChartUpdate`: `{ "id", "ops": [ ... ] }`. | Update the chart |
 | Code around a chart: "in my app", "on click open the record", "a panel that follows the hover". | TypeScript against `flint-chart/interactive`: mount, presets as factories, `onChange`, `dispatch`. | Use Flint in an application |
 | Code across charts or over time: "link these two charts", "a table that follows the selection", "play the years". | `linkCharts` or `useLinkedCharts`; `dispatch` on a timer. On an MCP board, `link_spec` instead (board skill, "Step 5 — connect them"). | Link charts |
@@ -529,12 +529,12 @@ of thing:
 | Op | It is for | Effect | Shape | Needs |
 | --- | --- | --- | --- | --- |
 | `set-style` | The marks the chart already draws: emphasize some, fade some, hide some, recolour some. A highlight is this op with `state: 'emphasized'`. | Emphasize the targets and recede the rest; recolour; fade; hide. `emphasis` sets how far the rest recede: `'light'` (default; they stay readable), `'strong'`, `'exclusive'` (only the targets read). | `{ op, targets: UpdateTarget[], value: StyleSpec }` | marks |
-| `annotate-text` (older name `set-annotation`) | One mark that should carry a note. | Pin a caption on one mark; `null` clears it. `highlight` sets how much the mark stands out: `'none'`, `'light'` (default), `'strong'`, `'exclusive'` (the rest recede). | `{ op, target: UpdateTarget, value: { text, anchor?: 'segment' \| 'point', highlight? } \| null }` | one resolved element |
-| `annotate-region` | A stretch of the plot: a period, a band of values, a box, a run of categories. | Shade it, with an optional caption set on it; `null` clears it. | `{ op, name, value: { x?: [lo, hi] \| categories, y?: [lo, hi] \| categories, text?, color?, opacity?, layer?: 'under' \| 'over', placement?: 'top' \| 'bottom' \| 'left' \| 'right' \| 'center' \| 'above' \| 'below' } \| null }` | x or y scales (not a map, pie or radar) |
+| `annotate-text` | One mark, a stretch of a line or area, a leg of a map route (`visual: { kind: 'path' }` on the row it leaves from), a slice or a region that should carry a note. | Set a caption beside it: plain words haloed in the page, a leader only where needed, never a card; `null` clears it. `highlight` marks what it names: `'none'`, `'light'` (default), `'strong'`, `'exclusive'` (the rest recede, so no separate `set-style` emphasis is needed). For a boxed callout use `set-overlay` or `set-freeform-overlay`. `set-annotation` is its deprecated name; do not write it. | `{ op, target: UpdateTarget, value: { text, anchor?: 'segment' \| 'point', highlight? } \| null }` | one resolved element |
+| `annotate-region` | A stretch of the plot: a period, a band of values, a box, a run of categories. | Shade it, with an optional caption set on it; `null` clears it. | `{ op, name, value: { x?: [lo, hi] \| categories, y?: [lo, hi] \| categories, text?, color?, opacity?, layer?: 'under' \| 'over', placement?: 'top' \| 'bottom' \| 'left' \| 'right' \| 'center' \| 'above' \| 'below' } \| null }`; on a map `longitude: [west, east], latitude: [south, north]` in place of x and y | x or y scales, or a map (not a pie or radar) |
 | `annotate-enclosure` | A group of marks that belong together: a cluster, a run of bars, a block of cells. | Outline each target group; one optional caption shared by them, with leaders to two or three outlines; `null` clears it. | `{ op, name, value: { targets: UpdateTarget[], text?, shape?: 'hull' \| 'rect' \| 'ellipse' \| 'circle', connect?: 'auto' \| 'all' \| 'none', color? } \| null }` | marks |
 | `set-viewport` | The range or region the chart should frame. | Frame a continuous domain. | `{ op, axes: 'x' \| 'y' \| 'xy', value: { x?: [lo, hi], y?: [lo, hi] } }`; on a multi-level map `value: { region: { key } }` | `navigate` or `brush-zoom` mounted on that axis |
 | `set-order` | The order of the categories on a discrete axis. | Reorder the axis; list every category in the order wanted. | `{ op, scope: 'category', field, values: unknown[] }` | `drag-reorder` mounted on that axis |
-| `set-overlay` | Marks the chart does not draw: a reference line, a threshold band, a forecast, a sketch of rows. | Draw new rows through the plot's own scales. | `{ op, name, value: { mark, data: { values }, encodings: { x?, y?, x2?, y2?, order?, color?, text? }, role, interactive?, projectable?, style? } \| null }` | x and y scales |
+| `set-overlay` | Marks the chart does not draw: a reference line, a threshold band, a forecast, a sketch of rows. | Draw new rows through the plot's own scales. | `{ op, name, value: { mark, data: { values }, encodings: { x?, y?, x2?, y2?, order?, color?, text? }, role, interactive?, projectable?, style? } \| null }`; on a map `longitude`, `latitude` (and `longitude2`, `latitude2` for a rule or rect) in place of x and y | x and y scales, or a map |
 | `set-freeform-overlay` | A custom shape with no data behind it. | Draw SVG, or a clone of marks, over the plot. | `{ op, name, value: { coordinateSpace: 'plot' \| 'renderer', body: [{ type: 'svg', content } \| { type: 'clone', targets, transform?, opacity? }] } \| null }` | — |
 | `set-data` | The rows the chart draws, for playback or a swap. | Replace every row; the rows carry every encoded field. | `{ op, source: 'main', value: { rows } }` | inline data |
 
@@ -550,7 +550,7 @@ Overlay marks are `line`, `point`, `rule`, `rect`, `text`. `encodings` name
 fields of the overlay's own rows, projected through the chart's x, y, and
 colour scales. `style` takes `stroke`, `strokeWidth`, `strokeDash` (lengths, or
 `'dash'` / `'dot'`), `fill`,
-`fillOpacity`, `opacity`, `pointRadius`, `fontSize`, `fontWeight`, `textAlign`
+`fillOpacity`, `opacity`, `pointRadius`, `fontSize`, `fontWeight`, `fontStyle` (`italic`), `textAlign`
 (`start`, `middle`, `end`), `dx`, `dy`. A `line` takes its stroke and a `text`
 its fill from the `color` encoding; a `point` takes `style.fill`. A `text` sits on
 the data, so it draws a halo in the chart's background; `stroke` sets another
@@ -587,7 +587,9 @@ A target is one of three forms:
   end, or adjacent categories on a banded one), or an outline
   (`annotate-enclosure`) round a group of marks, each with optional text.
   Leave colour, shape and placement to the chart unless the request names
-  them.
+  them. A note marks its own target through `highlight`; do not pair it with
+  a `set-style` emphasis to make the mark stand out. A stretch of a line or
+  area that spans a period is a region, not a note on one segment.
 
 - A selector key names fields the chart encodes (`x`, `y`, `color`, `detail`,
   `size`, …) and matches rows by equality, so `'2007'` and `2007` differ. One

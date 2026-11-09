@@ -90,26 +90,71 @@ const PAPER = '#ffffff';
 const CALLOUT_PALETTE = ['#e45756', '#f58518', '#54a24b', '#b279a2', '#ff9da6', '#9d755d', '#17becf', '#d95f02', '#7570b3'];
 
 /**
- * A region's wash: of the callout hues that read on the page, the one furthest (in OKLab) from every
- * mark's fill and every region already shaded.
+ * A region's wash: of the `candidates` that read on the page (the callout hues unless a house names
+ * its own), the one furthest (in OKLab) from every mark's fill and every region already shaded.
  */
-export function distinctRegionColor(existing: readonly (string | null | undefined)[], background = PAPER): string {
+export function distinctRegionColor(
+    existing: readonly (string | null | undefined)[],
+    background = PAPER,
+    candidates: readonly string[] = CALLOUT_PALETTE,
+): string {
     const paper = cssColor(background) ?? cssColor(PAPER)!;
-    const colours = existing.map(cssColor).filter((colour): colour is RGB => colour !== null && colour.a > 0);
-    let best = CALLOUT_PALETTE[0];
+    // The page is a colour a wash must stand apart from too, or it vanishes on a tinted page.
+    const colours = [...existing.map(cssColor).filter((colour): colour is RGB => colour !== null && colour.a > 0), paper];
+    let best: string | undefined;
     let bestScore = -Infinity;
-    for (const candidate of CALLOUT_PALETTE) {
-        const rgb = cssColor(candidate)!;
+    for (const candidate of candidates) {
+        const rgb = cssColor(candidate);
+        if (!rgb || rgb.a === 0) continue;
         const reads = contrast(rgb, paper);
         if (reads < 2.5) continue;
-        const separation = colours.length === 0 ? distance(rgb, paper) : Math.min(...colours.map((colour) => distance(rgb, colour)));
+        const separation = Math.min(...colours.map((colour) => distance(rgb, colour)));
         const score = separation + reads * 0.01;
         if (score > bestScore) {
-            best = candidate;
+            best = toHex(rgb);
             bestScore = score;
         }
     }
-    return best;
+    return best ?? CALLOUT_PALETTE[0];
+}
+
+/** The least OKLab chroma a house's hue needs to wash a region: greys and blacks are left out. */
+const MIN_WASH_CHROMA = 0.08;
+
+function chroma(rgb: RGB): number {
+    const [, a, b] = oklab(rgb);
+    return Math.hypot(a, b);
+}
+
+/** How far apart in OKLab a house's hue must stand from every mark to wash a region without reading as one. */
+const ACCENT_SEPARATION = 0.12;
+
+/**
+ * A region's wash, after the house where it can be: its `accent` where that reads on the page and
+ * stands apart from the page, every mark (`marks`) and every region already shaded (`regions`) — in most houses
+ * the accent is the data's own ink, and a wash in it would read as data; else the hue of its
+ * categorical `palette` furthest from them, where one stands apart; else the callout hue furthest
+ * from them ({@link distinctRegionColor}).
+ */
+export function regionColor(
+    regions: readonly (string | null | undefined)[],
+    marks: readonly (string | null | undefined)[],
+    background = PAPER,
+    accent?: string,
+    palette: readonly string[] = [],
+): string {
+    const paper = cssColor(background) ?? cssColor(PAPER)!;
+    const taken = [...[...regions, ...marks].map(cssColor).filter((colour): colour is RGB => colour !== null && colour.a > 0), paper];
+    // A grey or black hue washes the plot grey: a region is a hue, not a shade.
+    const apart = (rgb: RGB): boolean => chroma(rgb) >= MIN_WASH_CHROMA && contrast(rgb, paper) >= 2.5
+        && taken.every((colour) => distance(rgb, colour) >= ACCENT_SEPARATION);
+    const house = cssColor(accent);
+    if (house && house.a > 0 && apart(house)) return toHex(house);
+    const own = palette.filter((hue) => {
+        const rgb = cssColor(hue);
+        return rgb !== null && rgb.a > 0 && apart(rgb);
+    });
+    return distinctRegionColor([...marks, ...regions], background, own.length > 0 ? own : CALLOUT_PALETTE);
 }
 
 /**
@@ -164,6 +209,36 @@ export function clusterColor(marks: readonly { fill?: string | null; stroke?: st
     const hue = majority(marks.map((mark) => hexOf(mark.fill))) ?? majority(marks.map((mark) => hexOf(mark.stroke)));
     if (!hue || hue === page) return neutralInk(page);
     return contrast(cssColor(hue)!, paper) >= 4.5 ? hue : readableShade(hue, page, 4.5);
+}
+
+/** The least contrast a cue needs on what it is drawn over before it is given a halo. */
+const CUE_CONTRAST = 3;
+
+/**
+ * Of `inks`, the one that reads best on every ground it is drawn over, by its weakest contrast: a
+ * cue on an area's edge lies half on the fill and half on the page, so it must read on both. The
+ * dark note ink wins on a mid-tone area on a light page; on a dark area (navy on white) no ink reads
+ * on both, and the cue takes a `halo` of the other ink so its edge shows on the side it does not.
+ */
+export function inkOn(
+    grounds: readonly (string | null | undefined)[],
+    inks: readonly string[],
+): { ink: string; halo?: string } {
+    const under = grounds.map(cssColor).filter((rgb): rgb is RGB => rgb !== null && rgb.a > 0);
+    if (under.length === 0) return { ink: inks[0] };
+    let best = inks[0];
+    let bestContrast = -Infinity;
+    for (const ink of inks) {
+        const rgb = cssColor(ink);
+        if (!rgb) continue;
+        const weakest = Math.min(...under.map((ground) => contrast(rgb, ground)));
+        if (weakest > bestContrast) {
+            best = ink;
+            bestContrast = weakest;
+        }
+    }
+    const other = inks.find((ink) => ink !== best);
+    return bestContrast < CUE_CONTRAST && other ? { ink: best, halo: other } : { ink: best };
 }
 
 /** Whether the page is dark: a wash then lightens what it covers rather than darkening it. */

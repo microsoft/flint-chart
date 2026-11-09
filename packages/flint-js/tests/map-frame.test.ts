@@ -93,7 +93,7 @@ describe('what a world map frames', () => {
 
     it('keeps Antarctica where the data names it, or the caller asks for the whole base map', () => {
         const named = choropleth([...world, { Country: 'Antarctica', Value: 0 }]);
-        const whole = choropleth(world, { chartProperties: { fit: 'basemap' } });
+        const whole = choropleth(world, { chartProperties: { fit: 'whole' } });
         for (const spec of [named, whole]) {
             expect(regionsOf(spec).transform.some((step: any) => step.filter === 'datum.id !== 10')).toBe(false);
             expect(Math.min(...fitPoints(spec).map(([, lat]) => lat))).toBe(-90);
@@ -205,9 +205,10 @@ describe('regions without data', () => {
     it('keeps states and counties without a value on the US map', () => {
         for (const level of ['state', 'county', 'auto']) {
             const spec = choropleth([{ State: 'California', Value: 1 }], { chartProperties: { level } });
-            const marks = spec.layer ? spec.layer.map((layer: any) => layer.mark) : [spec.mark];
-            expect(marks.every((mark: any) => mark.invalid === null), level).toBe(true);
-            expect(spec.encoding.color.condition.test).toMatch(/isValid/);
+            // Every layer of regions keeps them; the borders' mesh draws lines, not regions.
+            const layers = spec.layer ? spec.layer.filter((layer: any) => !layer.data?.format?.mesh) : [spec];
+            expect(layers.every((layer: any) => layer.mark.invalid === null), level).toBe(true);
+            expect((regionsOf(spec) ?? spec).encoding.color.condition.test).toMatch(/isValid/);
         }
     });
 });

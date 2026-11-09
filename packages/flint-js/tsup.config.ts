@@ -45,7 +45,7 @@ export default defineConfig([{
     'vega', 'vega-lite', 'vega-tooltip', 'echarts', 'chart.js', 'plotly.js', 'plotly.js-dist-min', 'react',
     '../vegalite/interactive', '../echarts/interactive', '../chartjs/interactive', '../plotly/interactive',
     '../validate/links',
-    // The bundled boundaries, imported by the package's own name (see src/vegalite/basemap-loader.ts).
+    // The bundled boundaries, imported by the package's own name (see src/vegalite/boundary-loader.ts).
     /^flint-chart\/geo\/lazy\//,
   ],
 }, {

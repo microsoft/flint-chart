@@ -3,10 +3,10 @@
 
 import type { ChartAssemblyInput, ChartWarning } from '../core/types';
 import type { SemanticAnnotation } from '../core/field-semantics';
-import { CHART_UPDATE_OPS, type ChartOverlaySpec, type ChartUpdate, type ChartUpdateOp, type RegionAnnotationSpec, type UpdateTarget } from '../core/interaction-contracts';
+import { CHART_UPDATE_OPS, DEPRECATED_UPDATE_OPS, isDeprecatedUpdateOp, type ChartOverlaySpec, type ChartUpdate, type ChartUpdateOp, type RegionAnnotationSpec, type UpdateTarget } from '../core/interaction-contracts';
 import { temporalFieldValue } from '../core/resolve-semantics';
 import { isWhereSelector, selectorConditions, selectorRowTest, selectorText, type RowComparison } from '../core/target-selector';
-import { overlayChannels } from '../vegalite/interactions/presentation/overlay-channels';
+import { geoOverlayChannels, isGeoOverlay, overlayChannels } from '../vegalite/interactions/presentation/overlay-channels';
 import { navigationAxesFor } from '../interactive/spec/admission';
 import type { CanvasInteractionDef } from '../interactive/interactions';
 
@@ -23,6 +23,8 @@ export interface UpdateOpCheck {
     reason?: string;
     /** What would make the op better though it applies: a note that repeats what the chart already prints. */
     advice?: string;
+    /** The op's name is an older one still read: the name to write instead. */
+    deprecated?: string;
 }
 
 export interface UpdateCheck {
@@ -47,6 +49,8 @@ interface Chart {
     semanticTypes: Record<string, string | SemanticAnnotation>;
     navigation: readonly Axis[];
     geoNavigation: boolean;
+    /** The chart is a map: overlays and regions are placed on it by longitude and latitude. */
+    projected: boolean;
     reorderFields: readonly string[];
     /** The fields the chart prints as text on its marks: its value labels. */
     printedFields: readonly string[];
@@ -136,6 +140,7 @@ function chartOf(input: ChartAssemblyInput, assembled: unknown, interactions: re
         semanticTypes: input.semantic_types ?? {},
         navigation,
         geoNavigation: !!semantics.geoNavigation && navigation.length > 0,
+        projected: !!semantics.geoNavigation,
         reorderFields: elementDrag ? (semantics.reorderAxes ?? []).map((axis) => axis.field) : [],
         printedFields: printedFieldsOf(assembled),
     };
@@ -195,7 +200,34 @@ function onAxis(chart: Chart, axis: Axis, value: unknown): boolean {
     return chart.rows.some((row) => cell(row[field.field]) === cell(value));
 }
 
+/** Why a map overlay cannot be drawn: no map to draw it on, places missing or out of range. */
+function geoOverlayProblem(chart: Chart, spec: ChartOverlaySpec): string | undefined {
+    if (!chart.projected) return `${chart.semantics.chartType ?? 'This chart'} is no map: place its overlays by x and y.`;
+    const channels = geoOverlayChannels(spec);
+    if (!channels) {
+        return spec.mark === 'rule' || spec.mark === 'rect'
+            ? `a ${spec.mark} map overlay needs longitude, latitude, longitude2 and latitude2 encodings, and no x or y.`
+            : `a ${spec.mark} map overlay needs longitude and latitude encodings, and no x, y, longitude2 or latitude2.`;
+    }
+    const rows = spec.data?.values ?? [];
+    if (rows.length === 0) return 'the overlay has no rows.';
+    for (const channel of channels) {
+        const field = spec.encodings[channel]!.field;
+        const limit = channel.startsWith('latitude') ? 90 : 360;
+        const off = rows.findIndex((row) => {
+            const value = row[field];
+            return value === null || value === '' || !Number.isFinite(Number(value)) || Math.abs(Number(value)) > limit;
+        });
+        if (off >= 0) return `overlay row ${off} has no ${channel} in degrees in "${field}" (${cell(rows[off][field])}).`;
+    }
+    return undefined;
+}
+
 function overlayProblem(chart: Chart, spec: ChartOverlaySpec): string | undefined {
+    for (const [channel, encoding] of Object.entries(spec.encodings ?? {})) {
+        if (typeof encoding === 'string') return `encodings.${channel} must be { "field": "${encoding}" }, not "${encoding}".`;
+    }
+    if (isGeoOverlay(spec)) return geoOverlayProblem(chart, spec);
     const axes = chart.semantics.axisFields ?? {};
     if (!axes.x || !axes.y) return `${chart.semantics.chartType ?? 'This chart'} has no x and y axes to draw an overlay on.`;
     for (const [channel, encoding] of Object.entries(spec.encodings ?? {})) {
@@ -236,12 +268,24 @@ const STATE_VERBS: Record<string, string> = {
 };
 
 function regionText(name: string, value: RegionAnnotationSpec): string {
-    const span = (['x', 'y'] as const).filter((axis) => value[axis]).map((axis) => `${axis} ${value[axis]!.map(cell).join(' to ')}`);
+    const span = (['x', 'y', 'longitude', 'latitude'] as const).filter((axis) => value[axis])
+        .map((axis) => `${axis} ${(value[axis] as readonly unknown[]).map(cell).join(' to ')}`);
     return `region "${name}" over ${span.join(', ')}${value.text !== undefined ? `, captioned "${value.text}"` : ''}`;
 }
 
 /** Why a region cannot be shaded: an axis the chart lacks, a bound off it, a stretch of the wrong length. */
 function regionProblem(chart: Chart, value: RegionAnnotationSpec): string | undefined {
+    if (value.longitude !== undefined || value.latitude !== undefined) {
+        if (!chart.projected) return `${chart.semantics.chartType ?? 'This chart'} is no map: shade its regions by x and y.`;
+        if (value.x !== undefined || value.y !== undefined) return 'a map region is a box of longitude and latitude, with no x or y.';
+        for (const [axis, limit] of [['longitude', 360], ['latitude', 90]] as const) {
+            const bounds = value[axis];
+            if (!Array.isArray(bounds) || bounds.length !== 2 || bounds.some((bound) => typeof bound !== 'number' || !Number.isFinite(bound) || Math.abs(bound) > limit)) {
+                return `a map region needs ${axis}: [${axis === 'longitude' ? 'west, east' : 'south, north'}], two numbers in degrees.`;
+            }
+        }
+        return undefined;
+    }
     const axes = chart.semantics.axisFields ?? {};
     if (!axes.x && !axes.y) {
         return `${chart.semantics.chartType ?? 'This chart'} has no x or y scale to shade; outline its marks with annotate-enclosure instead.`;
@@ -273,9 +317,10 @@ function checkOp(chart: Chart, op: ChartUpdateOp): UpdateOpCheck {
         }
         case 'annotate-text':
         case 'set-annotation': {
-            if (op.value === null) return result(`removes the note at ${targetText(op.target)}`);
+            const renamed = isDeprecatedUpdateOp(op.op) ? { deprecated: DEPRECATED_UPDATE_OPS[op.op] } : {};
+            if (op.value === null) return { ...result(`removes the note at ${targetText(op.target)}`), ...renamed };
             const text = op.value.text !== undefined ? `note "${op.value.text}"` : 'note';
-            const checked = result(`${text} at ${targetText(op.target)}`, targetProblem(chart, op.target));
+            const checked = { ...result(`${text} at ${targetText(op.target)}`, targetProblem(chart, op.target)), ...renamed };
             const advice = checked.ok ? repeatedValue(chart, op) : undefined;
             return advice ? { ...checked, advice } : checked;
         }
@@ -363,11 +408,13 @@ const OP_SHAPES = {
         fields: { target: isTarget, value: isObjectOrNull },
     },
     'annotate-region': {
-        shape: "{ op, name, value: { x?: [lo, hi] | categories[], y?: [lo, hi] | categories[], text?, color?, opacity?, layer?: 'under' | 'over', placement? } | null }",
+        shape: "{ op, name, value: { x?: [lo, hi] | categories[], y?: [lo, hi] | categories[], longitude?: [west, east], latitude?: [south, north], text?, color?, opacity?, layer?: 'under' | 'over', placement? } | null }",
         fields: {
             name: isName,
-            value: (v: unknown) => v === null || (isObject(v) && (Array.isArray(v.x) || Array.isArray(v.y))
-                && (v.x === undefined || Array.isArray(v.x)) && (v.y === undefined || Array.isArray(v.y))),
+            // An x or y stretch on a chart with axes; a box of longitude and latitude on a map.
+            value: (v: unknown) => v === null || (isObject(v)
+                && (Array.isArray(v.x) || Array.isArray(v.y) || Array.isArray(v.longitude) || Array.isArray(v.latitude))
+                && (['x', 'y', 'longitude', 'latitude'] as const).every((axis) => v[axis] === undefined || Array.isArray(v[axis]))),
         },
     },
     'annotate-enclosure': {
@@ -386,7 +433,7 @@ const OP_SHAPES = {
         fields: { scope: isName, field: isName, values: Array.isArray },
     },
     'set-overlay': {
-        shape: '{ op, name, value: { mark, data: { values }, encodings: { x?, y?, x2?, y2? }, role } | null }',
+        shape: '{ op, name, value: { mark, data: { values }, encodings: { x?, y?, x2?, y2? } | { longitude, latitude, longitude2?, latitude2? }, role } | null }',
         fields: { name: isName, value: isObjectOrNull },
     },
     'set-freeform-overlay': {
@@ -414,7 +461,7 @@ export function updateShapeErrors(updates: unknown, label = 'updates'): ChartWar
         if (!Array.isArray(ops)) return fail(`${entry} (${id}): "ops" must be an array.`);
         for (const [opIndex, op] of ops.entries()) {
             const name = (op as { op?: unknown } | null)?.op;
-            if (typeof name !== 'string' || !(CHART_UPDATE_OPS as readonly string[]).includes(name)) {
+            if (typeof name !== 'string' || !((CHART_UPDATE_OPS as readonly string[]).includes(name) || isDeprecatedUpdateOp(name))) {
                 return fail(
                     `${entry} (${id}).ops[${opIndex}]: unknown op "${String(name)}". Known ops: ${CHART_UPDATE_OPS.join(', ')}.`,
                 );

@@ -12,7 +12,7 @@ import { toCanvasInteractionEvent } from '../src/interactive/canvas-interaction'
 import { associateSemanticElementRenderKeys } from '../src/core/interaction-semantics';
 import { addVegaLiteInteractions, injectVegaInteractionStore, injectVegaNavigationSignals } from '../src/vegalite/interactions/compile';
 import { INTERACTION_KEY } from '../src/vegalite/interactions/hit-adapter';
-import { withBundledBasemaps } from '../src/vegalite/basemap-loader';
+import { withBundledBoundaries } from '../src/vegalite/boundary-loader';
 import {
     ACCESSIBLE_NAVIGATION_HELP,
     AccessibleNavigator,
@@ -63,7 +63,7 @@ async function accessibleTree(input: ChartAssemblyInput): Promise<{ root: Access
     const compiled = compile(spec as any).spec as Record<string, any>;
     injectVegaInteractionStore(compiled, plan);
     // Maps draw the package's boundaries, as in Flint's renderers, rather than fetching them.
-    const view = new View(parse(compiled), { renderer: 'none', loader: withBundledBasemaps(loader()) });
+    const view = new View(parse(compiled), { renderer: 'none', loader: withBundledBoundaries(loader()) });
     await view.runAsync();
     const buildTree = () => buildAccessibleTree({
         root: (view.scenegraph() as any).root,
