@@ -30,7 +30,7 @@ import { LabelAngles } from './playground/label-angles/LabelAngles';
 import { CanvasSqueeze } from './playground/canvas-squeeze/CanvasSqueeze';
 import { MapsLab } from './playground/MapsLab';
 import { ColorLab } from './playground/ColorLab';
-import { TalkDeck } from './talk/TalkDeck';
+import { TalkDeckRoute, TalkIndex } from './talk/TalkDeck';
 import { DevDesign } from './routes/DevDesign';
 import { BandStretchingLab } from './playground/BandStretchingLab';
 import { TitleBalanceLab } from './playground/TitleBalanceLab';
@@ -102,7 +102,8 @@ function AppRoutes({ locale }: { locale: Locale }) {
         <Route path="wall" element={<WallRedirect />} />
         <Route path="wall/:backend" element={<WallRedirect />} />
         <Route path="editor" element={<Editor />} />
-        <Route path="talk" element={<TalkDeck />} />
+        <Route path="talk" element={<TalkIndex />} />
+        <Route path="talk/:deck" element={<TalkDeckRoute />} />
         <Route path="mcp" element={<McpServer />} />
         <Route path="themes" element={<Themes />} />
         <Route path="theme-lab" element={<PublicThemeLab />} />

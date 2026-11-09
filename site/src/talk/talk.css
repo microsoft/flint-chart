@@ -260,3 +260,55 @@
 .talk-leaf.muted { color: var(--ink-3); }
 .talk-leaf.good { color: #3d7a27; }
 .talk-slide .talk-callout.talk-callout-inline { position: relative; top: auto; right: auto; flex: none; max-width: none; margin: 0 8px 8px; transform: rotate(-1deg); }
+
+/* The talks, at #/talk. */
+.talk-index { max-width: 880px; margin: 0 auto; padding: 48px 24px 72px; }
+.talk-index h1 { margin: 0 0 20px; font-size: 28px; }
+.talk-index ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.talk-index a { display: grid; gap: 4px; padding: 16px 18px; border: 1px solid rgba(0, 0, 0, 0.12); border-radius: 10px; color: inherit; text-decoration: none; background: #fff; }
+.talk-index a:hover { border-color: #2f6db5; box-shadow: 0 1px 6px rgba(47, 109, 181, 0.12); }
+.talk-index strong { font-size: 18px; }
+.talk-index span { font-size: 14px; color: #5c6670; }
+.talk-index .talk-index-count { font-size: 12px; color: #8a949b; }
+.talk-panel-back { color: inherit; text-decoration: none; font-weight: 400; color: var(--ink-3); }
+.talk-panel-back:hover { color: var(--meaning); }
+
+/* The VIS 2026 deck. */
+.talk-authors { margin: 0 0 6px; display: grid; gap: 4px; font-size: 26px; color: var(--ink); }
+.talk-authors > div { display: flex; gap: 18px; align-items: baseline; }
+.talk-authors dt { flex: none; width: 64px; font-size: 20px; font-weight: 600; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.talk-authors dd { margin: 0; display: flex; flex-wrap: wrap; column-gap: 28px; }
+.talk-author-group { white-space: nowrap; }
+.talk-org { color: var(--ink-3); }
+.talk-venue { font-size: 22px !important; color: var(--ink-3) !important; margin: 0 !important; display: flex; gap: 28px; }
+.talk-points { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 36px; }
+.talk-point { display: flex; flex-direction: column; gap: 16px; min-width: 0; min-height: 0; }
+.talk-point h3 { margin: 0; }
+.talk-chips { display: flex; flex-wrap: wrap; gap: 10px; }
+.talk-chips span { font-size: 22px; font-weight: 600; padding: 6px 14px; border-radius: 999px; border: 2px solid currentColor; }
+.talk-chips.is-large span { font-size: 30px; padding: 8px 20px; }
+.talk-chips .meaning { color: var(--meaning); }
+.talk-chips .look { color: var(--look); }
+.talk-chips .behavior { color: var(--behavior); }
+.talk-backends { display: flex; flex-direction: column; align-items: stretch; gap: 10px; font-size: 26px; font-weight: 600; }
+.talk-backends span { padding: 8px 16px; border: 1px solid var(--line); border-radius: 10px; text-align: center; color: var(--ink-2); }
+.talk-backends .flint { background: var(--ink); color: #fff; border-color: var(--ink); }
+.talk-backends .talk-backends-arrow { border: 0; padding: 0; font-size: 32px; color: var(--ink-3); }
+.talk-walk { flex: none; margin: 0 !important; font-size: 28px; font-weight: 650; }
+.talk-walk.meaning { color: var(--meaning); }
+.talk-walk.look { color: var(--look); }
+.talk-walk.behavior { color: var(--behavior); }
+.talk-decides { margin: 0 !important; padding-left: 0 !important; list-style: none; display: grid; gap: 10px; font-size: 22px; }
+.talk-decides li { margin: 0 !important; }
+.talk-slide.is-title .talk-lead { font-size: 30px !important; margin: 0 0 10px !important; }
+.talk-compiler { justify-content: center; }
+.talk-compiler .fci-figure { width: 100%; }
+.talk-compiler .fci-stage svg { min-width: 0; }
+/* A slide whose figure takes the whole page; its heading is kept for the slide panel and screen readers. */
+.talk-slide.is-full { padding: 20px 24px; justify-content: center; }
+.talk-sr { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; margin: 0 !important; }
+
+/* The design poster under a slide title: as wide as the slide allows, centred in the rest of its height. */
+.talk-slide:has(.talk-poster) { padding-left: 32px; padding-right: 32px; }
+.talk-slide:has(.talk-poster) h2 { padding-left: 40px; }
+.talk-poster { justify-content: center; }

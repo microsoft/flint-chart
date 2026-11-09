@@ -486,7 +486,8 @@ const STYLES = `
 .fd-label { font-size: ${u(12.5)}; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: ${MUTED}; }
 `;
 
-export function DevDesign() {
+/** The design figure. `embedded` draws the spec, its notes, the compiled Vega-Lite and the chart (no header or footer), sized to its parent. */
+export function DevDesign({ embedded = false }: { embedded?: boolean } = {}) {
   const [state, setState] = useState<State>(START);
   const [prev, setPrev] = useState<State>(START);
   const [hovered, setActive] = useState<Part | null>(null);
@@ -596,12 +597,8 @@ export function DevDesign() {
   const sheets = layers(rows);
   const notes = noteTops(sheets, noteHeights);
 
-  return (
-    <div className="fd-page">
-      <style>{STYLES}</style>
-      <section style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, boxSizing: 'border-box' }}>
-        <div ref={stageRef} style={{ position: 'relative', width: `min(100%, calc((100vh - 32px) * ${DW / DH}))`, aspectRatio: `${DW} / ${DH}`, containerType: 'inline-size' }}>
-          <header style={{ position: 'absolute', top: u(32), left: u(SPEC_X), right: u(64) }}>
+  const content = (<>
+          {!embedded && <header style={{ position: 'absolute', top: u(32), left: u(SPEC_X), right: u(64) }}>
             <h1 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: u(14), fontSize: u(48), fontWeight: 650, letterSpacing: '-0.03em', lineHeight: 1.05, color: INK }}>
               <img src={flintLogo} alt="" style={{ width: u(52), height: u(52) }} />
               Flint: A simple semantic-driven language for good-looking visualizations
@@ -623,7 +620,7 @@ export function DevDesign() {
                 </span>
               </li>
             </ul>
-          </header>
+          </header>}
 
           {/* The spec: one block of code. */}
           <div style={{
@@ -733,11 +730,29 @@ export function DevDesign() {
             <AppPanel pick={pick} state={shown} color={COLOR.interaction} swapped={lastSwap} />
           </div>
 
-          <footer style={{ position: 'absolute', bottom: u(24), right: u(DW - VL_X - VL_W), fontSize: u(14), color: MUTED, display: 'flex', alignItems: 'center', gap: u(10) }}>
+          {!embedded && <footer style={{ position: 'absolute', bottom: u(24), right: u(DW - VL_X - VL_W), fontSize: u(14), color: MUTED, display: 'flex', alignItems: 'center', gap: u(10) }}>
             <span>Open source · MIT License</span>
             <span style={{ width: 1, height: u(12), background: LINE }} />
             <a href={GITHUB_REPO} target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>github.com/microsoft/flint-chart</a>
-          </footer>
+          </footer>}
+  </>);
+
+  if (embedded) {
+    // Cropped to the spec, its notes and the chart: the design frame from just above the spec to just below it.
+    const top = TOP - 24, height = BOTTOM + 24 - top;
+    return (
+      <div className="fd-embedded" ref={stageRef} style={{ position: 'relative', width: '100%', aspectRatio: `${DW} / ${height}`, containerType: 'inline-size', overflow: 'hidden', color: INK, fontFamily: siteTheme.fontSans }}>
+        <style>{STYLES}</style>
+        <div style={{ position: 'absolute', left: 0, top: 0, width: '100%', aspectRatio: `${DW} / ${DH}`, transform: `translateY(-${u(top)})` }}>{content}</div>
+      </div>
+    );
+  }
+  return (
+    <div className="fd-page">
+      <style>{STYLES}</style>
+      <section style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, boxSizing: 'border-box' }}>
+        <div ref={stageRef} style={{ position: 'relative', width: `min(100%, calc((100vh - 32px) * ${DW / DH}))`, aspectRatio: `${DW} / ${DH}`, containerType: 'inline-size' }}>
+          {content}
         </div>
       </section>
     </div>

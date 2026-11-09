@@ -53,7 +53,8 @@ function BackendSheet({ x, y, title }: { x: number; y: number; title: string }) 
   );
 }
 
-export function CompilationProcessIllustration() {
+/** `theme: false` draws the compiler alone: no ThemeSpec bar, its control lines, or the caption. */
+export function CompilationProcessIllustration({ theme = true }: { theme?: boolean } = {}) {
   const uid = useId().replace(/:/g, '');
   const flowArrow = `${uid}-flow-arrow`;
   const controlArrow = `${uid}-control-arrow`;
@@ -62,8 +63,8 @@ export function CompilationProcessIllustration() {
     <figure className="fci-figure">
       <style>{styles}</style>
       <div className="fci-stage">
-        <svg viewBox="0 0 1500 690" role="img" aria-labelledby={`${uid}-title`} preserveAspectRatio="xMidYMid meet">
-          <title id={`${uid}-title`}>ThemeSpec controls the Flint compilation process</title>
+        <svg viewBox={theme ? '0 0 1500 690' : '20 170 1400 455'} role="img" aria-labelledby={`${uid}-title`} preserveAspectRatio="xMidYMid meet">
+          <title id={`${uid}-title`}>{theme ? 'ThemeSpec controls the Flint compilation process' : 'The Flint compilation process'}</title>
           <defs>
             <marker id={flowArrow} viewBox="0 0 8 10" refX="7" refY="5" markerWidth="8" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto">
               <path d="M1 1L7 5L1 9" fill="none" stroke={palette.flow} strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter" />
@@ -73,6 +74,7 @@ export function CompilationProcessIllustration() {
             </marker>
           </defs>
 
+          {theme && (<>
           <rect x="50" y="64" width="218" height="74" className="fci-theme-box" />
           <text x="68" y="110" className="fci-theme-title fci-type-title">ThemeSpec</text>
 
@@ -84,6 +86,7 @@ export function CompilationProcessIllustration() {
           <Lines x={755} y={55} lines={['layout constraints', '& dynamics']} className="fci-control-heading fci-type-label" gap={24} />
           <Lines x={1074} y={55} lines={['visual', 'preferences']} className="fci-control-heading fci-type-label" gap={24} />
           <Lines x={1308} y={55} lines={['design', 'fixtures']} className="fci-control-heading fci-type-label" gap={24} />
+          </>)}
 
           <rect x="328" y="182" width="858" height="430" className="fci-boundary" />
           <text x="344" y="207" className="fci-boundary-label fci-type-kicker">compiler</text>
@@ -113,6 +116,7 @@ export function CompilationProcessIllustration() {
           <Lines x={1074} y={451} lines={['Code', 'Generator']} className="fci-process-title fci-type-process" gap={31} />
           <path d="M1159 462H1240" className="fci-flow" markerEnd={`url(#${flowArrow})`} />
 
+          {theme && (<>
           <path d="M467 386V101" className="fci-control-tap" markerEnd={`url(#${controlArrow})`} />
           <Lines x={491} y={126} lines={['series role = ordinal', 'color measure midpoint = 32']} className="fci-control-note fci-type-note" gap={22} />
           <path d="M755 101V207" className="fci-control-tap" markerEnd={`url(#${controlArrow})`} />
@@ -121,6 +125,7 @@ export function CompilationProcessIllustration() {
           <Lines x={1098} y={126} lines={['value labels → shown (if fit)', 'legend title → omitted', '(if self-explanatory)']} className="fci-control-note fci-type-note" gap={22} />
           <path d="M1308 101V324" className="fci-control-tap" markerEnd={`url(#${controlArrow})`} />
           <Lines x={1332} y={126} lines={['canvas ink = #1b1a19', 'min type size = 8 px', 'grid weight = 1 px']} className="fci-control-note fci-type-note" gap={22} />
+          </>)}
 
           <BackendSheet x={1240} y={343} title="Vega-Lite" />
           <BackendSheet x={1240} y={430} title="Chart.js" />
@@ -128,9 +133,9 @@ export function CompilationProcessIllustration() {
           <text x="1307" y="606" textAnchor="middle" className="fci-muted-text fci-type-title">...</text>
         </svg>
       </div>
-      <figcaption className="fci-caption">
+      {theme && <figcaption className="fci-caption">
         A ThemeSpec in Flint is a formal specification that shapes compilation across three stages so every generated chart adheres to a coherent design system. Using resolved semantic information, it governs layout constraints and dynamics, conditionally resolves visual preferences, and supplies design fixtures for backend-specific code generation.
-      </figcaption>
+      </figcaption>}
     </figure>
   );
 }

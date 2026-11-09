@@ -22,7 +22,7 @@ import {
 } from './parts';
 import glue from './specs/vl-final-glue.txt?raw';
 
-export interface SlideDef { id: string; kind?: 'title' | 'section' | 'statement'; section?: string; render: () => ReactNode }
+export interface SlideDef { id: string; kind?: 'title' | 'section' | 'statement' | 'full'; section?: string; render: () => ReactNode }
 
 const UPDATE_PROMPTS: Record<string, string> = {
   dense: 'Show all 24 games.',
@@ -32,7 +32,7 @@ const UPDATE_PROMPTS: Record<string, string> = {
 };
 
 const fmt = (n: number) => n.toLocaleString('en-US', { signDisplay: 'always' });
-const Cell = ({ caption, children, framed }: { caption?: string; children: ReactNode; framed?: boolean }) => (
+export const Cell = ({ caption, children, framed }: { caption?: string; children: ReactNode; framed?: boolean }) => (
   <div className="talk-cell">
     <div className={framed ? 'talk-fit talk-framed' : 'talk-fit'} style={{ display: 'flex' }}>{children}</div>
     {caption && <p className="talk-caption">{caption}</p>}
@@ -40,7 +40,7 @@ const Cell = ({ caption, children, framed }: { caption?: string; children: React
 );
 
 /** One step of the traditional way: the code and chart before, then the code and chart after. */
-const Step = ({ before, beforeSpec, after, afterSpec, note, flaws }: { before: CodeSource; beforeSpec: unknown; after: CodeSource; afterSpec: unknown; note?: ReactNode; flaws?: Flaw[] }) => (<>
+export const Step = ({ before, beforeSpec, after, afterSpec, note, flaws }: { before: CodeSource; beforeSpec: unknown; after: CodeSource; afterSpec: unknown; note?: ReactNode; flaws?: Flaw[] }) => (<>
   <div className="talk-body talk-step">
     <div className="talk-col"><Code rows={before} tone="vl" />{flaws ? <FlawedVegaLite spec={beforeSpec} flaws={flaws} /> : <VegaLite spec={beforeSpec} />}</div>
     <div className="talk-arrow">→</div>
@@ -50,14 +50,14 @@ const Step = ({ before, beforeSpec, after, afterSpec, note, flaws }: { before: C
 </>);
 
 // Each step's code: the new spec with what changed highlighted. The next slide starts from it, in black.
-const ROWS = {
+export const ROWS = {
   raw: stepLayout(STEPS.raw),
   parse: stepLayout(STEPS.parse, STEPS.raw),
   layout: stepLayout(STEPS.layout, STEPS.parse),
   theme: stepLayout(STEPS.theme, STEPS.layout),
   final: stepLayout(STEPS.final, STEPS.theme),
 };
-const DIFF = {
+export const DIFF = {
   parse: lineDiff(STEPS.raw, STEPS.parse),
   layout: lineDiff(STEPS.parse, STEPS.layout),
   theme: lineDiff(STEPS.layout, STEPS.theme, 72),
@@ -121,7 +121,7 @@ const FLINT_W = 52;
  * The type tree: the drawn boxes and connectors from the sketch, with the branch text set over them in
  * the deck's own type. Both sit on the same 1000 × 720 frame, so the text stays on its line at any size.
  */
-const TypeTree = () => (
+export const TypeTree = () => (
   <div className="talk-fit">
     <div className="talk-frame" style={{ aspectRatio: '1000 / 720' }}>
       <Sketch name="typesTree" />
@@ -143,7 +143,7 @@ const USE_CASES = [
 ];
 
 /** The three specs, labelled under the sketch's three panels, each in its section color. */
-const SPECS = [
+export const SPECS = [
   { title: 'The chart spec', short: 'What the data means.', long: 'Semantic types and a layout engine take care of what the data means.', color: '#2f6db5' },
   { title: 'The theme spec', short: 'How it looks.', long: 'A formal specification of style, written once for every chart.', color: '#e8954a' },
   { title: 'The interaction spec', short: 'How it behaves.', long: 'Semantic events and update operators describe how a chart behaves.', color: '#d9534f' },
@@ -153,7 +153,7 @@ const SPECS = [
  * A three-panel sketch with readable labels under its panels. With `focus`, the sketch circles that
  * panel, its label is spelled out, and the other two fade back.
  */
-const Trio = ({ sketch, items, focus }: {
+export const Trio = ({ sketch, items, focus }: {
   sketch: string; items: { title: string; short: string; long: string; color?: string }[]; focus?: number;
 }) => (
   <div className="talk-body column" style={{ gap: 8 }}>
@@ -171,7 +171,7 @@ const Trio = ({ sketch, items, focus }: {
 const UseCases = ({ focus }: { focus?: number }) => <Trio sketch="useCase" items={USE_CASES} focus={focus} />;
 
 /** The "draw your guess" demo's interaction, condensed: a trigger, and a handler that answers with an update. */
-const BESPOKE_ROWS: CodeRow[] = [
+export const BESPOKE_ROWS: CodeRow[] = [
   { text: 'const draw: CanvasInteractionDef = {', hot: true },
   { text: '  id: "draw-guess",' },
   { text: '  eventSource: lassoTrigger("contain"),', hot: true },
@@ -252,15 +252,17 @@ const INTERACTION_ROWS: CodeRow[] = [
   { text: '    "value": { "text": "Launch month" } }', hot: true },
   { text: '] }' },
 ];
-const TYPES_COMPILED = typesCompiled();
-const UPDATES: { id: string; title: string; prompt: string; change: Partial<FlintState> }[] = [
+export const TYPES_COMPILED = typesCompiled();
+export interface FlintUpdate { id: string; title: string; prompt: string; change: Partial<FlintState> }
+export const UPDATES: FlintUpdate[] = [
   { id: 'u-theme', title: 'Another theme is a one-line change', prompt: 'Use the Datawrapper style instead.', change: { theme: 'datawrapper' } },
   { id: 'u-swap', title: 'Swapping the axes swaps two names', prompt: 'Put the games across and the months down.', change: { swap: true } },
   { id: 'u-facet', title: 'One panel per region is one more encoding', prompt: 'Split it into a panel for each region.', change: { facet: true } },
   { id: 'u-brush', title: 'Brushing instead of clicking is one line', prompt: 'Let me brush a range of months instead of clicking a game.', change: { brush: true } },
   { id: 'u-pop', title: 'And a pop look is still one line', prompt: 'Now make it pop: bold colors and playful type.', change: { theme: 'pop' } },
 ];
-const UPDATE_SLIDES: SlideDef[] = UPDATES.reduce<{ state: FlintState; slides: SlideDef[] }>(({ state, slides }, u) => {
+/** One slide per request, each starting where the last one left off. */
+export const updateSlides = (updates: FlintUpdate[]): SlideDef[] => updates.reduce<{ state: FlintState; slides: SlideDef[] }>(({ state, slides }, u) => {
   const next = { ...state, ...u.change };
   const prev = flintShown(state), shown = flintShown(next);
   const { plus } = lineDiff(prev, shown, FLINT_W);
@@ -281,6 +283,7 @@ const UPDATE_SLIDES: SlideDef[] = UPDATES.reduce<{ state: FlintState; slides: Sl
   });
   return { state: next, slides };
 }, { state: FLINT_BASE, slides: [] }).slides;
+const UPDATE_SLIDES = updateSlides(UPDATES);
 
 export const SLIDES: SlideDef[] = [
   // ======================================================== Act 0

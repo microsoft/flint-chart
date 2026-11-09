@@ -1,6 +1,7 @@
 import { isValidElement, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { SLIDES, type SlideDef } from './slides';
+import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom';
+import { DECKS } from './decks';
+import type { SlideDef } from './slides';
 import './talk.css';
 
 const PANEL_WIDTH = 272;
@@ -29,7 +30,7 @@ function plainText(node: ReactNode): string {
 
 interface Group { name: string; slides: { slide: SlideDef; index: number; title: string }[] }
 
-function groupSlides(): Group[] {
+function groupSlides(SLIDES: SlideDef[]): Group[] {
   const groups: Group[] = [];
   SLIDES.forEach((slide, index) => {
     if (slide.section || groups.length === 0) groups.push({ name: slide.section ?? '', slides: [] });
@@ -46,18 +47,48 @@ function writePanel(open: boolean) {
   try { localStorage.setItem(PANEL_KEY, open ? 'open' : 'closed'); } catch { /* storage unavailable */ }
 }
 
+/** The talks, at #/talk: each opens its deck. An old link to the one deck (`#/talk?s=N`) opens the general talk. */
+export function TalkIndex() {
+  const [params] = useSearchParams();
+  if (params.has('s') || params.has('all') || params.has('outline')) return <Navigate to={`overview?${params.toString()}`} replace />;
+  return (
+    <main className="talk-index">
+      <h1>Talks</h1>
+      <ul>
+        {DECKS.map((deck) => (
+          <li key={deck.id}>
+            <Link to={deck.id}>
+              <strong>{deck.title}</strong>
+              <span>{deck.occasion}</span>
+              <span className="talk-index-count">{deck.slides.length} slides</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </main>
+  );
+}
+
+/** The deck the address names, at #/talk/<id>. */
+export function TalkDeckRoute() {
+  const { deck: id } = useParams();
+  const deck = DECKS.find((d) => d.id === id);
+  if (!deck) return <Navigate to=".." relative="path" replace />;
+  return <TalkDeck key={deck.id} slides={deck.slides} />;
+}
+
 /**
- * The talk deck, at #/talk. Arrow keys, the slide panel, or `?s=N` move between slides;
+ * A talk deck. Arrow keys, the slide panel, or `?s=N` move between slides;
  * `?all` stacks every slide at full size, for review and the overflow check.
  */
-export function TalkDeck() {
+export function TalkDeck({ slides: SLIDES }: { slides: SlideDef[] }) {
   const [params, setParams] = useSearchParams();
   const all = params.has('all');
   const outline = params.has('outline');
   const [index, setIndex] = useState(() => Math.max(0, Math.min(SLIDES.length - 1, Number(params.get('s') ?? 1) - 1)));
   const [panel, setPanel] = useState(readPanel);
   const [scale, setScale] = useState(1);
-  const groups = useMemo(groupSlides, []);
+  const groups = useMemo(() => groupSlides(SLIDES), [SLIDES]);
   const current = useRef<HTMLButtonElement | null>(null);
   const showPanel = panel && !all;
 
@@ -102,7 +133,7 @@ export function TalkDeck() {
       {showPanel && (
         <aside className="talk-panel" aria-label="Slides" style={{ width: PANEL_WIDTH }}>
           <div className="talk-panel-head">
-            <span className="talk-panel-title">Slides <span className="talk-panel-count">{SLIDES.length}</span></span>
+            <span className="talk-panel-title"><Link to=".." relative="path" className="talk-panel-back">Talks</Link> / Slides <span className="talk-panel-count">{SLIDES.length}</span></span>
             <button type="button" className="talk-panel-btn" aria-label="Hide slides" onClick={() => togglePanel(false)}>
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10 3.5 5.5 8l4.5 4.5" /></svg>
             </button>

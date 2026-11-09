@@ -270,6 +270,363 @@ export const SKETCHES: Record<string, Draw> = {
   },
 };
 
+// ---------------------------------------------------------------- a person thinking
+/**
+ * A person at the bottom left, thinking a thought: a cloud up and to the right, trailing small bubbles
+ * down to the head. `mood` sets the face: a smile when they imagine the chart, a frown when it disappoints.
+ */
+function thinker(ctx: Ctx, w: number, h: number, thought: string, mood: 'hopeful' | 'unhappy', seed: number, size = 34) {
+  const s = Math.min(w / 640, h / 560);
+  const X = (v: number) => v * s + (w - 640 * s) / 2;
+  const Y = (v: number) => v * s + (h - 560 * s) / 2;
+  const S = (v: number) => v * s;
+  // the cloud: a ring of puffs round an inner wash
+  const cx = 380, cy = 170, rx = 230, ry = 120;
+  ctx.save();
+  ctx.fillStyle = C.card;
+  ctx.beginPath(); ctx.ellipse(X(cx), Y(cy), S(rx), S(ry), 0, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+  const puffs = 11;
+  for (let i = 0; i < puffs; i++) {
+    const a = (i / puffs) * Math.PI * 2;
+    const px = cx + Math.cos(a) * rx * 0.9, py = cy + Math.sin(a) * ry * 0.88;
+    ellipse(ctx, X(px), Y(py), S(52), S(40), { w: S(3), color: C.ink, seed: seed + i });
+  }
+  ctx.save();
+  ctx.fillStyle = C.card;
+  ctx.beginPath(); ctx.ellipse(X(cx), Y(cy), S(rx * 0.92), S(ry * 0.88), 0, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+  text(ctx, thought, X(cx), Y(cy - (size > 40 ? 0 : 18)), { size: S(size), kind: 'handBold', color: mood === 'hopeful' ? C.ink : C.red, align: 'center', maxWidth: S(rx * 1.6), maxLines: 3, lineHeight: 1.15 });
+  // the trail of bubbles down to the head
+  [[230, 330, 20], [196, 372, 14], [172, 404, 9]].forEach(([bx, by, r], i) => ellipse(ctx, X(bx), Y(by), S(r), S(r * 0.85), { w: S(3), color: C.ink, seed: seed + 20 + i }));
+  // the person: head, a face, shoulders
+  const hx = 130, hy = 440, hr = 46;
+  ellipse(ctx, X(hx), Y(hy), S(hr), S(hr * 1.05), { w: S(3.5), color: C.ink, seed: seed + 30 });
+  dot(ctx, X(hx - 15), Y(hy - 8), S(4.5), C.ink, { seed: seed + 31 });
+  dot(ctx, X(hx + 15), Y(hy - 8), S(4.5), C.ink, { seed: seed + 32 });
+  const mouthY = hy + 20, dip = mood === 'hopeful' ? 10 : -10;
+  stroke(ctx, [[X(hx - 16), Y(mouthY - dip / 2)], [X(hx), Y(mouthY + dip / 2)], [X(hx + 16), Y(mouthY - dip / 2)]], { w: S(3), color: C.ink, seed: seed + 33 });
+  if (mood === 'unhappy') {
+    // a furrowed brow and a bead of sweat
+    line(ctx, X(hx - 24), Y(hy - 24), X(hx - 8), Y(hy - 19), { w: S(3), color: C.ink, seed: seed + 34 });
+    line(ctx, X(hx + 24), Y(hy - 24), X(hx + 8), Y(hy - 19), { w: S(3), color: C.ink, seed: seed + 35 });
+    stroke(ctx, [[X(hx + 52), Y(hy - 30)], [X(hx + 46), Y(hy - 16)], [X(hx + 52), Y(hy - 10)], [X(hx + 58), Y(hy - 16)], [X(hx + 52), Y(hy - 30)]], { w: S(2.5), color: C.blue, seed: seed + 36 });
+  }
+  stroke(ctx, [[X(hx - 90), Y(560)], [X(hx - 70), Y(hy + 70)], [X(hx), Y(hy + 56)], [X(hx + 70), Y(hy + 70)], [X(hx + 90), Y(560)]], { w: S(3.5), color: C.ink, seed: seed + 40 });
+}
+
+Object.assign(SKETCHES, {
+  thinkHeatmap(ctx: Ctx, w: number, h: number) { thinker(ctx, w, h, 'Some good-looking heatmap to show new users playing our games', 'hopeful', 700); },
+  thinkGrammar(ctx: Ctx, w: number, h: number) { thinker(ctx, w, h, 'Chart = mark + encoding…', 'hopeful', 700, 44); },
+  thinkNotGood(ctx: Ctx, w: number, h: number) { thinker(ctx, w, h, 'Not good-looking…', 'unhappy', 700, 52); },
+  thinkTangle(ctx: Ctx, w: number, h: number) { thinker(ctx, w, h, 'The code is a little bit complicated… how can I change to a faceted chart?', 'unhappy', 700, 30); },
+});
+
+// ---------------------------------------------------------------- inside the compiler
+/**
+ * The compiler opened up: the three specs at the left, each feeding a lane of decisions in its own
+ * colour, the lanes crossing where one needs another (the types name what a click hit; the layout
+ * sizes the theme's key), all landing in one set of library-agnostic chart properties that the code
+ * generator writes out for each library.
+ */
+function compilerZoom(ctx: Ctx, w: number, h: number) {
+  const s = Math.min(w / 1440, h / 680);
+  const X = (v: number) => v * s + (w - 1440 * s) / 2;
+  const Y = (v: number) => v * s + (h - 680 * s) / 2;
+  const S = (v: number) => v * s;
+  const lanes: { title: string; color: string; code: string[]; steps: string[] }[] = [
+    { title: 'chart spec', color: C.meaning, code: ['"period": "YearMonth"', '"chartType": "Heatmap"'], steps: ['parse 202101 as Jan 2021', 'sum the four regions', 'diverging scale at 0', 'size cells to the canvas'] },
+    { title: 'theme spec', color: C.look, code: ['"economist"'], steps: ['house palette, 5 steps', 'type sizes, axis lines', 'place the key', 'red tab, headline'] },
+    { title: 'interaction spec', color: C.behavior, code: ['"click-group-focus"'], steps: ['hit-test the cell', 'event: game = "Neon Drift"', 'emphasize, recede the rest', 'overlay, reset'] },
+  ];
+  const laneY = [150, 340, 530], chipW = 168, chipH = 78, chipX = [310, 508, 706, 904];
+  // the compiler's ground
+  washRect(ctx, X(268), Y(40), S(1030), S(610), C.panel, { alpha: 0.9, seed: 900, amp: 1.2 });
+  rect(ctx, X(268), Y(40), S(1030), S(610), { w: S(2.5), color: C.ink2, seed: 901, overshoot: 4 });
+  text(ctx, 'compiler', X(290), Y(80), { size: S(30), kind: 'handBold', color: C.ink, maxWidth: S(300) });
+  lanes.forEach((lane, i) => {
+    const cy = laneY[i];
+    // the spec, at the left
+    card(ctx, X(16), Y(cy - 68), S(220), S(136), { seed: 910 + i, color: lane.color, w: 3.5 });
+    text(ctx, lane.title, X(126), Y(cy - 30), { size: S(27), kind: 'handBold', color: lane.color, align: 'center', maxWidth: S(200), maxLines: 1 });
+    lane.code.forEach((c, k) => text(ctx, c, X(126), Y(cy + 8 + k * 28), { size: S(17), kind: 'mono', color: C.ink, align: 'center', maxWidth: S(206), maxLines: 1 }));
+    arrow(ctx, X(240), Y(cy), X(chipX[0] - 10), Y(cy), { w: S(3.5), color: lane.color, seed: 920 + i, head: S(13) });
+    // its lane of decisions
+    lane.steps.forEach((step, j) => {
+      const x = chipX[j];
+      washRect(ctx, X(x), Y(cy - chipH / 2), S(chipW), S(chipH), lane.color, { alpha: 0.16, seed: 930 + i * 10 + j });
+      rect(ctx, X(x), Y(cy - chipH / 2), S(chipW), S(chipH), { w: S(2.5), color: lane.color, seed: 940 + i * 10 + j, overshoot: 3 });
+      text(ctx, step, X(x + chipW / 2), Y(cy - 4), { size: S(21), kind: 'hand', color: C.ink, align: 'center', maxWidth: S(chipW - 18), maxLines: 2, lineHeight: 1.05 });
+      if (j < 3) arrow(ctx, X(x + chipW + 4), Y(cy), X(chipX[j + 1] - 6), Y(cy), { w: S(2.5), color: lane.color, seed: 960 + i * 10 + j, head: S(9) });
+    });
+    arrow(ctx, X(chipX[3] + chipW + 6), Y(cy), X(1110), Y(cy), { w: S(3), color: lane.color, seed: 980 + i, head: S(12) });
+  });
+  // where the lanes need each other
+  arrow(ctx, X(chipX[0] + 40), Y(laneY[0] + chipH / 2 + 6), X(chipX[1] + 30), Y(laneY[2] - chipH / 2 - 8), { w: S(2.5), color: C.soft, seed: 990, head: S(10), bend: S(-30) });
+  text(ctx, 'types name what was hit', X(chipX[0] + 30), Y(laneY[1] + 72), { size: S(18), color: C.ink2, maxWidth: S(220), maxLines: 1 });
+  arrow(ctx, X(chipX[3] + 60), Y(laneY[0] + chipH / 2 + 6), X(chipX[2] + 110), Y(laneY[1] - chipH / 2 - 8), { w: S(2.5), color: C.soft, seed: 991, head: S(10), bend: S(18) });
+  // one set of chart properties, written out for each library
+  card(ctx, X(1116), Y(90), S(160), S(520), { seed: 995, color: C.ink, fill: C.card, w: 3 });
+  text(ctx, 'chart properties', X(1196), Y(140), { size: S(24), kind: 'handBold', align: 'center', maxWidth: S(140), maxLines: 2, lineHeight: 1.05 });
+  ['parser', 'mark', 'scales', 'axes', 'formats', 'key', 'canvas', 'signals'].forEach((p, k) => text(ctx, p, X(1196), Y(220 + k * 46), { size: S(19), kind: 'mono', color: C.ink2, align: 'center', maxWidth: S(140), maxLines: 1 }));
+  ['Vega-Lite', 'ECharts', 'Chart.js', 'Plotly', 'Excel'].forEach((b, k) => {
+    const y = 170 + k * 84;
+    arrow(ctx, X(1280), Y(350), X(1318), Y(y), { w: S(2.5), color: C.ink, seed: 1000 + k, head: S(9) });
+    text(ctx, b, X(1326), Y(y + 8), { size: S(22), kind: 'handBold', color: C.ink, maxWidth: S(112), maxLines: 1 });
+  });
+}
+
+Object.assign(SKETCHES, { compilerZoom });
+
+/**
+ * The grammar of graphics, as an equation: mark and encoding small, the way the grammar presents them,
+ * and the "properties" it treats as details drawn large, as the tangle they turn into.
+ */
+function grammarEquation(ctx: Ctx, w: number, h: number) {
+  const s = Math.min(w / 1440, h / 600);
+  const X = (v: number) => v * s + (w - 1440 * s) / 2;
+  const Y = (v: number) => v * s + (h - 600 * s) / 2;
+  const S = (v: number) => v * s;
+  const baseline = 300;
+  text(ctx, 'chart  =  mark  +  encoding  +', X(40), Y(baseline + 14), { size: S(46), kind: 'handBold', color: C.ink, maxWidth: S(640), maxLines: 1 });
+  // the grammar's part, bracketed below
+  stroke(ctx, [[X(205), Y(baseline + 50)], [X(210), Y(baseline + 66)], [X(560), Y(baseline + 66)], [X(565), Y(baseline + 50)]], { w: S(2.5), color: C.ink2, seed: 1100 });
+  text(ctx, 'the grammar of graphics', X(385), Y(baseline + 108), { size: S(26), color: C.ink2, align: 'center', maxWidth: S(420), maxLines: 1 });
+  text(ctx, '“the design”', X(385), Y(baseline + 142), { size: S(24), color: C.soft, align: 'center', maxWidth: S(420), maxLines: 1 });
+  // properties: large, and tangled
+  const kx = 1030, ky = baseline, krx = 330, kry = 230;
+  knot(ctx, X(kx), Y(ky), S(krx), S(kry), { strands: 26 });
+  ctx.save();
+  ctx.globalAlpha = 0.92;
+  ctx.fillStyle = C.card;
+  ctx.beginPath(); ctx.ellipse(X(kx), Y(ky - 4), S(232), S(66), 0, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+  // the low-level settings, on the knot's outer ring, clear of the word
+  const frags = ['timeUnit', 'domainMid: 0', 'labelLimit', 'format: %b', '#db444b', 'legend orient', 'pick_store', 'width: 900', 'labelAngle', 'concat_1'];
+  frags.forEach((f, i) => {
+    const a = (i / frags.length) * Math.PI * 2 + 0.3;
+    text(ctx, f, X(kx + Math.cos(a) * krx * 0.84), Y(ky + Math.sin(a) * kry * 0.8 + 8), { size: S(22), color: C.ink, align: 'center', maxWidth: S(170), maxLines: 1 });
+  });
+  text(ctx, 'properties', X(1030), Y(baseline + 26), { size: S(92), kind: 'handBold', color: C.red, align: 'center', maxWidth: S(440), maxLines: 1 });
+  text(ctx, '“just details”… where the work actually is', X(1030), Y(baseline + 276), { size: S(26), color: C.ink2, align: 'center', maxWidth: S(660), maxLines: 1 });
+}
+
+Object.assign(SKETCHES, { grammarEquation });
+
+/**
+ * The contrast: above, the grammar with its properties left to the author, a tangle; an arrow down;
+ * below, Flint, where the author adds a small semantic spec and a compiler writes the properties out.
+ */
+function grammarContrast(ctx: Ctx, w: number, h: number) {
+  const s = Math.min(w / 1440, h / 740);
+  const X = (v: number) => v * s + (w - 1440 * s) / 2;
+  const Y = (v: number) => v * s + (h - 740 * s) / 2;
+  const S = (v: number) => v * s;
+  const eq = 'chart  =  mark  +  encoding  +';
+  // above: today
+  const ty = 150;
+  text(ctx, 'today', X(40), Y(ty - 70), { size: S(26), color: C.ink2, maxWidth: S(200), maxLines: 1 });
+  text(ctx, eq, X(40), Y(ty + 12), { size: S(40), kind: 'handBold', color: C.ink, maxWidth: S(560), maxLines: 1 });
+  const kx = 870, krx = 250, kry = 120;
+  knot(ctx, X(kx), Y(ty), S(krx), S(kry), { strands: 22 });
+  ctx.save();
+  ctx.globalAlpha = 0.92;
+  ctx.fillStyle = C.card;
+  ctx.beginPath(); ctx.ellipse(X(kx), Y(ty - 2), S(170), S(46), 0, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+  text(ctx, 'properties', X(kx), Y(ty + 20), { size: S(64), kind: 'handBold', color: C.red, align: 'center', maxWidth: S(330), maxLines: 1 });
+  text(ctx, 'you write all of it', X(kx + krx + 30), Y(ty + 10), { size: S(24), color: C.ink2, maxWidth: S(250), maxLines: 2 });
+  // the turn
+  arrow(ctx, X(300), Y(220), X(300), Y(480), { w: S(4.5), color: C.ink, seed: 1200, head: S(20) });
+  text(ctx, 'Flint', X(326), Y(362), { size: S(36), kind: 'handBold', color: C.meaning, maxWidth: S(160), maxLines: 1 });
+  // below: with Flint
+  const by = 600;
+  text(ctx, eq, X(40), Y(by + 12), { size: S(40), kind: 'handBold', color: C.ink, maxWidth: S(560), maxLines: 1 });
+  const cx = 580, cw = 196, ch = 58;
+  washRect(ctx, X(cx), Y(by - ch / 2), S(cw), S(ch), C.meaning, { alpha: 0.18, seed: 1210 });
+  rect(ctx, X(cx), Y(by - ch / 2), S(cw), S(ch), { w: S(2.5), color: C.meaning, seed: 1211, overshoot: 3 });
+  text(ctx, 'semantic spec', X(cx + cw / 2), Y(by + 9), { size: S(26), kind: 'handBold', color: C.meaning, align: 'center', maxWidth: S(cw - 16), maxLines: 1 });
+  stroke(ctx, [[X(205), Y(by + 52)], [X(210), Y(by + 68)], [X(cx + cw - 5), Y(by + 68)], [X(cx + cw), Y(by + 52)]], { w: S(2.5), color: C.ink2, seed: 1212 });
+  text(ctx, 'you and your agent write', X((205 + cx + cw) / 2), Y(by + 106), { size: S(24), color: C.ink2, align: 'center', maxWidth: S(460), maxLines: 1 });
+  // the compiler: a box pointing up at the properties, its gears turning; dashed paths in and out
+  const bx0 = 780, bx1 = 960, bBottom = 520, bShoulder = 395, bTip = 350, bMid = (bx0 + bx1) / 2;
+  const outline: Pt[] = [[bx0, bBottom], [bx0, bShoulder], [bMid, bTip], [bx1, bShoulder], [bx1, bBottom], [bx0, bBottom]];
+  ctx.save();
+  ctx.fillStyle = C.panel;
+  ctx.beginPath(); outline.forEach(([x, y], i) => (i ? ctx.lineTo(X(x), Y(y)) : ctx.moveTo(X(x), Y(y)))); ctx.closePath(); ctx.fill();
+  ctx.restore();
+  stroke(ctx, outline.map(([x, y]): Pt => [X(x), Y(y)]), { w: S(3.5), color: C.ink, seed: 1250 });
+  cog(ctx, X(bMid - 22), Y(432), S(18), 8, 1255);
+  cog(ctx, X(bMid + 16), Y(416), S(11), 6, 1265);
+  text(ctx, 'compiler', X(bMid), Y(488), { size: S(32), kind: 'handBold', color: C.ink, align: 'center', maxWidth: S(bx1 - bx0 - 16), maxLines: 1 });
+  dashed(ctx, X, Y, S, [cx + cw + 12, by - 6], [bMid - 30, bBottom + 6], 0, 1230, true);
+  dashed(ctx, X, Y, S, [bMid, bTip - 6], [kx, ty + kry + 8], 0, 1240, true);
+  text(ctx, 'writes the properties', X(bx1 + 24), Y(450), { size: S(24), color: C.ink2, maxWidth: S(300), maxLines: 1 });
+}
+
+/** A hand-drawn dashed line from `a` to `b`, stopping `gap` short of the end it is told to; with `head`, an arrow at `b`. */
+function dashed(ctx: Ctx, X: (v: number) => number, Y: (v: number) => number, S: (v: number) => number, a: Pt, b: Pt, gap: number, seed: number, head: boolean) {
+  const dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy), ux = dx / len, uy = dy / len;
+  const start = head ? gap : 0, end = head ? len : len - gap, dash = 16, space = 11;
+  // With a head, the dashes stop a dash short of the end, and the last one is an arrow onto it.
+  const stop = head ? end - dash : end;
+  let k = 0;
+  for (let t = start; t < stop - 4; t += dash + space, k++) {
+    const t2 = Math.min(stop - space, t + dash);
+    if (t2 > t) line(ctx, X(a[0] + ux * t), Y(a[1] + uy * t), X(a[0] + ux * t2), Y(a[1] + uy * t2), { w: S(3), color: C.ink, seed: seed + k, wobble: 0.6 });
+  }
+  if (head) arrow(ctx, X(a[0] + ux * (end - dash)), Y(a[1] + uy * (end - dash)), X(b[0]), Y(b[1]), { w: S(3), color: C.ink, seed: seed + k, head: S(15), wobble: 0.6 });
+}
+
+/** A hand-drawn cog: a rim, a hub, and teeth round it. */
+function cog(ctx: Ctx, x: number, y: number, r: number, teeth: number, seed: number) {
+  ctx.save();
+  ctx.fillStyle = C.panel;
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+  ellipse(ctx, x, y, r, r, { w: 3, color: C.ink, seed });
+  ellipse(ctx, x, y, r * 0.32, r * 0.32, { w: 2.5, color: C.ink, seed: seed + 1 });
+  for (let i = 0; i < teeth; i++) {
+    const a = (i / teeth) * Math.PI * 2 + 0.2;
+    line(ctx, x + Math.cos(a) * r, y + Math.sin(a) * r, x + Math.cos(a) * r * 1.32, y + Math.sin(a) * r * 1.32, { w: Math.max(3, r * 0.2), color: C.ink, seed: seed + 2 + i, wobble: 0.4 });
+  }
+}
+
+Object.assign(SKETCHES, { grammarContrast });
+
+/**
+ * Why Flint: the dilemma we met building Data Formulator. Either the agent writes a short Vega-Lite
+ * spec the user can edit, and the chart looks plain; or it writes the full spec, and the chart looks
+ * good but every edit goes back to the agent. Underneath, what we wished for.
+ */
+function whyFlint(ctx: Ctx, w: number, h: number) {
+  const s = Math.min(w / 1440, h / 770);
+  const X = (v: number) => v * s + (w - 1440 * s) / 2;
+  const Y = (v: number) => v * s + (h - 770 * s) / 2;
+  const S = (v: number) => v * s;
+  const tick = (x: number, y: number, seed: number) => stroke(ctx, [[X(x), Y(y)], [X(x + 10), Y(y + 12)], [X(x + 30), Y(y - 16)]], { w: S(4), color: C.green, seed });
+  const cross = (x: number, y: number, seed: number) => {
+    line(ctx, X(x), Y(y - 12), X(x + 22), Y(y + 10), { w: S(4), color: C.red, seed });
+    line(ctx, X(x + 22), Y(y - 12), X(x), Y(y + 10), { w: S(4), color: C.red, seed: seed + 1 });
+  };
+  const verdict = (x: number, y: number, good: boolean, label: string, seed: number) => {
+    (good ? tick : cross)(x, y, seed);
+    text(ctx, label, X(x + 44), Y(y + 9), { size: S(27), kind: 'handBold', color: good ? C.ink : C.red, maxWidth: S(520), maxLines: 1 });
+  };
+  const option = (x0: number, title: string, seed: number) => {
+    rect(ctx, X(x0), Y(14), S(640), S(482), { w: S(2.5), color: C.soft, seed, overshoot: 4 });
+    text(ctx, title, X(x0 + 24), Y(58), { size: S(30), kind: 'handBold', color: C.ink, maxWidth: S(600), maxLines: 1 });
+  };
+
+  // option 1: a short Vega-Lite spec, editable, plain
+  const L = 30;
+  option(L, 'The agent writes a simple Vega-Lite spec', 1300);
+  card(ctx, X(L + 24), Y(96), S(250), S(236), { seed: 1301, color: C.ink, fill: C.card, w: 2.5 });
+  ['{', '  "mark": "rect",', '  "x": "period",', '  "y": "game",', '  "color": "newUsers"', '}'].forEach((t, k) => {
+    const indent = t.length - t.trimStart().length;
+    text(ctx, t.trimStart(), X(L + 40 + indent * 11), Y(136 + k * 32), { size: S(19), kind: 'mono', color: C.ink, maxWidth: S(226 - indent * 11), maxLines: 1 });
+  });
+  text(ctx, '9 lines', X(L + 149), Y(358), { size: S(24), color: C.ink2, align: 'center', maxWidth: S(200), maxLines: 1 });
+  arrow(ctx, X(L + 288), Y(214), X(L + 336), Y(214), { w: S(3.5), color: C.ink, seed: 1302, head: S(13) });
+  miniHeatmap(ctx, X(L + 352), Y(184), S(268), S(56), { rows: 8, cols: 34, seed: 31, gap: 1, palette: ['#ffffcc', '#c7e9b4', '#7fcdbb', '#41b6c4', '#2c7fb8', '#253494'] });
+  for (let i = 0; i < 34; i++) line(ctx, X(L + 355 + i * 7.9), Y(252), X(L + 355 + i * 7.9), Y(278), { w: S(1.5), color: C.soft, seed: 1310 + i, wobble: 0.3 });
+  verdict(L + 28, 396, true, 'easy to generate', 1318);
+  verdict(L + 28, 434, true, 'you can edit it', 1320);
+  verdict(L + 28, 472, false, 'not good-looking', 1322);
+
+  text(ctx, 'or', X(720), Y(240), { size: S(46), kind: 'handBold', color: C.soft, align: 'center', maxWidth: S(80), maxLines: 1 });
+
+  // option 2: the full spec, good-looking, not editable
+  const R = 770;
+  option(R, 'The agent writes the full spec', 1400);
+  card(ctx, X(R + 24), Y(96), S(250), S(236), { seed: 1401, color: C.ink, fill: C.card, w: 2.5 });
+  const r = rng(0.271);
+  for (let k = 0; k < 30; k++) {
+    const indent = (Math.floor(r() * 4)) * 10, len = 40 + r() * 140;
+    line(ctx, X(R + 44 + indent), Y(112 + k * 7), X(R + 44 + indent + len), Y(112 + k * 7), { w: S(2.4), color: CONCERN[Math.floor(r() * 3)], seed: 1410 + k, wobble: 0.2, alpha: 0.85 });
+  }
+  text(ctx, '166 lines', X(R + 149), Y(358), { size: S(24), color: C.ink2, align: 'center', maxWidth: S(200), maxLines: 1 });
+  arrow(ctx, X(R + 288), Y(214), X(R + 336), Y(214), { w: S(3.5), color: C.ink, seed: 1402, head: S(13) });
+  washRect(ctx, X(R + 356), Y(102), S(30), S(9), C.red, { alpha: 0.95, seed: 1450 });
+  line(ctx, X(R + 356), Y(126), X(R + 520), Y(126), { w: S(4), color: C.ink, seed: 1451 });
+  line(ctx, X(R + 356), Y(144), X(R + 470), Y(144), { w: S(2.5), color: C.soft, seed: 1452 });
+  miniHeatmap(ctx, X(R + 356), Y(166), S(256), S(150), { rows: 6, cols: 10, seed: 7 });
+  verdict(R + 28, 396, true, 'good-looking', 1420);
+  verdict(R + 28, 434, false, 'not always reliable', 1422);
+  verdict(R + 28, 472, false, 'every edit: ask the agent again', 1424);
+
+  // the two of us at a whiteboard, the wish written on it
+  const wx = 330, wy = 522, ww = 1040, wh = 170;
+  // the stand: two legs and a tray of markers
+  line(ctx, X(wx + 90), Y(wy + wh), X(wx + 60), Y(wy + wh + 64), { w: S(3), color: C.ink2, seed: 1590 });
+  line(ctx, X(wx + ww - 90), Y(wy + wh), X(wx + ww - 60), Y(wy + wh + 64), { w: S(3), color: C.ink2, seed: 1591 });
+  ctx.save();
+  ctx.fillStyle = C.card;
+  ctx.fillRect(X(wx), Y(wy), S(ww), S(wh));
+  ctx.restore();
+  rect(ctx, X(wx), Y(wy), S(ww), S(wh), { w: S(4), color: C.ink2, seed: 1501, overshoot: 3 });
+  line(ctx, X(wx + 20), Y(wy + wh + 10), X(wx + ww - 20), Y(wy + wh + 10), { w: S(4), color: C.ink2, seed: 1592 });
+  [[C.meaning, 0], [C.red, 1], [C.ink, 2]].forEach(([color, i]) => line(ctx, X(wx + ww - 210 + (i as number) * 46), Y(wy + wh + 4), X(wx + ww - 176 + (i as number) * 46), Y(wy + wh + 4), { w: S(5), color: color as string, seed: 1593 + (i as number) }));
+  text(ctx, 'We wished for:', X(wx + 28), Y(wy + 42), { size: S(26), color: C.meaning, maxWidth: S(400), maxLines: 1 });
+  text(ctx, 'agents write an editable script that consistently produces good-looking charts', X(wx + ww / 2), Y(wy + 96), { size: S(34), kind: 'handBold', color: C.meaning, align: 'center', maxWidth: S(ww - 80), maxLines: 2, lineHeight: 1.15 });
+  // the two people, the nearer one pointing at the board
+  person(ctx, X, Y, S, 100, 640, 'hopeful', 1520, 1);
+  person(ctx, X, Y, S, 236, 640, 'hopeful', 1540, 1);
+  stroke(ctx, [[X(276), Y(694)], [X(304), Y(650)], [X(338), Y(616)]], { w: S(3), color: C.ink, seed: 1580 });
+}
+
+/** A small person, head at (x, y) in design units, with a face for `mood`, turned toward `facing` (−1 left, 1 right). */
+function person(ctx: Ctx, X: (v: number) => number, Y: (v: number) => number, S: (v: number) => number, x: number, y: number, mood: 'hopeful' | 'unhappy', seed: number, facing = 0) {
+  const r = 30, f = facing * 7;
+  ellipse(ctx, X(x), Y(y), S(r), S(r * 1.05), { w: S(3), color: C.ink, seed });
+  dot(ctx, X(x - 10 + f), Y(y - 5), S(3.5), C.ink, { seed: seed + 1 });
+  dot(ctx, X(x + 10 + f), Y(y - 5), S(3.5), C.ink, { seed: seed + 2 });
+  const dip = mood === 'hopeful' ? 7 : -7;
+  stroke(ctx, [[X(x - 11 + f), Y(y + 12 - dip / 2)], [X(x + f), Y(y + 12 + dip / 2)], [X(x + 11 + f), Y(y + 12 - dip / 2)]], { w: S(2.5), color: C.ink, seed: seed + 3 });
+  stroke(ctx, [[X(x - 58), Y(y + 100)], [X(x - 44), Y(y + 46)], [X(x), Y(y + 36)], [X(x + 44), Y(y + 46)], [X(x + 58), Y(y + 100)]], { w: S(3), color: C.ink, seed: seed + 4 });
+}
+
+Object.assign(SKETCHES, { whyFlint });
+
+/** Flint's spec, in the style of the grammar contrast: four small specs, each in its colour, each pointing to what it says. */
+function flintEquation(ctx: Ctx, w: number, h: number) {
+  const s = Math.min(w / 1440, h / 600);
+  const X = (v: number) => v * s + (w - 1440 * s) / 2;
+  const Y = (v: number) => v * s + (h - 600 * s) / 2;
+  const S = (v: number) => v * s;
+  const ey = 110;
+  text(ctx, 'flint spec  =', X(30), Y(ey + 12), { size: S(40), kind: 'handBold', color: C.ink, maxWidth: S(260), maxLines: 1 });
+  const parts: [string, string][] = [['data spec', C.green], ['chart spec', C.meaning], ['theme spec', C.look], ['interaction spec', C.behavior]];
+  const chipW = 230, chipH = 64, gap = 60, x0 = 290;
+  const centres: number[] = [];
+  parts.forEach(([label, color], i) => {
+    const x = x0 + i * (chipW + gap);
+    centres.push(x + chipW / 2);
+    washRect(ctx, X(x), Y(ey - chipH / 2), S(chipW), S(chipH), color, { alpha: 0.18, seed: 1600 + i * 3 });
+    rect(ctx, X(x), Y(ey - chipH / 2), S(chipW), S(chipH), { w: S(2.5), color, seed: 1601 + i * 3, overshoot: 3 });
+    text(ctx, label, X(x + chipW / 2), Y(ey + 10), { size: S(28), kind: 'handBold', color, align: 'center', maxWidth: S(chipW - 16), maxLines: 1 });
+    if (i < parts.length - 1) text(ctx, '+', X(x + chipW + gap / 2), Y(ey + 14), { size: S(40), kind: 'handBold', color: C.ink, align: 'center', maxWidth: S(40), maxLines: 1 });
+  });
+  // a pointer from each part down to what it says, with an example
+  const notes: { what: string; example: string[] }[] = [
+    { what: 'what data means', example: ['period → YearMonth', 'newUsers → Profit'] },
+    { what: 'what to show', example: ['Heatmap', 'x: period, y: game'] },
+    { what: 'how it looks', example: ['"economist"'] },
+    { what: 'how it behaves', example: ['click → highlight', 'the app hears "game"'] },
+  ];
+  const noteY = 300;
+  centres.forEach((c, i) => {
+    const color = parts[i][1];
+    arrow(ctx, X(c + (i - 1.5) * 6), Y(ey + chipH / 2 + 14), X(c), Y(noteY - 34), { w: S(3), color, seed: 1660 + i, head: S(13), bend: S((i % 2 ? 1 : -1) * 10) });
+    text(ctx, notes[i].what, X(c), Y(noteY), { size: S(30), kind: 'handBold', color, align: 'center', maxWidth: S(chipW + gap - 10), maxLines: 1 });
+    notes[i].example.forEach((line, k) => text(ctx, line, X(c), Y(noteY + 52 + k * 32), { size: S(20), kind: 'mono', color: C.ink2, align: 'center', maxWidth: S(chipW + gap - 10), maxLines: 1 }));
+  });
+  stroke(ctx, [[X(x0), Y(470)], [X(x0 + 5), Y(486)], [X(x0 + 4 * chipW + 3 * gap - 5), Y(486)], [X(x0 + 4 * chipW + 3 * gap), Y(470)]], { w: S(2.5), color: C.ink2, seed: 1620 });
+  text(ctx, 'short, and each part on its own: you and your agent change one without touching the others', X(x0 + (4 * chipW + 3 * gap) / 2), Y(530), { size: S(26), color: C.ink2, align: 'center', maxWidth: S(1060), maxLines: 1 });
+}
+
+Object.assign(SKETCHES, { flintEquation });
+
 // ---------------------------------------------------------------- the mechanism diagram
 interface Mech {
   color: string;
