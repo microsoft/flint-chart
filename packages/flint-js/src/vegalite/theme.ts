@@ -2504,12 +2504,17 @@ function applyMarks(
                 const t = enc[channel]?.type;
                 return enc[channel]?.field && (t === 'nominal' || t === 'ordinal');
             });
-            // A rect with a category on *both* axes is a cell in a grid, not a
+            // A rect with a category on an axis is a cell in a grid, not a
             // bar in a row: the cell is the band, and a house's bar thickness
             // says nothing about it. Thinning it here opens gaps in what should
             // read as a continuous surface, and how big the cell is was settled
-            // by the layout, which is the only pass that knows the room.
-            if (mark === 'rect' && discrete.length === 2) {
+            // by the layout, which is the only pass that knows the room. The
+            // other axis may be a category too, or dates the cells run along
+            // (each cell spans its period); only a measured range — a band of
+            // values from x to x2, as a bullet's zones — is a bar.
+            const measuredRange = (['x', 'y'] as const).some((channel) =>
+                enc[channel]?.type === 'quantitative' && enc[`${channel}2`] != null);
+            if (mark === 'rect' && discrete.length > 0 && !measuredRange) {
                 if (!saidCells) {
                     say('marks.bandFraction', 'band-fraction-not-applied',
                         'the marks are cells in a grid, not bars in a row — band occupancy is a bar rule and does not apply');

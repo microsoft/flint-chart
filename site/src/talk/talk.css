@@ -99,6 +99,7 @@
 .talk-chart > * { position: absolute; inset: 0; }
 .talk-fit { flex: 1 1 auto; min-height: 0; min-width: 0; position: relative; }
 .talk-sketch { flex: 1 1 auto; min-height: 0; width: 100%; height: 100%; display: block; }
+.talk-baked-chart { width: 100%; height: 100%; display: block; object-fit: contain; }
 .talk-minimap { width: 100%; height: 100%; min-height: 0; display: block; }
 .talk-framed { border: 1px solid var(--line); border-radius: 12px; padding: 14px; background: #fff; }
 
@@ -121,6 +122,50 @@
 /* Changed or discussed lines: a light highlighter under the usual syntax colours, in every language. */
 .talk-code .hl { font-weight: 700; background: #fff5c2; }
 .talk-code .gap { color: var(--ink-3); }
+.talk-scene .talk-deep-dive-code .talk-code {
+  --code-line: 1lh;
+  background: linear-gradient(to bottom,
+    transparent 0 var(--code-line),
+    #f0f5ec var(--code-line) calc(6 * var(--code-line)),
+    #edf2f8 calc(6 * var(--code-line)) calc(16 * var(--code-line)),
+    transparent calc(16 * var(--code-line)));
+  background-origin: content-box;
+  background-clip: content-box;
+  background-repeat: no-repeat;
+}
+.talk-scene .talk-type-overlay {
+  z-index: 1;
+  background: rgba(255, 255, 255, 0.84);
+  backdrop-filter: blur(2px);
+  box-shadow: 0 0 24px 12px rgba(255, 255, 255, 0.84);
+  border-radius: 16px;
+  padding: 24px 12px 0 28px;
+  box-sizing: border-box;
+}
+.talk-type-overlay h3 { font: 700 34px/1.2 'Kalam', cursive; margin: 0 0 14px; }
+.talk-type-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-content: start; }
+.talk-type-group { border: 1.5px solid; border-radius: 8px; padding: 10px 12px; }
+.talk-type-group h4 { font: 700 22px/1.2 'Kalam', cursive; margin: 0 0 8px; }
+.talk-type-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.talk-slide .talk-type-chips code { font: 500 15px/1.2 ui-monospace, 'SF Mono', Menlo, Consolas, monospace; background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: 4px 7px; }
+.talk-scene .talk-slot.talk-capability-catalog { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; align-content: start; gap: 1.2cqw; }
+.talk-capability-block { display: flex; flex-direction: column; gap: 0.4cqw; min-width: 0; }
+.talk-capability-block h3 { margin: 0; font: 700 1.9cqw/1.15 'Inter Variable', Inter, system-ui, sans-serif; letter-spacing: -0.01em; }
+/* What the column is about, outside its tile, in the deck's readable sans. */
+.talk-slide .talk-capability-tease { margin: 0 0 0.4cqw !important; min-height: 2.6em; font: 500 1.3cqw/1.3 'Inter Variable', Inter, system-ui, sans-serif; color: var(--ink-2) !important; }
+.talk-capability-block:first-child { color: var(--meaning); }
+.talk-capability-block:nth-child(2) { color: var(--look); }
+.talk-capability-block:nth-child(3) { color: var(--behavior); }
+/* The tile holds the examples only. */
+.talk-capability-block ul { flex: 1 1 auto; display: flex; flex-wrap: wrap; align-content: center; align-items: center; gap: 0.3cqw 0.6cqw; margin: 0; padding: 0.8cqw 1cqw; border-radius: 12px; list-style: none; }
+.talk-capability-block:first-child ul { background: #edf4fc; }
+.talk-capability-block:nth-child(2) ul { background: #fff3e5; }
+.talk-capability-block:nth-child(3) ul { background: #fcefee; }
+.talk-capability-block li { flex: 0 0 calc((100% - 1.2cqw) / 3); min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 0.1cqw; margin: 0; font: 400 0.95cqw/1.2 'Inter Variable', Inter, system-ui, sans-serif; }
+.talk-capability-block:first-child li { flex-basis: calc((100% - 1.8cqw) / 4); }
+.talk-capability-block li > svg, .talk-capability-block li > img { width: 1.5cqw; height: 1.5cqw; object-fit: contain; }
+.talk-capability-block li > span:last-child { white-space: nowrap; color: var(--ink); }
+.talk-capability-block .talk-capability-more { color: var(--ink-3); }
 
 /* A step: the code and chart before, an arrow, the code and chart after. */
 .talk-step { gap: 28px; }
@@ -129,6 +174,21 @@
 .talk-step .talk-code { flex: 1.6 1 0; padding: 14px 20px; }
 .talk-step .talk-fit { flex: 1 1 0; }
 .talk-arrow { flex: none; align-self: center; font-size: 56px; color: var(--ink-3); line-height: 1; }
+.talk-effort-stages { gap: 14px; }
+.talk-effort-card { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.talk-effort-card header { display: flex; align-items: center; gap: 10px; }
+.talk-effort-card header > span { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--effort-ink); color: #fff; font-size: 20px; font-weight: 700; }
+.talk-effort-card h3 { margin: 0; font-size: 30px; }
+.talk-effort-card.is-meaning { --effort-ink: var(--meaning); }
+.talk-effort-card.is-look { --effort-ink: var(--look); }
+.talk-effort-card.is-behavior { --effort-ink: var(--behavior); }
+.talk-effort-card header, .talk-effort-count { color: var(--effort-ink); }
+.talk-effort-card > p { margin: 0; font-size: 21px; color: var(--ink-3); }
+.talk-effort-code { flex: 1 1 0; min-height: 0; display: flex; }
+.talk-effort-code .talk-code { flex: 1 1 0; padding: 14px 16px; }
+.talk-effort-count { font-size: 20px; font-weight: 650; }
+.talk-effort-preview { flex: 0 0 180px; min-height: 0; }
+.talk-effort-arrow { align-self: center; flex: none; color: var(--ink-3); font-size: 36px; }
 
 /* A small static table. */
 .talk-table { border-collapse: collapse; font-size: 20px; color: var(--ink-2); width: 100%; }
@@ -255,6 +315,8 @@
 /* A sketch with text laid over it: the frame keeps the sketch's aspect, so text and lines stay aligned. */
 .talk-frame { position: absolute; inset: 0; margin: auto; max-width: 100%; max-height: 100%; container-type: size; }
 .talk-frame .talk-sketch { position: absolute; inset: 0; }
+/* A drawing laid over a scene's live slots (a person over the chart), letting clicks through. */
+.talk-overlay { position: absolute; inset: 0; pointer-events: none; }
 .talk-leaf { position: absolute; transform: translateY(-50%); white-space: nowrap; font-size: 2.9cqw; color: var(--ink); line-height: 1.2; }
 .talk-leaf.mono { font: 500 1.9cqw/1.2 ui-monospace, 'SF Mono', Menlo, Consolas, monospace; }
 .talk-leaf.muted { color: var(--ink-3); }
@@ -280,7 +342,41 @@
 .talk-authors dd { margin: 0; display: flex; flex-wrap: wrap; column-gap: 28px; }
 .talk-author-group { white-space: nowrap; }
 .talk-org { color: var(--ink-3); }
-.talk-venue { font-size: 22px !important; color: var(--ink-3) !important; margin: 0 !important; display: flex; gap: 28px; }
+/* The VIS title slide: title and authors centred and leading; the live demos a small strip along the bottom. */
+.talk-title-head { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 26px; padding-bottom: 8px; }
+.talk-slide.is-title .talk-title-head h1 { font-size: 68px; max-width: 1360px; margin: 0; }
+.talk-title-head .talk-contributors dd { font-size: 24px; font-style: italic; color: var(--ink-3); letter-spacing: 0.01em; }
+.talk-title-logo { display: flex; align-items: center; justify-content: center; gap: 32px; }
+.talk-slide.is-title .talk-title-head h1.talk-title-logo { font-size: 82px; line-height: 1.08; max-width: none; margin: 0; letter-spacing: -0.03em; }
+/* The title on two balanced lines beside the logo. */
+.talk-title-text { max-width: 1120px; text-align: left; text-wrap: balance; }
+.talk-title-logo img { flex: none; height: 2.1em; width: auto; }
+.talk-title-head .talk-authors { justify-items: start; text-align: left; gap: 12px; font-size: 27px; margin: 0; }
+.talk-title-head .talk-authors > div { align-items: first baseline; }
+.talk-title-head .talk-authors dt { width: auto; min-width: 58px; padding: 2px 10px; border-radius: 999px; background: #eef3fa; color: var(--meaning); font-size: 16px; font-weight: 650; text-align: center; letter-spacing: 0.02em; }
+.talk-title-head .talk-contributors dt { visibility: hidden; }
+.talk-title-head .talk-authors dd { flex-direction: column; align-items: flex-start; row-gap: 4px; }
+/* A short spark-coloured rule between the title and the authors. */
+.talk-title-rule { flex: none; width: 88px; height: 5px; margin: -6px 0 2px; border-radius: 3px; background: #f4b41a; }
+/* The chart wall, two rows, bleeding off the slide's sides and bottom and fading in from white at its top. */
+.talk-title-wall { flex: 0 0 320px; position: relative; margin: 0 -72px -52px; overflow: hidden; pointer-events: none; }
+.talk-title-wall::before { content: ''; position: absolute; inset: 0 0 auto; height: 64px; z-index: 2; background: linear-gradient(#fff, rgba(255, 255, 255, 0)); }
+.talk-title-wall .diverse-wall-figure { padding: 26px 18px 0; }
+.talk-title-wall .diverse-wall-row { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+/* The imagine scene: live boxes set over the sketch at the scene's own coordinates. */
+.talk-imagine .talk-slot, .talk-scene .talk-slot { position: absolute; display: flex; flex-direction: column; min-height: 0; }
+.talk-imagine .talk-code, .talk-scene .talk-code { background: transparent; padding: 0.6cqw 0.8cqw; }
+.talk-imagine .talk-table, .talk-scene .talk-table { font-size: 0.92cqw; }
+.talk-imagine .talk-table th, .talk-imagine .talk-table td, .talk-scene .talk-table th, .talk-scene .talk-table td { padding: 0.12cqw 0.3cqw; }
+/* The broken chart: the chart across the top; the person bottom-left with the numbered problems beside them. */
+.talk-scene .talk-flaws { grid-template-columns: minmax(0, 1fr); gap: 18px; margin: 0; }
+/* The tangle: the code on the left, its line count struck through, and a small key under it. */
+.talk-tangle-mess { gap: 14px; align-items: center; }
+.talk-tangle-mess > .talk-fit { align-self: stretch; }
+.talk-linecount { flex: none; margin: 0 !important; font-size: 34px; font-weight: 700; color: var(--ink) !important; }
+.talk-linecount s { margin-right: 18px; color: var(--ink-3); font-weight: 500; text-decoration-color: #e4572e; text-decoration-thickness: 3px; }
+.talk-tangle-mess .talk-chips { flex: none; justify-content: center; }
+.talk-tangle-mess .talk-chips span { font-size: 17px; padding: 3px 10px; border-width: 1.5px; }
 .talk-points { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 36px; }
 .talk-point { display: flex; flex-direction: column; gap: 16px; min-width: 0; min-height: 0; }
 .talk-point h3 { margin: 0; }
@@ -308,7 +404,29 @@
 .talk-slide.is-full { padding: 20px 24px; justify-content: center; }
 .talk-sr { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; margin: 0 !important; }
 
-/* The design poster under a slide title: as wide as the slide allows, centred in the rest of its height. */
-.talk-slide:has(.talk-poster) { padding-left: 32px; padding-right: 32px; }
-.talk-slide:has(.talk-poster) h2 { padding-left: 40px; }
+/* The design poster fills the slide, with its own handwritten spec label. */
 .talk-poster { justify-content: center; }
+.talk-slide .talk-subscribe { flex: none; margin: 12px 0 0 !important; text-align: center; font-size: 28px; font-weight: 600; color: var(--ink) !important; }
+.talk-subscribe a { margin-left: 14px; color: var(--meaning); font-weight: 500; text-decoration: none; }
+
+/* The advanced-interaction switcher: the title and its tabs on one line, the chosen demo live in the rest of the slide. */
+.talk-fun { gap: 8px; }
+.talk-fun-head { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.talk-fun-head h2 { flex: none; margin: 0 !important; white-space: nowrap; }
+.talk-fun-tabs { flex: 1 1 auto; min-width: 0; display: flex; flex-wrap: nowrap; justify-content: flex-end; gap: 6px; }
+.talk-fun-tabs button { flex: none; white-space: nowrap; font: inherit; font-size: 17px; padding: 4px 12px; border-radius: 999px; border: 1px solid var(--line); background: #fff; color: var(--ink-2); cursor: pointer; }
+.talk-fun-tabs button[aria-selected="true"] { border-color: var(--behavior); background: var(--behavior); color: #fff; }
+.talk-fun-stage { flex: 1 1 auto; min-height: 0; display: flex; }
+.talk-fun-stage > .talk-fit { flex: 1 1 auto; }
+.talk-fun-head .talk-tt { font: 600 0.82em ui-monospace, 'SF Mono', Menlo, Consolas, monospace; letter-spacing: -0.02em; }
+/* The story's card and its map stand together, centred, rather than at the board's two edges. */
+.talk-fun .story-body { grid-template-columns: 280px 760px; gap: 28px; justify-content: center; }
+.talk-fun .story-map > div { justify-content: flex-start !important; }
+.talk-slide .talk-entangled { flex: none; margin: -16px 0 12px !important; font: 400 20px/1.4 ui-monospace, 'SF Mono', Menlo, Consolas, monospace; color: var(--ink-3) !important; }
+.talk-tangle-mess.is-narrow { gap: 6px; }
+.talk-tangle-mess.is-narrow .talk-linecount { font-size: 1.7cqw; white-space: nowrap; }
+.talk-tangle-mess.is-narrow .talk-linecount s { margin-right: 0.6cqw; }
+.talk-tangle-mess.is-narrow .talk-chips { gap: 4px; }
+.talk-tangle-mess.is-narrow .talk-chips span { font-size: 0.85cqw; padding: 1px 6px; }
+.talk-slide.is-section .talk-backup-title { font-size: 48px; font-weight: 500; color: var(--ink-3); text-align: center; }
+.talk-slide h2 .talk-h2-note { font-weight: 500; color: var(--ink-3); }

@@ -104,7 +104,8 @@ export function odysseyLookInHouse(theme: string | null): OdysseyLook {
 }
 
 /** The chart the story is told on: the stops as one route, before any chapter's notes. */
-export function odysseySpec(look: OdysseyLook = DEFAULT_LOOK): ChartAssemblyInput {
+/** `size` lays the map out wider or taller than its usual square-ish room (a slide's wide band, say). */
+export function odysseySpec(look: OdysseyLook = DEFAULT_LOOK, size?: { width: number; height: number }): ChartAssemblyInput {
   return {
     data: { values: ROWS },
     semantic_types: { Stop: 'Rank', Leg: 'Category', Crew: 'Count', Voyage: 'Category', Episode: 'Name', longitude: 'Longitude', latitude: 'Latitude' },
@@ -129,7 +130,8 @@ export function odysseySpec(look: OdysseyLook = DEFAULT_LOOK): ChartAssemblyInpu
         ...(look.stops !== 'none' && look.stopRadius !== undefined ? { stopRadius: look.stopRadius } : {}),
       },
       // Wider than tall, as the Mediterranean the voyage crosses is.
-      canvasSize: { width: 600, height: 600 },
+      canvasSize: size ?? { width: 600, height: 600 },
+      ...(size ? { baseSize: size } : {}),
     },
     ...(look.theme ? { theme_spec: look.theme } : {}),
     interaction_spec: { interactions: [{ type: 'navigate' }] },
@@ -342,8 +344,8 @@ export function odysseyOpeningUpdates(look: OdysseyLook = DEFAULT_LOOK): ChartUp
 // ── Stage ────────────────────────────────────────────────────────────────
 
 /** The story beside its map; a `look` redraws the map in other colours and keeps the chapter. */
-export function OdysseyStoryStage({ look = DEFAULT_LOOK, compact = false }: { look?: OdysseyLook; compact?: boolean } = {}) {
-  const spec = useMemo(() => odysseySpec(look), [look]);
+export function OdysseyStoryStage({ look = DEFAULT_LOOK, compact = false, size }: { look?: OdysseyLook; compact?: boolean; size?: { width: number; height: number } } = {}) {
+  const spec = useMemo(() => odysseySpec(look, size), [look, size]);
   const [index, setIndex] = useState(0);
   const [surface, setSurface] = useState<InteractiveChartSurface | null>(null);
   const chapter = CHAPTERS[index];

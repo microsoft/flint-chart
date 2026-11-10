@@ -80,12 +80,13 @@ function IllustrationCard({ slot }: { slot: IllustrationSlot }) {
   );
 }
 
-export function DiverseChartWallIllustration() {
+/** The wall of themed charts, eight to a row; `rows` takes the first one to three of its rows. */
+export function DiverseChartWallIllustration({ rows = 3 }: { rows?: number }) {
   return (
     <section className="diverse-wall-figure" aria-label="Flint Vega-Lite charts across themes">
       <style>{styles}</style>
       <div className="diverse-wall">
-        {[0, 1, 2].map((row) => (
+        {[0, 1, 2].slice(0, rows).map((row) => (
           <div
             className="diverse-wall-row"
             key={row}

@@ -15,6 +15,8 @@ import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
  * height follow the scaled chart — clamped to `[minHeight, height]` — so a
  * wide, short chart (e.g. faceted small-multiples) uses the full panel width
  * with no wasted vertical space, while a tall/square chart stays capped.
+ * Content stays hidden until its initial fit is measured, avoiding a flash
+ * at its unscaled size when a chart renders asynchronously.
  */
 export function ScaleToFit({
   height,
@@ -47,7 +49,7 @@ export function ScaleToFit({
 }) {
   const outerRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(1);
+  const [scale, setScale] = useState<number>();
   const [boxHeight, setBoxHeight] = useState(height);
 
   useLayoutEffect(() => {
@@ -63,7 +65,7 @@ export function ScaleToFit({
       const boxH = (fill ? outer.clientHeight : height) - padding * 2;
       const next = Math.min(boxW / natW, boxH / natH, maxScale);
       if (Number.isFinite(next) && next > 0) {
-        setScale((prev) => (Math.abs(prev - next) > 0.005 ? next : prev));
+        setScale((prev) => (prev === undefined || Math.abs(prev - next) > 0.005 ? next : prev));
         if (adaptiveHeight) {
           const fitted = Math.min(Math.max(natH * next + padding * 2, minHeight), height);
           setBoxHeight((prev) => (Math.abs(prev - fitted) > 0.5 ? fitted : prev));
@@ -94,8 +96,9 @@ export function ScaleToFit({
         ref={innerRef}
         style={{
           position: 'absolute',
-          transform: `scale(${scale})`,
+          transform: `scale(${scale ?? 1})`,
           transformOrigin: 'center center',
+          visibility: scale === undefined ? 'hidden' : undefined,
         }}
       >
         {children}

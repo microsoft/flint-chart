@@ -8,6 +8,7 @@
 
 import type { ChannelSemantics, InstantiateContext } from '../../core/types';
 import { resolveDiscreteType } from '../../core/axis-detection';
+import { calendarStep } from '../../core/decisions';
 
 // ---------------------------------------------------------------------------
 // Discrete-dimension helpers
@@ -299,6 +300,72 @@ export function adjustRectTiling(spec: any, ctx: InstantiateContext): void {
 
         const sizeKey = axis === 'x' ? 'width' : 'height';
         spec.mark = setMarkProp(spec.mark, sizeKey, cellSize);
+    }
+}
+
+/** The working column holding where each cell along a time axis ends. */
+const cellEndField = (axis: 'x' | 'y') => `__cell_${axis}_end`;
+
+/** Whether the cells along this axis span their periods ({@link spanCalendarCells}): its scale takes the data's extent. */
+export function spansCalendarCells(spec: any, axis: 'x' | 'y'): boolean {
+    const units: any[] = [spec, spec.spec, ...(spec.layer ?? []), ...(spec.spec?.layer ?? [])];
+    return units.some((unit) => unit?.encoding?.[`${axis}2`]?.field === cellEndField(axis));
+}
+
+/**
+ * Cells along a time axis span their period. Where the dates keep a regular step on the calendar
+ * (whole months, quarters, years, days or weeks), each cell runs from its date to the next step, so
+ * neighbours meet whatever a month's length and a missing period stays an empty gap. The fixed pixel
+ * width {@link adjustRectTiling} cuts can only fit the shortest month, leaving the rest of every
+ * other step open. The scale runs from the first date to the last cell's end, the data's own
+ * extent; value labels stand at each cell's middle.
+ */
+export function spanCalendarCells(spec: any, ctx: InstantiateContext): void {
+    const units: any[] = Array.isArray(spec.layer) ? spec.layer : [spec];
+    const shared = spec.encoding ?? {};
+    const markOf = (unit: any) => (typeof unit.mark === 'string' ? unit.mark : unit.mark?.type);
+    const cells = units.filter((unit) => markOf(unit) === 'rect');
+    if (cells.length === 0) return;
+    for (const axis of ['x', 'y'] as const) {
+        const count = axis === 'x' ? ctx.layout.xContinuousAsDiscrete : ctx.layout.yContinuousAsDiscrete;
+        if (count <= 0) continue;
+        const enc = cells[0].encoding?.[axis] ?? shared[axis];
+        if (enc?.type !== 'temporal' || !enc.field || enc.bin || enc.timeUnit || enc.aggregate) continue;
+        const values = ctx.table.map((row: any) => row[enc.field]);
+        const calendar = calendarStep(values);
+        if (!calendar) continue;
+        const value = `datum[${JSON.stringify(enc.field)}]`;
+        const endExpr = `utcOffset('${calendar.unit}', ${value}, ${calendar.step})`;
+        const end = cellEndField(axis), mid = `__cell_${axis}_mid`;
+        const sizeKey = axis === 'x' ? 'width' : 'height';
+        const labelled = units.some((unit) => unit.encoding?.[axis] && markOf(unit) !== 'rect');
+        spec.transform = [
+            { calculate: endExpr, as: end },
+            ...(labelled ? [{ calculate: `(time(${value}) + time(${endExpr})) / 2`, as: mid }] : []),
+            ...(spec.transform ?? []),
+        ];
+        // No domain: the data's own extent, dates to period ends, is the first date to the last cell's
+        // end. A stated one would also stop the temporal ticks being planned.
+        const spanned = (target: any) => {
+            const { domain: _padded, ...scale } = target.scale ?? {};
+            return { ...target, scale: { ...scale, nice: false } };
+        };
+        for (const unit of units) {
+            const own = unit.encoding?.[axis];
+            if (markOf(unit) === 'rect') {
+                if (own) unit.encoding[axis] = spanned(own);
+                else shared[axis] = spanned(shared[axis]);
+                unit.encoding = { ...(unit.encoding ?? {}), [`${axis}2`]: { field: end } };
+                if (unit.mark && typeof unit.mark === 'object') {
+                    const { [sizeKey]: _cut, ...mark } = unit.mark;
+                    unit.mark = mark;
+                }
+            } else if (own) {
+                // A label stands at its cell's middle, on the cells' scale and axis. It keeps the axis
+                // (dropping it in one layer drops the shared axis) and the cells' title, not its own field's.
+                unit.encoding[axis] = { ...spanned(own), field: mid, title: 'title' in own ? own.title : own.field };
+            }
+        }
     }
 }
 

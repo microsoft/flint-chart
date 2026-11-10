@@ -134,13 +134,17 @@ const VL_LAST = ['data', 'datasets', 'config'];
 const VL_COLS = 66;
 
 /** The Vega-Lite the compiler writes for the spec, its data rows folded away and its marks shown first. */
-function compiled(spec: ChartAssemblyInput): string[] {
+function compiled(spec: ChartAssemblyInput): Record<string, unknown> {
   const vl = assembleVegaLite(spec) as Record<string, unknown>;
   const rank = (k: string) => (VL_FIRST.includes(k) ? VL_FIRST.indexOf(k) : VL_LAST.includes(k) ? 100 + VL_LAST.indexOf(k) : 50);
-  const ordered = Object.fromEntries(Object.keys(vl).filter((k) => k !== '$schema').sort((a, b) => rank(a) - rank(b)).map((k) => [k, vl[k]]));
+  return Object.fromEntries(Object.keys(vl).filter((k) => k !== '$schema').sort((a, b) => rank(a) - rank(b)).map((k) => [k, vl[k]]));
+}
+
+/** The compiled spec as printed: short objects on one line, value lists (a sort order, axis values) packed and wrapped. */
+function vlLines(ordered: Record<string, unknown>, omit: readonly string[] = []): string[] {
   const rows = (v: unknown) => Array.isArray(v) && v.length > 20 && typeof v[0] === 'object';
-  // Compact: short objects on one line, value lists (a sort order, axis values) packed and wrapped.
-  const folded = JSON.parse(JSON.stringify(ordered, (_k, v) => (rows(v) ? '__ROWS__' : v)));
+  const kept = Object.fromEntries(Object.entries(ordered).filter(([k]) => !omit.includes(k)));
+  const folded = JSON.parse(JSON.stringify(kept, (_k, v) => (rows(v) ? '__ROWS__' : v)));
   return condensedJson(folded, VL_COLS).replace(/"__ROWS__"/g, '[...]').split('\n');
 }
 
@@ -209,19 +213,19 @@ const NOTE_GAP_MAX = 72;
 const NOTE_LIFT = 40;
 
 /** Each part's layer, from the lines it owns. */
-function layers(rows: CodeRow[]) {
+function layers(rows: CodeRow[], lineHeight = LINE_H) {
   return PARTS.map((part) => {
     const first = rows.findIndex((r) => r.part === part.id);
     const last = rows.length - 1 - [...rows].reverse().findIndex((r) => r.part === part.id);
-    return { id: part.id, color: part.color, top: CODE_TOP + first * LINE_H - LAYER_PAD, height: (last - first + 1) * LINE_H + LAYER_PAD * 2 };
+    return { id: part.id, color: part.color, top: CODE_TOP + first * lineHeight - LAYER_PAD, height: (last - first + 1) * lineHeight + LAYER_PAD * 2 };
   });
 }
 
 /** The notes as one evenly spaced column: equal gaps between them, from a little above the first layer down to the spec's bottom. */
-function noteTops(ls: { top: number }[], heights: number[]) {
+function noteTops(ls: { top: number }[], heights: number[], bottom = BOTTOM) {
   const h = (i: number) => heights[i] ?? NOTE_H;
   const n = ls.length, total = ls.reduce((sum, _l, i) => sum + h(i), 0);
-  const from = ls[0].top - NOTE_LIFT, to = BOTTOM;
+  const from = ls[0].top - NOTE_LIFT, to = bottom;
   const gap = Math.min(NOTE_GAP_MAX, Math.max(NOTE_GAP, (to - from - total) / (n - 1)));
   const tops: number[] = [];
   // Centred in the room it has, so a short column does not hang from the top.
@@ -292,7 +296,7 @@ function DataPad({ size, color, onChange }: { size: Size; color: string; onChang
 
 // ---------------------------------------------------------------- code
 const TOKEN = /(\/\/.*$)|("(?:[^"\\]|\\.)*")(\s*:)?|([{}[\],:])/g;
-function CodeLine({ text, changed }: { text: string; changed?: string }) {
+function CodeLine({ text, changed, lineHeight = LINE_H }: { text: string; changed?: string; lineHeight?: number }) {
   const out: ReactNode[] = [];
   let last = 0;
   for (const m of text.matchAll(TOKEN)) {
@@ -307,7 +311,7 @@ function CodeLine({ text, changed }: { text: string; changed?: string }) {
     last = at + whole.length;
   }
   if (last < text.length) out.push(text.slice(last));
-  return <div className="fd-line" style={{ height: u(LINE_H), lineHeight: u(LINE_H), backgroundColor: changed ? `${changed}14` : 'transparent' }}>{out}</div>;
+  return <div className="fd-line" style={{ height: u(lineHeight), lineHeight: u(lineHeight), backgroundColor: changed ? `${changed}14` : 'transparent' }}>{out}</div>;
 }
 
 // ---------------------------------------------------------------- the app: what the chart's onChange reports
@@ -438,6 +442,80 @@ function lineDiff(a: readonly string[], b: readonly string[]): { plus: number; m
   return { plus: b.length - same, minus: a.length - same };
 }
 
+type DiffLine = { op: ' ' | '+' | '-'; text: string };
+/** The most cells the line-by-line table may hold; past it, a swap shows only its counts. */
+const DIFF_CELLS = 4_000_000;
+
+/** `a` to `b` line by line, kept, removed and added, by the longest common subsequence; null where too long to compare. */
+function diffLines(a: readonly string[], b: readonly string[]): DiffLine[] | null {
+  const n = a.length, m = b.length;
+  if ((n + 1) * (m + 1) > DIFF_CELLS) return null;
+  const width = m + 1;
+  const table = new Uint16Array((n + 1) * width);
+  for (let i = n - 1; i >= 0; i--) {
+    for (let j = m - 1; j >= 0; j--) {
+      table[i * width + j] = a[i] === b[j] ? table[(i + 1) * width + j + 1] + 1 : Math.max(table[(i + 1) * width + j], table[i * width + j + 1]);
+    }
+  }
+  const out: DiffLine[] = [];
+  let i = 0, j = 0;
+  while (i < n && j < m) {
+    if (a[i] === b[j]) { out.push({ op: ' ', text: a[i] }); i++; j++; }
+    else if (table[(i + 1) * width + j] >= table[i * width + j + 1]) out.push({ op: '-', text: a[i++] });
+    else out.push({ op: '+', text: b[j++] });
+  }
+  while (i < n) out.push({ op: '-', text: a[i++] });
+  while (j < m) out.push({ op: '+', text: b[j++] });
+  return out;
+}
+
+/** Unchanged lines kept either side of a change. */
+const DIFF_CONTEXT = 2;
+type DiffRow = DiffLine | { op: 'gap'; count: number };
+/** The changes with a little context, each run of unchanged lines between them folded to a count. */
+function diffHunks(lines: readonly DiffLine[]): DiffRow[] {
+  const near = lines.map(() => false);
+  lines.forEach((line, index) => {
+    if (line.op === ' ') return;
+    for (let k = Math.max(0, index - DIFF_CONTEXT); k <= Math.min(lines.length - 1, index + DIFF_CONTEXT); k++) near[k] = true;
+  });
+  const rows: DiffRow[] = [];
+  let folded = 0;
+  lines.forEach((line, index) => {
+    if (near[index]) {
+      if (folded) rows.push({ op: 'gap', count: folded });
+      folded = 0;
+      rows.push(line);
+    } else folded++;
+  });
+  if (folded) rows.push({ op: 'gap', count: folded });
+  return rows;
+}
+
+const DIFF_INK = {
+  '+': { background: 'rgba(26, 127, 55, 0.12)', color: '#116329', sign: '+' },
+  '-': { background: 'rgba(207, 34, 46, 0.10)', color: '#a40e26', sign: '−' },
+} as const;
+
+/** The last swap's changes to the compiled Vega-Lite: removed lines in red, added in green, the rest folded. */
+function VlDiff({ rows, limit }: { rows: readonly DiffRow[]; limit: number }) {
+  return (
+    <>
+      {rows.slice(0, limit).map((row, index) => {
+        if (row.op === 'gap') {
+          return <div key={index} style={{ color: 'rgba(0, 0, 0, 0.35)', fontStyle: 'italic' }}>{`  ⋯ ${row.count} unchanged line${row.count === 1 ? '' : 's'}`}</div>;
+        }
+        const ink = row.op === ' ' ? undefined : DIFF_INK[row.op];
+        return (
+          <div key={index} style={ink ? { background: ink.background, color: ink.color } : undefined}>
+            {`${ink ? ink.sign : ' '} ${row.text}`}
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
 /** `+n −m` for the last swap, in the add and remove colours; nothing before the first swap. */
 function Edits({ diff }: { diff: { plus: number; minus: number } | null }) {
   if (!diff) return null;
@@ -486,8 +564,17 @@ const STYLES = `
 .fd-label { font-size: ${u(12.5)}; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: ${MUTED}; }
 `;
 
-/** The design figure. `embedded` draws the spec, its notes, the compiled Vega-Lite and the chart (no header or footer), sized to its parent. */
+/** The design figure. `embedded` uses a larger, unboxed spec for the talk, without the page header or footer. */
 export function DevDesign({ embedded = false }: { embedded?: boolean } = {}) {
+  const specWidth = embedded ? 680 : SPEC_W;
+  const noteX = embedded ? 804 : NOTE_X;
+  const noteWidth = embedded ? 330 : NOTE_W;
+  const vlX = embedded ? 1220 : VL_X;
+  const vlWidth = DW - 64 - vlX;
+  const peek = embedded ? 16 : PEEK;
+  const bottom = embedded ? TOP + 950 : BOTTOM;
+  const frameHeight = embedded ? bottom + 64 : DH;
+  const lineHeight = embedded ? 34 : LINE_H;
   const [state, setState] = useState<State>(START);
   const [prev, setPrev] = useState<State>(START);
   const [hovered, setActive] = useState<Part | null>(null);
@@ -526,13 +613,15 @@ export function DevDesign({ embedded = false }: { embedded?: boolean } = {}) {
   const [k, setK] = useState(1);
   const [natural, setNatural] = useState({ width: 420, height: 360 });
   // The chart is laid out at its own size, then shown smaller to fit its room, never cropped.
-  const fit = Math.min(1, CHART_MAX_W / natural.width, CHART_MAX_H / natural.height);
+  const maxChartWidth = embedded ? vlWidth + peek - CARD_PAD * 2 : CHART_MAX_W;
+  const fit = Math.min(1, maxChartWidth / natural.width, CHART_MAX_H / natural.height);
   // The card wraps the chart; the app panel sits under it at the same width; the two centre on the Vega-Lite.
   const chartW = natural.width * fit, chartH = natural.height * fit;
   const cardW = Math.max(MIN_CARD_W, chartW + CARD_PAD * 2), cardH = CARD_HEAD + CARD_PAD * 2 + chartH;
-  const groupTop = GROUP_TOP + Math.max(0, (GROUP_BOTTOM - GROUP_TOP - (cardH + GROUP_GAP + APP_H)) / 2);
+  const groupBottom = embedded ? bottom - 20 : GROUP_BOTTOM;
+  const groupTop = GROUP_TOP + Math.max(0, (groupBottom - GROUP_TOP - (cardH + GROUP_GAP + APP_H)) / 2);
   // Always hanging past the Vega-Lite's left edge; a wider chart grows to the right, inside it.
-  const cardLeft = VL_X - PEEK;
+  const cardLeft = vlX - peek;
   useLayoutEffect(() => {
     const stage = stageRef.current, chart = chartRef.current;
     if (!stage || !chart) return undefined;
@@ -549,14 +638,24 @@ export function DevDesign({ embedded = false }: { embedded?: boolean } = {}) {
   // While the pad is dragged the chart follows a step behind, so the drag stays smooth.
   const shown = useDeferredValue(state);
   const spec = useMemo(() => input(shown), [shown]);
-  const vl = useMemo(() => compiled(spec), [spec]);
-  // What the last swap changed, in each language.
+  const compiledVl = useMemo(() => compiled(spec), [spec]);
+  const vl = useMemo(() => vlLines(compiledVl), [compiledVl]);
+  // The diff leaves out the title: the subtitle names the months, so every change of data rewrites it.
+  const vlUntitled = useMemo(() => vlLines(compiledVl, ['title']), [compiledVl]);
+  // What the last swap changed, in each language: the Vega-Lite's lines, removed and added.
   const prevVl = useRef<string[] | null>(null);
   const [vlDiff, setVlDiff] = useState<{ plus: number; minus: number } | null>(null);
+  const [vlRows, setVlRows] = useState<DiffRow[] | null>(null);
   useEffect(() => {
-    if (prevVl.current && prevVl.current !== vl) setVlDiff(lineDiff(prevVl.current, vl));
-    prevVl.current = vl;
-  }, [vl]);
+    if (prevVl.current && prevVl.current !== vlUntitled) {
+      const lines = diffLines(prevVl.current, vlUntitled);
+      setVlDiff(lines
+        ? { plus: lines.filter((line) => line.op === '+').length, minus: lines.filter((line) => line.op === '-').length }
+        : lineDiff(prevVl.current, vlUntitled));
+      setVlRows(lines ? diffHunks(lines) : null);
+    }
+    prevVl.current = vlUntitled;
+  }, [vlUntitled]);
   // What the chart reports through onChange; a new spec starts over.
   const [pick, setPick] = useState<Pick | null>(null);
   useEffect(() => setPick(null), [spec]);
@@ -594,8 +693,8 @@ export function DevDesign({ embedded = false }: { embedded?: boolean } = {}) {
   const specDiff = state === prev ? null : lineDiff(before.map((r) => r.text), rows.map((r) => r.text));
   const owned = (part: Part, list: CodeRow[]) => new Set(list.filter((r) => r.part === part).map((r) => r.text));
   const previous = Object.fromEntries(PARTS.map((p) => [p.id, owned(p.id, before)])) as Record<Part, Set<string>>;
-  const sheets = layers(rows);
-  const notes = noteTops(sheets, noteHeights);
+  const sheets = layers(rows, lineHeight);
+  const notes = noteTops(sheets, noteHeights, bottom);
 
   const content = (<>
           {!embedded && <header style={{ position: 'absolute', top: u(32), left: u(SPEC_X), right: u(64) }}>
@@ -624,14 +723,16 @@ export function DevDesign({ embedded = false }: { embedded?: boolean } = {}) {
 
           {/* The spec: one block of code. */}
           <div style={{
-            position: 'absolute', top: u(TOP), left: u(SPEC_X), width: u(SPEC_W), height: u(BOTTOM - TOP), boxSizing: 'border-box',
-            background: '#fff', border: `1px solid ${LINE}`, borderRadius: u(16), boxShadow: SHADOW,
+            position: 'absolute', top: u(TOP), left: u(SPEC_X), width: u(specWidth), height: u(bottom - TOP), boxSizing: 'border-box',
+            background: '#fff', border: embedded ? undefined : `1px solid ${LINE}`, borderRadius: embedded ? undefined : u(16), boxShadow: embedded ? undefined : SHADOW,
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: u(HEAD_H), padding: `0 ${u(20)}`, borderBottom: `1px solid ${LINE}` }}>
+            {embedded ? <div style={{ padding: `0 ${u(20)}`, font: `650 ${u(40)}/1.2 ${siteTheme.fontSans}`, letterSpacing: '-0.01em', color: INK, whiteSpace: 'nowrap' }}>
+              Flint: a simple spec for good-looking charts
+            </div> : <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: u(HEAD_H), padding: `0 ${u(20)}`, borderBottom: `1px solid ${LINE}` }}>
               <span className="fd-label">Flint spec<span style={{ fontWeight: 400, letterSpacing: 0, textTransform: 'none' }}> · {rows.length} lines{specDiff ? <> · <Edits diff={specDiff} /></> : null}</span></span>
-            </div>
-            <div style={{ position: 'absolute', top: u(CODE_TOP - TOP), left: u(20), right: u(20), fontFamily: MONO, fontSize: u(15), color: INK }}>
-              {rows.map((r, i) => <CodeLine key={i} text={r.text} changed={r.part && !previous[r.part].has(r.text) ? COLOR[r.part] : undefined} />)}
+            </div>}
+            <div style={{ position: 'absolute', top: u(CODE_TOP - TOP), left: u(20), right: u(20), fontFamily: MONO, fontSize: u(embedded ? 22 : 15), lineHeight: u(lineHeight), color: INK }}>
+              {rows.map((r, i) => <CodeLine key={i} text={r.text} lineHeight={lineHeight} changed={r.part && !previous[r.part].has(r.text) ? COLOR[r.part] : undefined} />)}
             </div>
           </div>
 
@@ -639,15 +740,15 @@ export function DevDesign({ embedded = false }: { embedded?: boolean } = {}) {
           {sheets.map((sheet) => (
             <div key={sheet.id} className="fd-move fd-sheet" {...hover(sheet.id)} {...pin(sheet.id)} onMouseDown={(e) => e.preventDefault()} role="button" tabIndex={-1}
               aria-pressed={pinned === sheet.id} aria-label={`Highlight the ${sheet.id} spec`} style={{
-              position: 'absolute', top: u(sheet.top), height: u(sheet.height), left: u(SPEC_X + 1), width: u(SPEC_W - 2), cursor: 'pointer',
+              position: 'absolute', top: u(sheet.top), height: u(sheet.height), left: u(SPEC_X + 1), width: u(specWidth - 2), cursor: 'pointer',
               backgroundColor: pinned === sheet.id ? `${sheet.color}14` : active === sheet.id ? `${sheet.color}0b` : 'transparent',
             }} />
           ))}
 
           {/* Each part: a rounded bracket in the gutter, its curly middle flowing in one smooth line to the part's title. */}
-          <svg viewBox={`0 0 ${DW} ${DH}`} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', overflow: 'visible' }}>
+          <svg viewBox={`0 0 ${DW} ${frameHeight}`} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', overflow: 'visible' }}>
             {sheets.map((sheet, i) => {
-              const xb = SPEC_X + SPEC_W + GUTTER, x2 = NOTE_X - 12;
+              const xb = SPEC_X + specWidth + GUTTER, x2 = noteX - 12;
               const top = sheet.top + LAYER_PAD, bottom = sheet.top + sheet.height - LAYER_PAD, mid = (top + bottom) / 2;
               const r = Math.min(TICK, (bottom - top) / 4), y2 = notes[i] + 17;
               // From the bracket's middle, a curve that leaves level and lands level on the title.
@@ -666,7 +767,7 @@ export function DevDesign({ embedded = false }: { embedded?: boolean } = {}) {
 
           {PARTS.map((part, i) => (
             <div key={part.id} ref={(el) => { noteRefs.current[i] = el; }} className="fd-move fd-note" {...hover(part.id)}
-              style={{ position: 'absolute', top: u(notes[i]), left: u(NOTE_X), width: u(NOTE_W) }}>
+              style={{ position: 'absolute', top: u(notes[i]), left: u(noteX), width: u(noteWidth) }}>
               <div {...pin(part.id)} role="button" tabIndex={0} aria-pressed={pinned === part.id}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setPinned((p) => (p === part.id ? null : part.id)); } }}
                 onMouseDown={(e) => e.preventDefault()} className="fd-pin">
@@ -692,7 +793,7 @@ export function DevDesign({ embedded = false }: { embedded?: boolean } = {}) {
           <div role="button" tabIndex={0} aria-pressed={vlFront} aria-label="Show the compiled Vega-Lite"
             onMouseDown={(e) => e.preventDefault()} onClick={() => setVlFront((v) => !v)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setVlFront((v) => !v); } }}
             className="fd-vl" style={{
-            position: 'absolute', top: u(TOP), left: u(VL_X), width: u(VL_W), height: u(BOTTOM - TOP), boxSizing: 'border-box', zIndex: vlFront ? 3 : 1,
+            position: 'absolute', top: u(TOP), left: u(vlX), width: u(vlWidth), height: u(bottom - TOP), boxSizing: 'border-box', zIndex: vlFront ? 3 : 1,
             display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#fafafa', border: `1px solid ${LINE}`, borderRadius: u(16),
             boxShadow: vlFront ? '0 18px 44px rgba(0,0,0,0.16)' : SHADOW, transition: 'box-shadow .12s', cursor: 'pointer', outline: 'none',
           }}>
@@ -705,7 +806,9 @@ export function DevDesign({ embedded = false }: { embedded?: boolean } = {}) {
             <pre style={{
               flex: 1, minHeight: 0, margin: `0 ${u(26)} 0 0`, padding: `${u(10)} ${u(16)}`, overflow: 'hidden', fontFamily: MONO, fontSize: u(11.5), lineHeight: u(16.5),
               color: 'rgba(0, 0, 0, 0.62)', maskImage: 'linear-gradient(to bottom, #000 85%, transparent)', WebkitMaskImage: 'linear-gradient(to bottom, #000 85%, transparent)',
-            }}>{vl.slice(0, vlFront ? 120 : 60).join('\n')}</pre>
+            }}>{vlRows && vlDiff && (vlDiff.plus || vlDiff.minus)
+              ? <VlDiff rows={vlRows} limit={vlFront ? 120 : 60} />
+              : vl.slice(0, vlFront ? 120 : 60).join('\n')}</pre>
           </div>
 
           {/* The chart, in a card sized to it, floating in front of the Vega-Lite. While the code is in front, a click on the part that peeks out brings the chart back. */}
@@ -739,11 +842,11 @@ export function DevDesign({ embedded = false }: { embedded?: boolean } = {}) {
 
   if (embedded) {
     // Cropped to the spec, its notes and the chart: the design frame from just above the spec to just below it.
-    const top = TOP - 24, height = BOTTOM + 24 - top;
+    const top = TOP - 24, height = bottom + 24 - top;
     return (
       <div className="fd-embedded" ref={stageRef} style={{ position: 'relative', width: '100%', aspectRatio: `${DW} / ${height}`, containerType: 'inline-size', overflow: 'hidden', color: INK, fontFamily: siteTheme.fontSans }}>
         <style>{STYLES}</style>
-        <div style={{ position: 'absolute', left: 0, top: 0, width: '100%', aspectRatio: `${DW} / ${DH}`, transform: `translateY(-${u(top)})` }}>{content}</div>
+        <div style={{ position: 'absolute', left: 0, top: 0, width: '100%', aspectRatio: `${DW} / ${frameHeight}`, transform: `translateY(-${u(top)})` }}>{content}</div>
       </div>
     );
   }

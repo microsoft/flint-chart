@@ -31,7 +31,7 @@ import {
     detectBandedAxisFromSemantics, detectBandedAxisForceDiscrete,
 } from '../../core/axis-detection';
 import {
-    defaultBuildEncodings, setMarkProp, adjustBarMarks, adjustRectTiling,
+    defaultBuildEncodings, setMarkProp, adjustBarMarks, adjustRectTiling, spanCalendarCells,
     resolveAsDiscrete, alignStackOrderToColorOrder,
 } from './utils';
 
@@ -1036,6 +1036,7 @@ export const heatmapDef: ChartTemplateDef = {
                 else delete spec.encoding;
             }
         }
+        spanCalendarCells(spec, ctx);
     },
     properties: [
         { key: 'showValueLabels', label: 'Values', type: 'binary', defaultValue: false },

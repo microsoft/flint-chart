@@ -28,6 +28,7 @@ import type { LayoutPlan } from '../core/plan';
 import { AXIS_LABEL_LIMIT } from '../core/compute-layout';
 import { planAxisLabels, type AxisLabelPlan } from '../core/axis-labels';
 import { OWNED_AXIS_KEYS } from './owned-axis-keys';
+import { spansCalendarCells } from './templates/utils';
 import {
     timeMillisecond, timeSecond, timeMinute, timeHour, timeDay, timeWeek, timeMonth, timeYear,
     utcMillisecond, utcSecond, utcMinute, utcHour, utcDay, utcWeek, utcMonth, utcYear,
@@ -200,6 +201,8 @@ export function vlApplyLayoutToSpec(
     // --- Write the planned spans of banded continuous axes, where no domain is stated ---
     // Labelled heatmaps move X/Y onto rect and text layers, so every matching target takes the span.
     for (const [axis, planned] of Object.entries(bandSpans) as Array<['x' | 'y', NonNullable<LayoutPlan['bandSpans']['x']>]>) {
+        // Cells that span their periods reach from the first date to the last end on their own.
+        if (spansCalendarCells(vgObj, axis)) continue;
         for (const enc of collectEncodingTargets(axis)) {
             if (enc.bin || enc.scale?.domain) continue;
             if (enc.type !== (planned.temporal ? 'temporal' : 'quantitative')) continue;

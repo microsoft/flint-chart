@@ -1,4 +1,4 @@
-import { isValidElement, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { isValidElement, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom';
 import { DECKS } from './decks';
 import type { SlideDef } from './slides';
@@ -92,7 +92,7 @@ export function TalkDeck({ slides: SLIDES }: { slides: SlideDef[] }) {
   const current = useRef<HTMLButtonElement | null>(null);
   const showPanel = panel && !all;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const fit = () => {
       const width = window.innerWidth - (showPanel ? PANEL_WIDTH : 0);
       setScale(Math.min(width / 1600, window.innerHeight / 900));
@@ -171,7 +171,15 @@ export function TalkDeck({ slides: SLIDES }: { slides: SlideDef[] }) {
             {slide.render()}
           </section>
         ))}
-        {!all && <div className="talk-position">{index + 1} / {SLIDES.length}</div>}
+        {!all && (() => {
+          // A divider restarts the count: the main slides count to it, the ones after it from 1 again.
+          const divider = SLIDES.findIndex((slide) => slide.restartCount);
+          if (divider < 0) return <div className="talk-position">{index + 1} / {SLIDES.length}</div>;
+          if (index === divider) return null;
+          return index < divider
+            ? <div className="talk-position">{index + 1} / {divider}</div>
+            : <div className="talk-position">{index - divider} / {SLIDES.length - divider - 1}</div>;
+        })()}
       </div>
       {!all && !panel && (
         <button type="button" className="talk-panel-tab" aria-label="Show slides" onClick={() => togglePanel(true)}>

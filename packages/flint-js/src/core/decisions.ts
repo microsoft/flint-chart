@@ -173,6 +173,16 @@ export function readsAsCalendarRun(values: readonly unknown[]): boolean {
     return !!coverage && coverage.monthly && coverage.step < 12 && coverage.count === coverage.periods;
 }
 
+/**
+ * The regular step dates keep on the calendar: whole months (every date a first of the month) or
+ * whole days, at their finest common step (3 months for quarters, 7 days for weeks). Undefined for
+ * dates off the calendar grid (times of day) or fewer than two.
+ */
+export function calendarStep(values: readonly unknown[]): { unit: 'month' | 'day'; step: number } | undefined {
+    const coverage = calendarCoverage(distinctTimes(values));
+    return coverage ? { unit: coverage.monthly ? 'month' : 'day', step: coverage.step } : undefined;
+}
+
 // ---------------------------------------------------------------------------
 // Helpers for encoding type resolution
 // ---------------------------------------------------------------------------

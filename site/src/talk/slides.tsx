@@ -13,7 +13,7 @@ import { YouDrawItStage } from '../playground/YouDrawItStage';
 import { ArticleSection } from '../playground/InteractiveDataReportLab';
 import { TIME_USE } from '../playground/interactive-data-report-content';
 import {
-  FLINT_BASE, LONG_ROWS, TYPES_FLINT, typesCompiled, CARS, flintInput, flintShown, linkedYears, PICKED_GAME, PICKED_ROWS, STEPS, VL, foodLines, gameBars, heatmap, lineByType,
+  FLINT_BASE, LONG_ROWS, TYPES_FLINT, typesCompiled, INTRO, flintInput, flintShown, linkedYears, PICKED_GAME, PICKED_ROWS, STEPS, VL, foodLines, gameBars, heatmap, lineByType,
   penguins, picked, withData, type FlintState,
 } from './data';
 import {
@@ -22,7 +22,11 @@ import {
 } from './parts';
 import glue from './specs/vl-final-glue.txt?raw';
 
-export interface SlideDef { id: string; kind?: 'title' | 'section' | 'statement' | 'full'; section?: string; render: () => ReactNode }
+export interface SlideDef {
+  id: string; kind?: 'title' | 'section' | 'statement' | 'full'; section?: string; render: () => ReactNode;
+  /** A divider (backup slides, say): it shows no page number, and the slides after it are numbered from 1 again. */
+  restartCount?: boolean;
+}
 
 const UPDATE_PROMPTS: Record<string, string> = {
   dense: 'Show all 24 games.',
@@ -40,11 +44,15 @@ export const Cell = ({ caption, children, framed }: { caption?: string; children
 );
 
 /** One step of the traditional way: the code and chart before, then the code and chart after. */
-export const Step = ({ before, beforeSpec, after, afterSpec, note, flaws }: { before: CodeSource; beforeSpec: unknown; after: CodeSource; afterSpec: unknown; note?: ReactNode; flaws?: Flaw[] }) => (<>
+export const Step = ({ before, beforeSpec, beforeChart, after, afterSpec, afterChart, note, flaws }: {
+  before: CodeSource; beforeSpec: unknown; beforeChart?: ReactNode;
+  after: CodeSource; afterSpec: unknown; afterChart?: ReactNode;
+  note?: ReactNode; flaws?: Flaw[];
+}) => (<>
   <div className="talk-body talk-step">
-    <div className="talk-col"><Code rows={before} tone="vl" />{flaws ? <FlawedVegaLite spec={beforeSpec} flaws={flaws} /> : <VegaLite spec={beforeSpec} />}</div>
+    <div className="talk-col"><Code rows={before} tone="vl" />{beforeChart ?? (flaws ? <FlawedVegaLite spec={beforeSpec} flaws={flaws} /> : <VegaLite spec={beforeSpec} />)}</div>
     <div className="talk-arrow">→</div>
-    <div className="talk-col"><Code rows={after} tone="vl" /><VegaLite spec={afterSpec} /></div>
+    <div className="talk-col"><Code rows={after} tone="vl" />{afterChart ?? <VegaLite spec={afterSpec} />}</div>
   </div>
   {note && <p className="talk-note">{note}</p>}
 </>);
@@ -327,8 +335,8 @@ export const SLIDES: SlideDef[] = [
       <h2 className="is-act">Authoring with Vega-Lite</h2>
       <p className="talk-callout">Ideally, a chart is a few lines that are easy to change.</p>
       <div className="talk-body">
-        <div className="talk-col"><Code rows={stepLayout(CARS.cars)} max={26} tone="vl" /></div>
-        <div className="talk-col"><VegaLite spec={VL.cars} /></div>
+        <div className="talk-col"><Code rows={stepLayout(INTRO.heatmap)} max={26} tone="vl" /></div>
+        <div className="talk-col"><VegaLite spec={VL.heatmap} /></div>
       </div>
     </>),
   },
@@ -336,8 +344,8 @@ export const SLIDES: SlideDef[] = [
     id: 'ideal-bar', render: () => (<>
       <h2>Switching to a bar chart is one small edit</h2>
       <div className="talk-body">
-        <div className="talk-col"><Code rows={fullLayout(CARS.carsBar, CARS.cars)} max={26} tone="vl" /></div>
-        <div className="talk-col"><VegaLite spec={VL.carsBar} /></div>
+        <div className="talk-col"><Code rows={fullLayout(INTRO.bar, INTRO.heatmap)} max={26} tone="vl" /></div>
+        <div className="talk-col"><VegaLite spec={VL.bar} /></div>
       </div>
     </>),
   },

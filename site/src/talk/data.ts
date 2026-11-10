@@ -6,9 +6,8 @@ import foodPrices from '../data/cpi-food-prices.json';
 import gapminderCsv from '../assets/gapminder-five-year.csv?raw';
 import { csvParseRows } from 'd3-dsv';
 import { testCaseToAssemblyInput } from '../shared/test-case-utils';
-import cars from './specs/cars.json';
-import vlCars from './specs/vl-0-cars.json';
-import vlCarsBar from './specs/vl-0-cars-bar.json';
+import vlGames from './specs/vl-0-games.json';
+import vlGamesBar from './specs/vl-0-games-bar.json';
 import vlTheme from './specs/vl-3-theme.json';
 import vlFinal from './specs/vl-4-final.json';
 
@@ -37,6 +36,14 @@ export const LONG8 = LONG_ROWS.filter((r) => GAMES8.includes(r.game));
 
 const sumBy = <K extends string>(rows: GameRow[], key: (r: GameRow) => K, value: (r: GameRow) => number) =>
   rows.reduce((m, r) => m.set(key(r), (m.get(key(r)) ?? 0) + value(r)), new Map<K, number>());
+
+/** Four synthetic years of monthly active users, summed across regions before taking annual means. */
+export const INTRO_ROWS = [2022, 2023, 2024, 2025].flatMap((year) =>
+  [...sumBy(ROWS8, (r) => `${r.period}|${r.game}`, (r) => r.totalUsers)].map(([key, totalUsers]) => {
+    const [, game] = key.split('|');
+    const factor = year === 2025 ? 1 : 0.5 + hash01(`${year}|${game}`) * 0.8;
+    return { year, game, activeUsers: Math.round(totalUsers * factor) };
+  }));
 
 export const MONTHLY_BY_TYPE = [...sumBy(ALL_ROWS, (r) => `${r.period}|${r.gameType}`, (r) => r.totalUsers)]
   .map(([k, totalUsers]) => { const [period, gameType] = k.split('|'); return { period, gameType, totalUsers }; });
@@ -208,6 +215,35 @@ function onMonth(spec: Spec): Spec {
   return out;
 }
 
+/** Rows a compiled spec carries, kept off the spec so its code shows `games.json` like the hand-written steps. */
+const COMPILED_ROWS = new WeakMap<Spec, unknown[]>();
+const dropInternal = (node: any): any => Array.isArray(node) ? node.map(dropInternal)
+  : node && typeof node === 'object' ? Object.fromEntries(Object.entries(node).filter(([k]) => !k.startsWith('_')).map(([k, v]) => [k, dropInternal(v)]))
+  : node;
+
+/** The Economist heatmap as Flint's compiler writes it in Vega-Lite, its internal bookkeeping dropped. */
+function compiledTheme(): Spec {
+  const { data, ...rest } = dropInternal(assembleVegaLite(heatmap({ theme: 'economist', ix: null })));
+  const out: Spec = { data: dataRef, ...rest };
+  COMPILED_ROWS.set(out, data.values);
+  return out;
+}
+
+/** The view holding the heatmap's marks: the spec itself, or its first layer when the compiler layers labels on. */
+const markView = (spec: Spec): Spec => spec.layer ? spec.layer[0] : spec;
+
+/** The compiled spec with a click highlight written in by hand: pick a game, fade the rest. */
+function withClick(theme: Spec): Spec {
+  const out = structuredClone(theme);
+  const rect = markView(out);
+  rect.params = [{ name: 'pick', select: { type: 'point', fields: ['game'], on: 'click', clear: 'dblclick' } }];
+  rect.encoding.opacity = { condition: { param: 'pick', value: 1 }, value: 0.25 };
+  const picked = "!isDefined(pick.game) || indexof(pick.game, datum.value) >= 0";
+  rect.encoding.y.axis = { ...rect.encoding.y.axis, labelColor: { condition: { test: picked, value: '#121317' }, value: '#b4b8ba' } };
+  COMPILED_ROWS.set(out, COMPILED_ROWS.get(theme)!);
+  return out;
+}
+
 const RAW: Spec = {
   data: dataRef,
   mark: 'rect',
@@ -226,22 +262,26 @@ export const STEPS = {
   final: onMonth(vlFinal),
 };
 
-const values: Record<string, unknown[]> = { 'data/cars.json': cars, 'games.json': INT_ROWS };
+const THEMED = compiledTheme();
+/** The VIS talk's theme and click steps: Flint's own compiled Economist heatmap, then a click highlight added by hand. */
+export const COMPILED = { theme: THEMED, final: withClick(THEMED) };
+
+const values: Record<string, unknown[]> = { 'intro-games.json': INTRO_ROWS, 'games.json': INT_ROWS };
 /** A shown spec with its rows filled in, ready to render. */
-export const withData = (spec: Spec): Spec => ({ ...structuredClone(spec), data: { values: values[spec.data.url] } });
+export const withData = (spec: Spec): Spec => ({ ...structuredClone(spec), data: { values: COMPILED_ROWS.get(spec) ?? values[spec.data.url] } });
 
 /** The final spec with one game picked, as the app shows it after a click. */
 export function picked(spec: Spec, game: string): Spec {
   const out = withData(spec);
-  out.vconcat[1].params[0].value = [{ game }];
+  (out.vconcat ? out.vconcat[1] : markView(out)).params[0].value = [{ game }];
   return out;
 }
 
 export const PICKED_GAME = 'Granite & Glyphs';
-export const CARS = { cars: vlCars as Spec, carsBar: vlCarsBar as Spec };
+export const INTRO = { heatmap: vlGames as Spec, bar: vlGamesBar as Spec };
 export const VL = {
-  cars: withData(vlCars),
-  carsBar: withData(vlCarsBar),
+  heatmap: withData(vlGames),
+  bar: withData(vlGamesBar),
 };
 export const PICKED_ROWS = LONG8.filter((r) => r.game === PICKED_GAME).slice(0, 7);
 
@@ -289,7 +329,7 @@ export const linkedYears: ChartAssemblyInput = {
 } as ChartAssemblyInput;
 
 // ---------------------------------------------------------------- section A: what the types decide
-const TYPES_INPUT = {
+export const TYPES_INPUT = {
   data: { values: INT_ROWS.map(({ period, game, region, newUsers }) => ({ period, game, region, newUsers })) },
   semantic_types: SEM,
   chart_spec: { chartType: 'Heatmap', encodings: { x: 'period', y: 'game', color: { field: 'newUsers', aggregate: 'sum' } } },
@@ -301,6 +341,8 @@ export const TYPES_FLINT = {
   semantic_types: SEM,
   chart_spec: TYPES_INPUT.chart_spec,
 };
+
+export const TYPES_VEGA_LITE: Record<string, unknown> = assembleVegaLite(TYPES_INPUT);
 
 type Line = { text: string; hot?: boolean; gap?: boolean };
 const j = (v: unknown) => JSON.stringify(v).split('","').join('", "').split('":').join('": ').split(',"').join(', "');
@@ -314,7 +356,7 @@ const spaced = (v: unknown) => {
  * comment naming the type behind each.
  */
 export function typesCompiled(): Line[] {
-  const vl = assembleVegaLite(TYPES_INPUT) as Record<string, any>;
+  const vl = TYPES_VEGA_LITE as Record<string, any>;
   const { x, y, color } = vl.encoding;
   const ticks: string[] = x.axis?.values ?? [];
   const row = vl.data?.values?.[0] ?? {};

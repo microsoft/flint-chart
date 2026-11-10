@@ -78,23 +78,33 @@ function keyLegend(legend: any, layout: KeyLayout, labels: string[] | undefined,
 const BINNED_SCALES = new Set(['quantize', 'quantile', 'threshold', 'bin-ordinal']);
 
 /**
- * A stepped ramp standing up beside the plot runs the length the plan gave it. Vega-Lite drops a
- * binned key's own `gradientLength` and reads the config's, 200 px unless set: a ramp twice the
- * height of a short plot, running past it. A row of bins above or below is sized for its labels
- * where the theme lays it ({@link fitBinnedKeyLength}), so only an upright one is held here, never
- * shorter than a line of label per bin.
+ * A stepped ramp standing up beside the plot runs the length the plan gave it, or where the plan
+ * gave none — it lays a stepped key out as a list of swatches — no longer than the plot is tall. Vega-Lite drops a
+ * binned key's own `gradientLength` and reads the config's, which a theme sizes for a row of bins
+ * above the plot ({@link fitBinnedKeyLength}): a ramp twice the height of a short plot, running past
+ * it. Only an upright one is held here, never shorter than a line of label per bin.
  */
-function holdBinnedKeyLength(spec: any, encoding: any, layout: KeyLayout): void {
-    const length = encoding.legend?.gradientLength;
-    if (!BINNED_SCALES.has(encoding.scale?.type) || typeof length !== 'number') return;
+function holdBinnedKeyLength(spec: any, encoding: any, layout: KeyLayout, plot: { width: number; height: number }): void {
+    if (!BINNED_SCALES.has(encoding.scale?.type)) return;
     const config = (spec.config ??= {});
     const legendConfig = (config.legend ??= {});
-    const direction = encoding.legend.direction ?? legendConfig.direction ?? (['top', 'bottom'].includes(layout.orient) ? 'horizontal' : 'vertical');
+    const direction = encoding.legend?.direction ?? legendConfig.direction ?? (['top', 'bottom'].includes(layout.orient) ? 'horizontal' : 'vertical');
     if (direction !== 'vertical') return;
     const bins = Array.isArray(encoding.scale.range) ? encoding.scale.range.length
         : encoding.scale.type === 'threshold' && Array.isArray(encoding.scale.domain) ? encoding.scale.domain.length + 1
             : encoding.scale.scheme?.count ?? 0;
-    const fontSize = encoding.legend.labelFontSize ?? legendConfig.labelFontSize ?? 10;
+    const fontSize = encoding.legend?.labelFontSize ?? legendConfig.labelFontSize ?? 10;
+    const planned = encoding.legend?.gradientLength;
+    let length: number;
+    if (typeof planned === 'number') length = planned;
+    else {
+        // The plot's height, less the key's title above the ramp.
+        const titled = encoding.legend?.title !== null;
+        const titleSize = encoding.legend?.titleFontSize ?? legendConfig.titleFontSize ?? 11;
+        const lines = Array.isArray(encoding.legend?.title) ? encoding.legend.title.length : 1;
+        const title = titled ? lines * Math.ceil(titleSize * 1.2) + (encoding.legend?.titlePadding ?? legendConfig.titlePadding ?? 5) : 0;
+        length = Math.min(legendConfig.gradientLength ?? 200, plot.height - title);
+    }
     const held = Math.round(Math.max(length, bins * (fontSize + 2)));
     // Keys share the config's length: an upright stepped ramp holds the shortest any of them asks for.
     legendConfig.gradientLength = Math.min(legendConfig.gradientLength ?? Infinity, held);
@@ -157,7 +167,7 @@ export function vlWriteKeyLayout(
             if (key.samples && encoding.legend.values === undefined) {
                 encoding.legend = { ...encoding.legend, values: key.samples, ...exactLegendLabels(encoding.legend, key.samples) };
             }
-            holdBinnedKeyLength(spec, encoding, keyLayout);
+            holdBinnedKeyLength(spec, encoding, keyLayout, layout.plot);
         }
     });
     writeEdges(spec, layout.edges);

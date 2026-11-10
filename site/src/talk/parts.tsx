@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import type { ChartAssemblyInput } from 'flint-chart';
 import { FlintChart } from 'flint-chart/react';
 import { ScaleToFit } from '../components/ScaleToFit';
@@ -41,10 +41,16 @@ export function FlawedVegaLite({ spec, flaws }: { spec: unknown; flaws: Flaw[] }
     const el = host.current, canvas = canvasRef.current;
     if (!el || !canvas) return;
     let ready = false;
+    let disposed = false;
+    let frame = 0;
     const draw = () => {
       const svg = el.querySelector('svg.marks, svg');
       const w = el.clientWidth, h = el.clientHeight;
       if (!ready || !svg || !w || !h) return;
+      if (getComputedStyle(svg).visibility === 'hidden') {
+        if (canvas.style.visibility !== 'hidden') canvas.style.visibility = 'hidden';
+        return;
+      }
       const hb = el.getBoundingClientRect(), k = hb.width / w || 1;
       const dpr = Math.max(2, window.devicePixelRatio * 1.5);
       canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
@@ -73,21 +79,35 @@ export function FlawedVegaLite({ spec, flaws }: { spec: unknown; flaws: Flaw[] }
         ctx.fillText(String(i + 1), bx, by + 1);
         ctx.restore();
       });
+      if (canvas.style.visibility !== 'visible') canvas.style.visibility = 'visible';
       canvas.dataset.drawn = 'true';
     };
-    void document.fonts.load("700 20px 'Kalam'").then(() => { ready = true; draw(); });
-    const ro = new ResizeObserver(draw);
+    const schedule = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(draw);
+    };
+    void document.fonts.load("700 20px 'Kalam'").then(() => {
+      if (disposed) return;
+      ready = true;
+      schedule();
+    });
+    const ro = new ResizeObserver(schedule);
     ro.observe(el);
-    const mo = new MutationObserver(() => requestAnimationFrame(draw));
-    mo.observe(el, { childList: true, subtree: true });
-    return () => { ro.disconnect(); mo.disconnect(); };
+    const mo = new MutationObserver(schedule);
+    mo.observe(el, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'transform'] });
+    return () => {
+      disposed = true;
+      cancelAnimationFrame(frame);
+      ro.disconnect();
+      mo.disconnect();
+    };
   }, [flaws]);
   return (
     <div ref={host} className="talk-fit" style={{ position: 'relative' }}>
-      <ScaleToFit height={0} fill maxScale={1.8}>
+      <ScaleToFit height={0} fill maxScale={1.8} padding={26}>
         <VegaLiteView spec={spec} renderer="svg" />
       </ScaleToFit>
-      <canvas ref={canvasRef} className="talk-sketch" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }} />
+      <canvas ref={canvasRef} className="talk-sketch" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', visibility: 'hidden' }} />
     </div>
   );
 }
@@ -102,10 +122,10 @@ export function FlawList({ flaws }: { flaws: Flaw[] }) {
 }
 
 /** A site demo laid out at `width`, scaled to fit its box. Flint's pointer handling follows the scale. */
-export function Demo({ width, children }: { width: number; children: ReactNode }) {
+export function Demo({ width, children, maxScale = 1 }: { width: number; children: ReactNode; maxScale?: number }) {
   return (
     <div className="talk-fit">
-      <ScaleToFit height={0} fill>
+      <ScaleToFit height={0} fill maxScale={maxScale}>
         <div style={{ width }}>{children}</div>
       </ScaleToFit>
     </div>
@@ -350,8 +370,8 @@ const colsAt = (w: number, size: number) => Math.max(8, Math.floor(w / (CHAR_W *
  * the columns each size allows; fixed rows wrap long lines under their own indent. When the rows
  * still do not fit, each changed run shows its first lines and says how many more it has.
  */
-export function Code({ rows: source, max = 22, min = 14, tone = 'flint' }: {
-  rows: CodeSource; max?: number; min?: number;
+export function Code({ rows: source, max = 22, min = 14, tone = 'flint', lineHeight = LINE_H }: {
+  rows: CodeSource; max?: number; min?: number; lineHeight?: number;
   /** Flint code marks its changes in blue; Vega-Lite code marks them in red, to show what it costs. */
   tone?: 'flint' | 'vl';
 }) {
@@ -359,7 +379,7 @@ export function Code({ rows: source, max = 22, min = 14, tone = 'flint' }: {
   const [fit, setFit] = useState<{ size: number; k: number; shown: number; cols: number }>({ size: max, k: Infinity, shown: Infinity, cols: 60 });
   const layout = (cols: number) => (typeof source === 'function' ? source(Math.max(MIN_COLS, cols - 1)) : source);
   const key = layout(60).map((r) => (r.hot ? '+' : r.gap ? '~' : ' ') + r.text).join('\n');
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
     const measure = () => {
@@ -375,7 +395,7 @@ export function Code({ rows: source, max = 22, min = 14, tone = 'flint' }: {
           return text.length <= cols ? 1 : 1 + Math.ceil((text.length - cols) / (cols - hang));
         });
       };
-      const fits = (list: CodeRow[], size: number) => sum(lines(list, size)) <= Math.floor(h / (LINE_H * size));
+      const fits = (list: CodeRow[], size: number) => sum(lines(list, size)) <= Math.floor(h / (lineHeight * size));
       const narrow = colsAt(w, min);
       const rows = layout(narrow);
       let next = { size: min, k: Infinity, shown: Infinity, cols: narrow };
@@ -386,7 +406,7 @@ export function Code({ rows: source, max = 22, min = 14, tone = 'flint' }: {
       }
       for (let k = rows.length; k >= 1 && !found; k--) if (fits(sampled(rows, k), min)) { next = { size: min, k, shown: Infinity, cols: narrow }; found = true; }
       if (!found) {
-        const list = sampled(rows, 1), per = lines(list, min), budget = Math.floor(h / (LINE_H * min));
+        const list = sampled(rows, 1), per = lines(list, min), budget = Math.floor(h / (lineHeight * min));
         let used = 1, shown = 0;
         while (shown < list.length && used + per[shown] <= budget) used += per[shown++];
         next = { size: min, k: 1, shown, cols: narrow };
@@ -398,11 +418,11 @@ export function Code({ rows: source, max = 22, min = 14, tone = 'flint' }: {
     ro.observe(el);
     return () => ro.disconnect();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key, max, min]);
+  }, [key, max, min, lineHeight]);
   const list = sampled(layout(fit.cols), fit.k);
   const shown = fit.shown < list.length ? [...list.slice(0, fit.shown), hiddenRow(list.slice(fit.shown))] : list;
   return (
-    <pre ref={ref} className={`talk-code ${tone}`} style={{ fontSize: fit.size }}>
+    <pre ref={ref} className={`talk-code ${tone}`} style={{ fontSize: fit.size, lineHeight }}>
       {shown.map((r, i) => {
         const hang = indentOf(r.text) + 2;
         return (
