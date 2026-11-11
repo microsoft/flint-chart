@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync, writeSync } from 'node:fs';
 import os from 'node:os';
-import { dirname, resolve } from 'node:path';
+import { dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { performance } from 'node:perf_hooks';
 import v8 from 'node:v8';
@@ -280,51 +280,142 @@ function environmentMetadata() {
   };
 }
 
-async function runWorker(caseId) {
-  const testCase = CASES.find(({ id }) => id === caseId);
-  if (!testCase) throw new Error(`Unknown benchmark worker case: ${caseId}`);
-  const sample = await measure(testCase, 1, 'cold-first-operation-in-fresh-process');
-  process.stdout.write(`${JSON.stringify(sample)}\n`);
-  if (sample.status !== 'ok') process.exitCode = 1;
+function writeWorkerEvent(event, sample) {
+  writeSync(1, `${JSON.stringify({ event, sample })}\n`);
 }
 
-function runColdSample(testCase, index) {
-  const child = spawnSync(process.execPath, [...process.execArgv, scriptPath, '--worker', testCase.id], {
-    encoding: 'utf8',
-    maxBuffer: 1024 * 1024,
-  });
-  if (child.status === 0) {
+function invocationMetadata() {
+  const root = spawnSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf8' });
+  if (root.status !== 0) throw new Error('Could not resolve the repository root for invocation metadata');
+  return {
+    argv: [relative(process.cwd(), scriptPath), ...process.argv.slice(2)],
+    workingDirectory: relative(root.stdout.trim(), process.cwd()) || '.',
+  };
+}
+
+async function runWorker(caseId, samples) {
+  const testCase = CASES.find(({ id }) => id === caseId);
+  if (!testCase) throw new Error(`Unknown benchmark worker case: ${caseId}`);
+  const cold = await measure(testCase, 1, 'cold-first-operation-in-fresh-process');
+  writeWorkerEvent('cold', cold);
+  if (cold.status !== 'ok') return;
+
+  const warmup = await measure(testCase, 0, 'warmup-excluded');
+  writeWorkerEvent('warmup', warmup);
+  if (warmup.status !== 'ok') return;
+
+  for (let index = 1; index <= samples; index++) {
+    const sample = await measure(testCase, index, 'warm');
+    writeWorkerEvent('warm', sample);
+    if (sample.status !== 'ok') return;
+  }
+}
+
+function parseWorkerEvents(stdout) {
+  const events = [];
+  const malformed = [];
+  for (const line of stdout.split('\n').filter(Boolean)) {
     try {
-      return { ...JSON.parse(child.stdout), index };
-    } catch (error) {
-      return {
-        phase: 'cold-first-operation-in-fresh-process',
-        index,
-        status: 'error',
-        error: {
-          name: 'WorkerProtocolError',
-          message: `Worker returned invalid JSON: ${error.message}; stderr: ${child.stderr.trim()}`,
-        },
-      };
+      const event = JSON.parse(line);
+      if (event && typeof event.event === 'string' && event.sample) events.push(event);
+      else malformed.push(line);
+    } catch {
+      malformed.push(line);
     }
   }
-  let workerSample;
-  try {
-    workerSample = JSON.parse(child.stdout);
-  } catch {
-    workerSample = undefined;
+  return { events, malformed };
+}
+
+export function collectWorkerResult(child, requestedSamples) {
+  const { events, malformed } = parseWorkerEvents(child.stdout ?? '');
+  const findEvent = (name, index) =>
+    events.find((event) => event.event === name &&
+      (index === undefined || event.sample.index === index))?.sample;
+  const timedOut = child.error?.code === 'ETIMEDOUT';
+  const processMessage = timedOut
+    ? `Worker exceeded its ${WORKER_TIMEOUT_MS} ms time limit and was killed`
+    : `Worker exited ${child.status ?? child.signal ?? 'without a status'}: ${
+        child.error?.message || child.stderr?.trim() || 'no diagnostic output'
+      }`;
+  const failedEvent = (phase, index, message = processMessage) => ({
+    phase,
+    index,
+    status: 'error',
+    elapsedMs: null,
+    error: { name: timedOut ? 'WorkerTimeout' : 'WorkerProcessError', message },
+  });
+  const notRun = (phase, index, reason) => ({
+    phase,
+    index,
+    status: 'not-run',
+    reason,
+  });
+  const cold = findEvent('cold') ?? failedEvent(
+    'cold-first-operation-in-fresh-process',
+    1,
+    malformed.length > 0 && child.status === 0
+      ? 'Worker returned malformed event data before the cold sample completed'
+      : processMessage,
+  );
+  const warmup = findEvent('warmup') ?? (
+    cold.status === 'ok'
+      ? failedEvent('warmup-excluded', 0)
+      : notRun('warmup-excluded', 0, 'Cold operation failed; warm-up was not attempted')
+  );
+  const warmSamples = [];
+  let priorError = warmup.status !== 'ok';
+  for (let index = 1; index <= requestedSamples; index++) {
+    const sample = findEvent('warm', index);
+    if (sample) {
+      warmSamples.push(sample);
+      if (sample.status !== 'ok') priorError = true;
+    } else if (priorError) {
+      warmSamples.push(notRun('warm', index, 'A preceding worker operation failed'));
+    } else {
+      warmSamples.push(failedEvent('warm', index));
+      priorError = true;
+    }
   }
-  return workerSample?.status === 'error'
-    ? { ...workerSample, index }
-    : {
-        phase: 'cold-first-operation-in-fresh-process',
-        index,
-        status: 'error',
-        error: {
-          name: 'WorkerProcessError',
-          message: `Worker exited ${child.status ?? child.signal}: ${child.error?.message || child.stderr.trim() || child.stdout.trim() || 'no diagnostic output'}`,
-        },
-      };
+  const lifecycleErrors = [];
+  if (child.status !== 0 && !timedOut && cold.status === 'ok' && warmup.status === 'ok' &&
+      warmSamples.filter((sample) => sample.status === 'ok').length === requestedSamples) {
+    lifecycleErrors.push({
+      name: 'WorkerExitError',
+      message: processMessage,
+    });
+  }
+  if (malformed.length > 0) {
+    lifecycleErrors.push({
+      name: 'WorkerProtocolError',
+      message: `Worker emitted ${malformed.length} malformed output line(s)`,
+    });
+  }
+  return {
+    cold,
+    warmup,
+    warmSamples,
+    lifecycleErrors,
+    stderr: child.stderr?.trim() || null,
+  };
+}
+
+const WORKER_TIMEOUT_MS = 15_000;
+
+function runCaseWorker(testCase, samples) {
+  const child = spawnSync(process.execPath, [
+    ...process.execArgv,
+    scriptPath,
+    '--worker',
+    testCase.id,
+    '--samples',
+    String(samples),
+  ], {
+    encoding: 'utf8',
+    maxBuffer: 1024 * 1024,
+    timeout: WORKER_TIMEOUT_MS,
+    killSignal: 'SIGKILL',
+  });
+  return collectWorkerResult(child, samples);
 }
 
 async function runBenchmark({ samples, output }) {
@@ -355,17 +446,14 @@ async function runBenchmark({ samples, output }) {
       continue;
     }
 
-    const coldSamples = [];
-    for (let i = 1; i <= samples; i++) coldSamples.push(runColdSample(testCase, i));
-
-    const warmup = await measure(testCase, 0, 'warmup-excluded');
-    const warmSamples = [];
-    for (let i = 1; i <= samples; i++) {
-      warmSamples.push(await measure(testCase, i, 'warm'));
-    }
-    const errors = [...coldSamples, ...warmSamples].filter((sample) => sample.status !== 'ok');
-    if (warmup.status !== 'ok') errors.push(warmup);
+    const workerResult = runCaseWorker(testCase, samples);
+    const coldSamples = [workerResult.cold];
+    const { warmup, warmSamples } = workerResult;
+    const errors = [...coldSamples, warmup, ...warmSamples]
+      .filter((sample) => sample.status === 'error');
+    errors.push(...workerResult.lifecycleErrors);
     const firstSuccessfulOutput = warmSamples.find((sample) => sample.output)?.output;
+    const coldOutput = workerResult.cold.output;
     cases.push({
       id: testCase.id,
       kind: testCase.kind,
@@ -373,10 +461,12 @@ async function runBenchmark({ samples, output }) {
       format: testCase.format,
       dimensions: firstSuccessfulOutput
         ? { width: firstSuccessfulOutput.width, height: firstSuccessfulOutput.height }
+        : coldOutput
+          ? { width: coldOutput.width, height: coldOutput.height }
         : null,
       status: errors.length === 0 && warmup.status === 'ok' ? 'ok' : 'error',
       cold: {
-        definition: 'One measured first operation in each fresh Node process, after module loading.',
+        definition: 'One measured first operation in a fresh Node process for this case, after module loading.',
         samples: coldSamples,
         summary: summarizeSamples(coldSamples),
       },
@@ -387,6 +477,7 @@ async function runBenchmark({ samples, output }) {
         summary: summarizeSamples(warmSamples),
       },
       errors,
+      workerStderr: workerResult.stderr,
     });
   }
 
@@ -395,15 +486,14 @@ async function runBenchmark({ samples, output }) {
     startedAt,
     completedAt: new Date().toISOString(),
     source: gitMetadata(),
-    invocation: {
-      argv: process.argv.slice(1),
-      workingDirectory: process.cwd(),
-    },
+    invocation: invocationMetadata(),
     environment: environmentMetadata(),
     fixture: fixtureInfo(),
     configuration: {
-      requestedSamplesPerPhase: samples,
+      requestedWarmSamplesPerCase: samples,
       warmupOperationsPerCase: 1,
+      coldSamplesPerCase: 1,
+      workerTimeoutMs: WORKER_TIMEOUT_MS,
       outputFormat: 'JSON',
       memoryDefinition: 'process.memoryUsage snapshots before and after each operation; deltas are not allocation totals or peak memory.',
       memoryFields: ['rss', 'heapTotal', 'heapUsed', 'external', 'arrayBuffers'],
@@ -426,7 +516,7 @@ async function runBenchmark({ samples, output }) {
 function printHelp() {
   process.stdout.write(
     'Usage: npm run benchmark:render -- [--samples N] [--out FILE]\n' +
-      '  --samples N  Cold and warm samples per case (minimum 3, default 5)\n' +
+      '  --samples N  Warm samples after each cold sample (minimum 3, default 5)\n' +
       '  --out FILE   Write a new JSON result file; existing files are not overwritten\n' +
       '  -h, --help   Show this help\n',
   );
@@ -438,18 +528,20 @@ async function main() {
     printHelp();
     return 0;
   }
-  const [{ assembleForBackend: compiler }, { STATIC_SERIES_LINE_BASIC }, renderer] = await Promise.all([
-    import('flint-chart'),
-    import('flint-chart/test-data'),
-    import('../packages/flint-mcp/dist/render/index.js'),
-  ]);
-  assembleForBackend = compiler;
-  staticFixture = STATIC_SERIES_LINE_BASIC;
-  renderChart = renderer.renderChart;
   if (options.worker) {
-    await runWorker(options.worker);
+    const [{ assembleForBackend: compiler }, { STATIC_SERIES_LINE_BASIC }, renderer] = await Promise.all([
+      import('flint-chart'),
+      import('flint-chart/test-data'),
+      import('../packages/flint-mcp/dist/render/index.js'),
+    ]);
+    assembleForBackend = compiler;
+    staticFixture = STATIC_SERIES_LINE_BASIC;
+    renderChart = renderer.renderChart;
+    await runWorker(options.worker, options.samples);
     return process.exitCode ?? 0;
   }
+  const { STATIC_SERIES_LINE_BASIC } = await import('flint-chart/test-data');
+  staticFixture = STATIC_SERIES_LINE_BASIC;
   return runBenchmark(options);
 }
 

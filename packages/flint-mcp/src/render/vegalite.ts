@@ -52,13 +52,17 @@ export async function renderVegaLite(
   const runtime = vega.parse(compiled as any, { background: args.background } as any);
   const view = new vega.View(runtime, { renderer: 'none' });
   view.logLevel(vega.Error);
-  await view.runAsync();
-  // A house may anchor branding to the graphic frame rather than the plot —
-  // the Economist's red masthead tab. Vega-Lite cannot express that, so the
-  // theme records the coordinates and the renderer paints it on afterwards.
-  // Done before rasterising, so the PNG carries it too.
-  const svg = injectCanvasFurnitureSVG(await view.toSVG(), readCanvasFurniture(spec));
-  view.finalize();
+  let svg: string;
+  try {
+    await view.runAsync();
+    // A house may anchor branding to the graphic frame rather than the plot —
+    // the Economist's red masthead tab. Vega-Lite cannot express that, so the
+    // theme records the coordinates and the renderer paints it on afterwards.
+    // Done before rasterising, so the PNG carries it too.
+    svg = injectCanvasFurnitureSVG(await view.toSVG(), readCanvasFurniture(spec));
+  } finally {
+    view.finalize();
+  }
 
   // Vega's View width/height report the content box, excluding axes/legends.
   // The root SVG dimensions are the actual artifact dimensions used by resvg.

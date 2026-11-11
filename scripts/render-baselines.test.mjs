@@ -3,10 +3,15 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { parseArgs, summarize, verifyRenderResult } from './render-baselines.mjs';
+import {
+  collectWorkerResult,
+  parseArgs,
+  summarize,
+  verifyRenderResult,
+} from './render-baselines.mjs';
 
 describe('render benchmark helpers', () => {
-  it('requires at least three cold and warm samples', () => {
+  it('requires at least three warm samples', () => {
     assert.equal(parseArgs([]).samples, 5);
     assert.equal(parseArgs(['--samples', '3']).samples, 3);
     assert.throws(() => parseArgs(['--samples', '2']), /at least 3/);
@@ -66,5 +71,28 @@ describe('render benchmark helpers', () => {
       () => verifyRenderResult({ ...result, svg: '<svg width="12" height="9"></svg>' }, testCase),
       /do not match reported/,
     );
+  });
+
+  it('preserves completed samples and records an in-flight timeout as an error', () => {
+    const coldSample = {
+      phase: 'cold-first-operation-in-fresh-process',
+      index: 1,
+      status: 'ok',
+      elapsedMs: 10,
+      memory: { delta: {} },
+      output: { width: 10, height: 8 },
+    };
+    const result = collectWorkerResult({
+      status: null,
+      signal: 'SIGKILL',
+      error: Object.assign(new Error('spawnSync timed out'), { code: 'ETIMEDOUT' }),
+      stdout: `${JSON.stringify({ event: 'cold', sample: coldSample })}\n`,
+      stderr: '',
+    }, 3);
+    assert.deepEqual(result.cold, coldSample);
+    assert.equal(result.warmup.status, 'error');
+    assert.equal(result.warmup.error.name, 'WorkerTimeout');
+    assert.equal(result.warmSamples[0].status, 'not-run');
+    assert.equal(result.warmSamples.length, 3);
   });
 });

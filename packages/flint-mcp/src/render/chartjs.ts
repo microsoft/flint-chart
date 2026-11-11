@@ -56,9 +56,13 @@ export async function renderChartjs(
   };
 
   const chart = new Chart(canvas, merged);
-  chart.draw();
-  const buffer = Buffer.from(canvas.toBuffer('image/png'));
-  chart.destroy();
+  let buffer: Buffer;
+  try {
+    chart.draw();
+    buffer = Buffer.from(canvas.toBuffer('image/png'));
+  } finally {
+    chart.destroy();
+  }
 
   return {
     backend: 'chartjs',
