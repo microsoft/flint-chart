@@ -133,4 +133,29 @@ describe('overflow category selection', () => {
     expect(applyCategoryViewports(data, result.viewports, { x: 1 }))
       .toEqual([data[1], data[2], data[3]]);
   });
+  it('keeps explicit order duplicates and drops missing values before truncation', () => {
+    const data = ['Delta', 'Alpha', 'Charlie', 'Bravo'].map(Category => ({ Category, Value: 1 }));
+    const sortBy = JSON.stringify(['Bravo', 'Missing', 'Delta', 'Bravo', 'Alpha', 'Charlie']);
+    const run = (sortOrder?: 'ascending' | 'descending') => filterOverflow(
+      {
+        x: { field: 'Category', type: 'nominal', semanticAnnotation: annotation },
+        y: { field: 'Value', type: 'quantitative', semanticAnnotation: { semanticType: 'Quantity' } },
+      },
+      { axisFlags: { x: { banded: true } } },
+      { x: { field: 'Category', sortBy, sortOrder }, y: { field: 'Value' } },
+      data,
+      budgets,
+      marks,
+    );
+
+    const ascending = run();
+    expect(ascending.viewports[0].orderedValues).toEqual(['Bravo', 'Delta', 'Bravo', 'Alpha', 'Charlie']);
+    expect(ascending.truncations[0].keptValues).toEqual(['Bravo', 'Delta', 'Bravo']);
+    expect(ascending.warnings[0].message).toBe("1 of 4 values in 'Category' were omitted (showing first 3 in sort order).");
+    expect(ascending.filteredData).toEqual([data[0], data[3]]);
+
+    const descending = run('descending');
+    expect(descending.viewports[0].orderedValues).toEqual(['Charlie', 'Alpha', 'Bravo', 'Delta', 'Bravo']);
+    expect(descending.truncations[0].keptValues).toEqual(['Charlie', 'Alpha', 'Bravo']);
+  });
 });
