@@ -9,11 +9,56 @@
 import { describe, it, expect } from 'vitest';
 import { assembleECharts, assembleChartjs, assemblePlotly, assembleVegaLite } from '../src';
 import { validateChart, validateChartInput } from '../src/validate';
+import { repairEncodingSorts } from '../src/core/resolve-semantics';
 import { compile } from 'vega-lite';
 import { parse, View } from 'vega';
 
 const CATS = [{ Cat: 'A', Val: 30 }, { Cat: 'B', Val: 90 }, { Cat: 'C', Val: 50 }];
 const CAT_TYPES = { Cat: 'Category', Val: 'Quantity' } as const;
+
+describe('lazy sort-repair field discovery', () => {
+  it('does not enumerate rows for absent, channel, or invalid non-field sorts', () => {
+    const row = new Proxy({}, { ownKeys() { throw new Error('unexpected row enumeration'); } });
+    const encodings = {
+      x: { field: 'Cat', sortBy: 'y' },
+      y: { field: 'Val' },
+      color: { field: 'Cat', sortBy: 42, sortOrder: 'descending' },
+      size: { field: 'Val', sortOrder: 'sideways' },
+    };
+    const result = repairEncodingSorts(encodings, [row]);
+    expect(result.encodings).toEqual({
+      x: encodings.x,
+      y: encodings.y,
+      color: { field: 'Cat' },
+      size: { field: 'Val' },
+    });
+    expect(result.warnings.map(warning => warning.channel)).toEqual(['color', 'size']);
+  });
+
+  it('discovers fields on later rows once, including static-series sorts', () => {
+    let enumerations = 0;
+    const later = new Proxy({ rank: 1 }, {
+      ownKeys(target) { enumerations++; return Reflect.ownKeys(target); },
+    });
+    const encodings = {
+      x: { field: 'Cat', sortBy: 'rank' },
+      y: [{ field: 'Val', sortBy: 'rank' }, { field: 'Other', sortBy: 'missing' }],
+    };
+    const result = repairEncodingSorts(encodings, [null, 42, { Cat: 'A' }, later]);
+    expect(enumerations).toBe(1);
+    expect(result.encodings.x).toBe(encodings.x);
+    expect(result.encodings.y).toEqual([encodings.y[0], { field: 'Other' }]);
+    expect(result.warnings).toEqual([expect.objectContaining({ channel: 'y', code: 'invalid_sort' })]);
+  });
+
+  it('keeps actual JSON-looking fields ahead of explicit category arrays', () => {
+    const encodings = { x: { field: 'Cat', sortBy: '["B","A"]' } };
+    const result = repairEncodingSorts(encodings, [{ Cat: 'A' }, { '["B","A"]': 2 }], { fieldSort: false });
+    expect(result.encodings.x).toEqual({ field: 'Cat' });
+    expect(result.warnings[0].message).toContain('raw data field');
+    expect(repairEncodingSorts(encodings, [{ Cat: 'A' }], { fieldSort: false }).warnings).toEqual([]);
+  });
+});
 
 describe('Vega-Lite explicit category sorting', () => {
   const input = (sort: Record<string, unknown>) => ({
