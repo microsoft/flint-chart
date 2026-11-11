@@ -65,3 +65,9 @@ declaration build on that host; runtime bundles were built without declaration
 generation to exercise the runner. CI uses Node 20/22, and this local result
 does not establish a hosted build issue. Reproduce the full build behavior on
 the supported CI Node versions before drawing conclusions about CI.
+
+An earlier, unbounded runner attempt was reported as holding the shared
+measurement lock for over 325 seconds; its timing output was discarded. When
+checked, that worker PID had already exited and a nonblocking lock probe
+succeeded. The checked-in sample was then rerun with the 15-second per-case
+worker limit; no worker timed out.
