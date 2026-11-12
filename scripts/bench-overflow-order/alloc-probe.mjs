@@ -1,0 +1,11 @@
+import v8 from 'node:v8';
+const tab = () => v8.getHeapStatistics().total_allocated_bytes;
+const keep = [];
+const probe = (name, fn) => { globalThis.gc(); const u0 = v8.getHeapStatistics().used_heap_size; const a0 = tab(); keep.push(fn()); const a1 = tab(); const u1 = v8.getHeapStatistics().used_heap_size; console.log(name.padEnd(36), 'tab_delta', a1 - a0, 'used_delta', u1 - u0); };
+probe('nothing', () => 0);
+probe('1 small object', () => ({ a: 1 }));
+probe('1000 small objects', () => Array.from({ length: 1000 }, (_, i) => ({ i })));
+probe('Float64Array 1e6 (8MB off-heap)', () => new Float64Array(1e6));
+probe('Array 1e6 doubles (~8MB)', () => { const a = new Array(1e6); for (let i = 0; i < 1e6; i++) a[i] = i + 0.5; return a; });
+probe('Set of 10k strings', () => new Set(Array.from({ length: 10000 }, (_, i) => 'k' + i)));
+console.log('node', process.version, 'v8', process.versions.v8, 'typeof', typeof v8.getHeapStatistics().total_allocated_bytes);

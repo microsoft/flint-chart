@@ -72,3 +72,46 @@ def test_uses_selected_value_sort():
         {"type": "nominal"},
         {"sortBy": "y", "sortOrder": "descending"},
     ) == ["Delta", "Charlie", "Bravo"]
+
+
+def _explicit_order_result(data, sort_by, sort_order=None):
+    encoding = {"field": "Category", "sortBy": sort_by}
+    if sort_order:
+        encoding["sortOrder"] = sort_order
+    return filter_overflow(
+        {
+            "x": {"field": "Category", "type": "nominal", "semanticAnnotation": {"semanticType": "Category"}},
+            "y": {"field": "Value", "type": "quantitative", "semanticAnnotation": {"semanticType": "Quantity"}},
+        },
+        {"axisFlags": {"x": {"banded": True}}},
+        {"x": encoding, "y": {"field": "Value"}},
+        data,
+        BUDGETS,
+        MARKS,
+    )
+
+
+def test_explicit_order_keeps_duplicates_and_drops_missing_values():
+    data = [{"Category": c, "Value": 1} for c in ["Delta", "Alpha", "Charlie", "Bravo"]]
+    sort_by = '["Bravo", "Missing", "Delta", "Bravo", "Alpha", "Charlie"]'
+
+    ascending = _explicit_order_result(data, sort_by)
+    # The default strategy is capped at the distinct-value count, so duplicates shorten the tail.
+    assert ascending["viewports"][0]["orderedValues"] == ["Bravo", "Delta", "Bravo", "Alpha"]
+    assert ascending["truncations"][0]["keptValues"] == ["Bravo", "Delta", "Bravo"]
+    assert ascending["warnings"][0]["message"] == (
+        "1 of 4 values in 'Category' were omitted (showing first 3 in sort order)."
+    )
+    assert ascending["filteredData"] == [data[0], data[3]]
+
+    descending = _explicit_order_result(data, sort_by, "descending")
+    assert descending["viewports"][0]["orderedValues"] == ["Charlie", "Alpha", "Bravo", "Delta"]
+    assert descending["truncations"][0]["keptValues"] == ["Charlie", "Alpha", "Bravo"]
+
+
+def test_explicit_order_uses_python_equality_and_skips_unhashable_entries():
+    data = [{"Category": c, "Value": 1} for c in [1, 2, 3, 4]]
+
+    result = _explicit_order_result(data, '[["nested"], true, 2.0, 9, 3, 4]')
+    assert result["viewports"][0]["orderedValues"] == [True, 2.0, 3, 4]
+    assert result["truncations"][0]["keptValues"] == [True, 2.0, 3]

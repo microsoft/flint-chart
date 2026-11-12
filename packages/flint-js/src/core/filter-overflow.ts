@@ -263,7 +263,8 @@ function defaultOverflowOrder(
     }
     if (explicitSort?.kind === 'values') {
         const ordered = sortOrder === 'descending' ? [...explicitSort.values].reverse() : explicitSort.values;
-        return ordered.filter(value => uniqueValues.includes(value));
+        const present = new Set(uniqueValues);
+        return ordered.filter(value => present.has(value));
     }
 
     // Infer sort field and direction
