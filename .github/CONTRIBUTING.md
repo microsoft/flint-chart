@@ -49,6 +49,16 @@ Node 18+ required (see `.nvmrc`).
 - Run `npm run typecheck && npm run test && npm run lint` before pushing.
 - Snapshot test updates: justify the diff in your PR description.
 
+### Sort-repair performance comparison
+
+From the repository root, run `node scripts/bench-sort-repair.mjs <baseline-ref>`
+after installing workspace dependencies. It compares the baseline sort-repair
+module with the working copy in three interleaved rounds, verifies matching
+outputs, and emits raw JSON timings and V8 sampled allocation estimates for
+1,000- and 100,000-row tables. Run it without competing builds or benchmarks.
+Sampling can miss small allocations; these figures are not exact allocation
+counts, retained heap, or end-to-end chart-rendering measurements.
+
 ## Public API & semver
 
 The public surface is whatever is re-exported from [`src/index.ts`](../src/index.ts)
