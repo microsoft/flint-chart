@@ -309,6 +309,53 @@ def _js_number_to_string(v: float) -> str:
 # Public API: resolve_channel_semantics
 # ---------------------------------------------------------------------------
 
+def _semantic_type(raw_annotation: Any, field_name: str, field_values: list[Any]) -> str:
+    if isinstance(raw_annotation, str):
+        supplied = raw_annotation or ""
+    elif isinstance(raw_annotation, dict):
+        supplied = raw_annotation.get("semanticType") or ""
+    else:
+        supplied = ""
+    return supplied or infer_implicit_semantic_type(field_name, field_values)
+
+
+def _channel_type(
+    encoding: dict, channel: str, data: list, field_name: str,
+    field_values: list, semantic_type: str,
+) -> str:
+    resolved = resolve_encoding_type(semantic_type, field_values, channel, data, field_name)["vlType"]
+    if encoding.get("type"):
+        resolved = encoding["type"]
+    elif channel in ("column", "row") and resolved not in ("nominal", "ordinal"):
+        resolved = "nominal"
+
+    if resolved == "quantitative":
+        sample_values = [r.get(field_name) for r in data[:15] if r.get(field_name) is not None]
+        iso_re = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})?$")
+        if sample_values and all(iso_re.match(str(v).strip()) for v in sample_values):
+            resolved = "temporal"
+    return resolved
+
+
+def _resolve_channel_types(
+    encodings: dict[str, dict[str, Any]], data: list[dict[str, Any]],
+    semantic_types: dict[str, Any],
+) -> dict[str, str]:
+    """Resolve only types needed before encoding actions are applied."""
+    result = {}
+    for channel, encoding in encodings.items():
+        if encoding.get("type"):
+            continue
+        field_name = encoding.get("field")
+        if encoding.get("aggregate") and (field_name or encoding["aggregate"] == "count"):
+            result[channel] = "quantitative"
+        elif field_name:
+            values = [row.get(field_name) for row in data]
+            semantic_type = _semantic_type(semantic_types.get(field_name), field_name, values)
+            result[channel] = _channel_type(encoding, channel, data, field_name, values, semantic_type)
+    return result
+
+
 def resolve_channel_semantics(
     encodings: dict[str, dict[str, Any]],
     data: list[dict[str, Any]],
@@ -336,33 +383,9 @@ def resolve_channel_semantics(
             continue
 
         raw_annotation = semantic_types.get(field_name)
-        if isinstance(raw_annotation, str):
-            supplied_semantic_type = raw_annotation or ""
-        elif isinstance(raw_annotation, dict):
-            supplied_semantic_type = raw_annotation.get("semanticType") or ""
-        else:
-            supplied_semantic_type = ""
         field_values = [r.get(field_name) for r in data]
-        semantic_type = supplied_semantic_type or infer_implicit_semantic_type(field_name, field_values)
-
-        type_decision = resolve_encoding_type(
-            semantic_type, field_values, channel, data, field_name,
-        )
-
-        resolved_type = type_decision["vlType"]
-        if encoding.get("type"):
-            resolved_type = encoding["type"]
-        elif channel in ("column", "row"):
-            if resolved_type not in ("nominal", "ordinal"):
-                resolved_type = "nominal"
-
-        if resolved_type == "quantitative":
-            sample_values = [
-                r.get(field_name) for r in data[:15] if r.get(field_name) is not None
-            ]
-            iso_re = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})?$")
-            if sample_values and all(iso_re.match(str(v).strip()) for v in sample_values):
-                resolved_type = "temporal"
+        semantic_type = _semantic_type(raw_annotation, field_name, field_values)
+        resolved_type = _channel_type(encoding, channel, data, field_name, field_values, semantic_type)
 
         fc = resolve_field_semantics(raw_annotation or semantic_type, field_name, field_values)
         annotation = fc["semanticAnnotation"]
