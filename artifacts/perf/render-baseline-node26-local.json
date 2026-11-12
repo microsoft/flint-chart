@@ -1,0 +1,2547 @@
+{
+  "schemaVersion": 1,
+  "startedAt": "2026-11-11T23:32:47.632Z",
+  "completedAt": "2026-11-11T23:32:52.896Z",
+  "source": {
+    "revision": "0e10c8d042689c62b12a050cd5e0210facd36187",
+    "dirty": false
+  },
+  "invocation": {
+    "argv": [
+      "scripts/render-baselines.mjs",
+      "--samples",
+      "3",
+      "--out",
+      "artifacts/perf/render-baseline-node26-local.json"
+    ],
+    "workingDirectory": "."
+  },
+  "environment": {
+    "node": "v26.12.1",
+    "v8": "14.6.202.34-node.40",
+    "platform": "linux",
+    "architecture": "x64",
+    "osRelease": "6.12.8+",
+    "cpuModel": "AMD EPYC 9V74 80-Core Processor",
+    "cpuCount": 2,
+    "availableParallelism": 2,
+    "totalMemoryBytes": 8012550144,
+    "v8HeapLimitBytes": 2248146944,
+    "execArgv": [],
+    "nodeOptions": null
+  },
+  "fixture": {
+    "name": "STATIC_SERIES_LINE_BASIC",
+    "source": "packages/flint-js/src/test-data/static-series-tests.ts",
+    "chartType": "Line Chart",
+    "rows": 12,
+    "columns": 3,
+    "fields": [
+      "Month",
+      "Revenue",
+      "Expenses"
+    ],
+    "serializedBytes": 1023,
+    "baseSize": {
+      "width": 600,
+      "height": 380
+    }
+  },
+  "configuration": {
+    "requestedWarmSamplesPerCase": 3,
+    "warmupOperationsPerCase": 1,
+    "coldSamplesPerCase": 1,
+    "workerTimeoutMs": 15000,
+    "outputFormat": "JSON",
+    "memoryDefinition": "process.memoryUsage snapshots before and after each operation; deltas are not allocation totals or peak memory.",
+    "memoryFields": [
+      "rss",
+      "heapTotal",
+      "heapUsed",
+      "external",
+      "arrayBuffers"
+    ],
+    "gcForced": false
+  },
+  "cases": [
+    {
+      "id": "compiler:vegalite",
+      "kind": "compiler",
+      "backend": "vegalite",
+      "format": "spec",
+      "dimensions": {
+        "width": 535,
+        "height": 426
+      },
+      "status": "ok",
+      "cold": {
+        "definition": "One measured first operation in a fresh Node process for this case, after module loading.",
+        "samples": [
+          {
+            "phase": "cold-first-operation-in-fresh-process",
+            "index": 1,
+            "status": "ok",
+            "elapsedMs": 37.41584900000001,
+            "memory": {
+              "before": {
+                "rss": 88793088,
+                "heapTotal": 14254080,
+                "heapUsed": 11260408,
+                "external": 5509846,
+                "arrayBuffers": 203723
+              },
+              "after": {
+                "rss": 91807744,
+                "heapTotal": 17399808,
+                "heapUsed": 14375912,
+                "external": 4872018,
+                "arrayBuffers": 203723
+              },
+              "delta": {
+                "rss": 3014656,
+                "heapTotal": 3145728,
+                "heapUsed": 3115504,
+                "external": -637828,
+                "arrayBuffers": 0
+              }
+            },
+            "output": {
+              "backend": "vegalite",
+              "format": "spec",
+              "width": 535,
+              "height": 426,
+              "specKeys": 11,
+              "warnings": 0
+            }
+          }
+        ],
+        "summary": {
+          "elapsedMs": {
+            "count": 1,
+            "min": 37.41584900000001,
+            "median": 37.41584900000001,
+            "mean": 37.41584900000001,
+            "p95": 37.41584900000001,
+            "max": 37.41584900000001
+          },
+          "memoryDeltaBytes": {
+            "rss": {
+              "count": 1,
+              "min": 3014656,
+              "median": 3014656,
+              "mean": 3014656,
+              "p95": 3014656,
+              "max": 3014656
+            },
+            "heapTotal": {
+              "count": 1,
+              "min": 3145728,
+              "median": 3145728,
+              "mean": 3145728,
+              "p95": 3145728,
+              "max": 3145728
+            },
+            "heapUsed": {
+              "count": 1,
+              "min": 3115504,
+              "median": 3115504,
+              "mean": 3115504,
+              "p95": 3115504,
+              "max": 3115504
+            },
+            "external": {
+              "count": 1,
+              "min": -637828,
+              "median": -637828,
+              "mean": -637828,
+              "p95": -637828,
+              "max": -637828
+            },
+            "arrayBuffers": {
+              "count": 1,
+              "min": 0,
+              "median": 0,
+              "mean": 0,
+              "p95": 0,
+              "max": 0
+            }
+          }
+        }
+      },
+      "warm": {
+        "definition": "Sequential operations in this process after one excluded warm-up operation.",
+        "warmup": {
+          "phase": "warmup-excluded",
+          "index": 0,
+          "status": "ok",
+          "elapsedMs": 6.656813,
+          "memory": {
+            "before": {
+              "rss": 91807744,
+              "heapTotal": 17399808,
+              "heapUsed": 14391320,
+              "external": 4872018,
+              "arrayBuffers": 203723
+            },
+            "after": {
+              "rss": 92856320,
+              "heapTotal": 18448384,
+              "heapUsed": 13077648,
+              "external": 4872018,
+              "arrayBuffers": 203723
+            },
+            "delta": {
+              "rss": 1048576,
+              "heapTotal": 1048576,
+              "heapUsed": -1313672,
+              "external": 0,
+              "arrayBuffers": 0
+            }
+          },
+          "output": {
+            "backend": "vegalite",
+            "format": "spec",
+            "width": 535,
+            "height": 426,
+            "specKeys": 11,
+            "warnings": 0
+          }
+        },
+        "samples": [
+          {
+            "phase": "warm",
+            "index": 1,
+            "status": "ok",
+            "elapsedMs": 7.693466999999998,
+            "memory": {
+              "before": {
+                "rss": 92856320,
+                "heapTotal": 18448384,
+                "heapUsed": 13086296,
+                "external": 4872018,
+                "arrayBuffers": 203723
+              },
+              "after": {
+                "rss": 94560256,
+                "heapTotal": 20021248,
+                "heapUsed": 14864000,
+                "external": 4872018,
+                "arrayBuffers": 203723
+              },
+              "delta": {
+                "rss": 1703936,
+                "heapTotal": 1572864,
+                "heapUsed": 1777704,
+                "external": 0,
+                "arrayBuffers": 0
+              }
+            },
+            "output": {
+              "backend": "vegalite",
+              "format": "spec",
+              "width": 535,
+              "height": 426,
+              "specKeys": 11,
+              "warnings": 0
+            }
+          },
+          {
+            "phase": "warm",
+            "index": 2,
+            "status": "ok",
+            "elapsedMs": 6.017020999999971,
+            "memory": {
+              "before": {
+                "rss": 94560256,
+                "heapTotal": 20021248,
+                "heapUsed": 14872144,
+                "external": 4872018,
+                "arrayBuffers": 203723
+              },
+              "after": {
+                "rss": 96526336,
+                "heapTotal": 21594112,
+                "heapUsed": 13300384,
+                "external": 4872018,
+                "arrayBuffers": 203723
+              },
+              "delta": {
+                "rss": 1966080,
+                "heapTotal": 1572864,
+                "heapUsed": -1571760,
+                "external": 0,
+                "arrayBuffers": 0
+              }
+            },
+            "output": {
+              "backend": "vegalite",
+              "format": "spec",
+              "width": 535,
+              "height": 426,
+              "specKeys": 11,
+              "warnings": 0
+            }
+          },
+          {
+            "phase": "warm",
+            "index": 3,
+            "status": "ok",
+            "elapsedMs": 10.209993999999995,
+            "memory": {
+              "before": {
+                "rss": 96526336,
+                "heapTotal": 21594112,
+                "heapUsed": 13308528,
+                "external": 4872018,
+                "arrayBuffers": 203723
+              },
+              "after": {
+                "rss": 98492416,
+                "heapTotal": 21856256,
+                "heapUsed": 15012616,
+                "external": 4872018,
+                "arrayBuffers": 203723
+              },
+              "delta": {
+                "rss": 1966080,
+                "heapTotal": 262144,
+                "heapUsed": 1704088,
+                "external": 0,
+                "arrayBuffers": 0
+              }
+            },
+            "output": {
+              "backend": "vegalite",
+              "format": "spec",
+              "width": 535,
+              "height": 426,
+              "specKeys": 11,
+              "warnings": 0
+            }
+          }
+        ],
+        "summary": {
+          "elapsedMs": {
+            "count": 3,
+            "min": 6.017020999999971,
+            "median": 7.693466999999998,
+            "mean": 7.973493999999988,
+            "p95": 10.209993999999995,
+            "max": 10.209993999999995
+          },
+          "memoryDeltaBytes": {
+            "rss": {
+              "count": 3,
+              "min": 1703936,
+              "median": 1966080,
+              "mean": 1878698.6666666667,
+              "p95": 1966080,
+              "max": 1966080
+            },
+            "heapTotal": {
+              "count": 3,
+              "min": 262144,
+              "median": 1572864,
+              "mean": 1135957.3333333333,
+              "p95": 1572864,
+              "max": 1572864
+            },
+            "heapUsed": {
+              "count": 3,
+              "min": -1571760,
+              "median": 1704088,
+              "mean": 636677.3333333334,
+              "p95": 1777704,
+              "max": 1777704
+            },
+            "external": {
+              "count": 3,
+              "min": 0,
+              "median": 0,
+              "mean": 0,
+              "p95": 0,
+              "max": 0
+            },
+            "arrayBuffers": {
+              "count": 3,
+              "min": 0,
+              "median": 0,
+              "mean": 0,
+              "p95": 0,
+              "max": 0
+            }
+          }
+        }
+      },
+      "errors": [],
+      "workerStderr": null
+    },
+    {
+      "id": "compiler:echarts",
+      "kind": "compiler",
+      "backend": "echarts",
+      "format": "spec",
+      "dimensions": {
+        "width": 754,
+        "height": 613
+      },
+      "status": "ok",
+      "cold": {
+        "definition": "One measured first operation in a fresh Node process for this case, after module loading.",
+        "samples": [
+          {
+            "phase": "cold-first-operation-in-fresh-process",
+            "index": 1,
+            "status": "ok",
+            "elapsedMs": 12.305524999999989,
+            "memory": {
+              "before": {
+                "rss": 79089664,
+                "heapTotal": 14778368,
+                "heapUsed": 11215192,
+                "external": 5509846,
+                "arrayBuffers": 203723
+              },
+              "after": {
+                "rss": 80007168,
+                "heapTotal": 15564800,
+                "heapUsed": 12450328,
+                "external": 4872018,
+                "arrayBuffers": 203723
+              },
+              "delta": {
+                "rss": 917504,
+                "heapTotal": 786432,
+                "heapUsed": 1235136,
+                "external": -637828,
+                "arrayBuffers": 0
+              }
+            },
+            "output": {
+              "backend": "echarts",
+              "format": "spec",
+              "width": 754,
+              "height": 613,
+              "specKeys": 13,
+              "warnings": 0
+            }
+          }
+        ],
+        "summary": {
+          "elapsedMs": {
+            "count": 1,
+            "min": 12.305524999999989,
+            "median": 12.305524999999989,
+            "mean": 12.305524999999989,
+            "p95": 12.305524999999989,
+            "max": 12.305524999999989
+          },
+          "memoryDeltaBytes": {
+            "rss": {
+              "count": 1,
+              "min": 917504,
+              "median": 917504,
+              "mean": 917504,
+              "p95": 917504,
+              "max": 917504
+            },
+            "heapTotal": {
+              "count": 1,
+              "min": 786432,
+              "median": 786432,
+              "mean": 786432,
+              "p95": 786432,
+              "max": 786432
+            },
+            "heapUsed": {
+              "count": 1,
+              "min": 1235136,
+              "median": 1235136,
+              "mean": 1235136,
+              "p95": 1235136,
+              "max": 1235136
+            },
+            "external": {
+              "count": 1,
+              "min": -637828,
+              "median": -637828,
+              "mean": -637828,
+              "p95": -637828,
+              "max": -637828
+            },
+            "arrayBuffers": {
+              "count": 1,
+              "min": 0,
+              "median": 0,
+              "mean": 0,
+              "p95": 0,
+              "max": 0
+            }
+          }
+        }
+      },
+      "warm": {
+        "definition": "Sequential operations in this process after one excluded warm-up operation.",
+        "warmup": {
+          "phase": "warmup-excluded",
+          "index": 0,
+          "status": "ok",
+          "elapsedMs": 2.438231000000002,
+          "memory": {
+            "before": {
+              "rss": 80138240,
+              "heapTotal": 15564800,
+              "heapUsed": 12465632,
+              "external": 4872018,
+              "arrayBuffers": 203723
+            },
+            "after": {
+              "rss": 80924672,
+              "heapTotal": 16351232,
+              "heapUsed": 13210000,
+              "external": 4872018,
+              "arrayBuffers": 203723
+            },
+            "delta": {
+              "rss": 786432,
+              "heapTotal": 786432,
+              "heapUsed": 744368,
+              "external": 0,
+              "arrayBuffers": 0
+            }
+          },
+          "output": {
+            "backend": "echarts",
+            "format": "spec",
+            "width": 754,
+            "height": 613,
+            "specKeys": 13,
+            "warnings": 0
+          }
+        },
+        "samples": [
+          {
+            "phase": "warm",
+            "index": 1,
+            "status": "ok",
+            "elapsedMs": 2.346544000000023,
+            "memory": {
+              "before": {
+                "rss": 80924672,
+                "heapTotal": 16351232,
+                "heapUsed": 13218696,
+                "external": 4872018,
+                "arrayBuffers": 203723
+              },
+              "after": {
+                "rss": 81580032,
+                "heapTotal": 17137664,
+                "heapUsed": 13928648,
+                "external": 4872018,
+                "arrayBuffers": 203723
+              },
+              "delta": {
+                "rss": 655360,
+                "heapTotal": 786432,
+                "heapUsed": 709952,
+                "external": 0,
+                "arrayBuffers": 0
+              }
+            },
+            "output": {
+              "backend": "echarts",
+              "format": "spec",
+              "width": 754,
+              "height": 613,
+              "specKeys": 13,
+              "warnings": 0
+            }
+          },
+          {
+            "phase": "warm",
+            "index": 2,
+            "status": "ok",
+            "elapsedMs": 2.3300900000000127,
+            "memory": {
+              "before": {
+                "rss": 81580032,
+                "heapTotal": 17137664,
+                "heapUsed": 13936912,
+                "external": 4872018,
+                "arrayBuffers": 203723
+              },
+              "after": {
+                "rss": 82366464,
+                "heapTotal": 17661952,
+                "heapUsed": 11431616,
+                "external": 4872018,
+                "arrayBuffers": 203723
+              },
+              "delta": {
+                "rss": 786432,
+                "heapTotal": 524288,
+                "heapUsed": -2505296,
+                "external": 0,
+                "arrayBuffers": 0
+              }
+            },
+            "output": {
+              "backend": "echarts",
+              "format": "spec",
+              "width": 754,
+              "height": 613,
+              "specKeys": 13,
+              "warnings": 0
+            }
+          },
+          {
+            "phase": "warm",
+            "index": 3,
+            "status": "ok",
+            "elapsedMs": 1.2805170000000032,
+            "memory": {
+              "before": {
+                "rss": 82497536,
+                "heapTotal": 17661952,
+                "heapUsed": 11900608,
+                "external": 4872018,
+                "arrayBuffers": 203723
+              },
+              "after": {
+                "rss": 82759680,
+                "heapTotal": 17661952,
+                "heapUsed": 12298368,
+                "external": 4872018,
+                "arrayBuffers": 203723
+              },
+              "delta": {
+                "rss": 262144,
+                "heapTotal": 0,
+                "heapUsed": 397760,
+                "external": 0,
+                "arrayBuffers": 0
+              }
+            },
+            "output": {
+              "backend": "echarts",
+              "format": "spec",
+              "width": 754,
+              "height": 613,
+              "specKeys": 13,
+              "warnings": 0
+            }
+          }
+        ],
+        "summary": {
+          "elapsedMs": {
+            "count": 3,
+            "min": 1.2805170000000032,
+            "median": 2.3300900000000127,
+            "mean": 1.9857170000000128,
+            "p95": 2.346544000000023,
+            "max": 2.346544000000023
+          },
+          "memoryDeltaBytes": {
+            "rss": {
+              "count": 3,
+              "min": 262144,
+              "median": 655360,
+              "mean": 567978.6666666666,
+              "p95": 786432,
+              "max": 786432
+            },
+            "heapTotal": {
+              "count": 3,
+              "min": 0,
+              "median": 524288,
+              "mean": 436906.6666666667,
+              "p95": 786432,
+              "max": 786432
+            },
+            "heapUsed": {
+              "count": 3,
+              "min": -2505296,
+              "median": 397760,
+              "mean": -465861.3333333333,
+              "p95": 709952,
+              "max": 709952
+            },
+            "external": {
+              "count": 3,
+              "min": 0,
+              "median": 0,
+              "mean": 0,
+              "p95": 0,
+              "max": 0
+            },
+            "arrayBuffers": {
+              "count": 3,
+              "min": 0,
+              "median": 0,
+              "mean": 0,
+              "p95": 0,
+              "max": 0
+            }
+          }
+        }
+      },
+      "errors": [],
+      "workerStderr": null
+    },
+    {
+      "id": "compiler:chartjs",
+      "kind": "compiler",
+      "backend": "chartjs",
+      "format": "spec",
+      "dimensions": {
+        "width": 711,
+        "height": 506
+      },
+      "status": "ok",
+      "cold": {
+        "definition": "One measured first operation in a fresh Node process for this case, after module loading.",
+        "samples": [
+          {
+            "phase": "cold-first-operation-in-fresh-process",
+            "index": 1,
+            "status": "ok",
+            "elapsedMs": 14.17310599999999,
+            "memory": {
+              "before": {
+                "rss": 88801280,
+                "heapTotal": 14778368,
+                "heapUsed": 11241256,
+                "external": 5509846,
+                "arrayBuffers": 203723
+              },
+              "after": {
+                "rss": 89718784,
+                "heapTotal": 15826944,
+                "heapUsed": 12421712,
+                "external": 4872018,
+                "arrayBuffers": 203723
+              },
+              "delta": {
+                "rss": 917504,
+                "heapTotal": 1048576,
+                "heapUsed": 1180456,
+                "external": -637828,
+                "arrayBuffers": 0
+              }
+            },
+            "output": {
+              "backend": "chartjs",
+              "format": "spec",
+              "width": 711,
+              "height": 506,
+              "specKeys": 8,
+              "warnings": 0
+            }
+          }
+        ],
+        "summary": {
+          "elapsedMs": {
+            "count": 1,
+            "min": 14.17310599999999,
+            "median": 14.17310599999999,
+            "mean": 14.17310599999999,
+            "p95": 14.17310599999999,
+            "max": 14.17310599999999
+          },
+          "memoryDeltaBytes": {
+            "rss": {
+              "count": 1,
+              "min": 917504,
+              "median": 917504,
+              "mean": 917504,
+              "p95": 917504,
+              "max": 917504
+            },
+            "heapTotal": {
+              "count": 1,
+              "min": 1048576,
+              "median": 1048576,
+              "mean": 1048576,
+              "p95": 1048576,
+              "max": 1048576
+            },
+            "heapUsed": {
+              "count": 1,
+              "min": 1180456,
+              "median": 1180456,
+              "mean": 1180456,
+              "p95": 1180456,
+              "max": 1180456
+            },
+            "external": {
+              "count": 1,
+              "min": -637828,
+              "median": -637828,
+              "mean": -637828,
+              "p95": -637828,
+              "max": -637828
+            },
+            "arrayBuffers": {
+              "count": 1,
+              "min": 0,
+              "median": 0,
+              "mean": 0,
+              "p95": 0,
+              "max": 0
+            }
+          }
+        }
+      },
+      "warm": {
+        "definition": "Sequential operations in this process after one excluded warm-up operation.",
+        "warmup": {
+          "phase": "warmup-excluded",
+          "index": 0,
+          "status": "ok",
+          "elapsedMs": 3.4095470000000034,
+          "memory": {
+            "before": {
+              "rss": 89849856,
+              "heapTotal": 15826944,
+              "heapUsed": 12436928,
+              "external": 4872018,
+              "arrayBuffers": 203723
+            },
+            "after": {
+              "rss": 90505216,
+              "heapTotal": 16613376,
+              "heapUsed": 13174232,
+              "external": 4872018,
+              "arrayBuffers": 203723
+            },
+            "delta": {
+              "rss": 655360,
+              "heapTotal": 786432,
+              "heapUsed": 737304,
+              "external": 0,
+              "arrayBuffers": 0
+            }
+          },
+          "output": {
+            "backend": "chartjs",
+            "format": "spec",
+            "width": 711,
+            "height": 506,
+            "specKeys": 8,
+            "warnings": 0
+          }
+        },
+        "samples": [
+          {
+            "phase": "warm",
+            "index": 1,
+            "status": "ok",
+            "elapsedMs": 1.6327310000000068,
+            "memory": {
+              "before": {
+                "rss": 90505216,
+                "heapTotal": 16613376,
+                "heapUsed": 13182848,
+                "external": 4872018,
+                "arrayBuffers": 203723
+              },
+              "after": {
+                "rss": 91160576,
+                "heapTotal": 17137664,
+                "heapUsed": 13992712,
+                "external": 4872018,
+                "arrayBuffers": 203723
+              },
+              "delta": {
+                "rss": 655360,
+                "heapTotal": 524288,
+                "heapUsed": 809864,
+                "external": 0,
+                "arrayBuffers": 0
+              }
+            },
+            "output": {
+              "backend": "chartjs",
+              "format": "spec",
+              "width": 711,
+              "height": 506,
+              "specKeys": 8,
+              "warnings": 0
+            }
+          },
+          {
+            "phase": "warm",
+            "index": 2,
+            "status": "ok",
+            "elapsedMs": 2.3828589999999963,
+            "memory": {
+              "before": {
+                "rss": 91291648,
+                "heapTotal": 17137664,
+                "heapUsed": 14391952,
+                "external": 4872018,
+                "arrayBuffers": 203723
+              },
+              "after": {
+                "rss": 91947008,
+                "heapTotal": 17399808,
+                "heapUsed": 11602296,
+                "external": 4872018,
+                "arrayBuffers": 203723
+              },
+              "delta": {
+                "rss": 655360,
+                "heapTotal": 262144,
+                "heapUsed": -2789656,
+                "external": 0,
+                "arrayBuffers": 0
+              }
+            },
+            "output": {
+              "backend": "chartjs",
+              "format": "spec",
+              "width": 711,
+              "height": 506,
+              "specKeys": 8,
+              "warnings": 0
+            }
+          },
+          {
+            "phase": "warm",
+            "index": 3,
+            "status": "ok",
+            "elapsedMs": 1.192245000000014,
+            "memory": {
+              "before": {
+                "rss": 91947008,
+                "heapTotal": 17399808,
+                "heapUsed": 11829952,
+                "external": 4872018,
+                "arrayBuffers": 203723
+              },
+              "after": {
+                "rss": 92078080,
+                "heapTotal": 17399808,
+                "heapUsed": 12146240,
+                "external": 4872018,
+                "arrayBuffers": 203723
+              },
+              "delta": {
+                "rss": 131072,
+                "heapTotal": 0,
+                "heapUsed": 316288,
+                "external": 0,
+                "arrayBuffers": 0
+              }
+            },
+            "output": {
+              "backend": "chartjs",
+              "format": "spec",
+              "width": 711,
+              "height": 506,
+              "specKeys": 8,
+              "warnings": 0
+            }
+          }
+        ],
+        "summary": {
+          "elapsedMs": {
+            "count": 3,
+            "min": 1.192245000000014,
+            "median": 1.6327310000000068,
+            "mean": 1.7359450000000056,
+            "p95": 2.3828589999999963,
+            "max": 2.3828589999999963
+          },
+          "memoryDeltaBytes": {
+            "rss": {
+              "count": 3,
+              "min": 131072,
+              "median": 655360,
+              "mean": 480597.3333333333,
+              "p95": 655360,
+              "max": 655360
+            },
+            "heapTotal": {
+              "count": 3,
+              "min": 0,
+              "median": 262144,
+              "mean": 262144,
+              "p95": 524288,
+              "max": 524288
+            },
+            "heapUsed": {
+              "count": 3,
+              "min": -2789656,
+              "median": 316288,
+              "mean": -554501.3333333334,
+              "p95": 809864,
+              "max": 809864
+            },
+            "external": {
+              "count": 3,
+              "min": 0,
+              "median": 0,
+              "mean": 0,
+              "p95": 0,
+              "max": 0
+            },
+            "arrayBuffers": {
+              "count": 3,
+              "min": 0,
+              "median": 0,
+              "mean": 0,
+              "p95": 0,
+              "max": 0
+            }
+          }
+        }
+      },
+      "errors": [],
+      "workerStderr": null
+    },
+    {
+      "id": "render:vegalite:svg",
+      "kind": "render",
+      "backend": "vegalite",
+      "format": "svg",
+      "dimensions": {
+        "width": 678,
+        "height": 473
+      },
+      "status": "ok",
+      "cold": {
+        "definition": "One measured first operation in a fresh Node process for this case, after module loading.",
+        "samples": [
+          {
+            "phase": "cold-first-operation-in-fresh-process",
+            "index": 1,
+            "status": "ok",
+            "elapsedMs": 330.603175,
+            "memory": {
+              "before": {
+                "rss": 88711168,
+                "heapTotal": 14516224,
+                "heapUsed": 11237904,
+                "external": 5509846,
+                "arrayBuffers": 203723
+              },
+              "after": {
+                "rss": 144584704,
+                "heapTotal": 41324544,
+                "heapUsed": 27698064,
+                "external": 5902420,
+                "arrayBuffers": 485487
+              },
+              "delta": {
+                "rss": 55873536,
+                "heapTotal": 26808320,
+                "heapUsed": 16460160,
+                "external": 392574,
+                "arrayBuffers": 281764
+              }
+            },
+            "output": {
+              "mimeType": "image/svg+xml",
+              "width": 678,
+              "height": 473,
+              "artifactBytes": 15931,
+              "warnings": []
+            }
+          }
+        ],
+        "summary": {
+          "elapsedMs": {
+            "count": 1,
+            "min": 330.603175,
+            "median": 330.603175,
+            "mean": 330.603175,
+            "p95": 330.603175,
+            "max": 330.603175
+          },
+          "memoryDeltaBytes": {
+            "rss": {
+              "count": 1,
+              "min": 55873536,
+              "median": 55873536,
+              "mean": 55873536,
+              "p95": 55873536,
+              "max": 55873536
+            },
+            "heapTotal": {
+              "count": 1,
+              "min": 26808320,
+              "median": 26808320,
+              "mean": 26808320,
+              "p95": 26808320,
+              "max": 26808320
+            },
+            "heapUsed": {
+              "count": 1,
+              "min": 16460160,
+              "median": 16460160,
+              "mean": 16460160,
+              "p95": 16460160,
+              "max": 16460160
+            },
+            "external": {
+              "count": 1,
+              "min": 392574,
+              "median": 392574,
+              "mean": 392574,
+              "p95": 392574,
+              "max": 392574
+            },
+            "arrayBuffers": {
+              "count": 1,
+              "min": 281764,
+              "median": 281764,
+              "mean": 281764,
+              "p95": 281764,
+              "max": 281764
+            }
+          }
+        }
+      },
+      "warm": {
+        "definition": "Sequential operations in this process after one excluded warm-up operation.",
+        "warmup": {
+          "phase": "warmup-excluded",
+          "index": 0,
+          "status": "ok",
+          "elapsedMs": 56.828877000000034,
+          "memory": {
+            "before": {
+              "rss": 144584704,
+              "heapTotal": 41324544,
+              "heapUsed": 27720456,
+              "external": 5902420,
+              "arrayBuffers": 485487
+            },
+            "after": {
+              "rss": 148254720,
+              "heapTotal": 45256704,
+              "heapUsed": 35499128,
+              "external": 5902420,
+              "arrayBuffers": 485487
+            },
+            "delta": {
+              "rss": 3670016,
+              "heapTotal": 3932160,
+              "heapUsed": 7778672,
+              "external": 0,
+              "arrayBuffers": 0
+            }
+          },
+          "output": {
+            "mimeType": "image/svg+xml",
+            "width": 678,
+            "height": 473,
+            "artifactBytes": 15931,
+            "warnings": []
+          }
+        },
+        "samples": [
+          {
+            "phase": "warm",
+            "index": 1,
+            "status": "ok",
+            "elapsedMs": 48.18778000000003,
+            "memory": {
+              "before": {
+                "rss": 148385792,
+                "heapTotal": 45256704,
+                "heapUsed": 35510920,
+                "external": 5902420,
+                "arrayBuffers": 485487
+              },
+              "after": {
+                "rss": 156643328,
+                "heapTotal": 53645312,
+                "heapUsed": 34000904,
+                "external": 5153783,
+                "arrayBuffers": 485487
+              },
+              "delta": {
+                "rss": 8257536,
+                "heapTotal": 8388608,
+                "heapUsed": -1510016,
+                "external": -748637,
+                "arrayBuffers": 0
+              }
+            },
+            "output": {
+              "mimeType": "image/svg+xml",
+              "width": 678,
+              "height": 473,
+              "artifactBytes": 15931,
+              "warnings": []
+            }
+          },
+          {
+            "phase": "warm",
+            "index": 2,
+            "status": "ok",
+            "elapsedMs": 24.94779099999994,
+            "memory": {
+              "before": {
+                "rss": 156643328,
+                "heapTotal": 53645312,
+                "heapUsed": 34009704,
+                "external": 5153783,
+                "arrayBuffers": 485487
+              },
+              "after": {
+                "rss": 163590144,
+                "heapTotal": 59936768,
+                "heapUsed": 42220160,
+                "external": 5153783,
+                "arrayBuffers": 485487
+              },
+              "delta": {
+                "rss": 6946816,
+                "heapTotal": 6291456,
+                "heapUsed": 8210456,
+                "external": 0,
+                "arrayBuffers": 0
+              }
+            },
+            "output": {
+              "mimeType": "image/svg+xml",
+              "width": 678,
+              "height": 473,
+              "artifactBytes": 15931,
+              "warnings": []
+            }
+          },
+          {
+            "phase": "warm",
+            "index": 3,
+            "status": "ok",
+            "elapsedMs": 22.254951000000005,
+            "memory": {
+              "before": {
+                "rss": 163590144,
+                "heapTotal": 59936768,
+                "heapUsed": 42228944,
+                "external": 5153783,
+                "arrayBuffers": 485487
+              },
+              "after": {
+                "rss": 170930176,
+                "heapTotal": 67014656,
+                "heapUsed": 40944832,
+                "external": 5153783,
+                "arrayBuffers": 485487
+              },
+              "delta": {
+                "rss": 7340032,
+                "heapTotal": 7077888,
+                "heapUsed": -1284112,
+                "external": 0,
+                "arrayBuffers": 0
+              }
+            },
+            "output": {
+              "mimeType": "image/svg+xml",
+              "width": 678,
+              "height": 473,
+              "artifactBytes": 15931,
+              "warnings": []
+            }
+          }
+        ],
+        "summary": {
+          "elapsedMs": {
+            "count": 3,
+            "min": 22.254951000000005,
+            "median": 24.94779099999994,
+            "mean": 31.796840666666657,
+            "p95": 48.18778000000003,
+            "max": 48.18778000000003
+          },
+          "memoryDeltaBytes": {
+            "rss": {
+              "count": 3,
+              "min": 6946816,
+              "median": 7340032,
+              "mean": 7514794.666666667,
+              "p95": 8257536,
+              "max": 8257536
+            },
+            "heapTotal": {
+              "count": 3,
+              "min": 6291456,
+              "median": 7077888,
+              "mean": 7252650.666666667,
+              "p95": 8388608,
+              "max": 8388608
+            },
+            "heapUsed": {
+              "count": 3,
+              "min": -1510016,
+              "median": -1284112,
+              "mean": 1805442.6666666667,
+              "p95": 8210456,
+              "max": 8210456
+            },
+            "external": {
+              "count": 3,
+              "min": -748637,
+              "median": 0,
+              "mean": -249545.66666666666,
+              "p95": 0,
+              "max": 0
+            },
+            "arrayBuffers": {
+              "count": 3,
+              "min": 0,
+              "median": 0,
+              "mean": 0,
+              "p95": 0,
+              "max": 0
+            }
+          }
+        }
+      },
+      "errors": [],
+      "workerStderr": null
+    },
+    {
+      "id": "render:vegalite:png",
+      "kind": "render",
+      "backend": "vegalite",
+      "format": "png",
+      "dimensions": {
+        "width": 678,
+        "height": 473
+      },
+      "status": "ok",
+      "cold": {
+        "definition": "One measured first operation in a fresh Node process for this case, after module loading.",
+        "samples": [
+          {
+            "phase": "cold-first-operation-in-fresh-process",
+            "index": 1,
+            "status": "ok",
+            "elapsedMs": 671.572456,
+            "memory": {
+              "before": {
+                "rss": 79331328,
+                "heapTotal": 14778368,
+                "heapUsed": 11247816,
+                "external": 5509846,
+                "arrayBuffers": 203723
+              },
+              "after": {
+                "rss": 167759872,
+                "heapTotal": 41586688,
+                "heapUsed": 28203712,
+                "external": 5224384,
+                "arrayBuffers": 519078
+              },
+              "delta": {
+                "rss": 88428544,
+                "heapTotal": 26808320,
+                "heapUsed": 16955896,
+                "external": -285462,
+                "arrayBuffers": 315355
+              }
+            },
+            "output": {
+              "mimeType": "image/png",
+              "width": 678,
+              "height": 473,
+              "artifactBytes": 33438,
+              "warnings": []
+            }
+          }
+        ],
+        "summary": {
+          "elapsedMs": {
+            "count": 1,
+            "min": 671.572456,
+            "median": 671.572456,
+            "mean": 671.572456,
+            "p95": 671.572456,
+            "max": 671.572456
+          },
+          "memoryDeltaBytes": {
+            "rss": {
+              "count": 1,
+              "min": 88428544,
+              "median": 88428544,
+              "mean": 88428544,
+              "p95": 88428544,
+              "max": 88428544
+            },
+            "heapTotal": {
+              "count": 1,
+              "min": 26808320,
+              "median": 26808320,
+              "mean": 26808320,
+              "p95": 26808320,
+              "max": 26808320
+            },
+            "heapUsed": {
+              "count": 1,
+              "min": 16955896,
+              "median": 16955896,
+              "mean": 16955896,
+              "p95": 16955896,
+              "max": 16955896
+            },
+            "external": {
+              "count": 1,
+              "min": -285462,
+              "median": -285462,
+              "mean": -285462,
+              "p95": -285462,
+              "max": -285462
+            },
+            "arrayBuffers": {
+              "count": 1,
+              "min": 315355,
+              "median": 315355,
+              "mean": 315355,
+              "p95": 315355,
+              "max": 315355
+            }
+          }
+        }
+      },
+      "warm": {
+        "definition": "Sequential operations in this process after one excluded warm-up operation.",
+        "warmup": {
+          "phase": "warmup-excluded",
+          "index": 0,
+          "status": "ok",
+          "elapsedMs": 121.38456199999996,
+          "memory": {
+            "before": {
+              "rss": 167759872,
+              "heapTotal": 41586688,
+              "heapUsed": 28221024,
+              "external": 5224384,
+              "arrayBuffers": 519078
+            },
+            "after": {
+              "rss": 159371264,
+              "heapTotal": 45518848,
+              "heapUsed": 36066688,
+              "external": 5291260,
+              "arrayBuffers": 552516
+            },
+            "delta": {
+              "rss": -8388608,
+              "heapTotal": 3932160,
+              "heapUsed": 7845664,
+              "external": 66876,
+              "arrayBuffers": 33438
+            }
+          },
+          "output": {
+            "mimeType": "image/png",
+            "width": 678,
+            "height": 473,
+            "artifactBytes": 33438,
+            "warnings": []
+          }
+        },
+        "samples": [
+          {
+            "phase": "warm",
+            "index": 1,
+            "status": "ok",
+            "elapsedMs": 102.88316000000009,
+            "memory": {
+              "before": {
+                "rss": 159371264,
+                "heapTotal": 45780992,
+                "heapUsed": 36075400,
+                "external": 5291260,
+                "arrayBuffers": 552516
+              },
+              "after": {
+                "rss": 190828544,
+                "heapTotal": 53121024,
+                "heapUsed": 34366256,
+                "external": 5257669,
+                "arrayBuffers": 552363
+              },
+              "delta": {
+                "rss": 31457280,
+                "heapTotal": 7340032,
+                "heapUsed": -1709144,
+                "external": -33591,
+                "arrayBuffers": -153
+              }
+            },
+            "output": {
+              "mimeType": "image/png",
+              "width": 678,
+              "height": 473,
+              "artifactBytes": 33438,
+              "warnings": []
+            }
+          },
+          {
+            "phase": "warm",
+            "index": 2,
+            "status": "ok",
+            "elapsedMs": 115.11317299999996,
+            "memory": {
+              "before": {
+                "rss": 190828544,
+                "heapTotal": 53121024,
+                "heapUsed": 34374728,
+                "external": 5257669,
+                "arrayBuffers": 552363
+              },
+              "after": {
+                "rss": 179855360,
+                "heapTotal": 60198912,
+                "heapUsed": 42677752,
+                "external": 5324545,
+                "arrayBuffers": 585801
+              },
+              "delta": {
+                "rss": -10973184,
+                "heapTotal": 7077888,
+                "heapUsed": 8303024,
+                "external": 66876,
+                "arrayBuffers": 33438
+              }
+            },
+            "output": {
+              "mimeType": "image/png",
+              "width": 678,
+              "height": 473,
+              "artifactBytes": 33438,
+              "warnings": []
+            }
+          },
+          {
+            "phase": "warm",
+            "index": 3,
+            "status": "ok",
+            "elapsedMs": 74.75813799999992,
+            "memory": {
+              "before": {
+                "rss": 179855360,
+                "heapTotal": 60198912,
+                "heapUsed": 42686224,
+                "external": 5324545,
+                "arrayBuffers": 585801
+              },
+              "after": {
+                "rss": 208035840,
+                "heapTotal": 67014656,
+                "heapUsed": 41255208,
+                "external": 5257669,
+                "arrayBuffers": 552363
+              },
+              "delta": {
+                "rss": 28180480,
+                "heapTotal": 6815744,
+                "heapUsed": -1431016,
+                "external": -66876,
+                "arrayBuffers": -33438
+              }
+            },
+            "output": {
+              "mimeType": "image/png",
+              "width": 678,
+              "height": 473,
+              "artifactBytes": 33438,
+              "warnings": []
+            }
+          }
+        ],
+        "summary": {
+          "elapsedMs": {
+            "count": 3,
+            "min": 74.75813799999992,
+            "median": 102.88316000000009,
+            "mean": 97.58482366666665,
+            "p95": 115.11317299999996,
+            "max": 115.11317299999996
+          },
+          "memoryDeltaBytes": {
+            "rss": {
+              "count": 3,
+              "min": -10973184,
+              "median": 28180480,
+              "mean": 16221525.333333334,
+              "p95": 31457280,
+              "max": 31457280
+            },
+            "heapTotal": {
+              "count": 3,
+              "min": 6815744,
+              "median": 7077888,
+              "mean": 7077888,
+              "p95": 7340032,
+              "max": 7340032
+            },
+            "heapUsed": {
+              "count": 3,
+              "min": -1709144,
+              "median": -1431016,
+              "mean": 1720954.6666666667,
+              "p95": 8303024,
+              "max": 8303024
+            },
+            "external": {
+              "count": 3,
+              "min": -66876,
+              "median": -33591,
+              "mean": -11197,
+              "p95": 66876,
+              "max": 66876
+            },
+            "arrayBuffers": {
+              "count": 3,
+              "min": -33438,
+              "median": -153,
+              "mean": -51,
+              "p95": 33438,
+              "max": 33438
+            }
+          }
+        }
+      },
+      "errors": [],
+      "workerStderr": null
+    },
+    {
+      "id": "render:echarts:svg",
+      "kind": "render",
+      "backend": "echarts",
+      "format": "svg",
+      "dimensions": {
+        "width": 754,
+        "height": 613
+      },
+      "status": "ok",
+      "cold": {
+        "definition": "One measured first operation in a fresh Node process for this case, after module loading.",
+        "samples": [
+          {
+            "phase": "cold-first-operation-in-fresh-process",
+            "index": 1,
+            "status": "ok",
+            "elapsedMs": 846.664889,
+            "memory": {
+              "before": {
+                "rss": 88838144,
+                "heapTotal": 14254080,
+                "heapUsed": 11221680,
+                "external": 5509846,
+                "arrayBuffers": 203723
+              },
+              "after": {
+                "rss": 223707136,
+                "heapTotal": 122257408,
+                "heapUsed": 64895872,
+                "external": 5139325,
+                "arrayBuffers": 467063
+              },
+              "delta": {
+                "rss": 134868992,
+                "heapTotal": 108003328,
+                "heapUsed": 53674192,
+                "external": -370521,
+                "arrayBuffers": 263340
+              }
+            },
+            "output": {
+              "mimeType": "image/svg+xml",
+              "width": 754,
+              "height": 613,
+              "artifactBytes": 8419,
+              "warnings": []
+            }
+          }
+        ],
+        "summary": {
+          "elapsedMs": {
+            "count": 1,
+            "min": 846.664889,
+            "median": 846.664889,
+            "mean": 846.664889,
+            "p95": 846.664889,
+            "max": 846.664889
+          },
+          "memoryDeltaBytes": {
+            "rss": {
+              "count": 1,
+              "min": 134868992,
+              "median": 134868992,
+              "mean": 134868992,
+              "p95": 134868992,
+              "max": 134868992
+            },
+            "heapTotal": {
+              "count": 1,
+              "min": 108003328,
+              "median": 108003328,
+              "mean": 108003328,
+              "p95": 108003328,
+              "max": 108003328
+            },
+            "heapUsed": {
+              "count": 1,
+              "min": 53674192,
+              "median": 53674192,
+              "mean": 53674192,
+              "p95": 53674192,
+              "max": 53674192
+            },
+            "external": {
+              "count": 1,
+              "min": -370521,
+              "median": -370521,
+              "mean": -370521,
+              "p95": -370521,
+              "max": -370521
+            },
+            "arrayBuffers": {
+              "count": 1,
+              "min": 263340,
+              "median": 263340,
+              "mean": 263340,
+              "p95": 263340,
+              "max": 263340
+            }
+          }
+        }
+      },
+      "warm": {
+        "definition": "Sequential operations in this process after one excluded warm-up operation.",
+        "warmup": {
+          "phase": "warmup-excluded",
+          "index": 0,
+          "status": "ok",
+          "elapsedMs": 35.14164200000005,
+          "memory": {
+            "before": {
+              "rss": 223707136,
+              "heapTotal": 122257408,
+              "heapUsed": 64927032,
+              "external": 5139325,
+              "arrayBuffers": 467063
+            },
+            "after": {
+              "rss": 224100352,
+              "heapTotal": 122519552,
+              "heapUsed": 67767736,
+              "external": 5139901,
+              "arrayBuffers": 467639
+            },
+            "delta": {
+              "rss": 393216,
+              "heapTotal": 262144,
+              "heapUsed": 2840704,
+              "external": 576,
+              "arrayBuffers": 576
+            }
+          },
+          "output": {
+            "mimeType": "image/svg+xml",
+            "width": 754,
+            "height": 613,
+            "artifactBytes": 8419,
+            "warnings": []
+          }
+        },
+        "samples": [
+          {
+            "phase": "warm",
+            "index": 1,
+            "status": "ok",
+            "elapsedMs": 30.998160999999982,
+            "memory": {
+              "before": {
+                "rss": 224100352,
+                "heapTotal": 122519552,
+                "heapUsed": 67788144,
+                "external": 5139901,
+                "arrayBuffers": 467639
+              },
+              "after": {
+                "rss": 224493568,
+                "heapTotal": 122781696,
+                "heapUsed": 70595392,
+                "external": 5140477,
+                "arrayBuffers": 468215
+              },
+              "delta": {
+                "rss": 393216,
+                "heapTotal": 262144,
+                "heapUsed": 2807248,
+                "external": 576,
+                "arrayBuffers": 576
+              }
+            },
+            "output": {
+              "mimeType": "image/svg+xml",
+              "width": 754,
+              "height": 613,
+              "artifactBytes": 8419,
+              "warnings": []
+            }
+          },
+          {
+            "phase": "warm",
+            "index": 2,
+            "status": "ok",
+            "elapsedMs": 14.217140999999856,
+            "memory": {
+              "before": {
+                "rss": 224493568,
+                "heapTotal": 122781696,
+                "heapUsed": 70618624,
+                "external": 5140477,
+                "arrayBuffers": 468215
+              },
+              "after": {
+                "rss": 224755712,
+                "heapTotal": 123043840,
+                "heapUsed": 73343568,
+                "external": 5141053,
+                "arrayBuffers": 468791
+              },
+              "delta": {
+                "rss": 262144,
+                "heapTotal": 262144,
+                "heapUsed": 2724944,
+                "external": 576,
+                "arrayBuffers": 576
+              }
+            },
+            "output": {
+              "mimeType": "image/svg+xml",
+              "width": 754,
+              "height": 613,
+              "artifactBytes": 8425,
+              "warnings": []
+            }
+          },
+          {
+            "phase": "warm",
+            "index": 3,
+            "status": "ok",
+            "elapsedMs": 18.893515999999863,
+            "memory": {
+              "before": {
+                "rss": 224755712,
+                "heapTotal": 123043840,
+                "heapUsed": 73360808,
+                "external": 5141053,
+                "arrayBuffers": 468791
+              },
+              "after": {
+                "rss": 226066432,
+                "heapTotal": 124354560,
+                "heapUsed": 76957744,
+                "external": 5141629,
+                "arrayBuffers": 469367
+              },
+              "delta": {
+                "rss": 1310720,
+                "heapTotal": 1310720,
+                "heapUsed": 3596936,
+                "external": 576,
+                "arrayBuffers": 576
+              }
+            },
+            "output": {
+              "mimeType": "image/svg+xml",
+              "width": 754,
+              "height": 613,
+              "artifactBytes": 8456,
+              "warnings": []
+            }
+          }
+        ],
+        "summary": {
+          "elapsedMs": {
+            "count": 3,
+            "min": 14.217140999999856,
+            "median": 18.893515999999863,
+            "mean": 21.3696059999999,
+            "p95": 30.998160999999982,
+            "max": 30.998160999999982
+          },
+          "memoryDeltaBytes": {
+            "rss": {
+              "count": 3,
+              "min": 262144,
+              "median": 393216,
+              "mean": 655360,
+              "p95": 1310720,
+              "max": 1310720
+            },
+            "heapTotal": {
+              "count": 3,
+              "min": 262144,
+              "median": 262144,
+              "mean": 611669.3333333334,
+              "p95": 1310720,
+              "max": 1310720
+            },
+            "heapUsed": {
+              "count": 3,
+              "min": 2724944,
+              "median": 2807248,
+              "mean": 3043042.6666666665,
+              "p95": 3596936,
+              "max": 3596936
+            },
+            "external": {
+              "count": 3,
+              "min": 576,
+              "median": 576,
+              "mean": 576,
+              "p95": 576,
+              "max": 576
+            },
+            "arrayBuffers": {
+              "count": 3,
+              "min": 576,
+              "median": 576,
+              "mean": 576,
+              "p95": 576,
+              "max": 576
+            }
+          }
+        }
+      },
+      "errors": [],
+      "workerStderr": "Revenue series not exists. Legend data should be same with series name or data name.\nExpenses series not exists. Legend data should be same with series name or data name.\nRevenue series not exists. Legend data should be same with series name or data name.\nExpenses series not exists. Legend data should be same with series name or data name.\nRevenue series not exists. Legend data should be same with series name or data name.\nExpenses series not exists. Legend data should be same with series name or data name.\nRevenue series not exists. Legend data should be same with series name or data name.\nExpenses series not exists. Legend data should be same with series name or data name.\nRevenue series not exists. Legend data should be same with series name or data name.\nExpenses series not exists. Legend data should be same with series name or data name."
+    },
+    {
+      "id": "render:echarts:png",
+      "kind": "render",
+      "backend": "echarts",
+      "format": "png",
+      "dimensions": {
+        "width": 754,
+        "height": 613
+      },
+      "status": "ok",
+      "cold": {
+        "definition": "One measured first operation in a fresh Node process for this case, after module loading.",
+        "samples": [
+          {
+            "phase": "cold-first-operation-in-fresh-process",
+            "index": 1,
+            "status": "ok",
+            "elapsedMs": 629.8428329999999,
+            "memory": {
+              "before": {
+                "rss": 88727552,
+                "heapTotal": 14778368,
+                "heapUsed": 11244768,
+                "external": 5509846,
+                "arrayBuffers": 203723
+              },
+              "after": {
+                "rss": 253788160,
+                "heapTotal": 122519552,
+                "heapUsed": 64527600,
+                "external": 5233387,
+                "arrayBuffers": 532816
+              },
+              "delta": {
+                "rss": 165060608,
+                "heapTotal": 107741184,
+                "heapUsed": 53282832,
+                "external": -276459,
+                "arrayBuffers": 329093
+              }
+            },
+            "output": {
+              "mimeType": "image/png",
+              "width": 754,
+              "height": 613,
+              "artifactBytes": 24737,
+              "warnings": []
+            }
+          }
+        ],
+        "summary": {
+          "elapsedMs": {
+            "count": 1,
+            "min": 629.8428329999999,
+            "median": 629.8428329999999,
+            "mean": 629.8428329999999,
+            "p95": 629.8428329999999,
+            "max": 629.8428329999999
+          },
+          "memoryDeltaBytes": {
+            "rss": {
+              "count": 1,
+              "min": 165060608,
+              "median": 165060608,
+              "mean": 165060608,
+              "p95": 165060608,
+              "max": 165060608
+            },
+            "heapTotal": {
+              "count": 1,
+              "min": 107741184,
+              "median": 107741184,
+              "mean": 107741184,
+              "p95": 107741184,
+              "max": 107741184
+            },
+            "heapUsed": {
+              "count": 1,
+              "min": 53282832,
+              "median": 53282832,
+              "mean": 53282832,
+              "p95": 53282832,
+              "max": 53282832
+            },
+            "external": {
+              "count": 1,
+              "min": -276459,
+              "median": -276459,
+              "mean": -276459,
+              "p95": -276459,
+              "max": -276459
+            },
+            "arrayBuffers": {
+              "count": 1,
+              "min": 329093,
+              "median": 329093,
+              "mean": 329093,
+              "p95": 329093,
+              "max": 329093
+            }
+          }
+        }
+      },
+      "warm": {
+        "definition": "Sequential operations in this process after one excluded warm-up operation.",
+        "warmup": {
+          "phase": "warmup-excluded",
+          "index": 0,
+          "status": "ok",
+          "elapsedMs": 59.93791799999997,
+          "memory": {
+            "before": {
+              "rss": 253788160,
+              "heapTotal": 122519552,
+              "heapUsed": 64546480,
+              "external": 5233387,
+              "arrayBuffers": 532816
+            },
+            "after": {
+              "rss": 259633152,
+              "heapTotal": 122519552,
+              "heapUsed": 67458432,
+              "external": 5258700,
+              "arrayBuffers": 533392
+            },
+            "delta": {
+              "rss": 5844992,
+              "heapTotal": 0,
+              "heapUsed": 2911952,
+              "external": 25313,
+              "arrayBuffers": 576
+            }
+          },
+          "output": {
+            "mimeType": "image/png",
+            "width": 754,
+            "height": 613,
+            "artifactBytes": 24737,
+            "warnings": []
+          }
+        },
+        "samples": [
+          {
+            "phase": "warm",
+            "index": 1,
+            "status": "ok",
+            "elapsedMs": 48.463600999999926,
+            "memory": {
+              "before": {
+                "rss": 259633152,
+                "heapTotal": 122519552,
+                "heapUsed": 67467304,
+                "external": 5258700,
+                "arrayBuffers": 533392
+              },
+              "after": {
+                "rss": 252026880,
+                "heapTotal": 122781696,
+                "heapUsed": 70341488,
+                "external": 5349613,
+                "arrayBuffers": 599568
+              },
+              "delta": {
+                "rss": -7606272,
+                "heapTotal": 262144,
+                "heapUsed": 2874184,
+                "external": 90913,
+                "arrayBuffers": 66176
+              }
+            },
+            "output": {
+              "mimeType": "image/png",
+              "width": 754,
+              "height": 613,
+              "artifactBytes": 24737,
+              "warnings": []
+            }
+          },
+          {
+            "phase": "warm",
+            "index": 2,
+            "status": "ok",
+            "elapsedMs": 46.84165500000006,
+            "memory": {
+              "before": {
+                "rss": 252026880,
+                "heapTotal": 122781696,
+                "heapUsed": 70349960,
+                "external": 5349613,
+                "arrayBuffers": 599568
+              },
+              "after": {
+                "rss": 271949824,
+                "heapTotal": 123043840,
+                "heapUsed": 73122576,
+                "external": 5374926,
+                "arrayBuffers": 600144
+              },
+              "delta": {
+                "rss": 19922944,
+                "heapTotal": 262144,
+                "heapUsed": 2772616,
+                "external": 25313,
+                "arrayBuffers": 576
+              }
+            },
+            "output": {
+              "mimeType": "image/png",
+              "width": 754,
+              "height": 613,
+              "artifactBytes": 24737,
+              "warnings": []
+            }
+          },
+          {
+            "phase": "warm",
+            "index": 3,
+            "status": "ok",
+            "elapsedMs": 41.70226200000002,
+            "memory": {
+              "before": {
+                "rss": 271949824,
+                "heapTotal": 123043840,
+                "heapUsed": 73131040,
+                "external": 5374926,
+                "arrayBuffers": 600144
+              },
+              "after": {
+                "rss": 276406272,
+                "heapTotal": 124354560,
+                "heapUsed": 76349392,
+                "external": 5465839,
+                "arrayBuffers": 666320
+              },
+              "delta": {
+                "rss": 4456448,
+                "heapTotal": 1310720,
+                "heapUsed": 3218352,
+                "external": 90913,
+                "arrayBuffers": 66176
+              }
+            },
+            "output": {
+              "mimeType": "image/png",
+              "width": 754,
+              "height": 613,
+              "artifactBytes": 24737,
+              "warnings": []
+            }
+          }
+        ],
+        "summary": {
+          "elapsedMs": {
+            "count": 3,
+            "min": 41.70226200000002,
+            "median": 46.84165500000006,
+            "mean": 45.66917266666667,
+            "p95": 48.463600999999926,
+            "max": 48.463600999999926
+          },
+          "memoryDeltaBytes": {
+            "rss": {
+              "count": 3,
+              "min": -7606272,
+              "median": 4456448,
+              "mean": 5591040,
+              "p95": 19922944,
+              "max": 19922944
+            },
+            "heapTotal": {
+              "count": 3,
+              "min": 262144,
+              "median": 262144,
+              "mean": 611669.3333333334,
+              "p95": 1310720,
+              "max": 1310720
+            },
+            "heapUsed": {
+              "count": 3,
+              "min": 2772616,
+              "median": 2874184,
+              "mean": 2955050.6666666665,
+              "p95": 3218352,
+              "max": 3218352
+            },
+            "external": {
+              "count": 3,
+              "min": 25313,
+              "median": 90913,
+              "mean": 69046.33333333333,
+              "p95": 90913,
+              "max": 90913
+            },
+            "arrayBuffers": {
+              "count": 3,
+              "min": 576,
+              "median": 66176,
+              "mean": 44309.333333333336,
+              "p95": 66176,
+              "max": 66176
+            }
+          }
+        }
+      },
+      "errors": [],
+      "workerStderr": "Revenue series not exists. Legend data should be same with series name or data name.\nExpenses series not exists. Legend data should be same with series name or data name.\nRevenue series not exists. Legend data should be same with series name or data name.\nExpenses series not exists. Legend data should be same with series name or data name.\nRevenue series not exists. Legend data should be same with series name or data name.\nExpenses series not exists. Legend data should be same with series name or data name.\nRevenue series not exists. Legend data should be same with series name or data name.\nExpenses series not exists. Legend data should be same with series name or data name.\nRevenue series not exists. Legend data should be same with series name or data name.\nExpenses series not exists. Legend data should be same with series name or data name."
+    },
+    {
+      "id": "render:chartjs:png",
+      "kind": "render",
+      "backend": "chartjs",
+      "format": "png",
+      "dimensions": {
+        "width": 711,
+        "height": 506
+      },
+      "status": "ok",
+      "cold": {
+        "definition": "One measured first operation in a fresh Node process for this case, after module loading.",
+        "samples": [
+          {
+            "phase": "cold-first-operation-in-fresh-process",
+            "index": 1,
+            "status": "ok",
+            "elapsedMs": 92.62504400000002,
+            "memory": {
+              "before": {
+                "rss": 88420352,
+                "heapTotal": 15040512,
+                "heapUsed": 11239560,
+                "external": 5509846,
+                "arrayBuffers": 203723
+              },
+              "after": {
+                "rss": 127979520,
+                "heapTotal": 20316160,
+                "heapUsed": 15127904,
+                "external": 5010659,
+                "arrayBuffers": 305843
+              },
+              "delta": {
+                "rss": 39559168,
+                "heapTotal": 5275648,
+                "heapUsed": 3888344,
+                "external": -499187,
+                "arrayBuffers": 102120
+              }
+            },
+            "output": {
+              "mimeType": "image/png",
+              "width": 711,
+              "height": 506,
+              "artifactBytes": 36520,
+              "warnings": []
+            }
+          }
+        ],
+        "summary": {
+          "elapsedMs": {
+            "count": 1,
+            "min": 92.62504400000002,
+            "median": 92.62504400000002,
+            "mean": 92.62504400000002,
+            "p95": 92.62504400000002,
+            "max": 92.62504400000002
+          },
+          "memoryDeltaBytes": {
+            "rss": {
+              "count": 1,
+              "min": 39559168,
+              "median": 39559168,
+              "mean": 39559168,
+              "p95": 39559168,
+              "max": 39559168
+            },
+            "heapTotal": {
+              "count": 1,
+              "min": 5275648,
+              "median": 5275648,
+              "mean": 5275648,
+              "p95": 5275648,
+              "max": 5275648
+            },
+            "heapUsed": {
+              "count": 1,
+              "min": 3888344,
+              "median": 3888344,
+              "mean": 3888344,
+              "p95": 3888344,
+              "max": 3888344
+            },
+            "external": {
+              "count": 1,
+              "min": -499187,
+              "median": -499187,
+              "mean": -499187,
+              "p95": -499187,
+              "max": -499187
+            },
+            "arrayBuffers": {
+              "count": 1,
+              "min": 102120,
+              "median": 102120,
+              "mean": 102120,
+              "p95": 102120,
+              "max": 102120
+            }
+          }
+        }
+      },
+      "warm": {
+        "definition": "Sequential operations in this process after one excluded warm-up operation.",
+        "warmup": {
+          "phase": "warmup-excluded",
+          "index": 0,
+          "status": "ok",
+          "elapsedMs": 22.023717000000005,
+          "memory": {
+            "before": {
+              "rss": 127979520,
+              "heapTotal": 20316160,
+              "heapUsed": 15145280,
+              "external": 5010659,
+              "arrayBuffers": 305843
+            },
+            "after": {
+              "rss": 130994176,
+              "heapTotal": 22675456,
+              "heapUsed": 17798432,
+              "external": 5083699,
+              "arrayBuffers": 342363
+            },
+            "delta": {
+              "rss": 3014656,
+              "heapTotal": 2359296,
+              "heapUsed": 2653152,
+              "external": 73040,
+              "arrayBuffers": 36520
+            }
+          },
+          "output": {
+            "mimeType": "image/png",
+            "width": 711,
+            "height": 506,
+            "artifactBytes": 36520,
+            "warnings": []
+          }
+        },
+        "samples": [
+          {
+            "phase": "warm",
+            "index": 1,
+            "status": "ok",
+            "elapsedMs": 21.094572999999997,
+            "memory": {
+              "before": {
+                "rss": 130994176,
+                "heapTotal": 22675456,
+                "heapUsed": 17807320,
+                "external": 5083699,
+                "arrayBuffers": 342363
+              },
+              "after": {
+                "rss": 131780608,
+                "heapTotal": 23461888,
+                "heapUsed": 16039384,
+                "external": 4952463,
+                "arrayBuffers": 211127
+              },
+              "delta": {
+                "rss": 786432,
+                "heapTotal": 786432,
+                "heapUsed": -1767936,
+                "external": -131236,
+                "arrayBuffers": -131236
+              }
+            },
+            "output": {
+              "mimeType": "image/png",
+              "width": 711,
+              "height": 506,
+              "artifactBytes": 36520,
+              "warnings": []
+            }
+          },
+          {
+            "phase": "warm",
+            "index": 2,
+            "status": "ok",
+            "elapsedMs": 18.273172000000017,
+            "memory": {
+              "before": {
+                "rss": 131780608,
+                "heapTotal": 23461888,
+                "heapUsed": 15911408,
+                "external": 4952463,
+                "arrayBuffers": 211127
+              },
+              "after": {
+                "rss": 131911680,
+                "heapTotal": 23461888,
+                "heapUsed": 14743824,
+                "external": 4988983,
+                "arrayBuffers": 247647
+              },
+              "delta": {
+                "rss": 131072,
+                "heapTotal": 0,
+                "heapUsed": -1167584,
+                "external": 36520,
+                "arrayBuffers": 36520
+              }
+            },
+            "output": {
+              "mimeType": "image/png",
+              "width": 711,
+              "height": 506,
+              "artifactBytes": 36520,
+              "warnings": []
+            }
+          },
+          {
+            "phase": "warm",
+            "index": 3,
+            "status": "ok",
+            "elapsedMs": 17.99154199999998,
+            "memory": {
+              "before": {
+                "rss": 131911680,
+                "heapTotal": 23461888,
+                "heapUsed": 14752280,
+                "external": 4988983,
+                "arrayBuffers": 247647
+              },
+              "after": {
+                "rss": 132042752,
+                "heapTotal": 23724032,
+                "heapUsed": 17344424,
+                "external": 5062023,
+                "arrayBuffers": 284167
+              },
+              "delta": {
+                "rss": 131072,
+                "heapTotal": 262144,
+                "heapUsed": 2592144,
+                "external": 73040,
+                "arrayBuffers": 36520
+              }
+            },
+            "output": {
+              "mimeType": "image/png",
+              "width": 711,
+              "height": 506,
+              "artifactBytes": 36520,
+              "warnings": []
+            }
+          }
+        ],
+        "summary": {
+          "elapsedMs": {
+            "count": 3,
+            "min": 17.99154199999998,
+            "median": 18.273172000000017,
+            "mean": 19.11976233333333,
+            "p95": 21.094572999999997,
+            "max": 21.094572999999997
+          },
+          "memoryDeltaBytes": {
+            "rss": {
+              "count": 3,
+              "min": 131072,
+              "median": 131072,
+              "mean": 349525.3333333333,
+              "p95": 786432,
+              "max": 786432
+            },
+            "heapTotal": {
+              "count": 3,
+              "min": 0,
+              "median": 262144,
+              "mean": 349525.3333333333,
+              "p95": 786432,
+              "max": 786432
+            },
+            "heapUsed": {
+              "count": 3,
+              "min": -1767936,
+              "median": -1167584,
+              "mean": -114458.66666666667,
+              "p95": 2592144,
+              "max": 2592144
+            },
+            "external": {
+              "count": 3,
+              "min": -131236,
+              "median": 36520,
+              "mean": -7225.333333333333,
+              "p95": 73040,
+              "max": 73040
+            },
+            "arrayBuffers": {
+              "count": 3,
+              "min": -131236,
+              "median": 36520,
+              "mean": -19398.666666666668,
+              "p95": 36520,
+              "max": 36520
+            }
+          }
+        }
+      },
+      "errors": [],
+      "workerStderr": null
+    },
+    {
+      "id": "render:chartjs:svg",
+      "kind": "render",
+      "backend": "chartjs",
+      "format": "svg",
+      "status": "skipped",
+      "reason": "The in-process MCP Chart.js renderer supports PNG only; it has no SVG engine."
+    }
+  ]
+}
