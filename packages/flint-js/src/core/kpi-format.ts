@@ -12,7 +12,7 @@
 import { format as formatNumber } from 'd3-format';
 import type { ChannelSemantics } from './types';
 import { percentRepresentation, resolveDisplayUnit, type DisplayUnit } from './field-semantics';
-import { COMPACT_SUFFIXES, DEFAULT_COMPACT_TYPES, compactApplies } from './number-compact';
+import { COMPACT_SUFFIXES, DEFAULT_COMPACT_TYPES, compactApplies, compactPower } from './number-compact';
 import { getRegistryEntry, isRegistered } from './type-registry';
 
 /** The least magnitude a tile prints compacted. */
@@ -70,9 +70,8 @@ export function kpiNumberFormat(cs: ChannelSemantics | undefined, values: readon
             said,
         }, DEFAULT_COMPACT_TYPES);
         if (compact) {
-            let power = Math.min(4, Math.floor(Math.log10(a) / 3));
             // 999,960 rounds to 1000k; it prints as 1M.
-            if (power < 4 && Number((a / 10 ** (3 * power)).toPrecision(3)) >= 1000) power += 1;
+            const power = compactPower(a);
             return { divisor: 10 ** (3 * power), pattern: '.3~r', prefix, suffix: COMPACT_SUFFIXES.short[power - 1] + suffix };
         }
         return { divisor: 1, pattern: cents && !Number.isInteger(value) ? ',.2f' : ',.2~f', prefix, suffix };

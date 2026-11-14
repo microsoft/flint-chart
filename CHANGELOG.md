@@ -372,6 +372,11 @@ Released together for `flint-chart`, `flint-chart-mcp`, and the Copilot Canvas p
 
 ### Fixed
 
+- A compact number that rounds up to the next power of a thousand is written in that power:
+  `999,600` prints `1M`, not `1000k` (or `1,000k` where a set shares one unit), and `999,600,000`
+  prints `1B`, as d3's `~s` and the KPI tile already do. A stated precision decides where it
+  rolls over: at two decimals `999,960` stays `999.96k`.
+  ([#172](https://github.com/microsoft/flint-chart/issues/172))
 - A note's, a region's or an enclosure's caption no longer stands on the source line, a map's
   credit or a house's header and rules, which are drawn beside the chart rather than in it; and a
   caption round a map's marks no longer treats the land and water as marks it must keep off.
