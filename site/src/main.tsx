@@ -30,8 +30,10 @@ import { LabelAngles } from './playground/label-angles/LabelAngles';
 import { CanvasSqueeze } from './playground/canvas-squeeze/CanvasSqueeze';
 import { MapsLab } from './playground/MapsLab';
 import { ColorLab } from './playground/ColorLab';
+import { ColorRangeLab } from './playground/ColorRangeLab';
 import { TalkDeckRoute, TalkIndex } from './talk/TalkDeck';
 import { DevDesign } from './routes/DevDesign';
+import { InteractionEval } from './playground/InteractionEval';
 import { BandStretchingLab } from './playground/BandStretchingLab';
 import { TitleBalanceLab } from './playground/TitleBalanceLab';
 import { LabelExperimentLab } from './playground/LabelExperimentLab';
@@ -44,6 +46,7 @@ import { ReleaseExamples102 } from './playground/release-examples/1.0.2';
 import { GreekStories } from './playground/fun/GreekStories';
 import { OverflowViewportLab } from './playground/OverflowViewportLab';
 import { ZoomClippingLab } from './playground/ZoomClippingLab';
+import { OverlayContainmentLab } from './playground/OverlayContainmentLab';
 import { LayoutInspector } from './playground/LayoutInspector';
 import { LayoutPlanLab } from './playground/LayoutPlanLab';
 import { FlintInteractive, InteractionGallery } from './routes/InteractionGallery';
@@ -66,6 +69,10 @@ import { DensityLab } from './playground/DensityLab';
 import { LegendLab } from './playground/LegendLab';
 import { BinningLab } from './playground/binning/BinningLab';
 import { AnnotationCaptionLab } from './playground/AnnotationCaptionLab';
+import { MutedAnnotations } from './playground/MutedAnnotations';
+import { BaselineLab } from './playground/BaselineLab';
+import { TooltipCompare } from './playground/TooltipCompare';
+import { BaselineSweep } from './playground/BaselineSweep';
 import { BackendLayoutLab } from './playground/backend-layout/BackendLayoutLab';
 import { EChartsFixesLab } from './playground/backend-layout/EChartsFixesLab';
 import { LocaleProvider, useLocale } from './i18n/LocaleContext';
@@ -112,6 +119,7 @@ function AppRoutes({ locale }: { locale: Locale }) {
         {/* Playground is public — poke around and play with the widgets. */}
         <Route path="dev-playground" element={<Navigate to={localePath('/playground/illustrations', locale)} replace />} />
         <Route path="dev/design" element={<DevDesign />} />
+        <Route path="dev/interaction-eval" element={<InteractionEval />} />
         <Route path="dev/*" element={<Navigate to={localePath('/playground', locale)} replace />} />
         <Route path="playground" element={<PlaygroundShell />}>
           <Route index element={<Navigate to="illustrations" replace />} />
@@ -133,6 +141,7 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="canvas-squeeze" element={<CanvasSqueeze />} />
           <Route path="maps" element={<MapsLab />} />
           <Route path="color" element={<ColorLab />} />
+          <Route path="color-range" element={<ColorRangeLab />} />
           <Route path="band-stretching" element={<BandStretchingLab />} />
           <Route path="label-experiment" element={<LabelExperimentLab />} />
           <Route path="axis-label" element={<AxisLabelLab />} />
@@ -155,6 +164,7 @@ function AppRoutes({ locale }: { locale: Locale }) {
           </Route>
           <Route path="overflow-viewport" element={<OverflowViewportLab />} />
           <Route path="zoom-clipping" element={<ZoomClippingLab />} />
+          <Route path="overlay-containment" element={<OverlayContainmentLab />} />
           <Route path="layout-inspector" element={<LayoutInspector />} />
           <Route path="layout-plan" element={<LayoutPlanLab />} />
           <Route path="interaction-test-cases" element={<ClickFocusLab />} />
@@ -177,6 +187,10 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="legend" element={<LegendLab />} />
           <Route path="binning" element={<BinningLab />} />
           <Route path="annotation-captions" element={<AnnotationCaptionLab />} />
+          <Route path="muted-annotations" element={<MutedAnnotations />} />
+          <Route path="baseline" element={<BaselineLab />} />
+          <Route path="tooltip-compare" element={<TooltipCompare />} />
+          <Route path="baseline-sweep" element={<BaselineSweep />} />
           <Route path="backend-layout" element={<Navigate to="echarts" replace />} />
           <Route path="backend-layout-echarts-fixes" element={<EChartsFixesLab />} />
           <Route path="backend-layout/:backend" element={<BackendLayoutLab />} />

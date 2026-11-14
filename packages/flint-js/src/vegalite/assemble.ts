@@ -659,7 +659,7 @@ function emitVegaLite(input: ChartAssemblyInput, prepared: VegaLitePreparation, 
     vlWriteAxisTitles(vgObj, plan.axisTitleFit);
     vlCaseKeyLabels(vgObj, plan.legend);
     vlListTooltipFields(vgObj);
-    vlReserveNoteRoom(vgObj, { notes: plan.options.notes, regions: plan.options.regions }, values, plan.plot, plan.axisLabels, VEGA_LITE_LAYOUT.measureText!);
+    vlReserveNoteRoom(vgObj, { notes: plan.options.notes, regions: plan.options.regions, references: plan.options.references }, values, plan.plot, plan.axisLabels, VEGA_LITE_LAYOUT.measureText!);
     vlReserveEnclosureRoom(vgObj, plan.options.enclosures, values, plan.plot, input.semantic_types);
     const plotAsPlanned = plotSizeFields(vgObj) === plannedPlotSize;
 

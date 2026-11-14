@@ -60,6 +60,15 @@ export interface PlaceNoteInput {
     connector?: 'auto' | 'none';
     /** The caption's font size, in px: a bar's direct seats stand off by multiples of it. */
     fontSize?: number;
+    /**
+     * Seats on the mark itself: the caption centred at `point`, with no leader, where `fits` says its
+     * box lies inside the room (a big slice's band, a donut's hole, a long bar). Its halo keeps the
+     * words readable on the fill, and standing on the mark names it outright, so such a seat beats a
+     * long leader and any seat over text. `own` lists boxes the seat may cover at no cost (the mark).
+     */
+    inside?: readonly { point: Point; fits: (box: Box) => boolean; own?: readonly Box[]; fill?: string }[];
+    /** Offer only the `inside` seats: the anchor names its mark from on it, not from around it. */
+    insideOnly?: boolean;
 }
 
 /**
@@ -92,6 +101,14 @@ export interface NotePlacement {
     angle: number;
     gap: number;
     cost: number;
+    /** What the seat covers: px² of text under it, and whether it runs past the canvas. */
+    covers?: { text: number; offCanvas: boolean };
+    /** The caption stands on the mark itself. */
+    inside?: boolean;
+    /** The mark's fill under a caption that stands on it: the caption is set in an ink that reads on it, with no halo. */
+    insideFill?: string;
+    /** No seat kept the chart's text readable on the canvas: the mark is pointed at by its highlight alone. */
+    unplaced?: boolean;
 }
 
 /** Directions round the mark, every 22.5°. */
@@ -121,6 +138,8 @@ const COST = {
     stub: 200,
     /** Per turn a leader takes: a straight one reads quicker. */
     elbow: 12,
+    /** A seat on the mark: dearer than a near empty seat, cheaper than a leader across the chart. */
+    inside: 45,
     gapLinear: 1.2,
     gapSquare: 0.3,
     /** Per radian away from the side the mark suggests. */
@@ -143,6 +162,10 @@ interface Seat {
     /** A direct seat past a bar's value face, with the leader it always draws. */
     direct?: NoteLeader;
     escape?: boolean;
+    /** A seat on the mark: no leader, no gap cost, its own boxes not charged. */
+    inside?: readonly Box[];
+    /** The fill the caption stands on, where the seat is on the mark's paint. */
+    fill?: string;
 }
 
 /**
@@ -272,6 +295,9 @@ function leaderTo(target: NoteTarget, box: Box, forward: Point | undefined, reac
     return squareLeader(to, { x: nx, y: ny }, box, reach);
 }
 
+const sameBox = (a: Box, b: Box): boolean =>
+    Math.abs(a.x - b.x) < 0.5 && Math.abs(a.y - b.y) < 0.5 && Math.abs(a.width - b.width) < 0.5 && Math.abs(a.height - b.height) < 0.5;
+
 export function placeNote(input: PlaceNoteInput): NotePlacement {
     const { target, label, plot, canvas } = input;
     const obstacles = input.obstacles ?? [];
@@ -294,7 +320,11 @@ export function placeNote(input: PlaceNoteInput): NotePlacement {
     // A note on a bar's value: the value face first, the ring round the end only as an escape.
     const forward = leaderAllowed ? valueDirection(target, input.body) : undefined;
     const seats: Seat[] = forward ? faceSeats(target, label, forward, fontSize, canvas) : [];
-    for (const angle of DIRECTIONS) {
+    for (const room of input.inside ?? []) {
+        const box = { x: room.point.x - label.width / 2, y: room.point.y - label.height / 2, width: label.width, height: label.height };
+        if (room.fits(box)) seats.push({ box, angle: 0, gap: 0, align: 'center', inside: room.own ?? [], ...(room.fill ? { fill: room.fill } : {}) });
+    }
+    for (const angle of input.insideOnly ? [] : DIRECTIONS) {
         const ux = Math.cos(angle);
         const uy = Math.sin(angle);
         for (const gap of GAPS) {
@@ -311,14 +341,22 @@ export function placeNote(input: PlaceNoteInput): NotePlacement {
         // A direct seat may stand past the plot in the paper the chart keeps, as Blabber's does.
         let cost = COST.canvas * overflow(box, canvas, 1) + (seat.direct ? 0 : COST.plot * overflow(box, plot));
         if (seat.escape) cost += COST.escape;
+        if (seat.inside) cost += COST.inside;
         if (best && cost >= best.cost) continue;
-        for (const obstacle of nearObstacles) cost += COST.area[obstacle.kind] * overlapArea(box, obstacle.box);
-        if (input.body) cost += COST.area.mark * overlapArea(box, input.body);
+        let textCover = 0;
+        for (const obstacle of nearObstacles) {
+            if (seat.inside?.some((own) => sameBox(own, obstacle.box))) continue;
+            const area = overlapArea(box, obstacle.box);
+            if (obstacle.kind === 'text') textCover += area;
+            cost += COST.area[obstacle.kind] * area;
+        }
+        if (input.body && !seat.inside) cost += COST.area.mark * overlapArea(box, input.body);
         for (const segment of nearSegments) if (segmentCrossesBox(segment.a, segment.b, box)) cost += COST.cut;
         if (best && cost >= best.cost) continue;
         let drawn: NotePlacement['leader'];
         let ambiguous = false;
         if (seat.direct) drawn = seat.direct;
+        else if (seat.inside) { /* on the mark: no leader, nothing to be ambiguous with */ }
         else {
             // Another mark about as near as its own makes the caption ambiguous without a leader.
             const own = targetGap(target, box);
@@ -342,13 +380,19 @@ export function placeNote(input: PlaceNoteInput): NotePlacement {
             // Without a leader to say which, a caption between two marks names neither.
             cost += COST.stub * 2;
         }
-        if (!seat.direct) {
+        if (!seat.direct && !seat.inside) {
             if (input.preferredAngle !== undefined) cost += COST.preferred * angularDistance(angle, input.preferredAngle);
             cost += COST.reading * angularDistance(angle, -Math.PI / 4);
         }
         if (!best || cost < best.cost) {
-            best = { box, align: seat.align, ...(drawn ? { leader: drawn } : {}), angle, gap, cost };
+            best = {
+                box, align: seat.align, ...(drawn ? { leader: drawn } : {}), angle, gap, cost,
+                covers: { text: textCover, offCanvas: overflow(box, canvas, 1) > 0 },
+                ...(seat.inside ? { inside: true } : {}),
+                ...(seat.fill ? { insideFill: seat.fill } : {}),
+            };
         }
     }
-    return best!;
+    // An anchor that offers only seats on its mark, none of which fit, places nothing.
+    return best ?? { box: { x: target.x, y: target.y, width: 0, height: 0 }, align: 'center', angle: 0, gap: 0, cost: Infinity };
 }

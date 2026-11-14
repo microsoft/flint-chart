@@ -63,6 +63,7 @@ import {
     nearestInteractiveSceneItem,
     sceneItemsUnder,
     nearestSceneItem,
+    nearestThinItem,
     pathHoverPresentationKey,
     pickBounds,
     polarFrameFromItems,
@@ -75,6 +76,7 @@ import {
     renderHit,
     rendererElement,
     rendererPlotOrigin,
+    facetPlotFrames,
     sceneItems,
     shapeReadingBounds,
     vegaRendererOrigin,
@@ -95,11 +97,12 @@ import {
 } from './presentation/drag-reorder-overlay';
 import { createFocusOverlay } from './presentation/focus-overlay';
 import { createFreeformOverlay } from './presentation/freeform-overlay';
+import { createHoverDotOverlay, type HoverDot } from './presentation/hover-dot-overlay';
 import { createTargetFeedbackOverlay } from './presentation/target-feedback-overlay';
 import { createLegendRangeOverlay } from './presentation/legend-range-overlay';
 import { createReorderResetControls } from './presentation/reorder-reset-controls';
 import { createViewportResetControl } from './presentation/viewport-reset-control';
-import { createInspectGuideOverlay } from './presentation/inspect-guide-overlay';
+import { createInspectGuideOverlay, inspectValuePanel } from './presentation/inspect-guide-overlay';
 import { createDataOverlay, overlayChannels, type OverlayProjection } from './presentation/data-overlay';
 import { geoOverlayChannels, isGeoOverlay } from './presentation/overlay-channels';
 import { buildAccessibleTree, type AccessibleNode } from './accessible-navigation/model';
@@ -115,6 +118,7 @@ import {
     STYLE_SIGNAL,
     DIM_SIGNAL,
     DIM_RELATIVE_SIGNAL,
+    INTERACTION_ROLE,
 } from './stores';
 
 const EMPTY_SEMANTIC_SELECTION_KEY = '__flint_empty_semantic_selection';
@@ -602,6 +606,67 @@ export function supersedeRetainedViewports(retained: Map<string, ChartUpdate>, e
     }
 }
 
+/**
+ * The baseline tooltip: Vega's own tooltip element. Near a line, rule or point it shows that
+ * mark's values; elsewhere it `release`s to Vega's exact hover.
+ */
+export interface ProximityReadout {
+    show(event: PointerEvent, value: unknown): void;
+    release(): void;
+    hide(): void;
+}
+
+/** How far, in renderer px past a line's stroke or a point's edge, the baseline tooltip still reads it. */
+export const PROXIMITY_READOUT_DISTANCE = 6;
+
+/**
+ * What the baseline tooltip reads from a line, rule or point near the pointer: the values and
+ * where they sit. A line's segment reads at the vertex nearer along it: the series' value at that x.
+ */
+export function proximityTooltip(item: any, point: { x: number; y: number }): { value: unknown; dot?: HoverDot } {
+    const ends = item.interactionGeometry?.points as readonly { x: number; y: number }[] | undefined;
+    const marktype = item.mark?.marktype;
+    if ((marktype === 'line' || marktype === 'area' || marktype === 'trail') && ends && ends.length >= 2) {
+        const items: any[] = item.mark?.items ?? [];
+        const index = items.findIndex((candidate) => candidate.datum === item.datum);
+        const [a, b] = [ends[0], ends[ends.length - 1]];
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const along = dx * dx + dy * dy === 0 ? 0 : ((point.x - a.x) * dx + (point.y - a.y) * dy) / (dx * dx + dy * dy);
+        const nearerEnd = along > 0.5 && index >= 0 && items[index + 1] !== undefined;
+        const vertex = nearerEnd ? items[index + 1] : items[index] ?? item;
+        const at = nearerEnd ? b : a;
+        const color = [item.stroke, vertex?.stroke, item.fill].find((paint) => typeof paint === 'string' && paint !== 'transparent');
+        return { value: vertex?.tooltip ?? item.tooltip, dot: { x: at.x, y: at.y, color, lineWidth: typeof item.strokeWidth === 'number' ? item.strokeWidth : undefined } };
+    }
+    if (marktype === 'symbol' && typeof item.x === 'number' && typeof item.y === 'number') {
+        // Vega draws a circle symbol of `size` with radius √size / 2; a stroke adds half its width.
+        const stroke = item.stroke && item.stroke !== 'transparent' && typeof item.strokeWidth === 'number' ? item.strokeWidth / 2 : 0;
+        const radius = Math.sqrt(typeof item.size === 'number' ? item.size : 64) / 2 + stroke;
+        const color = [item.fill, item.stroke].find((paint) => typeof paint === 'string' && paint !== 'transparent' && paint !== 'none');
+        return { value: item.tooltip, dot: { x: item.x, y: item.y, radius, color } };
+    }
+    return { value: item.tooltip };
+}
+
+/**
+ * A tooltip value with an overlong raw decimal trimmed to about four significant digits
+ * (1.34216696571 → 1.342); anything Vega-Lite formatted, and every other value, is left as it is.
+ */
+export function readableTooltip(value: unknown): unknown {
+    const trim = (text: unknown): unknown => {
+        if (typeof text !== 'string' || !/^-?\d+\.\d{5,}$/.test(text)) return text;
+        const number = Number(text);
+        const whole = Math.max(1, Math.floor(Math.log10(Math.abs(number) || 1)) + 1);
+        const fixed = number.toFixed(Math.max(0, 4 - whole));
+        return fixed.includes('.') ? fixed.replace(/\.?0+$/, '') : fixed;
+    };
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+        return Object.fromEntries(Object.entries(value as Record<string, unknown>).map(([key, entry]) => [key, trim(entry)]));
+    }
+    return trim(value);
+}
+
 export function mountVegaInteractions(
     view: any,
     container: HTMLElement,
@@ -617,6 +682,7 @@ export function mountVegaInteractions(
         assisted: import('../../interactive/types').TargetFeedbackOptions | false;
         keyboard: import('../../interactive/types').TargetFeedbackOptions | false;
     } | undefined = undefined,
+    readout: ProximityReadout | undefined = undefined,
 ): VegaInteractionController {
     const canvasInteractions = interactions.filter(isCanvasInteraction);
     const clickInteractions = resolve
@@ -671,7 +737,7 @@ export function mountVegaInteractions(
         resolveAssistDistance(eligible, assistDistance);
     const retainedUpdates = new Map<string, ChartUpdate>();
     const previewUpdates = new Map<string, ChartUpdate>();
-    const hiddenLegendDomains = new Map<string, { legend: LegendTargetValue; opacity: number }>();
+    const hiddenLegendDomains = new Map<string, { legend: LegendTargetValue; opacity: number; dimmed?: boolean }>();
     const changeListeners = new Set<(change: ChartChangeReport) => void>();
     let lastPreviewKey: string | undefined;
     let hoverCueActive = false;
@@ -755,6 +821,7 @@ export function mountVegaInteractions(
         coordinateSpace,
         containerLayoutSize,
     });
+    const hoverDot = createHoverDotOverlay({ container, coordinateSpace, containerLayoutSize });
     const legendRangeOverlay = createLegendRangeOverlay({ container, coordinateSpace, containerLayoutSize });
     // The captions the chart's notes stand in, one slot per note in the order they came: each
     // keeps clear of those before it.
@@ -925,8 +992,9 @@ export function mountVegaInteractions(
         }
         return entries;
     };
+    // A dimmed legend value is still drawn: it is not reported as hidden.
     const hiddenValues = (): ChartHiddenValue[] => [...hiddenLegendDomains.values()]
-        .filter(({ legend }) => legend.domain.kind === 'value')
+        .filter(({ legend, dimmed }) => !dimmed && legend.domain.kind === 'value')
         .map(({ legend }) => ({
             channel: legend.channel ?? legend.field ?? '',
             value: legend.domain.kind === 'value' ? legend.domain.value : undefined,
@@ -1253,6 +1321,10 @@ export function mountVegaInteractions(
         const activeHiddenLegendDomains = new Set<string>();
         const stylesByKey: Record<string, Pick<import('../../core/interaction-contracts').StyleSpec,
             'opacity' | 'fill' | 'stroke' | 'strokeWidth'>> = {};
+        // A muted legend value's marks: its rows carry no legend element's render keys, so they are
+        // found by value once every update is read.
+        const mutedLegendValues = new Map<string, Set<string>>();
+        let mutedLegendOpacity: number | undefined;
         const overlays = new Map<string, ChartOverlaySpec>();
         const axisStyles: { value: AxisTargetValue; style: import('../../core/interaction-contracts').StyleSpec }[] = [];
         let dataRows = initialDataRows;
@@ -1289,6 +1361,27 @@ export function mountVegaInteractions(
                     hostRows = op.value.rows;
                     dataRows = preparedRows(op.value.rows);
                     continue;
+                }
+                if (op.op === 'set-style' && op.value.state === 'muted' && op.value.visible !== false) {
+                    // A muted legend value fades its legend entry as a hidden one does; its marks take the style's opacity.
+                    for (const target of op.targets) {
+                        if ('select' in target || target.visual.kind !== 'legend') continue;
+                        for (const element of target.elements) {
+                            const legend = element.value as LegendTargetValue;
+                            if (legend.domain?.kind !== 'value' || !legend.channel) continue;
+                            activeHiddenLegendDomains.add(legendDomainIdentity(legend));
+                            hiddenLegendDomains.set(`${legend.channel}:${String(legend.domain.value)}`, {
+                                legend, opacity: op.value.mutedOpacity ?? 0.35, dimmed: true,
+                            });
+                            const field = legend.field ?? plan.legendFields?.[legend.channel];
+                            if (field && op.value.opacity !== undefined) {
+                                const values = mutedLegendValues.get(field) ?? new Set<string>();
+                                values.add(String(legend.domain.value));
+                                mutedLegendValues.set(field, values);
+                                mutedLegendOpacity = Math.min(mutedLegendOpacity ?? 1, op.value.opacity);
+                            }
+                        }
+                    }
                 }
                 if (op.op === 'set-style' && op.value.visible === false) {
                     for (const target of op.targets) {
@@ -1428,6 +1521,18 @@ export function mountVegaInteractions(
         }
         if (keys.length === 0) selectedLegend = null;
         // A navigation-only chart compiles without the selection stores.
+        if (mutedLegendOpacity !== undefined) {
+            for (const item of sceneItems(view)) {
+                const datum = item.datum as Record<string, unknown> | undefined;
+                const key = datum?.[INTERACTION_KEY];
+                if (key === undefined || key === null) continue;
+                const muted = [...mutedLegendValues].some(([field, values]) =>
+                    datum![field] !== undefined && values.has(String(datum![field])));
+                if (!muted) continue;
+                const styleKey = String(key);
+                stylesByKey[styleKey] = { ...stylesByKey[styleKey], opacity: mutedLegendOpacity };
+            }
+        }
         if (plan.semanticStores !== false) {
             view.signal(STYLE_SIGNAL, stylesByKey);
             view.signal(DIM_SIGNAL, recedeTo ?? plan.dimOpacity ?? DEFAULT_DIM_OPACITY);
@@ -1512,7 +1617,7 @@ export function mountVegaInteractions(
         }
         markupOverlay.render(regions, enclosures);
         const annotations = effectiveAnnotationEntries(displayUpdates)
-            .filter((entry) => entry.value.text && entry.value.candidates);
+            .filter((entry) => entry.value.text !== undefined && entry.value.candidates);
         const annotationKeys = new Set(annotations.map((entry) => entry.key));
         for (const [key, overlay] of annotationOverlays) {
             if (annotationKeys.has(key)) continue;
@@ -2244,9 +2349,30 @@ export function mountVegaInteractions(
         }
         return formatter;
     };
+    // Hover reads only over the plot (a facet's panels when faceted): never from the legend, the
+    // axes or the padding. The plot point `localPoint` gives is clamped to the plot, so this reads
+    // the pointer unclamped.
+    const overPlotArea = (event: PointerEvent): boolean => {
+        const space = coordinateSpace();
+        const root = clientToRendererPoint({ x: event.clientX, y: event.clientY }, space);
+        const point = { x: root.x - space.originX, y: root.y - space.originY };
+        const panels = facetPlotFrames(view);
+        if (panels.length > 0) {
+            return panels.some((panel) => point.x >= panel.x && point.x <= panel.x + panel.width
+                && point.y >= panel.y && point.y <= panel.y + panel.height);
+        }
+        return point.x >= 0 && point.x <= space.plotWidth && point.y >= 0 && point.y <= space.plotHeight;
+    };
+    let inspectOutside = false;
     const inspectHandler = (event: MouseEvent): void => {
         if (inspectInteractions.length === 0) return;
         const point = localPoint(event as unknown as PointerEvent);
+        if (!overPlotArea(event as unknown as PointerEvent)) {
+            if (!inspectOutside) inspectLeave();
+            inspectOutside = true;
+            return;
+        }
+        inspectOutside = false;
         const space = coordinateSpace();
         const items = sceneItems(view);
         const polarFrame = polarFrameFromItems(items, point);
@@ -2284,9 +2410,14 @@ export function mountVegaInteractions(
                     ?? plan.overlayScales?.[indexAxis]
                 : undefined;
             const indexScale = indexScaleName ? view.scale(indexScaleName) : undefined;
+            // Scales read a facet panel's own px: a position in the chart is read less its panel's corner.
+            const panels = facetPlotFrames(view);
+            const pointerPanel = panels.find((panel) => point.x >= panel.x && point.x <= panel.x + panel.width
+                && point.y >= panel.y && point.y <= panel.y + panel.height);
+            const indexOffset = pointerPanel?.[indexAxis] ?? 0;
             const discreteCoordinates = !continuousIndex && indexScale?.domain
                 ? indexScale.domain().map((value: unknown) =>
-                    Number(indexScale(value)) + (Number(indexScale.bandwidth?.()) || 0) / 2)
+                    indexOffset + Number(indexScale(value)) + (Number(indexScale.bandwidth?.()) || 0) / 2)
                 : undefined;
             const indexAcquisition = indexPolicy && !polarFrame
                 ? indexInspectAcquisition(
@@ -2333,14 +2464,20 @@ export function mountVegaInteractions(
                     return '';
                 };
                 const valueLabels = indexPolicy!.displayValue && valueScale?.invert
-                    ? indexAcquisition.valueCoordinates.map((coordinate, index) => ({
-                        text: `${inspectValueText(valueScale.invert(coordinate))}${outOfView(coordinate)}`,
-                        color: indexAcquisition.valueColors?.[index],
-                    }))
+                    ? indexAcquisition.valueCoordinates.map((coordinate, index) => {
+                        const panel = panels.length
+                            ? inspectValuePanel(panels, indexAxis, indexAcquisition.coordinate, coordinate)
+                            : undefined;
+                        const local = coordinate - (panel?.[valueAxis] ?? 0);
+                        return {
+                            text: `${inspectValueText(valueScale.invert(local))}${outOfView(local)}`,
+                            color: indexAcquisition.valueColors?.[index],
+                        };
+                    })
                     : undefined;
                 const indexLabel = indexPolicy!.displayValue && indexField && indexAcquisition.valueCoordinates.length > 0
                     ? inspectIndexText(
-                        indexScale, indexAcquisition.coordinate, continuousIndex, indexAcquisition.snapped, indexField.field,
+                        indexScale, indexAcquisition.coordinate - indexOffset, continuousIndex, indexAcquisition.snapped, indexField.field,
                     )
                     : undefined;
                 inspectGuideOverlay.renderAxes(guidePoint, indexAxis, guide.style, indexLabel);
@@ -2430,6 +2567,38 @@ export function mountVegaInteractions(
             container.addEventListener('wheel', inspectWheel, { passive: false });
             container.addEventListener('contextmenu', inspectContext);
         }
+    }
+    // The baseline tooltip: the nearest mark's values, whether or not the pointer is exactly on it.
+    const readoutMove = (event: PointerEvent): void => {
+        if (!readout) return;
+        if (event.buttons !== 0) return readoutLeave();
+        const point = localPoint(event);
+        if (!overPlotArea(event)) {
+            hoverDot.clear();
+            readout.release();
+            return;
+        }
+        const item = nearestThinItem(view, point, PROXIMITY_READOUT_DISTANCE);
+        const read = item ? proximityTooltip(item, point) : undefined;
+        const value = read?.value;
+        if (value === undefined || value === null || value === '') {
+            hoverDot.clear();
+            readout.release();
+            return;
+        }
+        readout.show(event, readableTooltip(value));
+        if (read?.dot) hoverDot.render(read.dot);
+        else hoverDot.clear();
+    };
+    const readoutLeave = (): void => {
+        hoverDot.clear();
+        readout?.hide();
+    };
+    const readoutDown = readoutLeave;
+    if (readout) {
+        container.addEventListener('pointermove', readoutMove);
+        container.addEventListener('pointerleave', readoutLeave);
+        container.addEventListener('pointerdown', readoutDown);
     }
     const pointerTarget = (event: MouseEvent, eligible: readonly CanvasInteractionDef[]) => {
         const point = localPoint(event as unknown as PointerEvent);
@@ -3305,6 +3474,13 @@ export function mountVegaInteractions(
         cancelPendingDismiss();
         if (clickNoneResets) view.removeEventListener('click', resetOnClick);
         if (doubleClickResets) container.removeEventListener('dblclick', resetOnDoubleClick);
+        if (readout) {
+            container.removeEventListener('pointermove', readoutMove);
+            container.removeEventListener('pointerleave', readoutLeave);
+            container.removeEventListener('pointerdown', readoutDown);
+            hoverDot.destroy();
+            readout.hide();
+        }
         if (inspectInteractions.length > 0) {
             container.removeEventListener('pointermove', inspectHandler);
             container.removeEventListener('pointerleave', inspectLeave);

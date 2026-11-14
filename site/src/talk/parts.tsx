@@ -113,12 +113,13 @@ export function FlawedVegaLite({ spec, flaws }: { spec: unknown; flaws: Flaw[] }
 }
 
 /** The numbered problems a FlawedVegaLite circles, as readable text. */
-export function FlawList({ flaws }: { flaws: Flaw[] }) {
-  return (
+export function FlawList({ flaws, lead }: { flaws: Flaw[]; lead?: ReactNode }) {
+  const list = (
     <ol className="talk-flaws">
       {flaws.map((flaw, i) => <li key={flaw.label}><span>{i + 1}</span>{flaw.label}</li>)}
     </ol>
   );
+  return lead ? <div className="talk-flaws-block"><p className="talk-flaws-lead">{lead}</p>{list}</div> : list;
 }
 
 /** A site demo laid out at `width`, scaled to fit its box. Flint's pointer handling follows the scale. */

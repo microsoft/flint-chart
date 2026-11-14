@@ -1603,6 +1603,12 @@ export interface AssembleOptions {
      */
     regions?: readonly { x?: readonly unknown[]; y?: readonly unknown[]; text?: string; placement?: string }[];
     /**
+     * Measure values the chart's updates mark across the plot (a `set-overlay` reference rule on y, a
+     * band of y): the measure axis reaches them, so a line the reader asked for is drawn in the plot
+     * rather than cut off past its end. Set by the interactive Vega-Lite renderer from the first updates.
+     */
+    references?: readonly number[];
+    /**
      * Enclosures the chart is drawn with from the start, as `annotate-enclosure` sets them: where a
      * dot they enclose sits at the edge of a continuous axis, the axis is padded by the px the outline
      * needs, so it is drawn whole. Set by the interactive Vega-Lite renderer from the first updates.

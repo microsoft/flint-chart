@@ -11,7 +11,7 @@ import { INTERACTION_RESET_GESTURES, isResetGesture } from '../reset';
 export interface ResolvedInteractionSpec {
     /** Definitions in spec order, each tagged `origin: 'spec'`; `filter-controls` is the one external definition. */
     readonly interactions: readonly InteractionDef[];
-    readonly surface: Pick<InteractionSpec, 'assistedTargeting' | 'keyboardTargeting'>;
+    readonly surface: Pick<InteractionSpec, 'assistedTargeting' | 'keyboardTargeting' | 'defaults'>;
 }
 
 const EMPTY: ResolvedInteractionSpec = Object.freeze({
@@ -19,7 +19,7 @@ const EMPTY: ResolvedInteractionSpec = Object.freeze({
     surface: Object.freeze({}),
 });
 
-const KNOWN_KEYS = new Set(['interactions', 'assistedTargeting', 'keyboardTargeting']);
+const KNOWN_KEYS = new Set(['interactions', 'assistedTargeting', 'keyboardTargeting', 'defaults']);
 const RETIRED_KEYS: Record<string, string> = {
     dismiss: 'put a "reset" list on each interaction instead',
     updates: 'state arrives through the surface (applyUpdate, setUpdates, dispatch), not the spec',
@@ -48,6 +48,12 @@ export function resolveInteractionSpec(spec: InteractionSpec | undefined): Resol
         if (KNOWN_KEYS.has(key)) continue;
         const hint = RETIRED_KEYS[key];
         throw new Error(`interaction_spec: unknown key "${key}"${hint ? `; ${hint}` : ''}.`);
+    }
+    const defaults = spec.defaults;
+    if (defaults !== undefined && typeof defaults !== 'boolean' && !(defaults && typeof defaults === 'object'
+        && !Array.isArray(defaults) && Object.entries(defaults).every(([key, value]) =>
+            ['tooltip', 'legend'].includes(key) && typeof value === 'boolean'))) {
+        throw new Error('interaction_spec.defaults must be true, false, or { tooltip?, legend? } of booleans.');
     }
     if (!Array.isArray(spec.interactions)) {
         throw new Error('interaction_spec.interactions must be an array of preset entries.');
@@ -127,6 +133,7 @@ export function resolveInteractionSpec(spec: InteractionSpec | undefined): Resol
         surface: {
             ...(spec.assistedTargeting !== undefined ? { assistedTargeting: spec.assistedTargeting } : {}),
             ...(spec.keyboardTargeting !== undefined ? { keyboardTargeting: spec.keyboardTargeting } : {}),
+            ...(defaults !== undefined ? { defaults } : {}),
         },
     };
 }

@@ -73,8 +73,9 @@ export function presentAnnotationUpdate(
                 context,
                 op.value.anchor === 'point' ? { ...op.target.visual, kind: 'mark' } : op.target.visual,
             );
+            // An empty text is a cue with no caption; an absent one is the chart's own wording.
             const text = op.value.text ?? formatAnnotation(element, context, op.target.visual);
-            if (!text) return [];
+            if (text === undefined || (text === '' && op.value.text !== '')) return [];
             const value: PresentedAnnotationSpec = {
                 ...op.value,
                 text,
@@ -112,6 +113,23 @@ export function enclosuresOfUpdates(updates: readonly ChartUpdate[] | undefined)
 }
 
 /** The regions a list of updates sets, for a compile to make room for their captions (`AssembleOptions.regions`). */
+/**
+ * The y values the updates mark across the plot: a reference rule's (an overlay with y and no x) and
+ * a band's ends (an overlay rect, or a region, with y and no x), for the compile to keep in the axis.
+ */
+export function referencesOfUpdates(updates: readonly ChartUpdate[] | undefined): number[] {
+    const numbers = (values: readonly unknown[]) => values.filter((value): value is number => typeof value === 'number' && Number.isFinite(value));
+    return (updates ?? []).flatMap((update) => update.ops.flatMap((op) => {
+        if (op.op === 'set-overlay' && op.value && (op.value.mark === 'rule' || op.value.mark === 'rect')) {
+            const { y, y2, x } = op.value.encodings ?? {};
+            if (!y || x) return [];
+            return numbers((op.value.data?.values ?? []).flatMap((row) => [row[y.field], ...(y2 ? [row[y2.field]] : [])]));
+        }
+        if (op.op === 'annotate-region' && op.value && op.value.y && !op.value.x) return numbers(op.value.y);
+        return [];
+    }));
+}
+
 export function regionsOfUpdates(updates: readonly ChartUpdate[] | undefined): RegionAnnotationSpec[] {
     return (updates ?? []).flatMap((update) => update.ops.flatMap((op) => op.op === 'annotate-region' && op.value ? [op.value] : []));
 }

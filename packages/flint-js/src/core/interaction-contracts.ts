@@ -157,6 +157,27 @@ export interface AnnotationSpec {
      * outline; `'exclusive'` is strong and recedes every other mark, as `set-style` `emphasized` does.
      */
     highlight?: 'none' | 'light' | 'strong' | 'exclusive';
+    /**
+     * The caption's type, over the theme's: size in px, weight, ink. Omitted, a note takes the
+     * theme's `type.annotation` role, else the axis labels' face and weight a size up in the primary ink.
+     */
+    style?: NoteTextStyle;
+    /** The ring or outline's paint for this note, over the theme's `interaction.highlight`. */
+    highlightStyle?: HighlightStyle;
+}
+
+/** A ring's or an outline's paint where one update sets its own. */
+export interface HighlightStyle {
+    color?: string;
+    /** Stroke width in px of the strong ring or outline; the light one is drawn a little thinner. */
+    width?: number;
+}
+
+/** A caption's type where one note sets its own. */
+export interface NoteTextStyle {
+    fontSize?: number;
+    fontWeight?: number | 'normal' | 'bold';
+    color?: string;
 }
 
 /**
@@ -215,8 +236,10 @@ export interface EnclosureAnnotationSpec {
      * or three outlines and none for one or more than three; `all` and `none` say so outright.
      */
     connect?: 'auto' | 'all' | 'none';
-    /** The outline's, its caption's and its leaders' colour; by default one that reads on the marks and the page. */
+    /** The outline's, its caption's and its leaders' colour; by default the theme's `interaction.highlight`, else one that reads on the marks and the page. */
     color?: string;
+    /** The outline's stroke width in px; by default the theme's, else 1.5. */
+    width?: number;
 }
 
 export interface StyleSpec {

@@ -31,7 +31,7 @@ export interface DataOverlayOptions {
     scales: Partial<Record<'x' | 'y' | 'color', string>>;
     coordinateSpace(): RendererCoordinateSpace;
     containerLayoutSize(): { width: number; height: number };
-    /** Whether the chart clips its marks to the plot, as a navigated chart does; overlays then follow. */
+    /** Whether the chart clips its marks to the plot. Overlays on a cartesian chart are always cut at the plot. */
     clipToPlot?: boolean;
     /** On a map, its projection as drawn now: overlays placed by `longitude`/`latitude` go through it. */
     geoProjection?: () => OverlayProjection | undefined;
@@ -129,7 +129,6 @@ export function createDataOverlay({
     scales,
     coordinateSpace,
     containerLayoutSize,
-    clipToPlot = false,
     geoProjection,
 }: DataOverlayOptions): DataOverlayController {
     const layer = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -389,7 +388,9 @@ export function createDataOverlay({
         // A map is a window on the world: what it places runs to the plot's edge and is cut there.
         const plot = !cartesian
             ? { x1: space.originX, y1: space.originY, x2: space.originX + space.plotWidth, y2: space.originY + space.plotHeight }
-            : clipToPlot && [...xRange, ...yRange].every(Number.isFinite)
+            // Cut at the plot whether or not the chart navigates: a rule past the axis's end would
+            // otherwise be drawn over the title.
+            : [...xRange, ...yRange].every(Number.isFinite)
                 ? {
                     x1: space.originX + Math.min(...xRange),
                     y1: space.originY + Math.min(...yRange),

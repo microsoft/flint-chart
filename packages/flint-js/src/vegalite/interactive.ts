@@ -1,6 +1,8 @@
 import type { ViewNode } from '../core/views';
 import { applyCategoryViewports, resolveCategoryViewport } from '../core/filter-overflow';
 import type { AssembleOptions, CategoryViewport, ChartAssemblyInput } from '../core/types';
+import { baselineOn, type InteractionDefaults } from '../core/interaction-spec';
+import { baselineInteractions } from './interactions/baseline';
 import { temporalFieldValue } from '../core/resolve-semantics';
 import { createChangeFilter } from '../interactive/chart-state';
 import { currentFilters, isFilterControls } from '../interactive/filter-controls';
@@ -9,7 +11,10 @@ import { isCanvasInteraction, type ChartState, type InteractionContext, type Int
 import type { InteractiveRendererAdapter, TargetFeedbackOptions, ViewportState } from '../interactive/types';
 import { openVegaLiteSession, type Replanned } from './assemble';
 import { canvasFurnitureMarkup, readCanvasFurniture, readCanvasPatterns, type CanvasPattern } from './canvas-furniture';
-import { enableGuideLabelTooltips, planTemporalTickValues, vlListTooltipFields } from './instantiate-spec';
+import { enableGuideLabelTooltips, planTemporalTickValues, skipLabelExpr, skipLabelsOf, vlListTooltipFields } from './instantiate-spec';
+import { onRoundInterval, sequenceKindOf } from '../core/label-sequence';
+import { RAIL_ROW_GAP, RAIL_THICKNESS } from '../interactive/viewport-rail';
+import { growPadding } from './theme';
 import {
     addVegaLiteInteractions,
     collectVegaAxisTargets,
@@ -32,7 +37,7 @@ import {
     vegaLiteTemporalAxisPlans,
     type LiveLayoutPlanner,
 } from './interactions/live-layout';
-import { mountVegaInteractions } from './interactions/runtime';
+import { mountVegaInteractions, readableTooltip } from './interactions/runtime';
 import { advanceLiveValues, bindLiveValues, LIVE_VALUES_SIGNAL, liveValuesChange } from './live-values';
 import { readDrawnLayout } from './drawn-layout';
 import { vegaRendererOrigin } from './interactions/hit-adapter';
@@ -53,7 +58,7 @@ export function mountedInteractionList(
         return kept ? [kept] : [];
     });
 }
-import { INTERACTION_STORES } from './interactions/stores';
+import { INTERACTION_KEY, INTERACTION_STORES } from './interactions/stores';
 import { compile } from 'vega-lite';
 import { Error as VegaError, expressionFunction, loader as vegaLoader, parse, View } from 'vega';
 import { withBundledBoundaries } from './boundary-loader';
@@ -106,6 +111,10 @@ export interface VegaInteractiveRendererOptions {
     notes?: AssembleOptions['notes'];
     /** The regions the chart mounts with, so the compile makes room for their captions (`AssembleOptions.regions`). */
     regions?: AssembleOptions['regions'];
+    /** The baseline behaviours (`interaction_spec.defaults`); on unless turned off. */
+    defaults?: InteractionDefaults;
+    /** The measure values the chart's updates mark, so the compile keeps them in the axis (`AssembleOptions.references`). */
+    references?: AssembleOptions['references'];
     /** The enclosures the chart mounts with, so the compile pads an axis their outlines would cross (`AssembleOptions.enclosures`). */
     enclosures?: AssembleOptions['enclosures'];
     assistDistance?: number;
@@ -144,6 +153,31 @@ function pinColorDomains(spec: any): void {
         if (node.spec) visit(node.spec);
     };
     visit(spec);
+}
+
+/**
+ * A windowed chart is compiled from its first window's rows, which would fit a continuous colour
+ * scale to that window alone: later windows would run past the legend's ends. Each continuous
+ * colour keeps the domain the chart stated over all its rows.
+ */
+function carryColorDomains(from: any, to: any): void {
+    const domains = new Map<string, Record<string, unknown>>();
+    const visit = (node: any, act: (color: any) => void): void => {
+        if (!node || typeof node !== 'object') return;
+        const color = node.encoding?.color;
+        if (color && typeof color.field === 'string' && color.type === 'quantitative') act(color);
+        for (const child of [...(node.layer ?? []), ...(node.concat ?? []), ...(node.hconcat ?? []), ...(node.vconcat ?? [])]) visit(child, act);
+        if (node.spec) visit(node.spec, act);
+    };
+    visit(from, (color) => {
+        if (Array.isArray(color.scale?.domain)) {
+            domains.set(color.field, { domain: color.scale.domain, ...(color.scale.domainMid !== undefined ? { domainMid: color.scale.domainMid } : {}) });
+        }
+    });
+    visit(to, (color) => {
+        const stated = domains.get(color.field);
+        if (stated) color.scale = { ...(color.scale ?? {}), ...stated };
+    });
 }
 
 function windowedInput(
@@ -269,8 +303,8 @@ export function layoutSignals(vegaSpec: any): LayoutSignal[] {
 /** The windows over a subset of the rows: their categories in the same order, the window no larger than they are. */
 function viewportsOver(viewports: CategoryViewport[], rows: readonly Record<string, unknown>[]): CategoryViewport[] {
     return viewports.map((viewport) => {
-        const present = new Set(rows.map((row) => row[viewport.field]));
-        const orderedValues = viewport.orderedValues.filter((value) => present.has(value));
+        const present = new Set(rows.map((row) => String(row[viewport.field])));
+        const orderedValues = viewport.orderedValues.filter((value) => present.has(String(value)));
         return {
             ...viewport,
             orderedValues,
@@ -290,6 +324,23 @@ function applyViewportSorts(node: unknown, viewports: CategoryViewport[]): void 
     for (const value of Object.values(record)) applyViewportSorts(value, viewports);
 }
 
+/**
+ * A rail's axis thinned to round values (every fifth year) prints the round values of every
+ * category it scrolls through, not only those of the first window it was laid out for.
+ */
+function widenSkipLabels(spec: any, viewports: CategoryViewport[], semanticTypes: ChartAssemblyInput['semantic_types']): void {
+    for (const viewport of viewports) {
+        const config = spec.config?.[viewport.channel === 'x' ? 'axisX' : 'axisY'];
+        const shown = skipLabelsOf(config?.labelExpr);
+        const declared: unknown = semanticTypes?.[viewport.field];
+        const kind = sequenceKindOf(typeof declared === 'string' ? declared
+            : (declared as { semanticType?: string } | undefined)?.semanticType);
+        if (!shown || !kind) continue;
+        const all = onRoundInterval(kind, shown, viewport.orderedValues.map(String));
+        if (all?.length) config.labelExpr = skipLabelExpr(all);
+    }
+}
+
 expressionFunction(TEMPORAL_TICKS_FUNCTION, planTemporalTickValues);
 
 export function createVegaInteractiveRenderer(
@@ -297,11 +348,17 @@ export function createVegaInteractiveRenderer(
 ): InteractiveRendererAdapter {
     return {
         async mount(container, input) {
-            // Tooltips are presentation, so the spec decides: off unless `options.addTooltips` is set.
-            // The host's background is the chart's where no house sets a canvas of its own.
-            const backed: ChartAssemblyInput = options.background !== undefined && input.options?.background === undefined
-                ? { ...input, options: { ...input.options, background: options.background } }
+            // The baseline tooltip reads the nearest mark, so every mark carries its values (Vega-Lite's own
+            // tooltip, formatted as it formats them), unless the spec turns tooltips off. Whether an inspect
+            // preset reads values on hover instead is known only once the chart admits it (below).
+            const baselineTooltip = baselineOn(options.defaults, 'tooltip') && input.options?.addTooltips !== false;
+            const tipped: ChartAssemblyInput = baselineTooltip && input.options?.addTooltips === undefined
+                ? { ...input, options: { ...input.options, addTooltips: true } }
                 : input;
+            // The host's background is the chart's where no house sets a canvas of its own.
+            const backed: ChartAssemblyInput = options.background !== undefined && tipped.options?.background === undefined
+                ? { ...tipped, options: { ...tipped.options, background: options.background } }
+                : tipped;
             // The notes and regions the chart mounts with get room at their marks; a spec that names its own keeps them.
             const withNotes: ChartAssemblyInput = options.notes?.length && backed.options?.notes === undefined
                 ? { ...backed, options: { ...backed.options, notes: options.notes } }
@@ -309,9 +366,12 @@ export function createVegaInteractiveRenderer(
             const withRegions: ChartAssemblyInput = options.regions?.length && withNotes.options?.regions === undefined
                 ? { ...withNotes, options: { ...withNotes.options, regions: options.regions } }
                 : withNotes;
-            const interactiveInput: ChartAssemblyInput = options.enclosures?.length && withRegions.options?.enclosures === undefined
-                ? { ...withRegions, options: { ...withRegions.options, enclosures: options.enclosures } }
+            const withReferences: ChartAssemblyInput = options.references?.length && withRegions.options?.references === undefined
+                ? { ...withRegions, options: { ...withRegions.options, references: options.references } }
                 : withRegions;
+            const interactiveInput: ChartAssemblyInput = options.enclosures?.length && withReferences.options?.enclosures === undefined
+                ? { ...withReferences, options: { ...withReferences.options, enclosures: options.enclosures } }
+                : withReferences;
             // A viewport on x changes the rows in view, so the compile leaves room for a live layout.
             const navigatesX = (options.interactions ?? []).some((interaction) => isCanvasInteraction(interaction)
                 && interaction.eventSource.type === 'navigation' && interaction.eventSource.axes !== 'y');
@@ -355,7 +415,22 @@ export function createVegaInteractiveRenderer(
                 return windowed.shown;
             };
             applyViewportSorts(vlSpec, viewports);
-            const interactions = options.interactions ?? [];
+            widenSkipLabels(vlSpec, viewports, mountedInput.semantic_types);
+            if (viewports.length > 0) carryColorDomains(assembled, vlSpec);
+            // A rail across x belongs under its axis: above a source line at the foot, the chart keeps it room there.
+            const railRoom = viewports.some((viewport) => viewport.channel === 'x')
+                && readCanvasFurniture(vlSpec).some((item) => item.bottom !== undefined);
+            if (railRoom) growPadding(vlSpec, 'bottom', RAIL_ROW_GAP + RAIL_THICKNESS);
+            // What every chart has without asking (a legend dim, a dense chart's zoom); each gives way to what was asked.
+            // Anything asked for that acts on legend items (a toggle, a click highlight, a single-series
+            // inspect) owns the legend, whatever its gesture: the baseline dim stays off it.
+            const legendClaimed = (options.interactions ?? []).some((interaction) =>
+                isCanvasInteraction(interaction) && 'legend-item' in interaction.affordances);
+            const baseline = vlSpec._interactionSemantics
+                ? baselineInteractions(vlSpec._interactionSemantics, options.defaults)
+                    .filter((interaction) => !(legendClaimed && 'legend-item' in interaction.affordances))
+                : [];
+            const interactions = [...(options.interactions ?? []), ...baseline];
             const canvasInteractions = interactions.filter(isCanvasInteraction);
             const filtersRows = interactions.some((interaction) =>
                 isFilterControls(interaction) && (interaction.filterControls.options.mode ?? 'filter') === 'filter');
@@ -365,7 +440,7 @@ export function createVegaInteractiveRenderer(
                 const interactionPlan = addVegaLiteInteractions(
                     shapedSpec,
                     interactions,
-                    options.enableSemanticUpdates,
+                    options.enableSemanticUpdates || baselineTooltip,
                 );
                 if (viewports.length === 0 && filtersRows) {
                     pinColorDomains(shapedSpec);
@@ -514,9 +589,43 @@ export function createVegaInteractiveRenderer(
             );
             view.logLevel(VegaError);
             const tooltip = createTooltip(container);
+            // Vega's exact hover drives the tooltip; with the baseline, a line or point a few px away
+            // takes it over (the readout), and gives it back when the pointer moves off.
+            // An inspect preset the chart admitted reads values on hover itself: the tooltip stays out of its way.
+            const readsOnHover = (interactionPlan?.interactions ?? []).some((interaction) =>
+                isCanvasInteraction(interaction) && interaction.eventSource.gesture === 'inspect');
+            const proximity = baselineTooltip && !readsOnHover && interactionPlan;
+            let nearby = false;
+            let exact: [any, any, unknown] | undefined;
+            const showTip = (handler: any, event: any, item: any, value: unknown): void =>
+                tooltip.call(handler, event, item, value == null ? value : readableTooltip(withoutSemanticInteractionField(value)));
+            // Text and rules that no data row stands behind (a ridge's label, a mean line, a sparkline's
+            // average) are the chart's furniture: under the baseline they say nothing on hover.
+            const furniture = (item: any): boolean => proximity !== undefined && proximity !== false
+                && (item?.mark?.marktype === 'text' || item?.mark?.marktype === 'rule')
+                && item?.datum?.[INTERACTION_KEY] == null;
             view.tooltip((handler, event, item, value) => {
-                tooltip.call(handler, event, item, withoutSemanticInteractionField(value));
+                if (furniture(item) || (readsOnHover && input.options?.addTooltips === undefined)) value = null;
+                exact = value == null ? undefined : [event, item, value];
+                if (!nearby) showTip(handler, event, item, value);
             });
+            const hideTip = (): void => tooltip.call(undefined as any, new MouseEvent('mousemove') as any, undefined as any, null);
+            const readout = proximity ? {
+                show: (event: PointerEvent, value: unknown) => {
+                    nearby = true;
+                    showTip(undefined, event, undefined, value);
+                },
+                release: () => {
+                    if (!nearby) return;
+                    nearby = false;
+                    if (exact) showTip(undefined, ...exact);
+                    else hideTip();
+                },
+                hide: () => {
+                    nearby = false;
+                    hideTip();
+                },
+            } : undefined;
             // After the tooltip: setting it re-initializes the view's event handler.
             scaleAwareCanvasPicking((view as any)._handler);
             await view.runAsync();
@@ -536,6 +645,7 @@ export function createVegaInteractiveRenderer(
                     options.hoverTolerance ?? 0,
                     options.keyboardTargeting ?? false,
                     options.targetFeedback,
+                    readout,
                 )
                 : undefined;
 
@@ -648,9 +758,13 @@ export function createVegaInteractiveRenderer(
                 },
                 getViewportGeometry(channel) {
                     const { x: left, y: top } = vegaRendererOrigin(view);
-                    return channel === 'x'
-                        ? { offset: left, extent: view.width() }
-                        : { offset: top, extent: view.height() };
+                    if (channel === 'y') return { offset: top, extent: view.height() };
+                    // Under everything Vega draws (axes, a legend below), in the room kept above the source line.
+                    const drawnBottom = Number((view.scenegraph() as any)?.root?.items?.[0]?.bounds?.y2);
+                    return {
+                        offset: left, extent: view.width(),
+                        ...(railRoom && Number.isFinite(drawnBottom) ? { railTop: top + drawnBottom + RAIL_ROW_GAP } : {}),
+                    };
                 },
                 getViewports: () => currentViewports,
                 setViewports(starts) {

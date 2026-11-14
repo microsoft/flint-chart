@@ -134,7 +134,7 @@ export const SKETCHES: Record<string, Draw> = {
   typesWhat(ctx: Ctx, w: number, h: number) {
     const s = Math.min(w / 1400, h / 560);
     const X = (v: number) => v * s + (w - 1400 * s) / 2, Y = (v: number) => v * s + (h - 560 * s) / 2, S = (v: number) => v * s;
-    const cols: [string, string][] = [['period', 'YearMonth'], ['game', 'Category'], ['newUsers', 'Profit']];
+    const cols: [string, string][] = [['period', 'YearMonth'], ['game', 'Category'], ['newUsers', 'Delta']];
     const tx = X(60), ty = Y(120), colW = S(190), rowH = S(56);
     cols.forEach(([name, type], i) => {
       const x = tx + i * colW;
@@ -157,7 +157,7 @@ export const SKETCHES: Record<string, Draw> = {
     heads.forEach(([t, x]) => text(ctx, t, X(x + 110), Y(40), { size: S(28), kind: 'handBold', color: C.ink2, align: 'center', maxWidth: S(220) }));
     const chains: [string, string, string, string][] = [
       ['Temporal', 'Date granule', 'YearMonth', C.meaning],
-      ['Measure', 'Signed measure', 'Profit', C.meaning],
+      ['Measure', 'Signed measure', 'Delta', C.meaning],
       ['Measure', 'Physical', 'Temperature', C.meaning],
       ['Discrete', 'Rank', 'Rank', C.meaning],
       ['Geographic', 'Place', 'Country', C.meaning],
@@ -549,7 +549,7 @@ export const BROKEN = {
   table: { x: 16, y: 20, w: 300, h: 560 },
   spec: { x: 366, y: 20, w: 300, h: 560 },
   chart: { x: 740, y: 40, w: 690, h: 236 },
-  flaws: { x: 770, y: 330, w: 620, h: 220 },
+  flaws: { x: 770, y: 300, w: 620, h: 240 },
 };
 
 /** The table plus the spec, and an arrow to the chart they gave. */
@@ -971,13 +971,35 @@ function pill(ctx: Ctx, cx: number, cy: number, len: number, r: number, angle: n
 
 Object.assign(SKETCHES, { whyFlint });
 
+/** A hand-drawn rounded outline (a stadium) round a box, its ends running a little past where the pen started. */
+function stadium(ctx: Ctx, x: number, y: number, w: number, h: number, o: { w: number; color: string; seed: number }) {
+  const r = h / 2, pts: Pt[] = [];
+  const arc = (cx: number, a0: number) => { for (let i = 0; i <= 12; i++) { const a = a0 + (i / 12) * Math.PI; pts.push([cx + Math.cos(a) * r, y + r + Math.sin(a) * r]); } };
+  // from the top-left, along the top, round the right end, back along the bottom, round the left end, and a little past the start
+  pts.push([x + r, y]);
+  arc(x + w - r, -Math.PI / 2);
+  arc(x + r, Math.PI / 2);
+  pts.push([x + r + w * 0.06, y - 1.5]);
+  stroke(ctx, pts, { w: o.w, color: o.color, seed: o.seed });
+}
+
+/** The capability slide's frame: the equation on top, the catalog the slide sets under it, the vision and a callout at the bottom. */
+export const TIMELINE = {
+  w: 1440, h: 720,
+  catalog: { x: 30, y: 170, w: 1380, h: 310 },
+  vision: { y: 510, h: 110 },
+  callout: { x: 660, y: 644, w: 750, h: 54 },
+};
+
 /** Independent semantic components become coloured threads, wired together into a rendering-library spec. */
 function flintEquation(ctx: Ctx, w: number, h: number, mode: 'compiler' | 'timeline' = 'compiler') {
-  const s = Math.min(w / 1440, h / 600);
+  const FH = mode === 'timeline' ? TIMELINE.h : 600;
+  const s = Math.min(w / 1440, h / FH);
   const X = (v: number) => v * s + (w - 1440 * s) / 2;
-  const Y = (v: number) => v * s + (h - 600 * s) / 2;
+  const Y = (v: number) => v * s + (h - FH * s) / 2;
   const S = (v: number) => v * s;
-  const ey = 70;
+  // the timeline drops the equation a little, to leave room for the v1.0 label over it
+  const ey = mode === 'timeline' ? 86 : 70;
   text(ctx, 'flint spec  =', X(30), Y(ey + 12), { size: S(40), kind: 'handBold', color: C.ink, maxWidth: S(260), maxLines: 1 });
   const parts: [string, string][] = [['data spec', C.green], ['chart spec', C.meaning], ['theme spec', C.look], ['interaction spec', C.behavior]];
   const chipW = 230, chipH = 64, gap = 60, x0 = 290;
@@ -999,24 +1021,33 @@ function flintEquation(ctx: Ctx, w: number, h: number, mode: 'compiler' | 'timel
   });
 
   if (mode === 'timeline') {
-    // The vision the specs serve, in a box under them, the slide's full width.
-    const bx = 30, bw = 1380, by = 168, bh = 92;
-    card(ctx, X(bx), Y(by), S(bw), S(bh), { seed: 1700, color: C.ink2, fill: C.panel, w: S(2.5) });
-    // One line: a bold lead and the vision after it, centred together.
-    const lead = 'Our vision:', rest = ' bake visualization knowledge into the compiler, so that a simple spec produces good-looking charts';
-    let size = 28;
-    const widths = (fs: number) => {
-      ctx.font = `700 ${S(fs)}px 'Inter Variable', Inter, system-ui, sans-serif`; const a = ctx.measureText(lead).width;
-      ctx.font = `400 ${S(fs)}px 'Inter Variable', Inter, system-ui, sans-serif`; return [a, ctx.measureText(rest).width];
+    // The theme and interaction specs came in v1.0: one snug box round both (clear of the "+" before them), labelled over its top-right corner.
+    const pad = 14, l = x0 + 2 * (chipW + gap) - 8, r = x0 + 3 * (chipW + gap) + chipW + pad, boxTop = ey - chipH / 2 - pad;
+    rect(ctx, X(l), Y(boxTop), S(r - l), S(chipH + pad * 2), { w: S(3), color: C.red, seed: 1690, overshoot: 4 });
+    text(ctx, 'new in v1.0', X(r), Y(boxTop - 12), { size: S(26), kind: 'handBold', color: C.red, align: 'right', maxWidth: S(240), maxLines: 1 });
+    // The vision the specs serve: the slide's takeaway, two large lines on an amber band.
+    const lines: [string, string][] = [['Our vision: ', 'bake visualization knowledge into the compiler,'], ['', 'so that a simple spec produces good-looking charts']];
+    const font = (weight: number, fs: number) => `${weight} ${S(fs)}px 'Inter Variable', Inter, system-ui, sans-serif`;
+    const lineW = (fs: number, [lead, rest]: [string, string]) => {
+      ctx.font = font(800, fs); const a = ctx.measureText(lead).width;
+      ctx.font = font(700, fs); return [a, ctx.measureText(rest).width];
     };
-    while (size > 16 && widths(size).reduce((t, v) => t + v, 0) > S(bw - 60)) size -= 1;
-    const [la, ra] = widths(size);
-    const start = X(bx + bw / 2) - (la + ra) / 2, base = Y(by + bh / 2) + S(size) * 0.36;
+    let size = 36;
+    while (size > 20 && Math.max(...lines.map((l) => lineW(size, l).reduce((t, v) => t + v, 0))) > S(1300)) size -= 1;
+    const { y: vy, h: vh } = TIMELINE.vision, lh = size * 1.3, top = vy + (vh - lh * lines.length) / 2;
+    const widest = Math.max(...lines.map((l) => lineW(size, l).reduce((t, v) => t + v, 0)));
+    washRect(ctx, X(720) - widest / 2 - S(34), Y(vy), widest + S(68), S(vh), C.amber, { alpha: 0.3, seed: 1700, amp: 1.6 });
     ctx.save();
-    ctx.fillStyle = C.ink; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-    ctx.font = `700 ${S(size)}px 'Inter Variable', Inter, system-ui, sans-serif`; ctx.fillText(lead, start, base);
-    ctx.font = `400 ${S(size)}px 'Inter Variable', Inter, system-ui, sans-serif`; ctx.fillText(rest, start + la, base);
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    lines.forEach((l, i) => {
+      const [la, ra] = lineW(size, l), x = X(720) - (la + ra) / 2, base = Y(top + lh * i + size * 1.02);
+      ctx.fillStyle = C.meaning; ctx.font = font(800, size); ctx.fillText(l[0], x, base);
+      ctx.fillStyle = C.ink; ctx.font = font(700, size); ctx.fillText(l[1], x + la, base);
+    });
     ctx.restore();
+    // a small callout in the bottom-right corner: a hand-drawn rounded outline; the slide sets the link inside it
+    const { x: cx, y: cy, w: cw, h: ch } = TIMELINE.callout;
+    stadium(ctx, X(cx), Y(cy), S(cw), S(ch), { w: S(2.5), color: C.soft, seed: 1710 });
     return;
   }
 
@@ -1123,12 +1154,15 @@ function dataChartDeepDive(ctx: Ctx, w: number, h: number) {
 
 Object.assign(SKETCHES, { dataChartDeepDive });
 
-function compilerCloseup(ctx: Ctx, w: number, h: number, active: 'resolve' | 'layout' | 'backend') {
+/** Where the compiler close-up's box starts: low enough to leave a clear line for its heading under the steps. */
+export const CLOSEUP_TOP = 162;
+
+function compilerCloseup(ctx: Ctx, w: number, h: number, active: 'resolve' | 'layout' | 'backend', boxH = 496) {
   const s = Math.min(w / DEEP_DIVE.w, h / DEEP_DIVE.h);
   const X = (v: number) => v * s + (w - DEEP_DIVE.w * s) / 2;
   const Y = (v: number) => v * s + (h - DEEP_DIVE.h * s) / 2;
   const S = (v: number) => v * s;
-  card(ctx, X(510), Y(112), S(912), S(546), { seed: 1840, color: C.ink, fill: '#fafaf8', w: S(3.5) });
+  card(ctx, X(510), Y(CLOSEUP_TOP), S(912), S(boxH), { seed: 1840, color: C.ink, fill: '#fafaf8', w: S(3.5) });
   text(ctx, 'Compiler deep dive', X(50), Y(53), { size: S(32), kind: 'handBold', maxWidth: S(250), maxLines: 1 });
   const stages = [
     { key: 'resolve', x: 330, label: 'Resolve configs', color: C.green },
@@ -1158,17 +1192,26 @@ function compilerCloseup(ctx: Ctx, w: number, h: number, active: 'resolve' | 'la
   return { X, Y, S };
 }
 
+/** A stage's heading: the box's message, centred over it, midway between the row of steps (bottom at 68) and the box. */
+function closeupHeading(ctx: Ctx, X: Map1, Y: Map1, S: Map1, label: string) {
+  const mid = (68 + CLOSEUP_TOP) / 2;
+  text(ctx, label, X(966), Y(mid + 11), { size: S(31), kind: 'handBold', align: 'center', maxWidth: S(900), maxLines: 1 });
+}
+
 function resolveConfigCloseup(ctx: Ctx, w: number, h: number) {
-  const { X, Y, S } = compilerCloseup(ctx, w, h, 'resolve');
-  text(ctx, 'Rule-based deduction', X(965), Y(172), { size: S(32), kind: 'handBold', align: 'center', maxWidth: S(820), maxLines: 1 });
+  // a shorter box, so the closing callout can sit under it
+  const { X, Y: Y0, S } = compilerCloseup(ctx, w, h, 'resolve', 450);
+  closeupHeading(ctx, X, Y0, S, 'Rule-based deduction');
+  // the heading has left the box, so its contents move up into the room it held
+  const Y = (v: number) => Y0(v - 8);
   for (const [label, x] of [['From', 550], ['Property', 835], ['Choice', 1105]] as const) {
     text(ctx, label, X(x), Y(230), { size: S(28), kind: 'handBold', color: C.ink2, maxWidth: S(260), maxLines: 1 });
   }
   const rows = [248, 356, 464];
   const decisions = [
-    { label: 'Parser', y: rows[0], sources: ['YearMonth / Profit', '+ data representation'] },
+    { label: 'Parser', y: rows[0], sources: ['YearMonth / Delta', '+ data representation'] },
     { label: 'Axis / scale', y: rows[1], sources: ['YearMonth + Heatmap'] },
-    { label: 'Color scheme', y: rows[2], sources: ['Profit + ± values'] },
+    { label: 'Color scheme', y: rows[2], sources: ['Delta + ± values'] },
   ];
   decisions.forEach(({ label, y, sources }, i) => {
     sources.forEach((source, j) => text(ctx, source, X(550), Y(y + (sources.length === 1 ? 43 : 26 + j * 36)), {
@@ -1199,13 +1242,15 @@ function resolveConfigCloseup(ctx: Ctx, w: number, h: number) {
   }
   text(ctx, '…', X(965), Y(598), { size: S(36), kind: 'handBold', color: C.ink2, align: 'center', maxWidth: S(100), maxLines: 1 });
   // The point of the slide: none of these rules could fire without the types.
-  washRect(ctx, X(700), Y(612), S(530), S(38), C.amber, { alpha: 0.28, seed: 1880, amp: 1.2 });
-  text(ctx, 'Only possible because we know the semantic types!', X(965), Y(640), { size: S(27), kind: 'handBold', color: C.red, align: 'center', maxWidth: S(510), maxLines: 1 });
+  // the box's takeaway, centred under it and set larger than anything inside it
+  washRect(ctx, X(586), Y0(630), S(760), S(48), C.amber, { alpha: 0.3, seed: 1880, amp: 1.4 });
+  text(ctx, 'Only possible because we know the semantic types!', X(966), Y0(665), { size: S(36), kind: 'handBold', color: C.red, align: 'center', maxWidth: S(740), maxLines: 1 });
 }
 
 function layoutOptimizationCloseup(ctx: Ctx, w: number, h: number) {
-  const { X, Y, S } = compilerCloseup(ctx, w, h, 'layout');
-  text(ctx, 'Layout as a constraint optimization problem', X(965), Y(200), { size: S(32), kind: 'handBold', align: 'center', maxWidth: S(820), maxLines: 1 });
+  const { X, Y: Y0, S } = compilerCloseup(ctx, w, h, 'layout', 434);
+  closeupHeading(ctx, X, Y0, S, 'Layout as a constraint optimization problem');
+  const Y = (v: number) => Y0(v - 51);
   rect(ctx, X(700), Y(285), S(530), S(190), { seed: 1890, color: C.ink, w: S(3) });
   const n = 12, step = 494 / n, bw = step * 0.65;
   for (let i = 0; i < n; i++) {
@@ -1224,9 +1269,7 @@ function layoutOptimizationCloseup(ctx: Ctx, w: number, h: number) {
 
 function backendGenerationCloseup(ctx: Ctx, w: number, h: number) {
   const { X, Y, S } = compilerCloseup(ctx, w, h, 'backend');
-  text(ctx, 'Translates inferred properties into language-specific vocabularies', X(965), Y(165), {
-    size: S(28), kind: 'handBold', align: 'center', maxWidth: S(830), maxLines: 1,
-  });
+  closeupHeading(ctx, X, Y, S, 'Translates inferred properties into language-specific vocabularies');
   DEEP_DIVE.backends.forEach((output) => {
     text(ctx, output.label, X(output.x), Y(215), {
       size: S(30), kind: 'handBold', color: C.purple, maxWidth: S(output.w), maxLines: 1,
@@ -1252,7 +1295,7 @@ interface Mech {
 const MECH: Record<'A' | 'B' | 'C', Mech> = {
   A: {
     color: C.meaning,
-    spec: { title: 'chart spec', lines: ['period → YearMonth', 'game → Category', 'newUsers → Profit'] },
+    spec: { title: 'chart spec', lines: ['period → YearMonth', 'game → Category', 'newUsers → Delta'] },
     decides: ['parse the values', 'pick scales and zero baselines', 'diverge around 0', 'choose formats and colors', 'aggregate duplicates', 'size bands from the data', 'fit the labels', 'place the legend'],
     controls: ['time units, UTC parsing', 'scale domains, midpoints', 'format strings', 'color ranges', 'steps, width, height', 'label limits and angles', 'legend orient and length'],
   },
@@ -1378,7 +1421,7 @@ Object.assign(SKETCHES, {
         washRect(ctx, b.X(x + 26), b.Y(326), b.S(348), b.S(232), C.meaning, { alpha: 0.2, seed: 505 });
         rect(ctx, b.X(x + 26), b.Y(326), b.S(348), b.S(232), { w: b.S(2.5), color: C.meaning, seed: 506 });
         text(ctx, '+ semantic types', b.X(x + 44), b.Y(370), { size: b.S(28), kind: 'handBold', color: C.meaning, maxWidth: b.S(320), maxLines: 1 });
-        [['period', 'YearMonth'], ['game', 'Category'], ['newUsers', 'Profit']].forEach(([f, t], i) => {
+        [['period', 'YearMonth'], ['game', 'Category'], ['newUsers', 'Delta']].forEach(([f, t], i) => {
           const y = 424 + i * 46;
           mono(ctx, b, `${f}:`, x + 44, y, { size: 22, color: C.ink2 });
           text(ctx, t, b.X(x + 44 + (f.length + 2) * 13.6), b.Y(y), { size: b.S(23), kind: 'mono', color: C.meaning, maxWidth: b.S(200), maxLines: 1 });
@@ -1605,7 +1648,7 @@ export const TYPE_TREE: { cy: number; label: string; leaves: TypeLeaf[] }[] = [
     { y: 330, text: "No order of its own: keep the data's order" },
     { y: 402, text: 'One row each, names wrapped to fit' },
   ] },
-  { cy: 592, label: 'newUsers: Profit', leaves: [
+  { cy: 592, label: 'newUsers: Delta', leaves: [
     { y: 512, text: 'It adds up: sum the four regions' },
     { y: 582, text: 'It can go negative: colors diverge at 0' },
     { y: 652, text: 'Same reach on both sides of 0' },
@@ -1618,7 +1661,7 @@ export const TYPE_GROUPS: { group: string; color: string; types: string[]; x: nu
   { group: 'Time units', color: C.blue, x: 20, y: 20, w: 470, types: ['Year', 'Quarter', 'Month', 'Week', 'Day', 'Hour', 'YearMonth', 'YearQuarter', 'YearWeek', 'Decade', 'Duration'] },
   { group: 'Points in time', color: C.blue, x: 20, y: 330, w: 470, types: ['DateTime', 'Date', 'Time', 'Timestamp'] },
   { group: 'Measures', color: C.amber, x: 515, y: 20, w: 470, types: ['Quantity', 'Count', 'Amount', 'Price', 'Percentage', 'Temperature'] },
-  { group: 'Signed measures', color: C.red, x: 515, y: 255, w: 470, types: ['Profit', 'PercentageChange', 'Sentiment', 'Correlation'] },
+  { group: 'Signed measures', color: C.red, x: 515, y: 255, w: 470, types: ['Delta', 'PercentageChange', 'Sentiment', 'Correlation'] },
   { group: 'Ordered numbers', color: C.green, x: 515, y: 440, w: 470, types: ['Rank', 'Score', 'ID'] },
   { group: 'Places', color: C.teal, x: 1010, y: 20, w: 470, types: ['Country', 'State', 'City', 'Region', 'Address', 'ZipCode', 'Latitude', 'Longitude'] },
   { group: 'Categories', color: C.purple, x: 1010, y: 310, w: 470, types: ['Category', 'Name', 'Status', 'Boolean', 'Direction', 'Range'] },
@@ -1725,7 +1768,7 @@ const USE_PANELS: TrioPanel[] = [
 // chart; a click that arrives as an event naming the data.
 const SPEC_PANELS: TrioPanel[] = [
   (ctx, { X, Y, S }, x, py) => {
-    ['"period": "YearMonth"', '"game": "Category"', '"newUsers": "Profit"'].forEach((t, i) =>
+    ['"period": "YearMonth"', '"game": "Category"', '"newUsers": "Delta"'].forEach((t, i) =>
       text(ctx, t, X(x + 24), Y(py + 72 + i * 32), { size: S(21), kind: 'mono', color: C.meaning, maxWidth: S(370), maxLines: 1 }));
     miniHeatmap(ctx, X(x + 40), Y(py + 178), S(340), S(110), { rows: 4, cols: 10, seed: 1511, palette: DEFAULT_DIVERGING, frame: false });
     line(ctx, X(x + 40), Y(py + 298), X(x + 380), Y(py + 298), { w: S(2), color: C.ink, seed: 1512 });

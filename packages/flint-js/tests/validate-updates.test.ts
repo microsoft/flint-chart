@@ -55,7 +55,7 @@ describe('validateChart updates: shape', () => {
 
     it('names the first missing or malformed field of an op, with its shape', () => {
         expect(message([{ id: 'a', ops: [{ op: 'annotate-text', foo: 1 }] }])).toBe(
-            'updates[0] (a).ops[0]: annotate-text has a missing or malformed "target". Shape: { op, target: UpdateTarget, value: { text, anchor?: \'segment\' | \'point\', highlight?: \'none\' | \'light\' | \'strong\' | \'exclusive\' } | null }. A target is { select: { key: { field: value } } }: this op acts on one mark, so it takes a key, not a where.',
+            'updates[0] (a).ops[0]: annotate-text has a missing or malformed "target". Shape: { op, target: UpdateTarget, value: { text, anchor?: \'segment\' | \'point\', highlight?: \'none\' | \'light\' | \'strong\' | \'exclusive\', style?: { fontSize?, fontWeight?, color? }, highlightStyle?: { color?, width? } } | null }. A target is { select: { key: { field: value } } }: this op acts on one mark, so it takes a key, not a where.',
         );
         expect(message([{ id: 'a', ops: [{ op: 'annotate-text', annotations: [{ kind: 'rule', x: '2022-12-01' }] }] }]))
             .toContain('missing or malformed "target"');

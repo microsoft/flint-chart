@@ -5,9 +5,9 @@ import { neutralInk } from './color';
 
 /**
  * How a note that names a mark is set: as words beside the mark, not a card over the chart. The
- * words take the chart's own label face (its axis labels', not its title's) a size up and a step
- * heavier, in the primary text ink, with a halo of the background behind the glyphs so they read
- * over gridlines and marks; a leader, where one is drawn, is a thin line of the neutral grey.
+ * words take the chart's own label face and weight (its axis labels', not its title's) a size up,
+ * in the primary text ink, with a halo of the background behind the glyphs so they read over
+ * gridlines and marks; a leader, where one is drawn, is a thin line of the neutral grey.
  */
 export interface NoteStyle {
     font: string;
@@ -62,16 +62,16 @@ export interface NoteDesign {
 const WEIGHT_NAMES: Record<string, number> = { normal: 400, bold: 700 };
 
 /**
- * How a note is set. A note is read beside the chart's own labels, so it is set apart from them by
- * weight first (a step heavier than the labels: semibold over regular ones) and by ink second (the
- * page's primary text ink, darker than the labels' secondary grey), with a halo of the page under it.
- * Hue is left to the data. A house's `type.annotation` role says otherwise where it says anything.
+ * How a note is set. A note is read beside the chart's own labels, so it keeps their face and
+ * weight and is set apart by size (one up) and ink (the page's primary text ink, darker than the
+ * labels' secondary grey), with a halo of the page under it. Hue is left to the data. A house's
+ * `type.annotation` role, and then a note's own `style`, say otherwise where they say anything.
  */
 export function noteStyle(chart: ChartTextStyle = {}, design: NoteDesign = {}): NoteStyle {
     const stated = design.text ?? {};
     const fontSize = stated.fontSize ?? Math.min(13, Math.max(10, Math.round((chart.fontSize ?? 10) + 1)));
     const labelWeight = typeof chart.fontWeight === 'number' ? chart.fontWeight : WEIGHT_NAMES[String(chart.fontWeight ?? 'normal')] ?? 400;
-    const fontWeight = stated.fontWeight ?? (labelWeight < 600 ? 600 : Math.min(900, labelWeight + 100));
+    const fontWeight = stated.fontWeight ?? labelWeight;
     const fallback = chart.color && chart.color !== '#000' && chart.color !== '#000000' ? chart.color : '#333333';
     const color = stated.color ?? design.ink ?? fallback;
     const background = chart.background && chart.background !== 'transparent' ? chart.background : '#ffffff';
@@ -107,8 +107,8 @@ export function wrapNote(text: string, maxWidth: number, measure: (text: string)
     return lines;
 }
 
-/** A line that ends a phrase — at a colon, a comma, a dash — breaks there at no cost. */
-const PHRASE_END = /[:;,.!?—–-]$/;
+/** A line that ends a phrase — at a colon, a comma, a dash, a middle dot — breaks there at no cost. */
+const PHRASE_END = /[:;,.!?—–·|-]$/;
 
 /**
  * The caption's lines as {@link wrapNote} counts them, broken evenly instead of greedily: no line

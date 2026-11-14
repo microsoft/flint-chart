@@ -148,6 +148,10 @@
 .talk-type-group h4 { font: 700 22px/1.2 'Kalam', cursive; margin: 0 0 8px; }
 .talk-type-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .talk-slide .talk-type-chips code { font: 500 15px/1.2 ui-monospace, 'SF Mono', Menlo, Consolas, monospace; background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: 4px 7px; }
+/* A small link to the repo in a hand-drawn callout, in the scene's bottom-right corner under the vision. */
+.talk-scene .talk-slot.talk-collab-callout { flex-direction: row; align-items: center; justify-content: center; gap: 12px; font: 500 22px 'Inter Variable', Inter, system-ui, sans-serif; white-space: nowrap; color: var(--ink-3); text-decoration: none; }
+.talk-collab-callout:hover { color: var(--meaning); }
+.talk-collab-repo { color: var(--meaning); font-weight: 600; }
 .talk-scene .talk-slot.talk-capability-catalog { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; align-content: start; gap: 1.2cqw; }
 .talk-capability-block { display: flex; flex-direction: column; gap: 0.4cqw; min-width: 0; }
 .talk-capability-block h3 { margin: 0; font: 700 1.9cqw/1.15 'Inter Variable', Inter, system-ui, sans-serif; letter-spacing: -0.01em; }
@@ -356,6 +360,9 @@
 .talk-title-head .talk-authors dt { width: auto; min-width: 58px; padding: 2px 10px; border-radius: 999px; background: #eef3fa; color: var(--meaning); font-size: 16px; font-weight: 650; text-align: center; letter-spacing: 0.02em; }
 .talk-title-head .talk-contributors dt { visibility: hidden; }
 .talk-title-head .talk-authors dd { flex-direction: column; align-items: flex-start; row-gap: 4px; }
+/* The repo link under the title. */
+.talk-title-link { display: inline-flex; align-items: center; gap: 12px; margin: -6px 0 0; font-size: 28px; font-weight: 500; color: var(--ink-2); text-decoration: none; }
+.talk-title-link:hover { color: var(--meaning); }
 /* A short spark-coloured rule between the title and the authors. */
 .talk-title-rule { flex: none; width: 88px; height: 5px; margin: -6px 0 2px; border-radius: 3px; background: #f4b41a; }
 /* The chart wall, two rows, bleeding off the slide's sides and bottom and fading in from white at its top. */
@@ -370,6 +377,9 @@
 .talk-imagine .talk-table th, .talk-imagine .talk-table td, .talk-scene .talk-table th, .talk-scene .talk-table td { padding: 0.12cqw 0.3cqw; }
 /* The broken chart: the chart across the top; the person bottom-left with the numbered problems beside them. */
 .talk-scene .talk-flaws { grid-template-columns: minmax(0, 1fr); gap: 18px; margin: 0; }
+/* A line introducing the numbered flaws. */
+.talk-flaws-block { display: flex; flex-direction: column; gap: 18px; }
+.talk-slide .talk-flaws-lead { margin: 0; font-size: 26px; font-weight: 600; color: var(--ink-2); }
 /* The tangle: the code on the left, its line count struck through, and a small key under it. */
 .talk-tangle-mess { gap: 14px; align-items: center; }
 .talk-tangle-mess > .talk-fit { align-self: stretch; }
@@ -406,8 +416,6 @@
 
 /* The design poster fills the slide, with its own handwritten spec label. */
 .talk-poster { justify-content: center; }
-.talk-slide .talk-subscribe { flex: none; margin: 12px 0 0 !important; text-align: center; font-size: 28px; font-weight: 600; color: var(--ink) !important; }
-.talk-subscribe a { margin-left: 14px; color: var(--meaning); font-weight: 500; text-decoration: none; }
 
 /* The advanced-interaction switcher: the title and its tabs on one line, the chosen demo live in the rest of the slide. */
 .talk-fun { gap: 8px; }

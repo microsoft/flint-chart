@@ -5810,7 +5810,7 @@ function applyReadableSeriesText(spec: any, d: DesignDecisions, say: ReportDepar
     }
 }
 
-function growPadding(spec: any, side: 'left' | 'right' | 'top' | 'bottom', amount: number): void {
+export function growPadding(spec: any, side: 'left' | 'right' | 'top' | 'bottom', amount: number): void {
     const base = normalizePadding(spec.padding);
     base[side] = (base[side] ?? VEGA_LITE_PADDING) + Math.round(amount);
     spec.padding = base;

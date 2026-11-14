@@ -16,9 +16,11 @@ or `assembleChartjs` to get a backend spec.
 
 - **DO** emit `chart_spec` (chart type, channel→field mapping, properties)
   and `semantic_types` (field → semantic type).
-- **DO** add `interaction_spec` when the user asks for behaviour (highlight,
-  legend toggle, pan and zoom, brush), asks for an interactive chart, or the
-  session's goal is to explore the data. List presets by name; see
+- **DO** add `interaction_spec` only for a reason: the user asks for
+  behaviour (highlight, legend toggle, pan and zoom, brush) or an interactive
+  chart, the chart works with other charts, or the data has more detail than
+  the chart can show. A question about the data is answered by the chart
+  itself. List presets by name; see
   "Interactions", and load the `flint-interaction-author` skill for an intent,
   an interactive chart with nothing named, or a combination.
 - **Reference columns by name.** How `data` itself gets bound depends on
@@ -54,10 +56,14 @@ First decide which workflow the user is asking for:
   when the host has no App UI support or the user explicitly wants a static
   image. Use `compile_chart` when the user wants backend-native JSON, and
   `list_chart_types` when you need the supported chart catalog.
-- **DO** pass `updates` beside the input to `validate_chart` and `show` when the user
-  asks the chart to open in a state (rows to stand out, a note on a mark, a
-  framed range), or when the chart answers a question whose point sits on
-  particular marks. It is a list of ChartUpdate layers, state not behaviour, and
+- **DO** keep the chart clean by default, and pass `updates` beside the input
+  to `validate_chart` and `show` only when the user asks for marks on the
+  chart (a note, rows to stand out, a reference line, a framed range, or a
+  chart that must tell its point on its own), asks about a chart already on
+  screen, or asks for an interaction that opens in a state. A question about
+  the data is answered in your title and reply; a concrete one (a peak, a
+  difference, a threshold) may also point at its answer with one muted
+  annotation ("Muted annotations" in the interaction skill). It is a list of ChartUpdate layers, state not behaviour, and
   needs no `interaction_spec`; the shapes are in `flint://interaction-skill`
   under "Update the chart". The live view draws them; `render_chart` and
   `compile_chart` do not. To change a
@@ -311,9 +317,10 @@ https://microsoft.github.io/flint-chart/#/documentation/theme-spec
 
 ## Interactions (`interaction_spec`)
 
-Add `interaction_spec` beside `chart_spec` when the user asks for behaviour,
-or when the goal of the session is to explore or analyse the data. A static
-image never needs it.
+Add `interaction_spec` beside `chart_spec` only for a reason: the user asks
+for behaviour, the chart works with other charts (a dashboard, a board), or
+the data has more detail than the chart can show at its size. A question about
+the data is answered by the chart itself; a static image never needs it.
 
 ```json
 {
@@ -631,8 +638,8 @@ Put the three steps into one `ChartAssemblyInput`, with the data bound as in
 ```
 
 Add `theme_spec`, `chartProperties` or `interaction_spec` only when the request
-asks for them, and `updates` when it asks or the answer sits on particular
-marks. With the MCP tools, check it with `validate_chart`,
+asks for them, and `updates` when it asks for marks on the chart or a concrete question
+can point at its answer (see "Update the chart" in the interaction skill). With the MCP tools, check it with `validate_chart`,
 fix what the report asks in the spec, then pass the whole spec to `show` as
 `chart`. Without them, run the "Validation checklist".
 

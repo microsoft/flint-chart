@@ -71,6 +71,7 @@ import {
     rendererPlotOrigin,
     renderHit,
     sceneItems,
+    nearestThinItem,
     tolerantInspectHits,
     continuousLegendSegmentCount,
     clippedBounds,
@@ -101,6 +102,7 @@ import {
     annotationConnectionPoint,
 } from '../src/vegalite/interactions/presentation/annotation-overlay';
 import { createVegaNavigationController } from '../src/vegalite/interactions/navigation-scale';
+import { PROXIMITY_READOUT_DISTANCE, proximityTooltip } from '../src/vegalite/interactions/runtime';
 import { INTERACTION_PROVENANCE } from '../src/vegalite/interaction-provenance';
 import { THEME_PRESETS } from '../src/core/theme/presets';
 import { INTERACTION_CAPABILITIES } from '../src/core/interaction-spec';
@@ -1302,6 +1304,18 @@ describe('Vega-Lite semantic interactions', () => {
             haloWidth: 0,
             haloOpacity: 0.7,
         });
+    });
+
+    it('carries the theme\'s highlight paint to annotations, and leaves it unset by default', () => {
+        const makeSpec = (theme_spec: any) => assembleVegaLite({
+            data: { values: [{ Year: '2020', Value: 10 }, { Year: '2021', Value: 14 }] },
+            semantic_types: { Year: 'Category', Value: 'Quantity' },
+            chart_spec: { chartType: 'Bar Chart', encodings: { x: 'Year', y: 'Value' } },
+            theme_spec,
+        } as any) as any;
+        expect(makeSpec('economist')._interactionSemantics.annotationDesign.highlight).toBeUndefined();
+        expect(makeSpec({ extends: 'economist', interaction: { highlight: { color: '#b54a20', width: 2 } } })
+            ._interactionSemantics.annotationDesign.highlight).toEqual({ color: '#b54a20', width: 2 });
     });
 
     it('merges selected heatmap cells by contiguous region without bridging gaps', () => {
@@ -4911,5 +4925,50 @@ describe('elementsFromHits', () => {
         ];
         const elements = elementsFromHits(hits, key);
         expect(elements.map((element) => semanticElementRenderKeys(element))).toEqual([['a'], ['b'], ['z']]);
+    });
+});
+
+describe('baseline tooltip reach', () => {
+    const series = ['a', 'b'].flatMap((g, s) => [0, 1, 2, 3].map((x) => ({ x, y: x * 10 + s * 40, g })));
+    async function viewOf(chartType: string) {
+        const spec = assembleVegaLite({
+            data: { values: series },
+            semantic_types: { x: 'Quantity', y: 'Quantity', g: 'Category' },
+            chart_spec: { chartType, encodings: { x: 'x', y: 'y', color: 'g' } },
+            options: { addTooltips: true },
+        } as never) as any;
+        const { compiled } = instrument(spec);
+        const view = new View(parse(compiled), { renderer: 'none' });
+        await view.runAsync();
+        return view;
+    }
+
+    it('reads a line a few px off its stroke, at the vertex nearer along it, and nothing farther off', async () => {
+        const view = await viewOf('Line Chart');
+        const segment = sceneItems(view).find((item) => item.mark.marktype === 'line' && item.interactionGeometry?.points?.length >= 2);
+        const [start, end] = segment.interactionGeometry.points;
+        const nearEnd = { x: start.x + (end.x - start.x) * 0.8, y: start.y + (end.y - start.y) * 0.8 - 4 };
+        const read = nearestThinItem(view, nearEnd, PROXIMITY_READOUT_DISTANCE);
+        expect(read?.datum?.g).toBe(segment.datum.g);
+        const { value, dot } = proximityTooltip(read, nearEnd);
+        expect(dot).toMatchObject({ x: end.x, y: end.y });
+        expect(value).toMatchObject({ x: '1' });
+        expect(nearestThinItem(view, { x: nearEnd.x, y: nearEnd.y - 20 }, PROXIMITY_READOUT_DISTANCE)).toBeUndefined();
+    });
+
+    it('leaves a bar to the exact hit: no reach from beside it, none from inside it', async () => {
+        const view = await viewOf('Stacked Bar Chart');
+        const bar = sceneItems(view).find((item) => item.mark.marktype === 'rect');
+        const inside = { x: (bar.bounds.x1 + bar.bounds.x2) / 2, y: (bar.bounds.y1 + bar.bounds.y2) / 2 };
+        expect(nearestThinItem(view, inside, PROXIMITY_READOUT_DISTANCE)).toBeUndefined();
+    });
+});
+
+describe('waterfall legend', () => {
+    it('reads legend values from the derived step kind the legend shows, not the author\'s Type column', () => {
+        const semantics = waterfallChartDef.semanticInteractions!(semanticContext({
+            resolvedEncodings: { x: { field: 'Step', type: 'nominal' }, y: { field: 'Value', type: 'quantitative' }, color: { field: 'Type', type: 'nominal' } } as never,
+        }));
+        expect(semantics.legendFields).toEqual({ color: '__wf_color' });
     });
 });

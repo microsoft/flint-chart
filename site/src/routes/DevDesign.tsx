@@ -156,7 +156,7 @@ function specRows(s: State): CodeRow[] {
     { text: '{' },
     ...own('data', [
       `  "data": { "values": [...] },  // ${(s.data.games * s.data.months * 4).toLocaleString('en-US')} rows`, '  "semantic_types": {',
-      '    "period": "YearMonth", "game": "Category",', '    "region": "Category", "newUsers": "Profit"', '  },',
+      '    "period": "YearMonth", "game": "Category",', '    "region": "Category", "newUsers": "Delta"', '  },',
     ]),
     { text: '' },
     ...own('chart', ['  "chart_spec": {', `    "chartType": "${CHARTS[s.chart].chartType}",`, '    "encodings": {', ...CHARTS[s.chart].lines, '    }', '  },']),
@@ -727,7 +727,7 @@ export function DevDesign({ embedded = false }: { embedded?: boolean } = {}) {
             background: '#fff', border: embedded ? undefined : `1px solid ${LINE}`, borderRadius: embedded ? undefined : u(16), boxShadow: embedded ? undefined : SHADOW,
           }}>
             {embedded ? <div style={{ padding: `0 ${u(20)}`, font: `650 ${u(40)}/1.2 ${siteTheme.fontSans}`, letterSpacing: '-0.01em', color: INK, whiteSpace: 'nowrap' }}>
-              Flint: a simple spec for good-looking charts
+              Flint Demo
             </div> : <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: u(HEAD_H), padding: `0 ${u(20)}`, borderBottom: `1px solid ${LINE}` }}>
               <span className="fd-label">Flint spec<span style={{ fontWeight: 400, letterSpacing: 0, textTransform: 'none' }}> · {rows.length} lines{specDiff ? <> · <Edits diff={specDiff} /></> : null}</span></span>
             </div>}
@@ -841,8 +841,8 @@ export function DevDesign({ embedded = false }: { embedded?: boolean } = {}) {
   </>);
 
   if (embedded) {
-    // Cropped to the spec, its notes and the chart: the design frame from just above the spec to just below it.
-    const top = TOP - 24, height = bottom + 24 - top;
+    // Cropped to the spec, its notes and the chart: the design frame from a little above the spec's title to just below it.
+    const top = TOP - 64, height = bottom + 24 - top;
     return (
       <div className="fd-embedded" ref={stageRef} style={{ position: 'relative', width: '100%', aspectRatio: `${DW} / ${height}`, containerType: 'inline-size', overflow: 'hidden', color: INK, fontFamily: siteTheme.fontSans }}>
         <style>{STYLES}</style>

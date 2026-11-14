@@ -166,7 +166,7 @@ function stretchOf(encoding: any, bounds: readonly unknown[] | undefined): ((row
  */
 export function vlReserveNoteRoom(
     spec: any,
-    room: { notes?: Notes; regions?: Regions },
+    room: { notes?: Notes; regions?: Regions; references?: readonly number[] },
     data: readonly Record<string, unknown>[],
     plot: { width: number; height: number } | undefined,
     axisLabels: Partial<Record<'x' | 'y', AxisLabelPlan>>,
@@ -176,7 +176,8 @@ export function vlReserveNoteRoom(
     // A stretch of x captioned at its top: by the placer's choice, or asked for.
     const regions = (room.regions ?? []).filter((region) => region.text && region.x?.length && !region.y?.length
         && (region.placement === undefined || region.placement === 'top'));
-    if ((!notes.length && !regions.length) || !plot || !data.length) return;
+    const references = room.references ?? [];
+    if ((!notes.length && !regions.length && !references.length) || !plot || !data.length) return;
     if (spec.facet || spec.repeat || spec.vconcat || spec.hconcat || spec.concat) return;
     const units: any[] = [spec, ...(Array.isArray(spec.layer) ? spec.layer : [])].filter((unit) => unit?.encoding || unit?.mark);
     {
@@ -267,6 +268,8 @@ export function vlReserveNoteRoom(
             const end = roomPast(top, [lo, hi], length, need, 'max');
             if (end !== undefined && (!bars || top > 0)) max = Math.max(max ?? -Infinity, end);
         }
+        // A value an update marks across the plot (a reference rule, a band) stays inside the axis.
+        for (const value of references) if (value > hi) max = Math.max(max ?? -Infinity, value);
         // An end the spec states (a semantic bound) is kept; only Flint's own ruled ends move.
         if (max === undefined || (!ruled && encodings.some((e) => e.scale?.domainMax !== undefined))) return;
         if (encodings.some((e) => e !== enc && e.scale?.domainMax !== undefined && e.scale.domainMax !== scale.domainMax)) return;

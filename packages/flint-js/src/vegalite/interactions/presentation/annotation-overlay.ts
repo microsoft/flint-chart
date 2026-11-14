@@ -596,6 +596,8 @@ interface NoteAnchor {
     own?: (inkItem: any, box: Box) => boolean;
     /** Thin ink of the noted mark itself the caption should not cut, such as an area's edge. */
     segments?: readonly NoteSegment[];
+    /** Seats on the mark itself; such an anchor offers only these (see `placeNote`'s `inside`). */
+    inside?: readonly { point: PlotPoint; fits: (box: Box) => boolean; fill?: string }[];
     cue: NoteCue;
 }
 
@@ -790,12 +792,54 @@ export function createAnnotationOverlay({
                 x1: Math.min(...slices.map((slice) => slice.bounds.x1)), x2: Math.max(...slices.map((slice) => slice.bounds.x2)),
                 y1: Math.min(...slices.map((slice) => slice.bounds.y1)), y2: Math.max(...slices.map((slice) => slice.bounds.y2)),
             });
-            return [{
+            const cue: NoteCue = highlight === 'none' ? { kind: 'none' } : { kind: 'outline', points: outline };
+            const outside: NoteAnchor = {
                 target: point({ x: item.x + radius * Math.sin(angle), y: item.y - radius * Math.cos(angle) }, 1.5),
                 body: pie,
                 preferredAngle: vectorAngle(Math.sin(angle), -Math.cos(angle)),
                 cost: 0,
-                cue: highlight === 'none' ? { kind: 'none' } : { kind: 'outline', points: outline },
+                cue,
+            };
+            // On the pie itself: in the slice's band where the caption fits it, or in a donut's hole.
+            const centre = toLayout({ x: item.x, y: item.y });
+            const pad = 2 * scale;
+            const outer = item.outerRadius * scale;
+            const innerPx = inner * scale;
+            const tau = Math.PI * 2;
+            const start = ((item.startAngle % tau) + tau) % tau;
+            const sweep = item.endAngle - item.startAngle;
+            const corners = (box: Box): PlotPoint[] => [
+                { x: box.x, y: box.y }, { x: box.x + box.width, y: box.y }, { x: box.x, y: box.y + box.height },
+                { x: box.x + box.width, y: box.y + box.height }, { x: box.x + box.width / 2, y: box.y },
+                { x: box.x + box.width / 2, y: box.y + box.height }, { x: box.x, y: box.y + box.height / 2 },
+                { x: box.x + box.width, y: box.y + box.height / 2 },
+            ];
+            const inWedge = (p: PlotPoint): boolean => {
+                const dx = p.x - centre.x;
+                const dy = p.y - centre.y;
+                const r = Math.hypot(dx, dy);
+                if (r < innerPx + pad || r > outer - pad) return false;
+                const at = ((Math.atan2(dx, -dy) - start) % tau + tau) % tau;
+                return at <= sweep;
+            };
+            const along = (fraction: number): PlotPoint => {
+                const r = (innerPx + (outer - innerPx) * fraction);
+                return { x: centre.x + r * Math.sin(angle), y: centre.y - r * Math.cos(angle) };
+            };
+            const sliceFill = paintOf(item.fill);
+            const inside: { point: PlotPoint; fits: (box: Box) => boolean; fill?: string }[] = [0.5, 0.4, 0.62].map((fraction) => ({
+                point: along(fraction), fits: (box: Box) => corners(box).every(inWedge), ...(sliceFill ? { fill: sliceFill } : {}),
+            }));
+            if (innerPx > 0) {
+                inside.push({ point: centre, fits: (box: Box) => corners(box).every((p) => Math.hypot(p.x - centre.x, p.y - centre.y) <= innerPx - pad) });
+            }
+            return [outside, {
+                target: { shape: 'circle', x: centre.x, y: centre.y, rx: 1, ry: 1 },
+                cost: 0,
+                // Placed on the pie, the slices are under the caption by design; the fit test keeps it off the rest.
+                own: (inkItem) => inkItem.mark === item.mark,
+                inside,
+                cue,
             }];
         }
         if (kind === 'shape') {
@@ -827,6 +871,19 @@ export function createAnnotationOverlay({
         const outset = highlight === 'none' || drawnTarget.shape !== 'circle' ? 0
             : ringed ? RING_GAP * scale + 0.5 * scale : rowPoint ? scale : 0.75 * scale;
         const target = outset > 0 ? { ...drawnTarget, rx: drawnTarget.rx + outset, ry: drawnTarget.ry + outset } : drawnTarget;
+        const rect = !rowPoint && item.mark?.marktype === 'rect' && item.bounds ? toBox(item.bounds) : undefined;
+        const onRect: NoteAnchor[] = rect && highlight !== 'none' ? [{
+            target: { shape: 'circle', x: rect.x + rect.width / 2, y: rect.y + rect.height / 2, rx: 1, ry: 1 },
+            cost: 0,
+            own: (inkItem) => inkItem === item,
+            inside: [{
+                point: { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 },
+                fits: (box: Box) => box.x >= rect.x + 2 * scale && box.x + box.width <= rect.x + rect.width - 2 * scale
+                    && box.y >= rect.y + scale && box.y + box.height <= rect.y + rect.height - scale,
+                ...(paintOf(item.fill) ? { fill: paintOf(item.fill)! } : {}),
+            }],
+            cue: { kind: 'mark', target: drawnTarget, ...(body ? { body } : {}) },
+        }] : [];
         return [{
             target,
             ...(body ? { body } : {}),
@@ -837,7 +894,7 @@ export function createAnnotationOverlay({
                 || (box.x <= drawnTarget.x && drawnTarget.x <= box.x + box.width && box.y <= drawnTarget.y && drawnTarget.y <= box.y + box.height
                     && box.width <= drawnTarget.rx * 2 + 6 && box.height <= drawnTarget.ry * 2 + 6),
             cue: { kind: 'mark', target: drawnTarget, ...(body ? { body } : {}) },
-        }];
+        }, ...onRect];
     };
 
     const renderCaption = ({ annotation, kind, item, rowPoint, subject, items, ink, plotCenter, toLayout, plot, canvas, furniture }: {
@@ -850,7 +907,9 @@ export function createAnnotationOverlay({
         const scale = Math.hypot(unit.x - origin.x, unit.y - origin.y) || 1;
         // The halo is the page the plot is read on: the house's plot surface where it has one.
         const textStyle = { ...chartTextStyle(view, ink.boxes), ...(design?.background ? { background: design.background } : {}) };
-        const base = noteStyle(textStyle, { ...(design?.text ? { text: design.text } : {}), ...(design?.ink ? { ink: design.ink } : {}) });
+        // A note's own style sits over the house's annotation role.
+        const text = design?.text || annotation.style ? { ...design?.text, ...annotation.style } : undefined;
+        const base = noteStyle(textStyle, { ...(text ? { text } : {}), ...(design?.ink ? { ink: design.ink } : {}) });
         const style = { ...base, fontSize: base.fontSize * scale, lineHeight: base.lineHeight * scale, padding: base.padding * scale };
         const measure = rendererTextMeasurer(style.fontSize, style.font, style.fontWeight, 'normal');
         const toBox = (bounds: { x1: number; x2: number; y1: number; y2: number }): Box => {
@@ -862,6 +921,14 @@ export function createAnnotationOverlay({
             };
         };
         const anchors = noteAnchors({ annotation, kind, item, rowPoint, subject, items, plotCenter, toLayout, toBox, scale, clip: item.interactionClip });
+        if (annotation.text === '') {
+            // A note with no words is its cue alone: the mark's ring or outline, no caption, no leader.
+            annotationText.replaceChildren();
+            annotationPath.style.display = 'none';
+            leaderHalo.style.display = 'none';
+            drawCue(annotation.highlight ?? 'light', anchors[0].cue, item, rowPoint, style, scale, annotation.highlightStyle);
+            return { box: { x: 0, y: 0, width: 0, height: 0 }, align: 'center', angle: 0, gap: 0, cost: 0 };
+        }
         // Rects that tile most of the plot — a heatmap's cells — and a map's regions are a ground the
         // halo reads over, not marks to dodge.
         const tiled = tiledRects(ink.boxes, Math.max(1, plot.width * plot.height) / (scale * scale));
@@ -909,20 +976,38 @@ export function createAnnotationOverlay({
                     ...(anchor.preferredAngle !== undefined ? { preferredAngle: anchor.preferredAngle } : {}),
                     connector: first?.connector === 'none' ? 'none' : 'auto',
                     fontSize: style.fontSize,
+                    ...(anchor.inside ? { inside: anchor.inside, insideOnly: true } : {}),
                 });
                 const cost = placed.cost + NOTE_LINE_COST * (lines.length - 1) + anchor.cost;
                 if (!best || cost < best.cost) best = { placed, lines, cost, anchor };
             }
         }
         const { placed, lines, anchor } = best!;
+        // No seat that leaves the chart's text readable and stays on the canvas: point with the highlight alone.
+        const labelArea = placed.box.width * placed.box.height;
+        if (placed.covers && (placed.covers.offCanvas || placed.covers.text > labelArea * 0.15)) {
+            annotationText.replaceChildren();
+            annotationPath.style.display = 'none';
+            leaderHalo.style.display = 'none';
+            drawCue(annotation.highlight ?? 'light', anchor.cue, item, rowPoint, style, scale, annotation.highlightStyle);
+            return { ...placed, box: { x: 0, y: 0, width: 0, height: 0 }, leader: undefined, unplaced: true };
+        }
         const { box, align, leader } = placed;
         annotationText.setAttribute('font-family', style.font);
         annotationText.setAttribute('font-size', String(style.fontSize));
         annotationText.setAttribute('font-weight', String(style.fontWeight));
         annotationText.setAttribute('text-anchor', align === 'left' ? 'start' : align === 'right' ? 'end' : 'middle');
-        annotationText.style.fill = `var(--flint-annotation-color, ${style.color})`;
-        annotationText.style.stroke = `var(--flint-annotation-halo, ${style.halo.color})`;
-        annotationText.style.strokeWidth = String(style.halo.width * scale);
+        if (placed.insideFill) {
+            // On the mark's own paint, as a value label inside a bar: the ink that reads on it, no halo.
+            const { ink: onFill } = inkOn([placed.insideFill], [style.color, style.halo.color]);
+            annotationText.style.fill = onFill;
+            annotationText.style.stroke = 'none';
+            annotationText.style.strokeWidth = '0';
+        } else {
+            annotationText.style.fill = `var(--flint-annotation-color, ${style.color})`;
+            annotationText.style.stroke = `var(--flint-annotation-halo, ${style.halo.color})`;
+            annotationText.style.strokeWidth = String(style.halo.width * scale);
+        }
         const x = align === 'left' ? box.x + style.padding : align === 'right' ? box.x + box.width - style.padding : box.x + box.width / 2;
         const baseline = box.y + style.padding + style.fontSize * 0.82;
         annotationText.replaceChildren(...lines.map((line, index) => {
@@ -943,7 +1028,7 @@ export function createAnnotationOverlay({
         leaderHalo.setAttribute('stroke-width', String((style.leader.width + 2) * scale));
         leaderHalo.setAttribute('d', path);
         leaderHalo.style.display = leader ? '' : 'none';
-        drawCue(annotation.highlight ?? 'light', anchor.cue, item, rowPoint, style, scale);
+        drawCue(annotation.highlight ?? 'light', anchor.cue, item, rowPoint, style, scale, annotation.highlightStyle);
         return placed;
     };
 
@@ -956,7 +1041,7 @@ export function createAnnotationOverlay({
      */
     const drawCue = (
         highlight: NonNullable<AnnotationSpec['highlight']>, cue: NoteCue, item: any, rowPoint: PlotPoint | undefined,
-        style: ReturnType<typeof noteStyle>, scale: number,
+        style: ReturnType<typeof noteStyle>, scale: number, own?: AnnotationSpec['highlightStyle'],
     ): void => {
         if (highlight === 'none' || cue.kind === 'none') {
             annotationCue.replaceChildren();
@@ -964,15 +1049,23 @@ export function createAnnotationOverlay({
             return;
         }
         const strong = highlight !== 'light';
-        const ink = `var(--flint-annotation-line-color, ${style.leader.color})`;
-        const halo = `var(--flint-annotation-halo, ${style.halo.color})`;
+        // The ring's and outline's paint: the note's own, then the house's, then the leader's grey.
+        const house = design?.highlight;
+        const paintColor = own?.color ?? house?.color;
+        const ink = paintColor ?? `var(--flint-annotation-line-color, ${style.leader.color})`;
+        const halo = house?.haloColor ?? `var(--flint-annotation-halo, ${style.halo.color})`;
+        const lineWidth = own?.width ?? house?.width;
+        const strongWidth = lineWidth ?? 1.25;
+        const lightWidth = lineWidth !== undefined ? lineWidth * 0.8 : 1;
+        const haloExtra = house?.haloWidth ?? 1.75;
+        const ringWidth = lineWidth ?? 1;
         const ringGap = RING_GAP * scale;
         // A cue drawn on the mark's edge (an area's stretch, a dot on it) lies on the mark and the page
         // at once: in whichever of the note's ink and the page's colour reads on both, haloed where neither does.
         const onMark = inkOn([paintOf(item.fill) ?? paintOf(item.stroke), style.halo.color], [style.color, style.halo.color]);
         const outlined = (d: string): SVGElement[] => [
-            svgShape('path', { d, fill: 'none', stroke: halo, 'stroke-width': (strong ? 3 : 2) * scale, 'stroke-linejoin': 'round' }),
-            svgShape('path', { d, fill: 'none', stroke: ink, 'stroke-width': (strong ? 1.25 : 1) * scale, 'stroke-opacity': strong ? 1 : 0.45, 'stroke-linejoin': 'round' }),
+            svgShape('path', { d, fill: 'none', stroke: halo, 'stroke-width': ((strong ? strongWidth : lightWidth) + haloExtra) * scale, 'stroke-linejoin': 'round' }),
+            svgShape('path', { d, fill: 'none', stroke: ink, 'stroke-width': (strong ? strongWidth : lightWidth) * scale, 'stroke-opacity': strong || paintColor ? 1 : 0.45, 'stroke-linejoin': 'round' }),
         ];
         const shapes: SVGElement[] = [];
         if (cue.kind === 'stretch') {
@@ -987,7 +1080,7 @@ export function createAnnotationOverlay({
             shapes.push(svgShape('circle', {
                 cx: cue.point.x, cy: cue.point.y, r, fill: cue.color ?? onMark.ink, stroke: cue.color ? halo : onMark.halo ?? (onMark.ink === style.color ? style.halo.color : style.color), 'stroke-width': 1.5 * scale,
             }));
-            if (strong) shapes.push(svgShape('circle', { cx: cue.point.x, cy: cue.point.y, r: r + ringGap, fill: 'none', stroke: ink, 'stroke-width': scale }));
+            if (strong) shapes.push(svgShape('circle', { cx: cue.point.x, cy: cue.point.y, r: r + ringGap, fill: 'none', stroke: ink, 'stroke-width': ringWidth * scale }));
         } else if (cue.kind === 'outline') {
             if (cue.points.length > 2) shapes.push(...outlined(pathData(cue.points, true)));
         } else {
@@ -995,17 +1088,17 @@ export function createAnnotationOverlay({
             if (rowPoint) {
                 const color = paintOf(item.stroke) ?? paintOf(item.mark?.items?.[0]?.stroke) ?? style.color;
                 shapes.push(svgShape('circle', { cx: target.x, cy: target.y, r: target.rx, fill: color, stroke: halo, 'stroke-width': 1.5 * scale }));
-                if (strong) shapes.push(svgShape('circle', { cx: target.x, cy: target.y, r: target.rx + ringGap, fill: 'none', stroke: ink, 'stroke-width': scale }));
+                if (strong) shapes.push(svgShape('circle', { cx: target.x, cy: target.y, r: target.rx + ringGap, fill: 'none', stroke: ink, 'stroke-width': ringWidth * scale }));
             } else if (target.shape === 'circle') {
                 const color = paintOf(item.fill) ?? paintOf(item.stroke) ?? style.color;
                 shapes.push(svgShape('circle', { cx: target.x, cy: target.y, r: target.rx, fill: color, stroke: halo, 'stroke-width': 1.5 * scale }));
-                if (strong) shapes.push(svgShape('circle', { cx: target.x, cy: target.y, r: target.rx + ringGap, fill: 'none', stroke: ink, 'stroke-width': scale }));
+                if (strong) shapes.push(svgShape('circle', { cx: target.x, cy: target.y, r: target.rx + ringGap, fill: 'none', stroke: ink, 'stroke-width': ringWidth * scale }));
             } else {
                 const box = body ?? { x: target.x - target.rx, y: target.y - target.ry, width: target.rx * 2, height: target.ry * 2 };
                 const outline = { x: box.x, y: box.y, width: Math.max(0, box.width), height: Math.max(0, box.height), fill: 'none' };
                 shapes.push(
-                    svgShape('rect', { ...outline, stroke: halo, 'stroke-width': (strong ? 3 : 2) * scale }),
-                    svgShape('rect', { ...outline, stroke: ink, 'stroke-width': (strong ? 1.25 : 1) * scale, 'stroke-opacity': strong ? 1 : 0.45 }),
+                    svgShape('rect', { ...outline, stroke: halo, 'stroke-width': ((strong ? strongWidth : lightWidth) + haloExtra) * scale }),
+                    svgShape('rect', { ...outline, stroke: ink, 'stroke-width': (strong ? strongWidth : lightWidth) * scale, 'stroke-opacity': strong || paintColor ? 1 : 0.45 }),
                 );
             }
         }
@@ -1118,6 +1211,7 @@ export function createAnnotationOverlay({
         annotationLayer.dataset.align = placed.align;
         annotationLayer.dataset.connector = placed.leader ? 'line' : 'none';
         annotationLayer.dataset.score = String(Math.round(placed.cost));
+        annotationLayer.dataset.placed = placed.unplaced ? 'none' : placed.inside ? 'inside' : 'beside';
         const runs = placed.leader ? leaderSegments(placed.leader) : [];
         holdCaption({ box: placed.box, ...(runs[0] ? { leader: runs[0] } : {}), ...(runs.length > 1 ? { segments: runs.slice(1) } : {}) });
         laidOut = layoutInputs;

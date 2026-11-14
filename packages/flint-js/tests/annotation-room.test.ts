@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import * as vl from 'vega-lite';
 import * as vega from 'vega';
 import { noteRoomNeed, roomPast } from '../src/core/annotation';
-import { notesOfUpdates, regionsOfUpdates } from '../src/interactive/presentation/annotation';
+import { notesOfUpdates, referencesOfUpdates, regionsOfUpdates } from '../src/interactive/presentation/annotation';
 import { annotationItem } from '../src/vegalite/interactions/presentation/annotation-overlay';
 import { assembleVegaLite } from '../src/vegalite/assemble';
 
@@ -153,5 +153,20 @@ describe('a chart drawn with regions', () => {
             { id: 'a', ops: [{ op: 'annotate-region', name: 'r', value: { x: [1, 2], text: 'Stretch' } }] },
             { id: 'b', ops: [{ op: 'annotate-region', name: 's', value: null }] },
         ] as any)).toEqual([{ x: [1, 2], text: 'Stretch' }]);
+    });
+});
+
+describe('a reference past the axis end', () => {
+    it('is read from a y rule or a y band, and the axis runs on to reach it', async () => {
+        const references = referencesOfUpdates([{ id: 'r', ops: [
+            { op: 'set-overlay', name: 'goal', value: { mark: 'rule', role: 'reference', data: { values: [{ v: 100 }] }, encodings: { y: { field: 'v' } } } },
+            { op: 'annotate-region', name: 'band', value: { y: [20, 30] } },
+            { op: 'set-overlay', name: 'cut', value: { mark: 'rule', role: 'reference', data: { values: [{ d: 'East' }] }, encodings: { x: { field: 'd' } } } },
+        ] }]);
+        expect(references).toEqual([100, 20, 30]);
+        const [, top] = await drawnDomain(bars({ references }));
+        expect(top).toBeGreaterThanOrEqual(100);
+        const [, plain] = await drawnDomain(bars());
+        expect(plain).toBeLessThan(100);
     });
 });

@@ -450,10 +450,9 @@ export function pickBounds(item: any): SelectionRect {
     return item.visibleBounds ?? item.bounds;
 }
 
-export function facetPlotFrameAt(view: any, point: PlotPoint, fallback: PlotFrame): PlotFrame | undefined {
+/** Every Vega facet cell's plot frame, in plot px; empty on a chart that draws one plot. */
+export function facetPlotFrames(view: any): PlotFrame[] {
     const frames: PlotFrame[] = [];
-    const containsPoint = (frame: PlotFrame): boolean => point.x >= frame.x && point.x <= frame.x + frame.width
-        && point.y >= frame.y && point.y <= frame.y + frame.height;
     const visit = (item: any, offsetX: number, offsetY: number): void => {
         if (!item) return;
         const isGroup = item.mark?.marktype === 'group';
@@ -466,25 +465,20 @@ export function facetPlotFrameAt(view: any, point: PlotPoint, fallback: PlotFram
         if (Array.isArray(item.items)) item.items.forEach((child: any) => visit(child, x, y));
     };
     visit(view.scenegraph()?.root, 0, 0);
+    return frames;
+}
+
+export function facetPlotFrameAt(view: any, point: PlotPoint, fallback: PlotFrame): PlotFrame | undefined {
+    const containsPoint = (frame: PlotFrame): boolean => point.x >= frame.x && point.x <= frame.x + frame.width
+        && point.y >= frame.y && point.y <= frame.y + frame.height;
+    const frames = facetPlotFrames(view);
     if (frames.length) return frames.filter(containsPoint).sort((left, right) => left.width * left.height - right.width * right.height)[0];
     return containsPoint(fallback) ? fallback : undefined;
 }
 
 /** Bounding plot frame of all Vega facet cells, or the root plot for a unit chart. */
 export function facetPlotBounds(view: any, fallback: PlotFrame): PlotFrame {
-    const frames: PlotFrame[] = [];
-    const visit = (item: any, offsetX: number, offsetY: number): void => {
-        if (!item) return;
-        const isGroup = item.mark?.marktype === 'group';
-        const x = offsetX + (isGroup && typeof item.x === 'number' ? item.x : 0);
-        const y = offsetY + (isGroup && typeof item.y === 'number' ? item.y : 0);
-        if (isGroup && (item.mark?.role === 'cell' || item.mark?.name === 'cell')
-            && typeof item.width === 'number' && typeof item.height === 'number') {
-            frames.push({ x, y, width: item.width, height: item.height });
-        }
-        if (Array.isArray(item.items)) item.items.forEach((child: any) => visit(child, x, y));
-    };
-    visit(view.scenegraph()?.root, 0, 0);
+    const frames = facetPlotFrames(view);
     if (frames.length === 0) return fallback;
     const x1 = Math.min(...frames.map((frame) => frame.x));
     const y1 = Math.min(...frames.map((frame) => frame.y));
@@ -1323,6 +1317,28 @@ function distanceToItem(point: PlotPoint, item: any): number {
 
 export function nearestSceneItem(view: any, point: PlotPoint, maxDistance: number): any | undefined {
     return nearestItemByBounds(sceneItems(view), point, maxDistance);
+}
+
+const THIN_MARKS = new Set(['line', 'trail', 'rule', 'symbol']);
+
+/**
+ * The nearest line, rule or point within `tolerance` px of its drawn edge (a stroke's half
+ * width counts as on it). Filled marks are left to Vega's exact pick.
+ */
+export function nearestThinItem(view: any, point: PlotPoint, tolerance: number): any | undefined {
+    let best: { item: any; distance: number } | undefined;
+    for (const item of sceneItems(view)) {
+        if (!THIN_MARKS.has(item.mark?.marktype) || !item.bounds || !isPickable(item)) continue;
+        if (item.datum?.[INTERACTION_ROLE] === 'legend-label') continue;
+        const stroke = item.mark.marktype === 'symbol' ? 0 : (typeof item.strokeWidth === 'number' ? item.strokeWidth : 1) / 2;
+        const distance = Math.max(0, distanceToItem(point, item) - stroke);
+        if (distance > tolerance) continue;
+        // A line's point markers win a tie with the line: the marker is what is read.
+        const closer = !best || distance < best.distance
+            || (distance === best.distance && item.mark.marktype === 'symbol' && best.item.mark?.marktype !== 'symbol');
+        if (closer) best = { item, distance };
+    }
+    return best?.item;
 }
 
 export type SpatialDirection = 'left' | 'right' | 'up' | 'down';

@@ -83,6 +83,23 @@ describe('heatmap color defaults', () => {
     expect(spec.encoding.color.scale.domainMid).toBe(0);
   });
 
+  it('fits the colour domain to every row when the columns overflow the canvas', () => {
+    // 144 years cannot all fit 580px; the warmest years lie past the first window kept.
+    const rows = Array.from({ length: 144 }, (_, index) => ({ year: 1880 + index, month: 'Jan', delta: index < 100 ? -0.2 : 1.1 }));
+    const spec = assembleVegaLite({
+      data: { values: rows },
+      semantic_types: { year: 'Year', month: 'Month', delta: { semanticType: 'Temperature', unit: '°C', divergingMidpoint: 0 } },
+      chart_spec: {
+        chartType: 'Heatmap',
+        encodings: { x: { field: 'year', type: 'ordinal' }, y: { field: 'month' }, color: { field: 'delta' } },
+        baseSize: { width: 1100, height: 200 }, canvasSize: { width: 580, height: 200 },
+      },
+    } as ChartAssemblyInput) as any;
+
+    expect(spec._viewports?.[0]?.channel).toBe('x');
+    expect(spec.encoding.color.scale.domain).toEqual([-1.1, 1.1]);
+  });
+
   it('draws no grid through the cells, even on a banded temporal axis', () => {
     const input: ChartAssemblyInput = {
       data: { values: [

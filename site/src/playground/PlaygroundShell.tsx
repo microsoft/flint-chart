@@ -24,6 +24,7 @@ const pages: NavEntry[] = [
       { to: 'layout-plan', label: 'Layout plan demos' },
       { to: 'overflow-viewport', label: 'Overflow viewport' },
       { to: 'zoom-clipping', label: 'Zoom clipping' },
+      { to: 'overlay-containment', label: 'Overlay containment' },
       { to: 'band-stretching', label: 'Band stretching' },
       { to: 'axis-label', label: 'Axis labels' },
       { to: 'title-wrap', label: 'Title wrap' },
@@ -36,6 +37,8 @@ const pages: NavEntry[] = [
       { to: 'legend', label: 'Legend' },
       { to: 'binning', label: 'Binned colour' },
       { to: 'color', label: 'Color' },
+      { to: 'color-range', label: 'Color range' },
+      { to: 'muted-annotations', label: 'Muted annotations' },
     ],
   },
   {
@@ -52,6 +55,9 @@ const pages: NavEntry[] = [
     children: [
       { to: 'interaction-test-cases', label: 'Test cases' },
       { to: 'interaction-coverage', label: 'Coverage' },
+      { to: 'baseline', label: 'Baseline behaviour' },
+      { to: 'tooltip-compare', label: 'Tooltip: Vega-Lite vs baseline' },
+      { to: 'baseline-sweep', label: 'Baseline sweep (all chart types)' },
       { to: 'interaction-conflicts', label: 'Conflict cases' },
       { to: 'chart-api-design', label: 'API design: FlintChart' },
       { to: 'annotation-lab', label: 'Annotation lab' },

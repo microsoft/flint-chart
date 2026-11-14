@@ -53,6 +53,13 @@ describe('interaction preset registry', () => {
 });
 
 describe('resolveInteractionSpec', () => {
+    it('reads defaults as a boolean or per behaviour, and refuses pan and zoom as a default', () => {
+        expect(resolveInteractionSpec({ interactions: [], defaults: false }).surface.defaults).toBe(false);
+        expect(resolveInteractionSpec({ interactions: [], defaults: { legend: false } }).surface.defaults).toEqual({ legend: false });
+        expect(() => resolveInteractionSpec({ interactions: [], defaults: { navigate: false } } as never))
+            .toThrow('interaction_spec.defaults must be true, false, or { tooltip?, legend? } of booleans.');
+    });
+
     it('returns nothing for an absent spec', () => {
         const resolved = resolveInteractionSpec(undefined);
         expect(resolved.interactions).toEqual([]);

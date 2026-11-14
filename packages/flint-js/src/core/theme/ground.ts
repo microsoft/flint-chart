@@ -2150,6 +2150,7 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
                 ...(theme.type?.annotation ? { text: resolveType(theme.type.annotation, (axisLabelText.fontSize ?? 10) + 1, text.primary) } : {}),
                 ink: text.primary,
                 background: plot,
+                ...(theme.interaction?.highlight ? { highlight: { ...theme.interaction.highlight } } : {}),
             },
         },
         facets,

@@ -219,6 +219,8 @@ the authored blocks and their jobs:
 
 `interaction.selectionBoundary` accepts `color`, `width`, `opacity`, `haloColor`, `haloWidth`, and `haloOpacity`. Omitted paint is grounded from the theme: foreground from `ink.accent` then primary text, and halo from the plot or canvas surface. Use explicit values only when the house has a distinct interaction treatment.
 
+`interaction.highlight` accepts `color`, `width`, `haloColor`, and `haloWidth`: the paint of the ring round a dot, the outline round a bar, cell, slice or region an annotation names, and an enclosure's outline. Unset, they take the neutral annotation grey; an update's own `highlightStyle` (or an enclosure's `color` and `width`) overrides it.
+
 This is a shape example, not a palette recommendation. Derive actual values
 from the user's references.
 

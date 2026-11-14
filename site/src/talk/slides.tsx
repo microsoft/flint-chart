@@ -503,7 +503,7 @@ export const SLIDES: SlideDef[] = [
       <h2>What each type decides for this chart</h2>
       <div className="talk-body">
         <div className="talk-col" style={{ flex: '0.75 1 0', gap: 22 }}>
-          <Code rows={specLayout(TYPES_FLINT, /YearMonth|Category|Profit|semantic_types/)} />
+          <Code rows={specLayout(TYPES_FLINT, /YearMonth|Category|Delta|semantic_types/)} />
           <p className="talk-callout talk-callout-inline">Semantic types decide data processing, axes, and colors, so the compiler can infer the low-level configuration reliably, without heuristics.</p>
         </div>
         <div className="talk-col" style={{ flex: '1.25 1 0' }}><TypeTree /></div>
@@ -515,7 +515,7 @@ export const SLIDES: SlideDef[] = [
       <h2>And this is what the compiler wrote in Vega-Lite</h2>
       <div className="talk-body talk-step">
         <div className="talk-col" style={{ flex: '0.85 1 0' }}>
-          <Code rows={specLayout(TYPES_FLINT, /YearMonth|Category|Profit|semantic_types/)} />
+          <Code rows={specLayout(TYPES_FLINT, /YearMonth|Category|Delta|semantic_types/)} />
         </div>
         <div className="talk-arrow">→</div>
         <div className="talk-col" style={{ flex: '1.15 1 0' }}>

@@ -2,7 +2,7 @@ import type { CategoryViewport, ChartAssemblyInput, ChartWarning } from '../core
 import type { ChartState, FlintInteractionEventDetail, InteractionContext, InteractionDef, SemanticTarget } from './interactions';
 import type { CanvasInteractionAction, CanvasInteractionEvent } from './language/events';
 import type { ChartUpdate, ChartUpdateResult } from './language/updates';
-import type { AssistedTargetingOptions } from '../core/interaction-spec';
+import type { AssistedTargetingOptions, InteractionDefaults } from '../core/interaction-spec';
 import type { InteractionResetGesture } from './reset';
 import type { VegaInteractiveRendererOptions } from '../vegalite/interactive';
 import type { EChartsInteractiveRendererOptions } from '../echarts/interactive';
@@ -19,6 +19,11 @@ export type ViewportState = Partial<Record<ViewportChannel, number>>;
 export interface ViewportGeometry {
     offset: number;
     extent: number;
+    /**
+     * Where the chart keeps room for a horizontal rail inside its own drawing, in px from its top:
+     * under the axis, above a source line at the foot. Undefined: the rail goes below the chart.
+     */
+    railTop?: number;
 }
 
 export type ChartUpdateComposition = 'auto';
@@ -130,6 +135,8 @@ export interface InteractiveChartSurfaceOptions {
     /** Presets assist by default; false disables it and maxDistance overrides eligible presets. */
     assistedTargeting?: boolean | AssistedTargetingOptions;
     keyboardTargeting?: boolean;
+    /** The baseline every chart has: a nearest-mark tooltip, a legend click that dims, a dense chart's zoom. Defaults to on. */
+    defaults?: InteractionDefaults;
     /** Warnings known before the mount; the surface reports them with the mount's own. */
     warnings?: readonly ChartWarning[];
 }

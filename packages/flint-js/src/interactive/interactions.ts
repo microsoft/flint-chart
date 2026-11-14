@@ -94,6 +94,8 @@ export type {
     AnnotationConnection,
     AnnotationConnectorAnchor,
     AnnotationSpec,
+    NoteTextStyle,
+    HighlightStyle,
     ChartOverlaySpec,
     EnclosureAnnotationSpec,
     RegionAnnotationSpec,
@@ -111,8 +113,12 @@ export type {
 
 export interface CanvasInteractionDef {
     readonly id: string;
-    /** Set by the spec resolver. A definition made in code has no origin. */
-    readonly origin?: 'spec';
+    /**
+     * Set by the spec resolver (`'spec'`) or by the mount for a behaviour every chart has
+     * (`'baseline'`, which gives way silently to anything the spec or the code asks for). A
+     * definition made in code has no origin.
+     */
+    readonly origin?: 'spec' | 'baseline';
     /** The preset that made this definition; admission reads its requirements from the registry. */
     readonly preset?: InteractionPresetType;
     /** The options the preset was made with, so a host can tell two definitions with one id apart. */

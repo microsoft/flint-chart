@@ -850,15 +850,18 @@ export const heatmapDef: ChartTemplateDef = {
         const config = ctx.chartProperties;
         const showTextLabels = !!config?.showTextLabels;
         const colorField = spec.encoding?.color?.field;
+        // The colour scale reads every row: a grid whose columns overflow its canvas scrolls through
+        // the rest, and they must not run past the legend's ends.
+        const colorRows = ctx.fullTable ?? ctx.table;
         const colorVals = colorField
-            ? ctx.table
+            ? colorRows
                 .map((r: any) => r[colorField])
                 .filter((v: any) => v != null && v !== '')
                 .map((v: any) => Number(v))
                 .filter((v: number) => Number.isFinite(v))
             : [];
         const hasMissingValues = colorField
-            ? ctx.table.some((r: any) => {
+            ? colorRows.some((r: any) => {
                 const value = r[colorField];
                 return value == null || value === '' || !Number.isFinite(Number(value));
             })

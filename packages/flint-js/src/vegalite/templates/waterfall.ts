@@ -86,8 +86,9 @@ export const waterfallChartDef: ChartTemplateDef = {
     semanticInteractions: ({ resolvedEncodings }) => {
         const categoryField = firstDiscreteEncodingField(resolvedEncodings, ['x']);
         const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
-        const colorField = resolvedEncodings.color?.field;
-        const legendField = colorField ?? '__wf_color';
+        // The legend keys the derived step kind (total / increase / decrease), whatever the author's
+        // Type column says (start / delta / end), so a legend value is read from that column.
+        const legendField = '__wf_color';
         return {
             fields: fieldsFromEncodingChannels(resolvedEncodings, ['x', 'color']),
             categoryField,

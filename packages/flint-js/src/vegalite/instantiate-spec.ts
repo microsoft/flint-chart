@@ -39,6 +39,25 @@ import { hostTextMeasurer } from '../core/text-width';
 const DEFAULT_QUANTITATIVE_AXIS_FORMAT = ',.12~g';
 const VEGA_AXIS_LABEL_LIMIT = AXIS_LABEL_LIMIT;
 
+/** The label expression of a sequence axis thinned to round values: only `shown` print. */
+export function skipLabelExpr(shown: readonly string[]): string {
+    return `indexof(${JSON.stringify(shown)}, toString(datum.value)) >= 0 ? datum.label : ''`;
+}
+
+/** The names a `skipLabelExpr` prints, or undefined where the expression is no such thinning. */
+export function skipLabelsOf(expr: unknown): string[] | undefined {
+    const match = typeof expr === 'string'
+        ? expr.match(/^indexof\((\[.*\]), toString\(datum\.value\)\) >= 0 \? datum\.label : ''$/)
+        : null;
+    if (!match) return undefined;
+    try {
+        const shown = JSON.parse(match[1]);
+        return Array.isArray(shown) ? shown.map(String) : undefined;
+    } catch {
+        return undefined;
+    }
+}
+
 /** Whether a template states its own labels for this axis, so the band labels are left as it wrote them. */
 export function templateStatesAxisLabels(template: any, channel: 'x' | 'y'): boolean {
     return [template.encoding?.[channel], ...(template.layer ?? []).map((layer: any) => layer.encoding?.[channel])]
@@ -239,7 +258,7 @@ export function vlApplyLayoutToSpec(
         const fit = labels.overflowFit;
         if (fit?.step === 'skip' && fit.shown) {
             // The names on round values (16:45, 17:00 …), looked up by the value as written; each band keeps its tick.
-            config.labelExpr = `indexof(${JSON.stringify(fit.shown)}, toString(datum.value)) >= 0 ? datum.label : ''`;
+            config.labelExpr = skipLabelExpr(fit.shown);
         }
     }
     for (const channel of ['x', 'y'] as const) {

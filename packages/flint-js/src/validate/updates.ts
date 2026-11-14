@@ -392,7 +392,7 @@ const isName = (value: unknown): boolean => typeof value === 'string' && value.l
 
 type OpShape = { shape: string; fields: Record<string, (value: unknown) => boolean> };
 
-const TEXT_SHAPE = "{ op, target: UpdateTarget, value: { text, anchor?: 'segment' | 'point', highlight?: 'none' | 'light' | 'strong' | 'exclusive' } | null }";
+const TEXT_SHAPE = "{ op, target: UpdateTarget, value: { text, anchor?: 'segment' | 'point', highlight?: 'none' | 'light' | 'strong' | 'exclusive', style?: { fontSize?, fontWeight?, color? }, highlightStyle?: { color?, width? } } | null }";
 
 const OP_SHAPES = {
     'set-style': {
@@ -418,7 +418,7 @@ const OP_SHAPES = {
         },
     },
     'annotate-enclosure': {
-        shape: "{ op, name, value: { targets: UpdateTarget[], text?, shape?: 'hull' | 'rect' | 'ellipse' | 'circle', connect?: 'auto' | 'all' | 'none', color? } | null }",
+        shape: "{ op, name, value: { targets: UpdateTarget[], text?, shape?: 'hull' | 'rect' | 'ellipse' | 'circle', connect?: 'auto' | 'all' | 'none', color?, width? } | null }",
         fields: {
             name: isName,
             value: (v: unknown) => v === null || (isObject(v) && Array.isArray(v.targets) && v.targets.every(isSetTarget)),

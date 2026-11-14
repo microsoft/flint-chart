@@ -61,6 +61,8 @@ export type {
     AnnotationCandidate,
     AnnotationConnection,
     AnnotationSpec,
+    NoteTextStyle,
+    HighlightStyle,
     ChartOverlaySpec,
     ChartUpdate,
     ChartUpdateOp,

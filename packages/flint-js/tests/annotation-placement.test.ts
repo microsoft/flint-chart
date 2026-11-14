@@ -180,6 +180,28 @@ describe('a note\'s type', () => {
         expect(style).toMatchObject({ font: 'Inter', fontSize: 11, color: '#333333', halo: { color: '#fafafa' } });
     });
 
+    it('keeps the labels\' weight unless the house or the note sets one', () => {
+        expect(noteStyle({ fontSize: 10, fontWeight: 'normal' }).fontWeight).toBe(400);
+        expect(noteStyle({ fontSize: 10, fontWeight: 600 }).fontWeight).toBe(600);
+        expect(noteStyle({ fontSize: 10 }, { text: { fontWeight: 'bold', fontSize: 14, color: '#c00' } }))
+            .toMatchObject({ fontWeight: 'bold', fontSize: 14, color: '#c00' });
+    });
+});
+
+describe('a note with empty text', () => {
+    it('is kept as a cue with no caption, while a chart wording that comes out empty is dropped', async () => {
+        const { presentAnnotationUpdate } = await import('../src/interactive/presentation/annotation');
+        const element = { value: { region: 'East', name: '' }, records: [{ region: 'East', name: '' }] } as never;
+        const target = { visual: { kind: 'mark' }, elements: [element] } as never;
+        const present = presentAnnotationUpdate(() => ({ kind: 'point' } as never), () => '');
+        const context = {} as never;
+        const asked = present({ id: 'a', ops: [{ op: 'annotate-text', target, value: { text: '' } }] }, context);
+        const worded = present({ id: 'b', ops: [{ op: 'annotate-text', target, value: {} }] }, context);
+        expect(asked.ops).toHaveLength(1);
+        expect((asked.ops[0] as { value: { text: string } }).value.text).toBe('');
+        expect(worded.ops).toHaveLength(0);
+    });
+
     it('breaks between words at its width, keeping hard breaks', () => {
         const measure = (text: string) => text.length * 6;
         expect(wrapNote('fastest growth since the merger', 100, measure)).toEqual(['fastest growth', 'since the merger']);
@@ -197,5 +219,41 @@ describe('a note\'s type', () => {
         expect(balanceNote('short', 140, measure)).toEqual(['short']);
         expect(balanceNote('first line here\nand a second one that runs on and on', 120, measure))
             .toEqual(['first line here', 'and a second one', 'that runs on and on']);
+    });
+});
+
+describe('a note with no room beside its mark', () => {
+    const PLOT = { x: 0, y: 0, width: 400, height: 300 };
+    const label = { width: 60, height: 14 };
+    // A mark ringed by text on every side, as a slice that faces the legend: only a 64×16 room is clear.
+    const room = { x: 168, y: 142, width: 64, height: 16 };
+    const walls = [
+        { box: { x: 0, y: 0, width: 400, height: room.y }, kind: 'text' as const },
+        { box: { x: 0, y: room.y + room.height, width: 400, height: 300 - room.y - room.height }, kind: 'text' as const },
+        { box: { x: 0, y: room.y, width: room.x, height: room.height }, kind: 'text' as const },
+        { box: { x: room.x + room.width, y: room.y, width: 400 - room.x - room.width, height: room.height }, kind: 'text' as const },
+    ];
+    const target = { shape: 'circle' as const, x: 200, y: 150, rx: 2, ry: 2 };
+
+    it('sits on the mark where its room fits the caption, with no leader', () => {
+        const placed = placeNote({
+            target, label, plot: PLOT, canvas: PLOT, obstacles: walls,
+            inside: [{ point: { x: 200, y: 150 }, fits: (box) => box.x >= room.x && box.x + box.width <= room.x + room.width && box.y >= room.y && box.y + box.height <= room.y + room.height }],
+        });
+        expect(placed.inside).toBe(true);
+        expect(placed.leader).toBeUndefined();
+        expect(placed.covers?.text).toBe(0);
+    });
+
+    it('reports the text it covers where nothing better fits, and an inside-only anchor with no room places nothing', () => {
+        const blocked = placeNote({ target, label, plot: PLOT, canvas: PLOT, obstacles: [...walls, { box: { x: 100, y: 120, width: 200, height: 60 }, kind: 'text' }] });
+        expect(blocked.covers!.text).toBeGreaterThan(0);
+        const none = placeNote({ target, label, plot: PLOT, canvas: PLOT, inside: [{ point: { x: 200, y: 150 }, fits: () => false }], insideOnly: true });
+        expect(none.cost).toBe(Infinity);
+    });
+
+    it('breaks a caption after a middle dot, not before it', () => {
+        const measure = (text: string) => text.length * 6;
+        expect(balanceNote('Sleep & bedrest · 9.1 hr (38%)', 120, measure)).toEqual(['Sleep & bedrest ·', '9.1 hr (38%)']);
     });
 });

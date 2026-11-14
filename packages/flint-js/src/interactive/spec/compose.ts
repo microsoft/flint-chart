@@ -11,6 +11,7 @@ export interface ComposedInteractiveOptions {
     readonly updates: readonly ChartUpdate[];
     readonly assistedTargeting: BuildInteractiveChartOptions['assistedTargeting'];
     readonly keyboardTargeting: boolean | undefined;
+    readonly defaults: BuildInteractiveChartOptions['defaults'];
     /** Warnings known before the mount, such as a spec a static backend ignores. */
     readonly warnings: readonly ChartWarning[];
 }
@@ -18,7 +19,7 @@ export interface ComposedInteractiveOptions {
 type ComposeInput = Pick<ChartAssemblyInput, 'interaction_spec' | 'updates'>;
 type ComposeOptions = Pick<
     BuildInteractiveChartOptions,
-    'backend' | 'interactions' | 'updates' | 'assistedTargeting' | 'keyboardTargeting'
+    'backend' | 'interactions' | 'updates' | 'assistedTargeting' | 'keyboardTargeting' | 'defaults'
 >;
 
 /**
@@ -65,6 +66,7 @@ export function composeInteractiveOptions(input: ComposeInput, options: ComposeO
         ],
         assistedTargeting: options.assistedTargeting ?? resolved.surface.assistedTargeting,
         keyboardTargeting: options.keyboardTargeting ?? resolved.surface.keyboardTargeting,
+        defaults: options.defaults ?? resolved.surface.defaults,
         warnings,
     };
 }

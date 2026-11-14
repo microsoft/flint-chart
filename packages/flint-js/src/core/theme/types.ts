@@ -1080,6 +1080,17 @@ export interface ThemeInteraction {
         haloWidth?: number;
         haloOpacity?: number;
     };
+    /**
+     * Paint for the marks an agent or the reader points at with an update: the ring round a dot, the
+     * outline round a bar, cell, slice or region a note names, and an enclosure's outline. Unset, they
+     * take the neutral annotation grey (an enclosure round one colour's cluster takes that colour).
+     */
+    highlight?: {
+        color?: string;
+        width?: number;
+        haloColor?: string;
+        haloWidth?: number;
+    };
 }
 
 /**
@@ -1211,6 +1222,8 @@ export interface AnnotationDesign {
     ink: string;
     /** The page an annotation is read on: the plot's own surface, else the canvas. */
     background: string;
+    /** The house's paint for rings, outlines and enclosures, where it states one. */
+    highlight?: { color?: string; width?: number; haloColor?: string; haloWidth?: number };
 }
 
 export interface ResolvedText {

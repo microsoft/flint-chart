@@ -942,7 +942,8 @@ step, using at most a third of the axis (`AssembleOptions.notes`). A note added 
 already has.
 
 `annotate-region` and `annotate-enclosure` follow Blabber's `region` and `enclose`. A region
-shades a stretch of the plot: one axis gives a band across it, both a box. A continuous
+shades a stretch of the plot: one axis gives a band across it, both a box. On a faceted chart
+the stretch is shaded in every panel, each wash cut at its panel. A continuous
 stretch is two bounds, either `null` for the plot's end; a banded one lists the categories it
 covers, which must be adjacent. Its caption is centred on the stretch, clear of the series that
 cross it, and moves outside on a leader only where nothing inside is clear. A stretch of x

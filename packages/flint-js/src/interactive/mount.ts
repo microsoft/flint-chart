@@ -1,6 +1,6 @@
 import type { ChartAssemblyInput } from '../core/types';
 import { isCanvasInteraction } from './interactions';
-import { enclosuresOfUpdates, notesOfUpdates, regionsOfUpdates } from './presentation/annotation';
+import { enclosuresOfUpdates, notesOfUpdates, referencesOfUpdates, regionsOfUpdates } from './presentation/annotation';
 import { composeInteractiveOptions } from './spec/compose';
 import { mountInteractiveChartSurface } from './surface';
 import type {
@@ -54,7 +54,7 @@ export function mountChartWith(
         return withCanvasSize(chartInput, availableSize);
     };
     // The spec and the code are two sources of one configuration; the spec comes first.
-    const { interactions, updates, assistedTargeting, keyboardTargeting, warnings } =
+    const { interactions, updates, assistedTargeting, keyboardTargeting, defaults, warnings } =
         composeInteractiveOptions(input, options);
     // The spec's updates are applied here, after the chart is drawn: the chart is drawn without them.
     const { updates: _specUpdates, ...chart } = input;
@@ -81,6 +81,8 @@ export function mountChartWith(
                             background,
                             notes: notesOfUpdates(updates),
                             regions: regionsOfUpdates(updates),
+                            references: referencesOfUpdates(updates),
+                            defaults,
                             enclosures: enclosuresOfUpdates(updates),
                             assistDistance: assistedTargeting === false
                                 ? 0

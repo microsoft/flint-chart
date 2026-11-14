@@ -51,6 +51,8 @@ export const MONTHLY_NET = [...sumBy(ALL_ROWS, (r) => r.period, (r) => r.newUser
 export const GAME_TOTALS = [...sumBy(ALL_ROWS, (r) => r.game, (r) => r.newUsers)].map(([game, newUsers]) => ({ game, newUsers }));
 
 const SEM = { period: 'YearMonth', game: 'Category', newUsers: 'Profit' };
+/** The types as the slides show them: a net change reads as a Delta on screen, while Flint still compiles it as Profit. */
+const SHOWN_SEM = { ...SEM, newUsers: 'Delta' };
 
 /** The paper heatmap in Flint, with the parts each slide varies. */
 export function heatmap(o: {
@@ -80,7 +82,7 @@ export const FLINT_BASE: FlintState = { theme: 'economist', swap: false, facet: 
 export function flintShown(st: FlintState): Record<string, unknown> {
   const [x, y] = st.swap ? ['game', 'period'] : ['period', 'game'];
   return {
-    semantic_types: SEM,
+    semantic_types: SHOWN_SEM,
     chart_spec: {
       chartType: 'Heatmap',
       encodings: { x, y, color: { field: 'newUsers', aggregate: 'sum' }, ...(st.facet ? { column: 'region' } : {}) },
@@ -94,9 +96,10 @@ export function flintInput(st: FlintState): ChartAssemblyInput {
   const shown = flintShown(st) as { chart_spec: Record<string, unknown> } & Record<string, unknown>;
   return {
     ...shown,
+    semantic_types: SEM,
     data: { values: LONG8 },
     chart_spec: { ...shown.chart_spec, title: 'Net new users by game', subtitle: 'Monthly net change in active users, 2021 to 2025' },
-  } as ChartAssemblyInput;
+  } as unknown as ChartAssemblyInput;
 }
 
 export const lineByType = (extra: Partial<ChartAssemblyInput> = {}): ChartAssemblyInput => ({
@@ -338,7 +341,7 @@ export const TYPES_INPUT = {
 /** The Flint side: raw rows, three types, and the chart. */
 export const TYPES_FLINT = {
   data: { values: [TYPES_INPUT.data.values![0], '…'] },
-  semantic_types: SEM,
+  semantic_types: SHOWN_SEM,
   chart_spec: TYPES_INPUT.chart_spec,
 };
 
@@ -374,7 +377,7 @@ export function typesCompiled(): Line[] {
     { text: '    // Category: games keep the order they come in', gap: true },
     { text: `    "y": { "field": "game", "type": ${j(y.type)},`, hot: true },
     { text: `      "sort": ${j(y.sort)} },`, hot: true },
-    { text: '    // Profit: it can go negative, so colors diverge', gap: true },
+    { text: '    // Delta: it can go negative, so colors diverge', gap: true },
     { text: `    "color": { "field": ${j(color.field)},`, hot: true },
     { text: `      "type": ${j(color.type)},`, hot: true },
     { text: `      "scale": { "scheme": ${j(color.scale?.scheme)}, "domainMid": ${j(color.scale?.domainMid)},`, hot: true },

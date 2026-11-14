@@ -33,7 +33,7 @@ import { semanticElementRenderKeys } from '../../../core/interaction-semantics';
 import { rendererTextMeasurer } from '../../../core/text-width';
 import type { AnnotationDesign } from '../../../core/theme/types';
 import type { PlotPoint } from '../../../interactive/interactions';
-import { PATH_KEY_SUFFIX, clientToLayoutPoint, plotToClientPoint, sceneItems, type RendererCoordinateSpace } from '../hit-adapter';
+import { PATH_KEY_SUFFIX, clientToLayoutPoint, facetPlotFrames, plotToClientPoint, sceneItems, type RendererCoordinateSpace } from '../hit-adapter';
 import { INTERACTION_KEY } from '../stores';
 import { canvasFurnitureBoxes, chartTextStyle, sceneInk, tiledRects, type PlacedCaption } from './annotation-overlay';
 import { lonLatBox, type OverlayProjection } from './data-overlay';
@@ -114,6 +114,21 @@ function intersectBox(a: Box, b: Box): Box {
     const x = Math.max(a.x, b.x);
     const y = Math.max(a.y, b.y);
     return { x, y, width: Math.max(0, Math.min(a.x + a.width, b.x + b.width) - x), height: Math.max(0, Math.min(a.y + a.height, b.y + b.height) - y) };
+}
+
+/**
+ * Where a region is shaded in each plot panel, in plot px: its spans (read in a panel's own px, as
+ * the shared scales give them) laid from that panel's corner and cut at it. A span the region does
+ * not name runs the panel's full length.
+ */
+export function regionPanelBoxes(spans: Partial<Record<'x' | 'y', [number, number]>>, panels: readonly Box[]): { shaded: Box; panel: Box }[] {
+    return panels.flatMap((panel) => {
+        const shaded = intersectBox({
+            x: spans.x ? panel.x + spans.x[0] : panel.x, width: spans.x ? spans.x[1] - spans.x[0] : panel.width,
+            y: spans.y ? panel.y + spans.y[0] : panel.y, height: spans.y ? spans.y[1] - spans.y[0] : panel.height,
+        }, panel);
+        return shaded.width > 0 && shaded.height > 0 ? [{ shaded, panel }] : [];
+    });
 }
 
 function paint(value: unknown): string | undefined {
@@ -338,8 +353,10 @@ export function createMarkupOverlay(options: MarkupOverlayOptions): MarkupOverla
         ];
         // The series a period's caption keeps clear of: the vertices of its lines and areas.
         const vertices = items.flatMap((item) => (item.interactionGeometry?.points as PlotPoint[] | undefined)?.map(toLayout) ?? []);
+        const plotBox = { x: 0, y: 0, width: space.plotWidth, height: space.plotHeight };
+        const facets = facetPlotFrames(view);
+        const panels: Box[] = facets.length ? facets : [plotBox];
         for (const [name, region] of regions) {
-            const plotBox = { x: 0, y: 0, width: space.plotWidth, height: space.plotHeight };
             // On a map the region is its box as the projection draws it, cut at the plot.
             const geo = geoRegionOf(region);
             if (geo && 'problem' in geo) {
@@ -351,58 +368,61 @@ export function createMarkupOverlay(options: MarkupOverlayOptions): MarkupOverla
                 problems.set(name, problem ?? 'the region names no x or y stretch.');
                 continue;
             }
-            const shaded = geo
-                ? toBox(intersectBox(geo.bounds, plotBox))
-                : toBox({
-                    x: spans.x ? spans.x[0] : plotBox.x, width: spans.x ? spans.x[1] - spans.x[0] : plotBox.width,
-                    y: spans.y ? spans.y[0] : plotBox.y, height: spans.y ? spans.y[1] - spans.y[0] : plotBox.height,
-                });
-            if (geo && (shaded.width <= 0 || shaded.height <= 0)) continue;
+            // Anywhere else it is shaded in every plot panel (one, or each facet's), cut at that panel.
+            const placed = geo
+                ? [{ shaded: intersectBox(geo.bounds, plotBox), panel: plotBox }].filter(({ shaded }) => shaded.width > 0 && shaded.height > 0)
+                : regionPanelBoxes(spans, panels);
+            if (placed.length === 0) continue;
             const colour = region.color ?? regionColor(regionColours, [...backdrop, ...markInks], background, design?.accent, design?.palette);
             if (!region.color) regionColours.push(colour);
             // Over an area, or cells that tile the plot, a wash under the marks would not be seen.
             const layerOver = region.layer ? region.layer === 'over' : overArea || overTiles;
             const opacity = region.opacity ?? (overArea || overTiles ? 0.18 : 0.16);
-            // A map region's path is drawn in the plot's px, scaled into the layout inside a group, so
-            // the mask set on the group is read in the layout as the rect's is.
-            const rect = geo
-                ? svg('g', { 'data-flint-region': name })
-                : svg('rect', { x: shaded.x, y: shaded.y, width: shaded.width, height: shaded.height, fill: colour, 'fill-opacity': opacity, 'data-flint-region': name });
-            if (geo) rect.append(svg('path', { d: geo.d, transform: `translate(${origin.x},${origin.y}) scale(${scale})`, fill: colour, 'fill-opacity': opacity }));
-            if (layerOver && geo) {
-                // Over the marks, a map region is still cut at the plot.
-                const id = `flint-region-mask-${maskSequence += 1}`;
-                const mask = svg('mask', { id, maskUnits: 'userSpaceOnUse', x: shaded.x, y: shaded.y, width: shaded.width, height: shaded.height });
-                mask.append(svg('rect', { x: shaded.x, y: shaded.y, width: shaded.width, height: shaded.height, fill: '#fff' }));
-                rect.setAttribute('mask', `url(#${id})`);
-                ink.svg.prepend(mask, rect);
-            } else if (layerOver) ink.svg.prepend(rect);
-            else {
-                // Under the marks: the wash is cut away wherever a mark or a line is drawn, so they read over it.
-                const id = `flint-region-mask-${maskSequence += 1}`;
-                const mask = svg('mask', { id, maskUnits: 'userSpaceOnUse', x: shaded.x, y: shaded.y, width: shaded.width, height: shaded.height });
-                mask.append(svg('rect', { x: shaded.x, y: shaded.y, width: shaded.width, height: shaded.height, fill: '#fff' }));
-                for (const shape of markShapes) {
-                    if (overlapArea(shape.box, shaded) <= 0 && !(shape.line && segmentTouches(shape.line, shaded))) continue;
-                    mask.append(shape.cut());
+            for (const { shaded: inPlot } of placed) {
+                const shaded = toBox(inPlot);
+                // A map region's path is drawn in the plot's px, scaled into the layout inside a group, so
+                // the mask set on the group is read in the layout as the rect's is.
+                const rect = geo
+                    ? svg('g', { 'data-flint-region': name })
+                    : svg('rect', { x: shaded.x, y: shaded.y, width: shaded.width, height: shaded.height, fill: colour, 'fill-opacity': opacity, 'data-flint-region': name });
+                if (geo) rect.append(svg('path', { d: geo.d, transform: `translate(${origin.x},${origin.y}) scale(${scale})`, fill: colour, 'fill-opacity': opacity }));
+                if (layerOver && geo) {
+                    // Over the marks, a map region is still cut at the plot.
+                    const id = `flint-region-mask-${maskSequence += 1}`;
+                    const mask = svg('mask', { id, maskUnits: 'userSpaceOnUse', x: shaded.x, y: shaded.y, width: shaded.width, height: shaded.height });
+                    mask.append(svg('rect', { x: shaded.x, y: shaded.y, width: shaded.width, height: shaded.height, fill: '#fff' }));
+                    rect.setAttribute('mask', `url(#${id})`);
+                    ink.svg.prepend(mask, rect);
+                } else if (layerOver) ink.svg.prepend(rect);
+                else {
+                    // Under the marks: the wash is cut away wherever a mark or a line is drawn, so they read over it.
+                    const id = `flint-region-mask-${maskSequence += 1}`;
+                    const mask = svg('mask', { id, maskUnits: 'userSpaceOnUse', x: shaded.x, y: shaded.y, width: shaded.width, height: shaded.height });
+                    mask.append(svg('rect', { x: shaded.x, y: shaded.y, width: shaded.width, height: shaded.height, fill: '#fff' }));
+                    for (const shape of markShapes) {
+                        if (overlapArea(shape.box, shaded) <= 0 && !(shape.line && segmentTouches(shape.line, shaded))) continue;
+                        mask.append(shape.cut());
+                    }
+                    rect.setAttribute('mask', `url(#${id})`);
+                    wash.svg.append(mask, rect);
                 }
-                rect.setAttribute('mask', `url(#${id})`);
-                wash.svg.append(mask, rect);
             }
             if (!region.text) continue;
+            // One caption, on the first panel's wash.
+            const shaded = toBox(placed[0].shaded);
             const widths = [...noteWrapWidths(region.text, (text) => measure(text) / scale),
                 Math.max(60, shaded.width / scale * 0.65), Math.max(fontSize * 3, shaded.width / scale - 12)];
             const layouts = layoutsFor(region.text, widths);
-            const placed = placeRegionCaption({
-                region: shaded, axes: { x: !!spans.x, y: !!spans.y }, layouts, plot, canvas, obstacles, segments, vertices,
+            const caption = placeRegionCaption({
+                region: shaded, axes: { x: !!spans.x, y: !!spans.y }, layouts, plot: toBox(placed[0].panel), canvas, obstacles, segments, vertices,
                 ...(region.placement ? { placement: region.placement } : {}),
             });
-            if (!placed) continue;
-            const within = overlapArea(placed.box, shaded) >= placed.box.width * placed.box.height * 0.5;
+            if (!caption) continue;
+            const within = overlapArea(caption.box, shaded) >= caption.box.width * caption.box.height * 0.5;
             const tint = within ? over(colour, background, opacity) : background;
             // A caption on the wash reads on it as it is: a halo would be a coloured smudge where it leaves the wash.
-            const halo = overlapArea(placed.box, shaded) > 0 ? undefined : background;
-            drawCaption(placed, layouts, readableShade(colour, tint, 4.5), halo, neutralInk(background));
+            const halo = overlapArea(caption.box, shaded) > 0 ? undefined : background;
+            drawCaption(caption, layouts, readableShade(colour, tint, 4.5), halo, neutralInk(background));
         }
 
         // Enclosures: each target a group, one outline each, their caption shared.
@@ -465,18 +485,20 @@ export function createMarkupOverlay(options: MarkupOverlayOptions): MarkupOverla
             const flat = groups.flat();
             // A cluster that shares a colour is outlined in it; any other group in the neutral annotation
             // ink. A halo of the page under the outline lets it read on dark bars and cells without a loud hue.
-            const colour = enclosure.color ?? (all.every((mark) => mark.role === 'point')
+            const house = design?.highlight;
+            const strokeWidth = enclosure.width ?? house?.width ?? ENCLOSURE_STROKE;
+            const colour = enclosure.color ?? house?.color ?? (all.every((mark) => mark.role === 'point')
                 ? clusterColor(flat.map((item) => ({ fill: paint(item.fill), stroke: paint(item.stroke) })), background)
                 : neutralInk(background));
             const drawnLines: NoteSegment[] = [];
             for (const outline of outlines) {
                 ink.svg.append(
                     svg('path', {
-                        d: outline.d, fill: 'none', stroke: background, 'stroke-width': (ENCLOSURE_STROKE + 2) * scale,
+                        d: outline.d, fill: 'none', stroke: house?.haloColor ?? background, 'stroke-width': (strokeWidth + (house?.haloWidth ?? 2)) * scale,
                         'stroke-linejoin': 'round', 'stroke-opacity': 0.85, 'data-flint-enclosure-halo': name,
                     }),
                     svg('path', {
-                        d: outline.d, fill: 'none', stroke: colour, 'stroke-width': ENCLOSURE_STROKE * scale,
+                        d: outline.d, fill: 'none', stroke: colour, 'stroke-width': strokeWidth * scale,
                         'stroke-linejoin': 'round', 'data-flint-enclosure': name,
                     }),
                 );

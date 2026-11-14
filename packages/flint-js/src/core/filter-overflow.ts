@@ -208,11 +208,12 @@ export function applyCategoryViewports(
     viewports: OverflowResult['viewports'],
     starts: Partial<Record<'x' | 'y', number>> = {},
 ): any[] {
+    // The compile reads a category as text (a Year of 1880 becomes "1880"); the rows keep theirs.
     const windows = viewports.map((viewport) => ({
         field: viewport.field,
-        values: new Set(resolveCategoryViewport(viewport, starts[viewport.channel]).values),
+        values: new Set(resolveCategoryViewport(viewport, starts[viewport.channel]).values.map(String)),
     }));
-    return data.filter((row) => windows.every((window) => window.values.has(row[window.field])));
+    return data.filter((row) => windows.every((window) => window.values.has(String(row[window.field]))));
 }
 
 // ---------------------------------------------------------------------------

@@ -133,4 +133,10 @@ describe('overflow category selection', () => {
     expect(applyCategoryViewports(data, result.viewports, { x: 1 }))
       .toEqual([data[1], data[2], data[3]]);
   });
+
+  it('windows rows whose numeric categories the rail holds as text', () => {
+    const rows = [1880, 1881, 1882].map((Year) => ({ Year, Anomaly: 0 }));
+    const viewport = { channel: 'x' as const, field: 'Year', orderedValues: ['1880', '1881', '1882'], visibleCount: 2, totalCount: 3 };
+    expect(applyCategoryViewports(rows, [viewport], { x: 1 })).toEqual([rows[1], rows[2]]);
+  });
 });

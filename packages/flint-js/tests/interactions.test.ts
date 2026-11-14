@@ -111,7 +111,8 @@ import {
     targetFeedbackEntries,
     targetFeedbackPoint,
 } from '../src/vegalite/interactions/presentation/target-feedback-overlay';
-import { inspectGuideLine, inspectGuideValueLabelPosition } from '../src/vegalite/interactions/presentation/inspect-guide-overlay';
+import { inspectGuideLine, inspectGuidePanels, inspectGuideValueLabelPosition, inspectValuePanel } from '../src/vegalite/interactions/presentation/inspect-guide-overlay';
+import { regionPanelBoxes } from '../src/vegalite/interactions/presentation/markup-overlay';
 import {
     annotationFacingEdges,
     annotationLeaderPorts,
@@ -2659,6 +2660,34 @@ describe('assisted, keyboard, and lasso acquisition', () => {
 
         expect(facetPlotBounds(view, { x: 0, y: 0, width: 200, height: 180 })).toEqual({
             x: 0, y: 0, width: 170, height: 120,
+        });
+    });
+
+    describe('overlays on facet panels', () => {
+        // Two rows stacked with a 30 px gap, and three columns side by side with 20 px gaps.
+        const rows = [{ x: 0, y: 0, width: 200, height: 100 }, { x: 0, y: 130, width: 200, height: 100 }];
+        const columns = [0, 1, 2].map((index) => ({ x: index * 120, y: 0, width: 100, height: 150 }));
+
+        it('draws an index guide in each panel it crosses, not through the gaps', () => {
+            expect(inspectGuidePanels(rows, 'x', 60)).toEqual(rows);
+            expect(inspectGuidePanels(columns, 'x', 150)).toEqual([columns[1]]);
+            // Snapped into a gap, it keeps to the nearest panel.
+            expect(inspectGuidePanels(columns, 'x', 104)).toEqual([columns[0]]);
+        });
+
+        it('draws a value rule in the panel it was read in', () => {
+            expect(inspectValuePanel(rows, 'x', 60, 170)).toEqual(rows[1]);
+            expect(inspectValuePanel(columns, 'x', 150, 40)).toEqual(columns[1]);
+        });
+
+        it('shades a region in every panel, from each panel corner and cut at it', () => {
+            expect(regionPanelBoxes({ x: [20, 500] }, rows).map(({ shaded }) => shaded)).toEqual([
+                { x: 20, y: 0, width: 180, height: 100 },
+                { x: 20, y: 130, width: 180, height: 100 },
+            ]);
+            expect(regionPanelBoxes({ y: [50, 80] }, columns).map(({ shaded }) => shaded)).toEqual(
+                columns.map((panel) => ({ x: panel.x, y: 50, width: 100, height: 30 })),
+            );
         });
     });
 

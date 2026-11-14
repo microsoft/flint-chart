@@ -21,7 +21,7 @@ other backends leave `interaction_spec` and updates untouched.
 | The request says | You produce | Section |
 | --- | --- | --- |
 | A gesture or a behaviour on the chart: "highlight on click", "zoom", "brush a period", "make it interactive", "add behaviour to this chart". | One `interaction_spec`: `{ "interactions": [ ... ] }`, presets only. | Add interactions to the chart |
-| A chart that makes a point: notes on marks, a shaded period, an outlined group, emphasis, a reference line, drawn with the chart from the start. | `updates` beside the input (or inside it, as `input.updates`, for one self-contained spec): ChartUpdate layers, no `interaction_spec`. | Update the chart |
+| The user asks for marks on a new chart: notes on marks, a shaded period, an outlined group, emphasis, a reference line, drawn with the chart from the start. | `updates` beside the input (or inside it, as `input.updates`, for one self-contained spec): ChartUpdate layers, no `interaction_spec`. | Update the chart |
 | A change to a chart that is already on screen, from outside: "point out Japan", "frame 2010 to 2020", "note this value", "reorder by value", an agent answering a user with the chart. | One `ChartUpdate`: `{ "id", "ops": [ ... ] }`. | Update the chart |
 | Code around a chart: "in my app", "on click open the record", "a panel that follows the hover". | TypeScript against `flint-chart/interactive`: mount, presets as factories, `onChange`, `dispatch`. | Use Flint in an application |
 | Code across charts or over time: "link these two charts", "a table that follows the selection", "play the years". | `linkCharts` or `useLinkedCharts`; `dispatch` on a timer. On an MCP board, `link_spec` instead (board skill, "Step 5 — connect them"). | Link charts |
@@ -55,76 +55,70 @@ other backends leave `interaction_spec` and updates untouched.
 
 ## Add interactions to the chart
 
-### Step 1 — read the request and the chart
+### Step 1 — decide whether the chart needs behaviour
 
-Three things in the request decide the entries, read in this order:
+A mounted chart already reads each mark's values in a tooltip on hover.
+Behaviour goes on top of that only for a reason:
 
-1. **What the user named.** A gesture or a preset in their words: "brush a
-   period", "zoom", "toggle the legend", "highlight on click". Each is one job.
-2. **The goal they stated.** "Explore", "compare the regions", "find
-   outliers", "present this", "a control in my app". A goal is the set of
-   questions the reader will ask of this chart; each question is one job.
-3. **Nothing named**, only "interactive", a live view, a dashboard. The chart
-   and the data say what the reader can do with it.
+1. **The user asks for it**, by naming a gesture ("brush a period", "zoom",
+   "toggle the legend") or by describing what the chart should do ("click a
+   line so it stands out", "slide along the years"). "Make it interactive" is
+   an ask with nothing named.
+2. **The chart works with other charts**: a dashboard, a board, an overview
+   and its detail. Behaviour is what connects the views.
+3. **The data needs it to be read**: more detail than the chart can show at
+   its size, a long dense series or a crowded cluster the reader will want to
+   see closer. Shaping the chart itself (an aggregate, a scale, a filter) comes
+   first; behaviour is for the detail that shaping cannot show, and it is a way
+   to move closer (`navigate`, `brush-zoom`). Many series on one chart is not
+   this reason: picking them apart (a legend toggle, a hover focus, reading
+   them at one x) waits for the user to ask, and fewer series is a shaping
+   choice.
 
-Then read the chart spec: the chart type, the field on each channel, and the
-shape of the data. What a chart invites a reader to do:
-
-| The chart | Invites |
-| --- | --- |
-| A time series, one or many series | Comparing the series at one x; focusing a period; hiding a series when a colour field is bound; moving along the series when it is long. |
-| A scatter or a dense point chart | Focusing a cluster; moving closer; hiding a series when a colour field is bound. |
-| A bar, lollipop, or other category chart | Singling out a category; ranking by hand; hiding a series when a colour field is bound. |
-| A pie, donut, rose, or radar | Singling out a sector; focusing adjacent sectors. |
-| A heatmap or a calendar | Singling out a cell; reading a whole row or column. |
-| A map | Singling out a region; moving closer. |
-| A chart that is a control in an app | A click the app reads as a selection; a stronger gesture the app reads as an activation. |
-| A chart read without a pointer | Walking the chart from the keyboard. |
+Otherwise the chart stays as drawn. A question about the data is answered by
+the chart itself, and a chart shown in a live view has asked for nothing.
 
 ### Step 2 — pick presets
 
-Before any entry, a mounted chart already shows a tooltip with the mark's
-values on hover and nothing else. An entry adds one behaviour.
+Each entry does a job the plain chart and its tooltip do not do, and fits what
+this chart draws. The map says what each preset is for. A named gesture takes
+the preset of that gesture; a described need, or a reason from Step 1, takes
+the preset whose purpose meets it on this chart. Take one preset per job, and
+as few jobs as the reason holds: one or two entries for most charts, none
+added to round out a set.
 
-Take one row of the map per job. A named gesture takes the row whose
-"Gesture" is that gesture. A question takes the row whose "Answers" is that
-question, on a chart whose "Needs" it offers; a broad goal takes two or three
-rows, the ones the chart invites most. When nothing is named, the rows the
-chart invites, two or three. A row that answers no job on the request stays
-out.
-
-| Preset | Gesture | Answers | Needs | Default reset |
+| Preset | Gesture | What it is for | Needs | Default reset |
 | --- | --- | --- | --- | --- |
 | **Single one thing out** | | | | |
-| `click-highlight` | Clicks a mark, a legend item, or an axis label; it stays emphasised and the rest mute. Shift-click adds. | Which mark, series, or category is this one? | elements | click-none, escape |
-| `click-group-focus` | Clicks a mark; every mark in its group stays emphasised. `groupBy` names the group field. | Which marks belong with this one? | elements | click-none, escape |
-| `hover-group-focus` | Hovers a mark; its group stands out until the pointer leaves. `groupBy` names the group field; `emphasis` is `"auto"` (a line widens and the rest stay as drawn; points, bars, and slices dim the rest), `"highlight"`, or `"spotlight"`. | Which marks belong with this one, at a glance? | elements | none |
-| `axis-highlight` | Clicks (or with `event: "hover"`, hovers) a discrete axis label; that category's marks emphasise. | Which marks share this row or column? | discrete axis | click-none, escape |
+| `click-highlight` | Clicks a mark, a legend item, or an axis label; it stays emphasised and the rest mute. Shift-click adds. | Keeps one mark, series, or category in focus against the rest while the reader looks at it; in an app, the selection the app reads. | elements | click-none, escape |
+| `click-group-focus` | Clicks a mark; every mark in its group stays emphasised. `groupBy` names the group field. | Follows one group (a country's line, a species' points) across the chart from any of its marks. | elements | click-none, escape |
+| `hover-group-focus` | Hovers a mark; its group stands out until the pointer leaves. `groupBy` names the group field; `emphasis` is `"auto"` (a line widens and the rest stay as drawn; points, bars, and slices dim the rest), `"highlight"`, or `"spotlight"`. | Picks one group out of many overlapping ones at a glance, without a click. | elements | none |
+| `axis-highlight` | Clicks (or with `event: "hover"`, hovers) a discrete axis label; that category's marks emphasise. | Picks a whole row or column, a category or a month, through its axis label. | discrete axis | click-none, escape |
 | **Read values** | | | | |
-| `inspect` | Moves over the plot; a guide follows the pointer and the nearest mark on the chosen axes reads out. `mode` picks the axes and a comparison (`"x>"` reads every mark past the pointer). | What is at this x, this y, or beyond it? | elements | none |
-| `inspect-index` | Moves along the index axis; every series reads out at that position on one guide, each value labelled in its series colour and the position named at the axis. `show: "single"` reads one series and switches it through the legend; `seriesBy` names the series field when the chart draws one series at a time; `displayValue: false` keeps the guides and drops the labels. | What does each series hold at this point? | index axis | escape |
+| `inspect` | Moves over the plot; a guide follows the pointer and the nearest mark on the chosen axes reads out. `mode` picks the axes and a comparison (`"x>"` reads every mark past the pointer). | Reads exact positions on guides: a crosshair on one or both axes, or every mark past a threshold. One mark's values are already in the tooltip. | elements | none |
+| `inspect-index` | Moves along the index axis; every series reads out at that position on one guide, each value labelled in its series colour and the position named at the axis. `show: "single"` reads one series and switches it through the legend; `seriesBy` names the series field when the chart draws one series at a time; `displayValue: false` keeps the guides and drops the labels. | Reads several series at the same position side by side, on one guide. With one series it repeats the tooltip. | index axis | escape |
 | **Focus a region** | | | | |
-| `select` | Drags a rectangle; the marks inside emphasise. `mode: "stateful"` keeps the rectangle on screen to move and resize. | Which marks lie in this area? | elements, cartesian region | click-none, escape |
-| `lasso-select` | Draws a freehand region; the marks inside emphasise. | Which marks lie in this irregular cluster? | elements, cartesian region | click-none, escape |
-| `brush-x`, `brush-y` | Drags an interval along one axis; the marks in it emphasise. `mode: "stateful"` keeps the interval on screen to move and resize. On a polar chart the x brush is a sector. | Which marks fall in this period or this range? | elements, cartesian region | click-none, escape |
-| `brush-angle` | Drags an angular sector on a pie, donut, rose, or radar; the slices in it emphasise. | Which adjacent slices make up this share? | elements, angular region | click-none, escape |
-| `linked-brush` | Drags a region; the groups inside emphasise in every chart that mounts the same preset. `groupBy` names the shared field; `mode: 'stateful'` keeps the rectangle on screen to move or resize. | Where are these groups in the other charts? | elements, cartesian region | click-none, escape |
+| `select` | Drags a rectangle; the marks inside emphasise. `mode: "stateful"` keeps the rectangle on screen to move and resize. | Picks out the marks in an area of a two-dimensional spread, to see which they are. | elements, cartesian region | click-none, escape |
+| `lasso-select` | Draws a freehand region; the marks inside emphasise. | Picks out an irregular cluster that a rectangle would not fit. | elements, cartesian region | click-none, escape |
+| `brush-x`, `brush-y` | Drags an interval along one axis; the marks in it emphasise. `mode: "stateful"` keeps the interval on screen to move and resize. On a polar chart the x brush is a sector. | Marks a period or a value range, to see what falls in it. | elements, cartesian region | click-none, escape |
+| `brush-angle` | Drags an angular sector on a pie, donut, rose, or radar; the slices in it emphasise. | Takes adjacent slices of a part-to-whole chart together. | elements, angular region | click-none, escape |
+| `linked-brush` | Drags a region; the groups inside emphasise in every chart that mounts the same preset. `groupBy` names the shared field; `mode: 'stateful'` keeps the rectangle on screen to move or resize. | Connects charts: groups picked in one show in every chart that shares the field. | elements, cartesian region | click-none, escape |
 | **Move the view** | | | | |
-| `navigate` | Drags to pan; wheels or pinches to zoom a continuous axis. `axes` limits it; `pan: false` leaves the plot drag free. On a map it moves the projection; on a globe (a world Choropleth with `projection: "orthographic"`) a drag turns the sphere and the zoom stays centred. On a map, `geometry.domain.focus` names the region at the centre. | What is in this part of the range, closer? | navigation | double-click |
-| `brush-zoom` | Drags a rectangle; the chart flies into it. | What is in this box, closer? | navigation | double-click, escape |
+| `navigate` | Drags to pan; wheels or pinches to zoom a continuous axis. `axes` limits it; `pan: false` leaves the plot drag free. On a map it moves the projection; on a globe (a world Choropleth with `projection: "orthographic"`) a drag turns the sphere and the zoom stays centred. On a map, `geometry.domain.focus` names the region at the centre. | Moves through a chart that holds more detail than fits at its size: a long series, a dense cluster, a map. | navigation | double-click |
+| `brush-zoom` | Drags a rectangle; the chart flies into it. | Jumps into one stretch or box of a dense chart, and back out. | navigation | double-click, escape |
 | **Reduce or rearrange** | | | | |
-| `legend-toggle` | Clicks a legend item; its series hides or returns. Hidden series are a setting and survive every reset. | What does the chart look like without this series? | discrete legend | none |
-| `drag-reorder` | Drags a discrete axis label to a new place; the categories reorder. | How do these rank in the order I choose? | reorderable axis | none |
-| `filter-controls` | Picks values in controls beside the chart; the rows that fail are removed, or muted with `mode: "highlight"`. One control per listed field. | What does the chart show for this subset of a field it does not draw? | inline data | none |
+| `legend-toggle` | Clicks a legend item; its series hides or returns. Hidden series are a setting and survive every reset. | Takes series out of view and brings them back, so the rest read without them. | discrete legend | none |
+| `drag-reorder` | Drags a discrete axis label to a new place; the categories reorder. | Lets the reader set the order of the categories. | reorderable axis | none |
+| `filter-controls` | Picks values in controls beside the chart; the rows that fail are removed, or muted with `mode: "highlight"`. One control per listed field. | Switches the chart between subsets of a field it does not draw: a year, a group, a scenario. | inline data | none |
 | **Mark for the reader** | | | | |
-| `click-annotate` | Clicks a mark; a note with its value pins to it. | What is this value, left on the chart? | elements | click-none, escape |
+| `click-annotate` | Clicks a mark; a note with its value pins to it. | Leaves the values of chosen marks written on the chart, where there is room beside them for a note. | elements | click-none, escape |
 | **Hand a gesture to the app** | | | | |
-| `double-activate` | Double-clicks a mark; the mark activates and the host reads it. | Which record should the app open? | elements | click-none, escape |
-| `long-press` | Holds a mark (500 ms); the mark activates. The touch spelling of the same activation. | Which record should the app open, on touch? | elements | click-none, escape |
-| `context-activate` | Right-clicks or long-presses a mark; the host receives a context target and draws its own menu. | What can the app do with this mark? | elements | none |
-| `context-menu` | The reader picks marks and a menu of the app's actions opens beside them; picking one emits `menu-select` with the item's id and the marks. `gesture` picks how: `rectangle` (default), `lasso`, `brush-x`, `brush-y`, `click`, `right-click`, `long-press`. `items` is required: `[{ "id", "label" }]`. One entry; it brings its own selection. | What can the app do with these marks? | elements, cartesian region | click-none, escape |
+| `double-activate` | Double-clicks a mark; the mark activates and the host reads it. | Hands a mark to the app as an action, apart from selecting it. | elements | click-none, escape |
+| `long-press` | Holds a mark (500 ms); the mark activates. The touch spelling of the same activation. | The same hand-off, on touch. | elements | click-none, escape |
+| `context-activate` | Right-clicks or long-presses a mark; the host receives a context target and draws its own menu. | Hands a mark to a menu the app draws. | elements | none |
+| `context-menu` | The reader picks marks and a menu of the app's actions opens beside them; picking one emits `menu-select` with the item's id and the marks. `gesture` picks how: `rectangle` (default), `lasso`, `brush-x`, `brush-y`, `click`, `right-click`, `long-press`. `items` is required: `[{ "id", "label" }]`. One entry; it brings its own selection. | Offers the app's actions on the marks the reader picks, in a menu Flint draws. | elements, cartesian region | click-none, escape |
 | **Read without a pointer** | | | | |
-| `accessible-navigation` | Tabs into the chart and walks titles, axes, legends, facet headers, series, and marks with the arrow keys; Enter goes a level in, and inside a level Tab steps through it before moving on. Each step says what the element is and emphasises its data. Space on a focused element runs the click presets. | What is on this chart, from the keyboard or a screen reader? | elements | none |
+| `accessible-navigation` | Tabs into the chart and walks titles, axes, legends, facet headers, series, and marks with the arrow keys; Enter goes a level in, and inside a level Tab steps through it before moving on. Each step says what the element is and emphasises its data. Space on a focused element runs the click presets. | Makes the chart readable from the keyboard and a screen reader. | elements | none |
 
 Within a family the rows answer neighbouring questions, so one chart takes
 one of them: `inspect` reads the marks near the pointer, `inspect-index` reads
@@ -490,6 +484,69 @@ container.addEventListener('flint-interaction', (e) => {
 
 ## Update the chart
 
+A chart opens clean: the data as drawn, with its title and tooltip. `updates`
+add the agent's own marks to it (notes, emphasis, overlays, a framed range),
+and go on only for one of these reasons. Without one, what the agent wants to
+say goes in its reply.
+
+1. **The user asks for marks on the chart.** They name one ("label the peak",
+   "highlight Japan", "a line at $3", "shade the recession"), or describe a
+   chart that has to tell its point on its own ("for a slide", "explain this
+   to someone who doesn't follow it").
+2. **The user asks about a chart already on screen.** The answer points at
+   the chart: emphasise the rows, note the value, frame the range. The update
+   is the reply.
+3. **A requested interaction needs a starting state.** "Look at one year,
+   then slide along" opens on that year with `set-viewport`.
+4. **A concrete question, pointed at lightly.** See "Muted annotations" below.
+
+#### Muted annotations
+
+A question about particular values (a peak, a value at a date, a difference,
+a crossing, a threshold, which items pass one) may point at its answer
+without being asked. An overview question ("how did it move", "is there a
+relationship") gets none.
+
+- **The title says it; the annotation points.** The answer is in the title
+  (and the reply). On the chart, only what directly answers the question: one
+  mark, two for a difference or a crossing, one span, or one small set.
+- **A label names what it points at.** A few words that still mean something
+  on their own: the value and what identifies it ("$5.01 · Jun 13, 2022",
+  "China 26, Russia 23"). Not a bare tag ("Peak", "Max"), not a sentence, not
+  a repeat of the title or of a value label the chart already prints.
+- **Room decides the form, not the chart type.** Where there is open space
+  beside the answer, a short label. Where marks fill the space round it (a
+  full grid of cells, a dense cluster, a bar that already prints its value),
+  the highlight alone: `annotate-text` with `text: ""` draws the ring or
+  outline and no caption. Many answers (more than three or four) get emphasis
+  with no labels, and the list goes in the reply.
+- **Light forms.** A mark: `annotate-text` with the default `highlight:
+  'light'`, or `'strong'` for an outline. A span or band: one
+  `annotate-region` under the marks, low opacity, a caption only when the
+  title does not give the range and the plot has room above it. A small set:
+  `set-style` with `state: 'emphasized'`, `emphasis: 'light'`, or an outline
+  per member. A clear cluster: one `annotate-enclosure`, no caption when the
+  legend names it. A value the question names: a plain `set-overlay` rule.
+- **The answer is in view.** A pointer on a mark the reader cannot see is
+  nothing. On a chart that scrolls or opens zoomed (a long heatmap, a wide
+  calendar), narrow the data to the stretch that holds the answer, or open
+  the viewport on it.
+- **Not muted:** notes that tell a story, several shaded episodes, context the
+  question did not ask about, `strong` or `exclusive` emphasis. Those need an
+  ask (reason 1).
+
+Text and paint come from the theme: notes take its annotation type, rings,
+outlines and enclosures its `interaction.highlight`. Set them per update
+(`value.style`, `value.highlightStyle`) only when the user asks.
+
+Interactions and updates write the same layers: a gesture's handler returns
+an update, and an agent writes one directly. A mark on the chart comes from
+either side. The reader leaves it with a gesture (`click-annotate` pins a
+value, a brush emphasises a period); the agent leaves it in reply to the
+reader, to a question or to a selection it reads from the state. When the
+request is for something the reader can do themselves, give them the gesture.
+Read the state before writing, so an update does not undo what the reader set.
+
 ### Step 1 — read the state
 
 A host hands the model the chart input and the state, as text or as data. The
@@ -529,9 +586,9 @@ of thing:
 | Op | It is for | Effect | Shape | Needs |
 | --- | --- | --- | --- | --- |
 | `set-style` | The marks the chart already draws: emphasize some, fade some, hide some, recolour some. A highlight is this op with `state: 'emphasized'`. | Emphasize the targets and recede the rest; recolour; fade; hide. `emphasis` sets how far the rest recede: `'light'` (default; they stay readable), `'strong'`, `'exclusive'` (only the targets read). | `{ op, targets: UpdateTarget[], value: StyleSpec }` | marks |
-| `annotate-text` | One mark, a stretch of a line or area, a leg of a map route (`visual: { kind: 'path' }` on the row it leaves from), a slice or a region that should carry a note. | Set a caption beside it: plain words haloed in the page, a leader only where needed, never a card; `null` clears it. `highlight` marks what it names: `'none'`, `'light'` (default), `'strong'`, `'exclusive'` (the rest recede, so no separate `set-style` emphasis is needed). For a boxed callout use `set-overlay` or `set-freeform-overlay`. `set-annotation` is its deprecated name; do not write it. | `{ op, target: UpdateTarget, value: { text, anchor?: 'segment' \| 'point', highlight? } \| null }` | one resolved element |
+| `annotate-text` | One mark, a stretch of a line or area, a leg of a map route (`visual: { kind: 'path' }` on the row it leaves from), a slice or a region that should carry a note. | Set a caption beside it: plain words haloed in the page, a leader only where needed, never a card; `null` clears it. `highlight` marks what it names: `'none'`, `'light'` (default), `'strong'`, `'exclusive'` (the rest recede, so no separate `set-style` emphasis is needed). The caption takes the theme's annotation type (else the axis labels' face a size up); `style` sets one note's `fontSize`, `fontWeight` or `color`; `highlightStyle: { color, width }` its ring or outline, over the theme's `interaction.highlight`. `text: ""` draws the highlight alone (an outline or ring, no caption); with `text` omitted the chart words the note itself. For a boxed callout use `set-overlay` or `set-freeform-overlay`. `set-annotation` is its deprecated name; do not write it. | `{ op, target: UpdateTarget, value: { text, anchor?: 'segment' \| 'point', highlight?, style?: { fontSize?, fontWeight?, color? }, highlightStyle?: { color?, width? } } \| null }` | one resolved element |
 | `annotate-region` | A stretch of the plot: a period, a band of values, a box, a run of categories. | Shade it, with an optional caption set on it; `null` clears it. | `{ op, name, value: { x?: [lo, hi] \| categories, y?: [lo, hi] \| categories, text?, color?, opacity?, layer?: 'under' \| 'over', placement?: 'top' \| 'bottom' \| 'left' \| 'right' \| 'center' \| 'above' \| 'below' } \| null }`; on a map `longitude: [west, east], latitude: [south, north]` in place of x and y | x or y scales, or a map (not a pie or radar) |
-| `annotate-enclosure` | A group of marks that belong together: a cluster, a run of bars, a block of cells. | Outline each target group; one optional caption shared by them, with leaders to two or three outlines; `null` clears it. | `{ op, name, value: { targets: UpdateTarget[], text?, shape?: 'hull' \| 'rect' \| 'ellipse' \| 'circle', connect?: 'auto' \| 'all' \| 'none', color? } \| null }` | marks |
+| `annotate-enclosure` | A group of marks that belong together: a cluster, a run of bars, a block of cells. | Outline each target group; one optional caption shared by them, with leaders to two or three outlines; `null` clears it. | `{ op, name, value: { targets: UpdateTarget[], text?, shape?: 'hull' \| 'rect' \| 'ellipse' \| 'circle', connect?: 'auto' \| 'all' \| 'none', color?, width? } \| null }` | marks |
 | `set-viewport` | The range or region the chart should frame. | Frame a continuous domain. | `{ op, axes: 'x' \| 'y' \| 'xy', value: { x?: [lo, hi], y?: [lo, hi] } }`; on a multi-level map `value: { region: { key } }` | `navigate` or `brush-zoom` mounted on that axis |
 | `set-order` | The order of the categories on a discrete axis. | Reorder the axis; list every category in the order wanted. | `{ op, scope: 'category', field, values: unknown[] }` | `drag-reorder` mounted on that axis |
 | `set-overlay` | Marks the chart does not draw: a reference line, a threshold band, a forecast, a sketch of rows. | Draw new rows through the plot's own scales. | `{ op, name, value: { mark, data: { values }, encodings: { x?, y?, x2?, y2?, order?, color?, text? }, role, interactive?, projectable?, style? } \| null }`; on a map `longitude`, `latitude` (and `longitude2`, `latitude2` for a rule or rect) in place of x and y | x and y scales, or a map |
@@ -1003,10 +1060,11 @@ User: "Help me understand how these three regions moved." The chart:
 }
 ```
 
-The reader compares the series at one month, hides a region, and points at a
-period. `inspect-index` reads every series at one month; `legend-toggle` has a
-colour field to work with; `brush-x` focuses a period. `inspect-index` with
-`show: "all"` asks for no legend click, so it sits beside `legend-toggle`.
+The user asks to understand how three regions moved, so the reader will
+compare them over time. `inspect-index` reads all three at one month;
+`legend-toggle` has a colour field to work with; `brush-x` focuses a period.
+`inspect-index` with `show: "all"` asks for no legend click, so it sits beside
+`legend-toggle`.
 
 ```json
 {
@@ -1104,8 +1162,8 @@ plot drag otherwise.
 For an `interaction_spec`:
 
 1. It parses as strict JSON and is a bare object with `interactions`.
-2. Every entry answers a job from Step 1: a gesture the user named, a
-   question their goal raises, or something the chart invites.
+2. Every entry has a reason from Step 1 (the user asked, the chart is linked,
+   or the data needs it to be read) and a job the tooltip does not do.
 3. Every `type` is in the chart type's list from `list_chart_types`, and every
    option is under `options` with `id` on the entry.
 4. `groupBy` and `seriesBy` are present where required, and name bound fields.

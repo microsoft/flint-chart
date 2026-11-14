@@ -14,6 +14,8 @@ export type {
     AnnotationConnection,
     AnnotationConnectorAnchor,
     AnnotationSpec,
+    NoteTextStyle,
+    HighlightStyle,
     ChartUpdate,
     ChartUpdateOp,
     ChartOverlaySpec,

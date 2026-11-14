@@ -4,6 +4,8 @@ import { INTERACTION_PRESET_TYPES, THEME_PRESETS } from 'flint-chart';
 import { ThemeSwatches } from '../components/ThemeSwatches';
 import { CHART_CATEGORIES } from '../shared/chart-categories';
 import { DevDesign } from '../routes/DevDesign';
+import { GitHubIcon } from '../components/SiteShell';
+import { GITHUB_REPO } from '../shared/theme';
 import { CountryTableStage } from '../playground/ExternalToChartLab';
 import { GlobeWarmingStage } from '../playground/GlobeWarmingStage';
 import { DiverseChartWallIllustration } from '../playground/DiverseChartWallIllustration';
@@ -25,7 +27,7 @@ import {
 import {
   Cell, ROWS, type SlideDef,
 } from './slides';
-import { AUTHOR, BROKEN, DEEP_DIVE, DETAILED, IMAGINE, TANGLE, TYPE_GROUPS } from './sketches';
+import { AUTHOR, BROKEN, CLOSEUP_TOP, DEEP_DIVE, TIMELINE, DETAILED, IMAGINE, TANGLE, TYPE_GROUPS } from './sketches';
 
 /**
  * The IEEE VIS 2026 talk for the Flint paper. It reuses the general deck's slides and parts, with less
@@ -79,7 +81,7 @@ const DEEP_DIVE_INPUT = textRows(`{
   "semantic_types": {
     "period": "YearMonth",
     "game": "Category",
-    "newUsers": "Profit"
+    "newUsers": "Delta"
   },
   "chart_spec": {
     "chartType": "Heatmap",
@@ -145,9 +147,9 @@ const CHART_TYPE_COUNT = new Set(CHART_CATEGORIES.flatMap((category) => category
 const CapabilityTimeline = () => (
   <div className="talk-body column">
     <div className="talk-fit">
-      <div className="talk-frame talk-scene" style={{ aspectRatio: '1440 / 600' }}>
+      <div className="talk-frame talk-scene" style={{ aspectRatio: `${TIMELINE.w} / ${TIMELINE.h}` }}>
         <Sketch name="flintTimeline" />
-        <div className="talk-slot talk-capability-catalog" style={slot({ x: 30, y: 300, w: 1380, h: 298 }, { w: 1440, h: 600 })}>
+        <div className="talk-slot talk-capability-catalog" style={slot(TIMELINE.catalog, TIMELINE)}>
           <section className="talk-capability-block" aria-label="Supported chart types">
             <h3>Chart types</h3>
             <p className="talk-capability-tease">Presets + visual transformations (expressiveness)</p>
@@ -173,11 +175,11 @@ const CapabilityTimeline = () => (
             </ul>
           </section>
         </div>
+        <a className="talk-slot talk-collab-callout" href={GITHUB_REPO} target="_blank" rel="noreferrer" style={slot(TIMELINE.callout, TIMELINE)}>
+          <GitHubIcon size={26} /><span>Subscribe <span className="talk-collab-repo">github.com/microsoft/flint-chart</span> &amp; let&apos;s collaborate!</span>
+        </a>
       </div>
     </div>
-    <p className="talk-subscribe">
-      Subscribe to our research to collaborate &amp; know what&apos;s next! <a href="https://github.com/microsoft/flint-chart">github.com/microsoft/flint-chart</a>
-    </p>
   </div>
 );
 
@@ -250,7 +252,7 @@ const CompilerCloseupScene = ({ stage }: { stage: 'resolve' | 'layout' | 'backen
     <div className="talk-fit">
       <div className="talk-frame talk-scene" style={{ aspectRatio: `${DEEP_DIVE.w} / ${DEEP_DIVE.h}` }}>
         <Sketch name={{ resolve: 'resolveConfigCloseup', layout: 'layoutOptimizationCloseup', backend: 'backendGenerationCloseup' }[stage]} />
-        <div className="talk-slot talk-deep-dive-code" style={slot({ ...DEEP_DIVE.input, y: 112 }, DEEP_DIVE)}>
+        <div className="talk-slot talk-deep-dive-code" style={slot({ ...DEEP_DIVE.input, y: CLOSEUP_TOP, h: DEEP_DIVE.h - CLOSEUP_TOP }, DEEP_DIVE)}>
           <Code rows={DEEP_DIVE_INPUT} max={22} min={18} lineHeight={1.6} />
         </div>
         {stage === 'backend' && DEEP_DIVE.backends.map((output) => <Fragment key={output.backend}>
@@ -311,6 +313,7 @@ const titleSlide: SlideDef = {
   id: 'title', section: 'Opening', kind: 'title', render: () => (<>
     <div className="talk-title-head">
       <h1 className="talk-title-logo"><img src={flintLogo} alt="" aria-hidden="true" /><span className="talk-title-text">{VIS_2026.title}</span></h1>
+      <a className="talk-title-link" href={GITHUB_REPO} target="_blank" rel="noreferrer"><GitHubIcon size={30} />github.com/microsoft/flint-chart</a>
       <span className="talk-title-rule" aria-hidden="true" />
       <Authors />
     </div>
@@ -320,7 +323,7 @@ const titleSlide: SlideDef = {
 
 const whySlide: SlideDef = {
   id: 'why', render: () => (<>
-    <h2>Trade-off: simplicity vs quality</h2>
+    <h2>Trade-off: simplicity vs quality <span className="talk-h2-note">(esp. for AI agents)</span></h2>
     <div className="talk-body column"><div className="talk-fit"><Sketch name="whyFlint" /></div></div>
   </>),
 };
@@ -328,7 +331,7 @@ const whySlide: SlideDef = {
 /** The Flint spec taken apart, as a poster: shown in the talk and again at its close. */
 const designSlide: SlideDef = {
   id: 'design', kind: 'full', render: () => (<>
-    <h2 className="talk-sr">A Flint spec: data, chart, interaction, and theme</h2>
+    <h2 className="talk-sr">Flint Demo</h2>
     <div className="talk-body column talk-poster"><DevDesign embedded /></div>
   </>),
 };
@@ -383,7 +386,7 @@ export const VIS_2026_SLIDES: SlideDef[] = [
           <div className="talk-slot" style={slot(BROKEN.chart, BROKEN)}>
             <img className="talk-baked-chart" src={brokenAnnotatedChart} width={950} height={320} alt="Squashed heatmap with numbered red circles marking the layout, temporal-axis, and color-scale problems." />
           </div>
-          <div className="talk-slot" style={slot(BROKEN.flaws, BROKEN)}><FlawList flaws={RAW_FLAWS} /></div>
+          <div className="talk-slot" style={slot(BROKEN.flaws, BROKEN)}><FlawList flaws={RAW_FLAWS} lead="Smart defaults miss:" /></div>
           <div className="talk-overlay"><Sketch name="brokenThinker" /></div>
         </div>
       </div>
