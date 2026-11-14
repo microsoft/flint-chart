@@ -355,6 +355,7 @@ function boxplotDodge(
 }
 
 export const boxplotDef: ChartTemplateDef = {
+    additionalPropertyKeys: ['nestedSnapThreshold'],
     chart: "Boxplot",
     template: { mark: "boxplot", encoding: {} },
     channels: ["x", "y", "color", "opacity", "column", "row"],

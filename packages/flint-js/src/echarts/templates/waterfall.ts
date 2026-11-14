@@ -21,6 +21,7 @@ function areCategoriesNumeric(cats: string[]): boolean {
 }
 
 export const ecWaterfallChartDef: ChartTemplateDef = {
+    additionalPropertyKeys: ['totals'],
     chart: 'Waterfall Chart',
     template: { mark: 'bar', encoding: {} },
     channels: ['x', 'y', 'color', 'column', 'row'],

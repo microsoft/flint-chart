@@ -92,6 +92,7 @@ function alignBounds(
 }
 
 export const ecRangeAreaChartDef: ChartTemplateDef = {
+    additionalPropertyKeys: ['opacity'],
     chart: 'Range Area Chart',
     template: { mark: 'area', encoding: {} },
     channels: ['x', 'y', 'y2', 'color', 'column', 'row'],

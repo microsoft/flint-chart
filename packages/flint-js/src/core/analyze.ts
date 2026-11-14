@@ -2,10 +2,13 @@ import type { ChartAssemblyInput, ChartEncoding, ChartTemplateDef, ChartWarning,
 import { withEncodingColorAnnotations } from './color-controls';
 import { applyAggregation, resolveImplicitAggregation } from './aggregate';
 import { applyEncodingOverrides } from './encoding-overrides';
-import { applyTransform, TRANSFORM_ARRANGE_KEY, TRANSFORM_CHART_TYPE_KEY } from './pivot';
+import { applyTransform } from './pivot';
+import { validateUnknownInputKeys } from './validate-input-keys';
 import { convertTemporalData, repairEncodingSorts, resolveChannelSemantics, resolveChannelTypes } from './resolve-semantics';
 import { computeZeroDecision } from './semantic-types';
 import { normalizeStaticSeries } from './static-series';
+
+export { analysisReadsProperty } from './analysis-properties';
 
 /** What a compile learns from the data and the chart spec, before any room or theme is read. */
 export interface ChartAnalysis {
@@ -27,21 +30,6 @@ export interface ChartAnalysis {
     warnings: ChartWarning[];
     /** Rows shaped as the analysis shaped its own: static series folded, aggregated, dates converted. */
     shapeRows(rows: readonly Record<string, unknown>[]): any[];
-}
-
-/** Chart properties {@link analyzeChart} reads on every chart type. */
-const ANALYSIS_PROPERTIES = new Set([
-    'xAxisType', 'yAxisType',
-    'includeZero_x', 'includeZero_y',
-    'logScale_x', 'logScale_y',
-    TRANSFORM_CHART_TYPE_KEY, TRANSFORM_ARRANGE_KEY, 'pivot',
-]);
-
-/** Whether {@link analyzeChart} reads this chart property: it decides how the data is read, not how the chart looks. */
-export function analysisReadsProperty(template: ChartTemplateDef, key: string): boolean {
-    return ANALYSIS_PROPERTIES.has(key)
-        || key === template.pivot?.key
-        || (template.encodingActions ?? []).some((action) => action.key === key);
 }
 
 export function analyzeChart(
@@ -122,6 +110,9 @@ export function analyzeChart(
         const swapped = getTemplateDef(transformed.chartType);
         if (swapped) template = swapped;
     }
+    warnings.push(...validateUnknownInputKeys(
+        [authoredTemplate, template], input.chart_spec.chartProperties, input.options,
+    ));
     const composedEncodings = applyEncodingOverrides(template, transformed.encodings, chartProperties);
 
     // Template-level encoding normalization (e.g. Sparkline remaps its series

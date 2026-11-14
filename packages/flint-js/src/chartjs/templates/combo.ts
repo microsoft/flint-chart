@@ -48,6 +48,7 @@ export const cjsComboChartDef: ChartTemplateDef = {
     template: { mark: 'bar', encoding: {} },
     channels: ['x', 'y', 'column', 'row'],
     markCognitiveChannel: 'length',
+    additionalPropertyKeys: ['lineField'],
     declareLayoutMode: (cs, table) => {
         const result = detectBandedAxisFromSemantics(cs, table, { preferAxis: 'x' });
         return {
