@@ -189,10 +189,22 @@ export function repairEncodingSorts<T>(
 ): { encodings: Record<string, T>; warnings: ChartWarning[] } {
     const warnings: ChartWarning[] = [];
     if (!encodings || typeof encodings !== 'object') return { encodings, warnings };
-    const dataFields = new Set(data.flatMap(row => row && typeof row === 'object' ? Object.keys(row) : []));
+    const dataFields = new Set<string>();
+    let fieldsCollected = false;
     const repair = (channel: string, entry: unknown): unknown => {
         if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return entry;
         const encoding = entry as Record<string, unknown>;
+        const sortByValue = encoding.sortBy;
+        if (!fieldsCollected && typeof sortByValue === 'string' && sortByValue.trim()
+            && sortByValue !== 'x' && sortByValue !== 'y' && sortByValue !== 'color') {
+            for (const row of data) {
+                if (row && typeof row === 'object') {
+                    const fields = Object.keys(row);
+                    for (let index = 0; index < fields.length; index++) dataFields.add(fields[index]);
+                }
+            }
+            fieldsCollected = true;
+        }
         const { sortBy, sortOrder, issues } = inspectEncodingSort(encoding, channel, encodings, dataFields, options);
         if (issues.length === 0) return entry;
         for (const issue of issues) {
