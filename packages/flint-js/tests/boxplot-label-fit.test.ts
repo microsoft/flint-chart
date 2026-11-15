@@ -570,3 +570,29 @@ describe('band label pressure decisions', () => {
     expect(result!.lines[0]).toHaveLength(2);
   });
 });
+
+describe('a distribution reads its values as positions', () => {
+    const rows = [110, 111, 112, 113, 114, 115, 116, 118, 122].flatMap((age, i) => [{ group: i % 2 ? 'Men' : 'Women', age }]);
+    const valueScale = (chartType: string) => {
+        const spec: any = assembleVegaLite({
+            data: { values: rows },
+            semantic_types: { group: 'Category', age: 'Number' },
+            chart_spec: { chartType, encodings: { x: { field: 'group' }, y: { field: 'age' } } },
+        } as any);
+        // A violin's value axis is the measure renamed `value` by its density transform.
+        const find = (node: any): any => ['age', 'value'].includes(node?.encoding?.y?.field) && node.encoding.y.type === 'quantitative'
+            ? node.encoding.y : [...(node?.layer ?? []), ...(node?.spec ? [node.spec] : [])].map(find).find(Boolean);
+        return find(spec)?.scale ?? {};
+    };
+
+    it('fits a boxplot\'s and a violin\'s value axis to the data, far from zero', () => {
+        for (const chartType of ['Boxplot', 'Violin Plot']) {
+            const scale = valueScale(chartType);
+            expect(scale.zero, chartType).toBe(false);
+        }
+    });
+
+    it('keeps zero under a bar of the same measure', () => {
+        expect(valueScale('Bar Chart').zero).not.toBe(false);
+    });
+});

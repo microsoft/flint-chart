@@ -1,0 +1,214 @@
+.odyssey-lab {
+  width: min(100%, 1000px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.odyssey-lab-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 10px 16px;
+  padding: 14px 16px;
+  border: 1px solid #e3e6ea;
+  border-radius: 10px;
+  background: #fafbfc;
+  font-size: 13px;
+}
+
+.odyssey-lab-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: #4a5560;
+}
+
+.odyssey-lab-field > span {
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+
+.odyssey-lab-field select {
+  font: inherit;
+  padding: 4px 6px;
+  border: 1px solid #cfd5db;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.odyssey-lab-toggles {
+  display: flex;
+  gap: 14px;
+  align-items: flex-end;
+  padding-bottom: 4px;
+  color: #4a5560;
+}
+
+.odyssey-lab-toggles label {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+
+.odyssey-lab-swatches {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  color: #4a5560;
+}
+
+.odyssey-lab-swatches label {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.odyssey-lab-swatches input[type='color'] {
+  width: 28px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid #cfd5db;
+  border-radius: 4px;
+  background: none;
+}
+
+.odyssey-lab-palette {
+  display: flex;
+  gap: 2px;
+  height: 6px;
+  margin-top: 2px;
+}
+
+.odyssey-lab-palette i {
+  flex: 1;
+  border-radius: 2px;
+}
+
+.odyssey-lab-spec {
+  border: 1px solid #e3e6ea;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.odyssey-lab-spec header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 14px;
+  background: #f3f5f7;
+  font-size: 13px;
+  font-weight: 600;
+  color: #3c4650;
+}
+
+.odyssey-lab-spec header button {
+  font: inherit;
+  font-weight: 500;
+  padding: 3px 10px;
+  border: 1px solid #cfd5db;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.odyssey-lab-spec pre {
+  margin: 0;
+  padding: 12px 14px;
+  max-height: 520px;
+  overflow: auto;
+  font-size: 12px;
+  line-height: 1.5;
+  background: #fff;
+}
+
+/* A spec or a set of controls folded away under a summary bar. */
+.story-spec summary,
+.story-looks summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 14px;
+  background: #f3f5f7;
+  font-size: 13px;
+  font-weight: 600;
+  color: #3c4650;
+  cursor: pointer;
+  list-style: none;
+}
+
+.story-spec summary::-webkit-details-marker,
+.story-looks summary::-webkit-details-marker {
+  display: none;
+}
+
+.story-spec summary span::before,
+.story-looks summary span::before {
+  content: '▸';
+  display: inline-block;
+  width: 14px;
+  color: #8a949b;
+  transition: transform 120ms ease;
+}
+
+.story-spec[open] summary span::before,
+.story-looks[open] summary span::before {
+  transform: rotate(90deg);
+}
+
+.story-spec summary button {
+  font: inherit;
+  font-weight: 500;
+  padding: 3px 10px;
+  border: 1px solid #cfd5db;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.story-looks {
+  border: 1px solid #e3e6ea;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.story-looks .odyssey-lab-controls {
+  border: 0;
+  border-radius: 0;
+}
+
+/* The page of stories: a contents line, then each story in a section of its own. */
+.greek-stories {
+  width: min(100%, 1000px);
+  display: flex;
+  flex-direction: column;
+  gap: 44px;
+}
+
+.greek-contents {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.greek-story {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  scroll-margin-top: 72px;
+}
+
+.greek-story > header h2 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.greek-story > header p {
+  margin: 4px 0 0;
+  color: #5d6871;
+  font-size: 14px;
+  line-height: 1.5;
+}

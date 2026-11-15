@@ -228,7 +228,9 @@ export function formatValueApprox(value: number, pattern: string | undefined): s
 
     if (type === 's') {
         // SI: bring the mantissa into 1–999 and name the exponent.
-        const exponent = abs === 0 ? 0 : Math.floor(Math.log10(abs) / 3) * 3;
+        let exponent = abs === 0 ? 0 : Math.floor(Math.log10(abs) / 3) * 3;
+        // 999,600 rounds to 1000k; d3 prints it as 1M.
+        if (abs !== 0 && Number((abs / 10 ** exponent).toPrecision(precision ?? 6)) >= 1000) exponent += 3;
         const clamped = Math.max(-24, Math.min(24, exponent));
         const mantissa = abs / 10 ** clamped;
         body = mantissa.toPrecision(precision ?? 6);

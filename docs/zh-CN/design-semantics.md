@@ -360,6 +360,11 @@ interface SemanticAnnotation {
      * Well-known types (Month, DayOfWeek) need not provide this.
      */
     sortOrder?: string[];
+    /**
+     * How a percentage is stored: 'fraction' (0.45 is 45%) or 'percent' (45 is 45%).
+     * Skips representation detection (§3.4).
+     */
+    percentScale?: 'fraction' | 'percent';
 }
 ```
 
@@ -388,7 +393,7 @@ interface SemanticAnnotation {
 
 | Type | Representations | Detection |
 |---|---|---|
-| **Percentage** | 0–1 分数 vs 0–100 整数 | `max(data) ≤ 1` → fractional；否则 whole；或 `intrinsicDomain` |
+| **Percentage** | 0–1 分数 vs 0–100 整数 | `percentScale`；否则能定论的 `intrinsicDomain`；否则 ≥80% 的 `abs(data) ≤ 1` → fractional |
 | **Timestamp** | Unix s、Unix ms、ISO string | Magnitude >1e12 → ms；>1e9 → s；string → parse |
 | **Month / Day** | Numeric vs abbreviated vs full name | Data type + pattern matching |
 | **Boolean** | true/false、0/1、Yes/No | Data type + distinct values |
@@ -401,7 +406,7 @@ interface SemanticAnnotation {
 | Domain | [0, 1] | [0, 100] |
 | Ticks | 0, 0.25, 0.5, 0.75, 1.0 | 0, 25, 50, 75, 100 |
 
-优先级：（1）显式 `intrinsicDomain`，（2）数据检查，（3）保守默认。若至少 80% 的绝对值 ≤1，则将字段视为 fractional。
+优先级：（1）显式 `percentScale`（`'fraction'` 或 `'percent'`），（2）能定论的 `intrinsicDomain`（在 ±1 以内为 fractional；达到 100 为 whole），（3）数据检查，（4）保守默认。若至少 80% 的绝对值 ≤1，则将字段视为 fractional。以分数存储、多数值大于 1 的增长率（2.4 表示 240%）需要 `percentScale: 'fraction'`：仅凭数值会被读作 whole。
 
 ## §3.5 接受字符串或对象
 

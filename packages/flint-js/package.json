@@ -1,6 +1,6 @@
 {
   "name": "flint-chart",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Semantic-level visualization library that compiles data + semantic types for Vega-Lite, ECharts, Chart.js, Plotly, and Excel.",
   "keywords": [
     "visualization",
@@ -80,15 +80,64 @@
       "import": "./dist/interactive/index.js",
       "require": "./dist/interactive/index.cjs"
     },
+    "./interactive/vegalite": {
+      "types": "./dist/interactive/vegalite.d.ts",
+      "import": "./dist/interactive/vegalite.js",
+      "require": "./dist/interactive/vegalite.cjs"
+    },
+    "./interactive/echarts": {
+      "types": "./dist/interactive/echarts.d.ts",
+      "import": "./dist/interactive/echarts.js",
+      "require": "./dist/interactive/echarts.cjs"
+    },
+    "./interactive/chartjs": {
+      "types": "./dist/interactive/chartjs.d.ts",
+      "import": "./dist/interactive/chartjs.js",
+      "require": "./dist/interactive/chartjs.cjs"
+    },
+    "./interactive/plotly": {
+      "types": "./dist/interactive/plotly.d.ts",
+      "import": "./dist/interactive/plotly.js",
+      "require": "./dist/interactive/plotly.cjs"
+    },
     "./render": {
       "types": "./dist/render/index.d.ts",
       "import": "./dist/render/index.js",
       "require": "./dist/render/index.cjs"
     },
+    "./geo": {
+      "types": "./dist/geo/index.d.ts",
+      "import": "./dist/geo/index.js",
+      "require": "./dist/geo/index.cjs"
+    },
+    "./geo/lazy/*": {
+      "types": "./src/geo/lazy/*.d.ts",
+      "default": "./dist/geo/lazy/*.js"
+    },
     "./react": {
       "types": "./dist/react/index.d.ts",
       "import": "./dist/react/index.js",
       "require": "./dist/react/index.cjs"
+    },
+    "./react/vegalite": {
+      "types": "./dist/react/vegalite.d.ts",
+      "import": "./dist/react/vegalite.js",
+      "require": "./dist/react/vegalite.cjs"
+    },
+    "./react/echarts": {
+      "types": "./dist/react/echarts.d.ts",
+      "import": "./dist/react/echarts.js",
+      "require": "./dist/react/echarts.cjs"
+    },
+    "./react/chartjs": {
+      "types": "./dist/react/chartjs.d.ts",
+      "import": "./dist/react/chartjs.js",
+      "require": "./dist/react/chartjs.cjs"
+    },
+    "./react/plotly": {
+      "types": "./dist/react/plotly.d.ts",
+      "import": "./dist/react/plotly.js",
+      "require": "./dist/react/plotly.cjs"
     },
     "./vegalite/interactive": {
       "types": "./dist/vegalite/interactive.d.ts",
@@ -141,42 +190,15 @@
     "release": "npm publish --access public"
   },
   "peerDependencies": {
-    "chart.js": "^4.0.0",
-    "echarts": "^5.0.0 || ^6.0.0",
-    "plotly.js": "^2.0.0 || ^3.0.0",
-    "plotly.js-dist-min": "^2.0.0 || ^3.0.0",
-    "react": ">=18",
-    "vega": "^5.0.0 || ^6.0.0",
-    "vega-lite": "^5.0.0 || ^6.0.0",
-    "vega-tooltip": "^1.0.0"
+    "react": ">=18"
   },
   "peerDependenciesMeta": {
-    "vega": {
-      "optional": true
-    },
-    "vega-lite": {
-      "optional": true
-    },
-    "vega-tooltip": {
-      "optional": true
-    },
-    "echarts": {
-      "optional": true
-    },
-    "chart.js": {
-      "optional": true
-    },
-    "plotly.js": {
-      "optional": true
-    },
-    "plotly.js-dist-min": {
-      "optional": true
-    },
     "react": {
       "optional": true
     }
   },
   "devDependencies": {
+    "@types/d3-geo": "^3.1.1",
     "@types/d3-time": "^3.0.4",
     "@types/d3-time-format": "^4.0.3",
     "@types/node": "^20.14.10",
@@ -204,7 +226,14 @@
   },
   "dependencies": {
     "@floating-ui/dom": "^1.7.4",
+    "chart.js": "^4.0.0",
+    "d3-geo": "^3.1.1",
     "d3-time": "^3.1.0",
-    "d3-time-format": "^4.1.0"
+    "d3-time-format": "^4.1.0",
+    "echarts": "^5.0.0 || ^6.0.0",
+    "plotly.js-dist-min": "^2.35.0",
+    "vega": "^5.0.0 || ^6.0.0",
+    "vega-lite": "^5.0.0 || ^6.0.0",
+    "vega-tooltip": "^1.0.0"
   }
 }

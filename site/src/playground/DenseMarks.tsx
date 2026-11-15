@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import * as d3 from 'd3';
 import type { ChartAssemblyInput } from 'flint-chart';
 import { FlintView } from '../components/FlintView';
@@ -140,11 +139,7 @@ export function DenseMarks() {
     <div className="dev-page dm-page">
       <header className="dev-page-heading dm-heading">
         <h1>Dense marks: D3 vs Flint</h1>
-        <p>
-          164 countries' upper secondary completion rates (UNESCO UIS, modelled, 2000–2025): one line per country, and
-          one dot per country for girls against boys in 2025. Left, styled by hand in D3; right, Flint from a plain
-          spec (the fields, their types, the chart type). Below the charts: where the difference comes from.
-        </p>
+        <p>164 countries, UNESCO UIS completion rates. Left: D3 by hand. Right: Flint from a plain spec.</p>
       </header>
 
       <nav className="dm-tabs" aria-label="Flint theme">
@@ -160,66 +155,6 @@ export function DenseMarks() {
       <section className="dm-row">
         <figure><figcaption>D3, by hand</figcaption><D3Dots /></figure>
         <figure><figcaption>Flint · {choice.label}</figcaption><FlintView key={`d-${themeKey}`} spec={dots} renderer="svg" /></figure>
-      </section>
-
-      <section className="dm-notes">
-        <h2>Where the difference comes from</h2>
-
-        <h3>Layout and marks: density</h3>
-        <ol>
-          <li>
-            <b>Line weight, dot size and overlap</b> (done). The D3 version thins its lines and shrinks and rings its
-            dots by hand; Flint now does the same from the plan and the theme. The rules, with side-by-side cases,
-            are on <Link to="../density">Layout → Density</Link>.
-          </li>
-          <li>
-            <b>A one-year series still disappears</b> (open). Four countries have only a 2025 value; a line through
-            one point draws nothing.
-          </li>
-        </ol>
-
-        <h3>Legend: the key takes space the plot needs</h3>
-        <ol start={3}>
-          <li>
-            <b>Long category names cost the plot its width.</b> Seven region names up to 32 characters go in a key on the
-            right: about a third of the line chart's width, and on the scatter they wrap to two or three lines each. By
-            hand: one row of keys above the scatter, and labels at the line ends instead of a key. Flint's legend plan
-            picks a side but does not weigh a key row on top, or labels at the line ends, against a column at the side.
-          </li>
-          <li>
-            <b>No labels at the line ends.</b> With 164 lines in seven colours Flint keeps the key. A label per colour at
-            the right edge needs one line per region to hang it on, a summary line, which is authoring (below).
-          </li>
-        </ol>
-
-        <h3>Theme</h3>
-        <ol start={5}>
-          <li>
-            <b>The Economist's axis names went missing</b> (fixed). The house writes axis titles in the deck under the
-            headline; this chart has no headline, and Vega-Lite drops a title with no text, deck and all, so the names
-            were lost. A deck with no headline is now drawn on its own, in the deck's type. The same fix draws an
-            author's subtitle on a chart with no title, which was also dropped. (An older test passed only because
-            it found the measure's name in the bars' accessibility labels.)
-          </li>
-          <li>
-            <b>The Economist's inks at thin weights.</b> Six colours and a grey overflow ink, which the seventh region
-            (Eastern and South-Eastern Asia here) takes, so a large region reads as "other". The house's blue, cyan and teal are close; at 1.6 px and
-            164 lines they blur. The inks were picked for a few thick lines, not a crowd of thin ones.
-          </li>
-        </ol>
-
-        <h3>Authoring: things the D3 version says that the spec does not</h3>
-        <ul>
-          <li>The region medians drawn thick over the faint countries, labelled at their ends.</li>
-          <li>The parity line on the scatter, and "girls ahead / boys ahead" named on the plot.</li>
-          <li>Percent signs on the y ticks of the line chart, and full axis titles.</li>
-        </ul>
-        <p className="dm-note-text">
-          These are content, not styling: the author decided what the chart should say. In Flint they would be an
-          aggregate series in the data, a reference overlay, and field display names, so a fair comparison counts them
-          as authoring rather than as gaps in the compiler. Items 1–9 are the compiler's: the same plain spec should
-          already look like the hand-tuned marks.
-        </p>
       </section>
     </div>
   );

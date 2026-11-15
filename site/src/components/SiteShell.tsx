@@ -46,6 +46,7 @@ export function SiteNavBar(_props: { flush?: boolean } = {}) {
   return (
     <header
       className="site-nav-bar"
+      onDragStart={(event) => event.preventDefault()}
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -56,6 +57,7 @@ export function SiteNavBar(_props: { flush?: boolean } = {}) {
         margin: '0 auto',
         padding: '0 20px',
         height: 48,
+        userSelect: 'none',
         background: 'transparent',
         flexShrink: 0,
       }}
@@ -255,6 +257,7 @@ function NavMenu({ logicalPath, label, active, items }: {
               to={item.to}
               role="menuitem"
               className="site-nav-menu-item"
+              draggable={false}
               aria-current={logicalPath === item.to || logicalPath.startsWith(`${item.to}/`) ? 'page' : undefined}
               onClick={() => setOpen(false)}
               style={{
@@ -407,6 +410,7 @@ function GitHubLink() {
 
   return (
     <a
+      className="site-nav-github"
       href={GITHUB_REPO}
       target="_blank"
       rel="noreferrer"
@@ -431,29 +435,31 @@ function GitHubLink() {
         transition: 'color 120ms ease',
       }}
     >
-      <GitHubIcon />
-      {t('nav.github')}
-      <span
-        aria-hidden="true"
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'flex-start',
-          gap: 4,
-          width: 42,
-          boxSizing: 'border-box',
-          marginLeft: 4,
-          paddingLeft: 9,
-          borderLeft: `1px solid ${siteTheme.border}`,
-          color: hovered ? siteTheme.accent : siteTheme.textMuted,
-          fontSize: 12,
-          fontVariantNumeric: 'tabular-nums',
-          visibility: starCount === null ? 'hidden' : 'visible',
-          transition: 'color 120ms ease',
-        }}
-      >
-        <span style={{ fontSize: 10, lineHeight: 1 }}>★</span>
-        {compactStarCount}
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+        <GitHubIcon />
+        {t('nav.github')}
+        <span
+          aria-hidden="true"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'flex-start',
+            gap: 4,
+            width: 42,
+            boxSizing: 'border-box',
+            marginLeft: 4,
+            paddingLeft: 9,
+            borderLeft: `1px solid ${siteTheme.border}`,
+            color: hovered ? siteTheme.accent : siteTheme.textMuted,
+            fontSize: 12,
+            fontVariantNumeric: 'tabular-nums',
+            visibility: starCount === null ? 'hidden' : 'visible',
+            transition: 'color 120ms ease',
+          }}
+        >
+          <span style={{ fontSize: 10, lineHeight: 1 }}>★</span>
+          {compactStarCount}
+        </span>
       </span>
     </a>
   );

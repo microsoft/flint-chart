@@ -79,6 +79,23 @@ function valueOf(kind: SequenceKind, name: string): number {
 }
 
 /**
+ * Of `names`, those on the round interval `shown` was thinned to. A thinning chosen over a window
+ * of the names (a category rail's first window) carries to all of them; undefined where `shown`
+ * holds fewer than two values to read the interval from.
+ */
+export function onRoundInterval(kind: SequenceKind, shown: readonly string[], names: readonly string[]): string[] | undefined {
+    const marks = [...new Set(shown.map((name) => valueOf(kind, name)))].sort((a, b) => a - b);
+    if (marks.length < 2 || marks.some((value) => !Number.isFinite(value))) return undefined;
+    let interval = Infinity;
+    for (let i = 1; i < marks.length; i++) interval = Math.min(interval, marks[i] - marks[i - 1]);
+    if (!(interval > 0)) return undefined;
+    return names.filter((name) => {
+        const value = valueOf(kind, name);
+        return Number.isFinite(value) && (((value - marks[0]) % interval) + interval) % interval === 0;
+    });
+}
+
+/**
  * The names a sequence axis prints when every name cannot: those on the finest round interval
  * whose labels stand `needed` px apart across bands `band` px wide, where at least two land, and
  * how many bands apart they stand. The names are read as values in the axis's own units (minutes,

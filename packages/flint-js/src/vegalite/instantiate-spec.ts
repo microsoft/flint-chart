@@ -28,6 +28,7 @@ import type { LayoutPlan } from '../core/plan';
 import { AXIS_LABEL_LIMIT } from '../core/compute-layout';
 import { planAxisLabels, type AxisLabelPlan } from '../core/axis-labels';
 import { OWNED_AXIS_KEYS } from './owned-axis-keys';
+import { spansCalendarCells } from './templates/utils';
 import {
     timeMillisecond, timeSecond, timeMinute, timeHour, timeDay, timeWeek, timeMonth, timeYear,
     utcMillisecond, utcSecond, utcMinute, utcHour, utcDay, utcWeek, utcMonth, utcYear,
@@ -37,6 +38,25 @@ import { hostTextMeasurer } from '../core/text-width';
 
 const DEFAULT_QUANTITATIVE_AXIS_FORMAT = ',.12~g';
 const VEGA_AXIS_LABEL_LIMIT = AXIS_LABEL_LIMIT;
+
+/** The label expression of a sequence axis thinned to round values: only `shown` print. */
+export function skipLabelExpr(shown: readonly string[]): string {
+    return `indexof(${JSON.stringify(shown)}, toString(datum.value)) >= 0 ? datum.label : ''`;
+}
+
+/** The names a `skipLabelExpr` prints, or undefined where the expression is no such thinning. */
+export function skipLabelsOf(expr: unknown): string[] | undefined {
+    const match = typeof expr === 'string'
+        ? expr.match(/^indexof\((\[.*\]), toString\(datum\.value\)\) >= 0 \? datum\.label : ''$/)
+        : null;
+    if (!match) return undefined;
+    try {
+        const shown = JSON.parse(match[1]);
+        return Array.isArray(shown) ? shown.map(String) : undefined;
+    } catch {
+        return undefined;
+    }
+}
 
 /** Whether a template states its own labels for this axis, so the band labels are left as it wrote them. */
 export function templateStatesAxisLabels(template: any, channel: 'x' | 'y'): boolean {
@@ -200,6 +220,8 @@ export function vlApplyLayoutToSpec(
     // --- Write the planned spans of banded continuous axes, where no domain is stated ---
     // Labelled heatmaps move X/Y onto rect and text layers, so every matching target takes the span.
     for (const [axis, planned] of Object.entries(bandSpans) as Array<['x' | 'y', NonNullable<LayoutPlan['bandSpans']['x']>]>) {
+        // Cells that span their periods reach from the first date to the last end on their own.
+        if (spansCalendarCells(vgObj, axis)) continue;
         for (const enc of collectEncodingTargets(axis)) {
             if (enc.bin || enc.scale?.domain) continue;
             if (enc.type !== (planned.temporal ? 'temporal' : 'quantitative')) continue;
@@ -236,7 +258,7 @@ export function vlApplyLayoutToSpec(
         const fit = labels.overflowFit;
         if (fit?.step === 'skip' && fit.shown) {
             // The names on round values (16:45, 17:00 …), looked up by the value as written; each band keeps its tick.
-            config.labelExpr = `indexof(${JSON.stringify(fit.shown)}, toString(datum.value)) >= 0 ? datum.label : ''`;
+            config.labelExpr = skipLabelExpr(fit.shown);
         }
     }
     for (const channel of ['x', 'y'] as const) {
@@ -1114,13 +1136,29 @@ const isWorkingColumn = (field: unknown): boolean => typeof field === 'string' &
 const NOT_LISTED = new Set(['tooltip', 'href', 'url', 'description', 'key']);
 const TOOLTIP_FIELD_KEYS = ['field', 'type', 'title', 'aggregate', 'timeUnit', 'bin', 'format', 'formatType'] as const;
 const COMPOSITE_MARKS = new Set(['boxplot', 'errorbar', 'errorband']);
+const STACKED_MARKS = new Set(['bar', 'area', 'arc']);
+
+/**
+ * Whether Vega-Lite will stack a mark in the order of its colour domain: a discrete colour with a
+ * stated domain and no `order` makes it compute `_<field>_sort_index` and list it as the order.
+ */
+function ordersStackByColorDomain(mark: unknown, encoding: Record<string, any>): boolean {
+    const color = encoding.fill ?? encoding.color;
+    if (!color?.field || color.type !== 'nominal' || !Array.isArray(color.scale?.domain)) return false;
+    if (encoding.order !== undefined || encoding.xOffset !== undefined || encoding.yOffset !== undefined) return false;
+    const type = typeof mark === 'object' && mark !== null ? (mark as any).type : mark;
+    const stacks = ['x', 'y', 'theta'].map((channel) => encoding[channel]).filter((def) => def && 'stack' in def).map((def) => def.stack);
+    if (stacks.some((stack) => stack === null || stack === false)) return false;
+    return STACKED_MARKS.has(type) || stacks.length > 0;
+}
 
 /**
  * Keeps Flint's working columns out of the tooltips Vega-Lite builds from each mark's encoding.
  * A column that repacks the author's field — a folded colour key, a waterfall's step kind — carries
  * that field's name as its title and stays, under the name. One with no name of its own — a radar's
  * positions, a pie's order, a strip's jitter — names nothing a reader asked about, and is left out;
- * a mark with nothing else to list shows no tooltip. A mark whose tooltip lists no working column
+ * a mark with nothing else to list shows no tooltip. A stack ordered by its colour's stated domain
+ * counts too: Vega-Lite would list the sort index it computes for it. A mark whose tooltip lists no working column
  * is left as it is, and so is a composite mark (a boxplot), whose summary a stated list would drop.
  */
 export function vlListTooltipFields(spec: any): void {
@@ -1138,7 +1176,7 @@ export function vlListTooltipFields(spec: any): void {
         if (node.mark && encoding.tooltip === null && markTooltip !== false && markTooltip !== null) silence();
         else if (node.mark && !composite && markTooltip !== false && markTooltip !== null && encoding.tooltip === undefined) {
             const listed: any[] = [];
-            let working = false;
+            let working = ordersStackByColorDomain(node.mark, encoding);
             for (const [channel, def] of Object.entries<any>(encoding)) {
                 if (NOT_LISTED.has(channel) || !def || typeof def !== 'object' || Array.isArray(def)) continue;
                 if (def.field === undefined && def.aggregate !== 'count') continue;

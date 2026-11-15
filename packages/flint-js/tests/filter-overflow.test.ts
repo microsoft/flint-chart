@@ -158,4 +158,10 @@ describe('overflow category selection', () => {
     expect(descending.viewports[0].orderedValues).toEqual(['Charlie', 'Alpha', 'Bravo', 'Delta', 'Bravo']);
     expect(descending.truncations[0].keptValues).toEqual(['Charlie', 'Alpha', 'Bravo']);
   });
+
+  it('windows rows whose numeric categories the rail holds as text', () => {
+    const rows = [1880, 1881, 1882].map((Year) => ({ Year, Anomaly: 0 }));
+    const viewport = { channel: 'x' as const, field: 'Year', orderedValues: ['1880', '1881', '1882'], visibleCount: 2, totalCount: 3 };
+    expect(applyCategoryViewports(rows, [viewport], { x: 1 })).toEqual([rows[1], rows[2]]);
+  });
 });

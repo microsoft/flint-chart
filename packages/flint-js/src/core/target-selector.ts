@@ -40,6 +40,17 @@ export function conditionNumber(value: unknown): number {
  * temporal fields hold time; a set member must then equal the mark's value exactly, as a key's
  * value does, and a range holds its ends.
  */
+/**
+ * A number and the same number written as text are one member: a field drawn as categories (a year
+ * on a banded axis) carries its values as text, while the author's key names them as numbers.
+ */
+function sameMember(value: unknown, member: unknown): boolean {
+    if (Object.is(value, member)) return true;
+    if (typeof value === 'number' && typeof member === 'string') return member.trim() !== '' && Number(member) === value;
+    if (typeof value === 'string' && typeof member === 'number') return value.trim() !== '' && Number(value) === member;
+    return false;
+}
+
 export function selectorPredicate(
     selector: SemanticTargetSelector,
     declaredFields: readonly string[],
@@ -50,7 +61,7 @@ export function selectorPredicate(
     const tests = conditions.map(([field, condition]): ((value: Readonly<Record<string, unknown>>) => boolean) => {
         if ('in' in condition) {
             const members = condition.in.map((member) => normalize(field, member));
-            return (value) => members.some((member) => Object.is(value[field], member));
+            return (value) => members.some((member) => sameMember(value[field], member));
         }
         const low = conditionNumber(normalize(field, condition.range[0]));
         const high = conditionNumber(normalize(field, condition.range[1]));

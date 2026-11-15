@@ -98,6 +98,43 @@ input[type='range'].site-range:focus-visible {
   }
 }
 
+/* Extend only top-level controls to the desktop bar's edges; menus are portaled to the body. */
+@media (min-width: 981px) {
+  .site-nav-bar :is(a, button) {
+    position: relative;
+  }
+
+  .site-nav-bar :is(a, button)::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 48px;
+    transform: translateY(-50%);
+  }
+
+  /* Keep the native focus ring on the control, not its expanded hit area. */
+  .site-nav-bar :is(a, button):focus-visible {
+    outline: none;
+  }
+
+  .site-nav-bar :is(a, button):not(.site-nav-github):focus-visible::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    outline: 1px auto -webkit-focus-ring-color;
+    outline-offset: inherit;
+    pointer-events: none;
+  }
+
+  /* The star count can overflow its fixed-width slot; include it in the native ring. */
+  .site-nav-github:focus-visible > span {
+    outline: 1px auto -webkit-focus-ring-color;
+    outline-offset: inherit;
+  }
+}
+
 /* Below this width the links no longer fit beside the brand and actions, so they take their own row. */
 @media (max-width: 980px) {
   .site-nav-bar {

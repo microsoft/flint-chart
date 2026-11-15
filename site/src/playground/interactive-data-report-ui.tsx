@@ -371,7 +371,7 @@ export function ReportSentence({ sentence: item, report, sectionId, action }: Re
 }
 
 function sentenceOpsTitle(item: Sentence): string {
-  return [...new Set(item.ops.map((op) => OPS[op.op === 'set-viewport' || op.op === 'set-order' || op.op === 'set-annotation' ? op.op : 'set-style'].title))].join(' + ');
+  return [...new Set(item.ops.map((op) => OPS[op.op === 'set-viewport' || op.op === 'set-order' || op.op === 'annotate-text' ? op.op : 'set-style'].title))].join(' + ');
 }
 
 interface ReportParagraphProps {

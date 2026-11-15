@@ -34,7 +34,7 @@ sort order — all derived deterministically by the compiler.
 When the user wants more than a spec, the skill also tells the agent how to:
 
 - validate and render charts with the Flint MCP server;
-- install `flint-chart` and the needed renderer peer dependencies;
+- install `flint-chart`, which comes with every chart renderer;
 - call `assembleVegaLite`, `assembleECharts`, or `assembleChartjs` in JS/TS;
 - use the Python package when it is published in a later release.
 

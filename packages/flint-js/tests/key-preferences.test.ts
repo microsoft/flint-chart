@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { planKeyLayout, type KeyToLayout } from '../src/core/legend-layout';
 import { tableTextMeasurer } from '../src/core/text-width';
+import { assembleVegaLite } from '../src/vegalite/assemble';
 
 const style = {
     labelFont: 'Helvetica', labelFontSize: 10, labelFontWeight: 'normal', labelFontStyle: 'normal',
@@ -52,5 +53,32 @@ describe('keys sharing an edge, counted in the room they take', () => {
         const large = planKeyLayout([plain, bubbles(3600)], square, tableTextMeasurer, { arrangement: 'stack' });
         expect(small.keys[1]?.orient).toBe('top');
         expect(large.keys[1]?.orient).toBe('right');
+    });
+});
+
+describe('a key its author pins to an edge', () => {
+    it('stands on that edge in the Vega-Lite it compiles to, not on the right', () => {
+        const rows = [600, 528, 46, 45, 1].map((Crew, i) => ({ Stop: i + 1, Crew, Leg: ['A', 'A', 'B', 'C', 'C'][i], longitude: 10 + i * 3, latitude: 35 + i }));
+        const spec: any = assembleVegaLite({
+            data: { values: rows },
+            semantic_types: { Stop: 'Rank', Crew: 'Count', Leg: 'Category', longitude: 'Longitude', latitude: 'Latitude' },
+            chart_spec: {
+                chartType: 'Map',
+                encodings: { longitude: 'longitude', latitude: 'latitude', order: 'Stop',
+                    color: { field: 'Leg', legend: { orient: 'bottom' } }, size: { field: 'Crew', legend: { orient: 'bottom' } } },
+                canvasSize: { width: 600, height: 540 },
+            },
+        } as any);
+        const orients: string[] = [];
+        const walk = (node: any) => {
+            for (const channel of ['color', 'size', 'strokeWidth']) {
+                const legend = node?.encoding?.[channel]?.legend;
+                if (legend && node.encoding[channel].field) orients.push(legend.orient);
+            }
+            (node?.layer ?? []).forEach(walk);
+        };
+        walk(spec);
+        expect(orients.length).toBeGreaterThan(0);
+        expect(new Set(orients)).toEqual(new Set(['bottom']));
     });
 });

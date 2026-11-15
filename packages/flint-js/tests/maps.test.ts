@@ -3,7 +3,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { assembleVegaLite } from '../src';
-import { resolveCountry, resolveCountryCode } from '../src/chart-types/geo';
+import { resolveCountry, resolveCountryCode, resolveUsState } from '../src/chart-types/geo';
 
 /**
  * Name-based map creation.
@@ -27,6 +27,9 @@ interface ChoroplethResult {
   joined: Map<any, any>;
 }
 
+/** The unit drawing the regions: the map itself, or the layer whose colour comes from a field (a world map dots its disputed borders over it). */
+const regionsOf = (spec: any): any => (Array.isArray(spec?.layer) ? spec.layer.find((layer: any) => layer.encoding?.color?.field) : spec);
+
 function buildChoropleth(
   rows: Row[],
   idField: string,
@@ -47,12 +50,12 @@ function buildChoropleth(
   }) as any;
 
   const joined = new Map<any, any>();
-  const values = spec?.transform?.find((transform: any) => transform.lookup)?.from?.data?.values ?? [];
+  const values = regionsOf(spec)?.transform?.find((transform: any) => transform.lookup)?.from?.data?.values ?? [];
   for (const r of values) joined.set(r[idField], r.__geo_id);
 
   return {
     spec,
-    feature: spec?.data?.format?.feature,
+    feature: regionsOf(spec)?.data?.format?.feature,
     projection: spec?.projection?.type,
     joined,
   };
@@ -145,13 +148,13 @@ describe('choropleth maps from names', () => {
       { state: 'California', pop: 39.5 },
       { state: 'Texas', pop: 29.1 },
     ];
-    const { spec } = buildChoropleth(rows, 'state', 'pop', 'State');
+    const regions = regionsOf(buildChoropleth(rows, 'state', 'pop', 'State').spec);
 
-    expect(spec.data?.url).toContain('us-atlas');
-    expect(spec.mark?.type).toBe('geoshape');
-    expect(spec.encoding?.color?.field).toBe('pop');
-    expect(spec.transform?.find((transform: any) => transform.lookup)?.lookup).toBe('id');
-    expect(spec.transform?.find((transform: any) => transform.lookup)?.from?.key).toBe('__geo_id');
+    expect(regions.data?.url).toContain('counties-albers-10m');
+    expect(regions.mark?.type).toBe('geoshape');
+    expect(regions.encoding?.color?.field).toBe('pop');
+    expect(regions.transform?.find((transform: any) => transform.lookup)?.lookup).toBe('id');
+    expect(regions.transform?.find((transform: any) => transform.lookup)?.from?.key).toBe('__geo_id');
   });
 
   it('keeps a declared quantitative color domain stable and centered', () => {
@@ -167,7 +170,7 @@ describe('choropleth maps from names', () => {
       },
     }) as any;
 
-    expect(spec.encoding.color.scale).toMatchObject({
+    expect(regionsOf(spec).encoding.color.scale).toMatchObject({
       domain: [-100, 100],
       clamp: true,
       scheme: 'redblue',
@@ -219,12 +222,14 @@ describe('choropleth lookup robustness', () => {
     ];
     const r = buildChoropleth(rows, 's', 'v', 'State');
     expect(r.feature).toBe('states');
-    expect(r.joined.get('Calif.')).toBe(6);
-    expect(r.joined.get('Wash.')).toBe(53);
-    expect(r.joined.get('N. Carolina')).toBe(37);
-    expect(r.joined.get('S. Dakota')).toBe(46);
-    expect(r.joined.get('California, USA')).toBe(6);
-    expect(r.joined.get('Washington State')).toBe(53);
+    expect(resolveUsState('Calif.')).toBe(6);
+    expect(resolveUsState('Wash.')).toBe(53);
+    expect(resolveUsState('N. Carolina')).toBe(37);
+    expect(resolveUsState('S. Dakota')).toBe(46);
+    expect(resolveUsState('California, USA')).toBe(6);
+    expect(resolveUsState('Washington State')).toBe(53);
+    // Two spellings of one state join as one region.
+    expect([...r.joined.values()].sort((a, b) => a - b)).toEqual([6, 37, 46, 53]);
   });
 
   it('resolves country aliases, alternate forms and accented names', () => {
@@ -237,11 +242,13 @@ describe('choropleth lookup robustness', () => {
     ];
     const r = buildChoropleth(rows, 'c', 'v', 'Country');
     expect(r.feature).toBe('countries');
-    expect(r.joined.get('Holland')).toBe(528);
-    expect(r.joined.get('S. Korea')).toBe(410);
-    expect(r.joined.get('Korea, Rep.')).toBe(410);
-    expect(r.joined.get('Côte d’Ivoire')).toBe(384);
-    expect(r.joined.get('Türkiye')).toBe(792);
+    expect(resolveCountry('Holland')).toBe(528);
+    expect(resolveCountry('S. Korea')).toBe(410);
+    expect(resolveCountry('Korea, Rep.')).toBe(410);
+    expect(resolveCountry('Côte d’Ivoire')).toBe(384);
+    expect(resolveCountry('Türkiye')).toBe(792);
+    // Two spellings of one country join as one region.
+    expect([...r.joined.values()].sort((a, b) => a - b)).toEqual([384, 410, 528, 792]);
   });
 
   it('resolves the expanded set of countries verified against world-110m', () => {
@@ -276,17 +283,18 @@ describe('Choropleth level', () => {
 
   it('draws counties from the same pre-projected US atlas and passes numeric FIPS ids through', () => {
     const spec = build({ region: 'us', level: 'county' });
-    expect(spec.data.url).toContain('counties-albers-10m');
-    expect(spec.data.format.feature).toBe('counties');
+    const regions = regionsOf(spec);
+    expect(regions.data.url).toContain('counties-albers-10m');
+    expect(regions.data.format.feature).toBe('counties');
     expect(spec.projection.type).toBe('identity');
-    expect(spec.mark.strokeWidth).toBe(0.2);
-    const joined = spec.transform.find((transform: any) => transform.lookup).from.data.values;
+    expect(regions.mark.strokeWidth).toBe(0.2);
+    const joined = regions.transform.find((transform: any) => transform.lookup).from.data.values;
     expect(joined.map((row: any) => row.__geo_id)).toEqual([1079, 6037]);
   });
 
   it('keeps the state layer by default and on the world map', () => {
-    expect(build({ region: 'us' }).data.format.feature).toBe('states');
-    expect(build({ region: 'world', level: 'county' }).data.format.feature).toBe('countries');
+    expect(regionsOf(build({ region: 'us' })).data.format.feature).toBe('states');
+    expect(regionsOf(build({ region: 'world', level: 'county' })).data.format.feature).toBe('countries');
   });
 });
 
@@ -328,6 +336,14 @@ describe('the country gazetteer covers the world map', () => {
     for (const [name, id] of Object.entries(cases)) expect(resolveCountry(name), name).toBe(id);
   });
 
+  it('keeps state data on the US map despite a total or a stray foreign row', () => {
+    const rows = ['California', 'Texas', 'New York', 'United States'].map((name, v) => ({ name, v }));
+    expect(buildChoropleth(rows, 'name', 'v').feature).toBe('states');
+    expect(buildChoropleth([...rows, { name: 'Canada', v: 9 }], 'name', 'v').feature).toBe('states');
+    // Mostly countries stay on the world map.
+    expect(buildChoropleth(['France', 'Germany', 'Georgia'].map((name, v) => ({ name, v })), 'name', 'v').feature).toBe('countries');
+  });
+
   it('still keeps colliding US state codes on the US map', () => {
     const rows = ['AL', 'GA', 'MD', 'ME', 'NC', 'SC'].map((st, v) => ({ st, v }));
     expect(buildChoropleth(rows, 'st', 'v').feature).toBe('states');
@@ -342,7 +358,7 @@ describe('a colour key formats its numbers like an axis would', () => {
       semantic_types: { Country: 'Country', Change: { semanticType: 'PercentageChange', intrinsicDomain: [-1, 1] } },
       chart_spec: { chartType: 'Choropleth', encodings: { id: 'Country', color: 'Change' }, chartProperties: { region: 'world' } },
     } as any);
-    const legend = spec.encoding.color.legend;
+    const legend = regionsOf(spec).encoding.color.legend;
     expect(legend.format ?? legend.labelExpr).toMatch(/%/);
   });
 
@@ -352,6 +368,6 @@ describe('a colour key formats its numbers like an axis would', () => {
       semantic_types: { State: 'State', N: 'Count' },
       chart_spec: { chartType: 'Choropleth', encodings: { id: 'State', color: 'N' } },
     } as any);
-    expect(spec.encoding.color.legend?.format ?? '').not.toMatch(/%/);
+    expect(regionsOf(spec).encoding.color.legend?.format ?? '').not.toMatch(/%/);
   });
 });

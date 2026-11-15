@@ -1,6 +1,7 @@
 import type { ChartAssemblyInput } from '../core/types';
 import { assembleECharts } from '../echarts/assemble';
 import { assembleVegaLite } from '../vegalite/assemble';
+import { withBundledBoundaries } from '../vegalite/boundary-loader';
 import { injectCanvasFurnitureSVG, readCanvasFurniture, readCanvasPatterns } from '../vegalite/canvas-furniture';
 
 export type RenderSvgBackend = 'vegalite' | 'echarts';
@@ -39,7 +40,10 @@ export async function renderSvg(input: ChartAssemblyInput, options: RenderSvgOpt
         }
     }
     if (backend !== 'vegalite') throw new Error(`renderSvg does not support backend "${backend as string}".`);
-    const vlSpec = assembleVegaLite(input);
+    // The host's background is the chart's where no house sets a canvas of its own.
+    const vlSpec = assembleVegaLite(options.background !== undefined && input.options?.background === undefined
+        ? { ...input, options: { ...input.options, background: options.background } }
+        : input);
     const [{ compile }, vega] = await Promise.all([import('vega-lite'), import('vega')]);
     const interpreter = options.expressionInterpreter;
     const runtime = vega.parse(
@@ -47,7 +51,11 @@ export async function renderSvg(input: ChartAssemblyInput, options: RenderSvgOpt
         (options.background ? { background: options.background } : {}) as any,
         (interpreter ? { ast: true } : undefined) as any,
     );
-    const view = new vega.View(runtime, { renderer: 'none', ...(interpreter ? { expr: interpreter } : {}) } as any);
+    const view = new vega.View(runtime, {
+        renderer: 'none',
+        loader: withBundledBoundaries(vega.loader()),
+        ...(interpreter ? { expr: interpreter } : {}),
+    } as any);
     view.logLevel(vega.Error);
     try {
         await view.runAsync();

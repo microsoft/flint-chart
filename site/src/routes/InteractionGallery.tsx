@@ -1050,7 +1050,7 @@ export function FlintInteractive() {
   handle: ({ target }) => ({ ops: [
     { op: "set-style", targets: [target],
       value: { state: "emphasized" } },
-    { op: "set-annotation", target,
+    { op: "annotate-text", target,
       value: { text: … } },
     { op: "set-overlay", name: "continent-avg",
       value: { mark: "rule", data: …, encodings: … } },
@@ -1067,7 +1067,7 @@ export function FlintInteractive() {
           <p>Flint Canvas is a state machine that tracks user interactions on the canvas and manages visual rendering state. Flint makes interaction specification easy by separating visual logic, managed by the compiler, from interaction logic, specified by the user at the semantic level:</p>
           <ol className="ig-mechanism-logic">
             <li><strong>Visual logic:</strong> The compiler automatically resolves raw triggers, such as clicks, drags, and key presses, into <strong>semantic events</strong> that identify chart elements and data. It also translates <strong>update operators</strong> into rendered canvas changes, handling hit testing and low-level visual updates.</li>
-            <li><strong>Interaction logic:</strong> The user specifies interactions by mapping semantic interaction events to chart update operators, such as <code>set-style</code> to highlight data, <code>set-annotation</code> to label a point, or <code>set-viewport</code> to pan or zoom. The user can also use those semantic events to update external tables, widgets, or application state.</li>
+            <li><strong>Interaction logic:</strong> The user specifies interactions by mapping semantic interaction events to chart update operators, such as <code>set-style</code> to highlight data, <code>annotate-text</code> to label a point, or <code>set-viewport</code> to pan or zoom. The user can also use those semantic events to update external tables, widgets, or application state.</li>
           </ol>
           <p>This separation means users do not need to reverse-engineer rendering logic or manipulate renderer-specific marks, making interactions easier to specify and maintain. Furthermore, because event generation and visual updates are compositional, the same model also connects Flint with tables, text, other charts, and widgets to build interactive stories and dashboards.</p>
           <InteractionMechanism />

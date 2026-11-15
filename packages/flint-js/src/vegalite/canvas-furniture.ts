@@ -57,6 +57,8 @@ export interface CanvasFurnitureItem {
     alt?: string;
     /** Where the item links to. */
     href?: string;
+    /** Shown on hover. */
+    title?: string;
     /** Centred between `left` and `right` rather than run between them. */
     center?: boolean;
 }
@@ -185,9 +187,9 @@ function itemMarkup(item: CanvasFurnitureItem, canvasWidth: number, canvasHeight
     } else {
         body = `<rect x="${box.x}" y="${box.y}" width="${box.width}" height="${box.height}" fill="${escapeAttr(item.color ?? '#000000')}"/>`;
     }
-    return item.href
-        ? `<a href="${escapeAttr(item.href)}" target="_blank" rel="noopener" style="pointer-events:auto;cursor:pointer">${body}</a>`
-        : body;
+    const title = item.title ? `<title>${escapeAttr(item.title)}</title>` : '';
+    if (item.href) return `<a href="${escapeAttr(item.href)}" target="_blank" rel="noopener" style="pointer-events:auto;cursor:pointer">${title}${body}</a>`;
+    return title ? `<g style="pointer-events:auto">${title}${body}</g>` : body;
 }
 
 /** The markup for a set of canvas-furniture items on a canvas `width` px wide. */

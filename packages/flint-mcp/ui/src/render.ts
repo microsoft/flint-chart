@@ -27,7 +27,7 @@ export interface FlintRenderResult {
 }
 
 const DEFAULT_BACKGROUND = '#ffffff';
-const APP_PREVIEW_BASE_SIZE = { width: 360, height: 270 } as const;
+const APP_PREVIEW_BASE_SIZE = { width: 300, height: 300 } as const;
 /**
  * The room the preview has when nobody has measured it.
  *
@@ -55,10 +55,6 @@ function copyPngScale(width: number, height: number): number {
   const longEdge = Math.max(width, height);
   if (!Number.isFinite(longEdge) || longEdge <= 0) return 2;
   return Math.min(COPY_PNG_MAX_SCALE, Math.max(1, COPY_PNG_TARGET_LONG_EDGE / longEdge));
-}
-
-export function usesAutoPreviewSize(input: ChartAssemblyInput): boolean {
-  return !input.chart_spec.baseSize && !input.chart_spec.canvasSize;
 }
 
 /**
@@ -97,26 +93,48 @@ function previewCanvasSize(viewport?: { width: number; height?: number }): { wid
   return { width, height };
 }
 
+/**
+ * How far past its footprint a chart in the card may grow: a dense chart takes
+ * up to half again its size, and no more, so a sparse one is not blown up to
+ * fill a wide column and a busy one is not drawn too tall.
+ */
+export const APP_PREVIEW_STRETCH = 1.5;
+
+/**
+ * The footprint the chart aims for: the agent's `baseSize` when it states one
+ * (it knows where it is shown), else the house's, else the card's default.
+ */
+function previewBase(input: ChartAssemblyInput): { width: number; height: number } {
+  return input.chart_spec.baseSize ?? houseBaseSize(input) ?? APP_PREVIEW_BASE_SIZE;
+}
+
+/** The size the chart may grow to: a stated `canvasSize`, else 1.5x its footprint. */
+function previewCeiling(input: ChartAssemblyInput): { width: number; height: number } {
+  const base = previewBase(input);
+  return input.chart_spec.canvasSize
+    ?? { width: Math.round(base.width * APP_PREVIEW_STRETCH), height: Math.round(base.height * APP_PREVIEW_STRETCH) };
+}
+
+/** The widest the card lays the chart out, before the room has a say. */
+export function previewMaxWidth(input: ChartAssemblyInput): number {
+  return previewCeiling(input).width;
+}
+
 export function withAppPreviewDefaults(
   input: ChartAssemblyInput,
   viewport?: { width: number; height?: number },
 ): ChartAssemblyInput {
-  if (!usesAutoPreviewSize(input)) return input;
-  // The ceiling is the widget's business — it is how much room there is. The
-  // footprint is the house's, and the app's preview size only stands in where
-  // no house has spoken.
-  const base = houseBaseSize(input) ?? APP_PREVIEW_BASE_SIZE;
-  const ceiling = previewCanvasSize(viewport);
+  const base = previewBase(input);
+  const room = previewCanvasSize(viewport);
+  // The stated or default size leads; a host narrower than it lays the chart out
+  // again for the room it has, so every chart stays readable rather than shrunk.
+  const stated = previewCeiling(input);
+  const ceiling = { width: Math.min(stated.width, room.width), height: Math.min(stated.height, room.height) };
   return {
     ...input,
     chart_spec: {
       ...input.chart_spec,
-      // A footprint larger than the room available is not a footprint; clamp
-      // it so the house still leads but cannot overflow the frame.
-      baseSize: {
-        width: Math.min(base.width, ceiling.width),
-        height: Math.min(base.height, ceiling.height),
-      },
+      baseSize: { width: Math.min(base.width, ceiling.width), height: Math.min(base.height, ceiling.height) },
       canvasSize: ceiling,
     },
     // A sparse band chart spends the room it has: the layout widens its bands

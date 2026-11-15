@@ -56,7 +56,7 @@ const peakWeek = extremeWeek(1, 26, (a, b) => a > b);
 const lowWeek = extremeWeek(27, FORECAST_START, (a, b) => a < b);
 
 function note(week: number, text: string): ChartUpdateOp {
-  return { op: 'set-annotation', target: { select: { key: { Week: week } } }, value: { text } };
+  return { op: 'annotate-text', target: { select: { key: { Week: week } } }, value: { text } };
 }
 
 const forecastRows = [44, 46, 48, 50, 52].map((Week, index) => ({

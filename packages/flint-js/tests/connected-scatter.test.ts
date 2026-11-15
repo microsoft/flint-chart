@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 
 import { describe, it, expect } from 'vitest';
-import { assembleVegaLite, assembleECharts, assembleChartjs } from '../src';
+import { compile } from 'vega-lite';
+import { assembleVegaLite, assembleECharts, assembleChartjs, THEME_PRESETS } from '../src';
+import { addVegaLiteInteractions } from '../src/vegalite/interactions/compile';
 import {
   genConnectedScatterTests,
   genEChartsConnectedScatterTests,
@@ -104,6 +106,19 @@ describe('Vega-Lite Connected Scatter', () => {
     expect(dspec.encoding.color).toBeUndefined();
     expect(dspec.encoding.order.field).toBe('Step');
     expect(dspec.mark.interpolate).toBe('linear');
+  });
+
+  it('draws each reading once when the live view splits the dots off the line', () => {
+    // Cartoon sets the house's line dots in config.line.point; the split line must not draw them again.
+    const themed = assembleVegaLite({ ...toInput(byTitle(cases, BASIC)), theme_spec: THEME_PRESETS.cartoon.spec } as any) as any;
+    addVegaLiteInteractions(themed, [], true);
+    const symbols: unknown[] = [];
+    const walk = (marks: any[] = []) => marks.forEach((m) => {
+      if (m.type === 'symbol') symbols.push(m);
+      walk(m.marks);
+    });
+    walk((compile(themed).spec as any).marks);
+    expect(symbols).toHaveLength(1);
   });
 });
 

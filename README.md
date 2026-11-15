@@ -106,7 +106,9 @@ npm install flint-chart
 ```
 
 The library compiles Flint specs into backend-native chart specs and provides
-React and vanilla JavaScript APIs for embedding interactive charts.
+React and vanilla JavaScript APIs for embedding interactive charts. It comes
+with every backend it draws with (Vega-Lite, ECharts, Chart.js, Plotly); React
+is an optional peer for `<FlintChart>`.
 
 A Flint spec describes the data, semantic types, and field mappings, with
 optional theme and interaction settings. In React, pass it to `<FlintChart>`
@@ -142,7 +144,7 @@ https://github.com/microsoft/flint-chart/blob/main/agent-skills/flint-chart-auth
 https://github.com/microsoft/flint-chart/blob/main/agent-skills/flint-interaction-author/SKILL.md
 
 Use these skills to add a chart to this app.
-Install flint-chart and the renderer dependencies needed for this project.
+Install flint-chart (it includes its chart renderers) and add it to this project.
 Plot monthly users by region from our data in Economist style.
 Let readers hover to compare regions at each month, and add a region selector
 that updates the chart.

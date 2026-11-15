@@ -25,6 +25,7 @@
 
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
 import { getRegistryEntry } from '../../core/type-registry';
+import { resolveDisplayAggregate } from '../../core/field-semantics';
 
 const HEADER_H = 16;
 const FACET_HEADER_H = 20;
@@ -175,7 +176,7 @@ export const plBarTableDef: ChartTemplateDef = {
 
         const maxRows = Math.max(0, Number(chartProperties?.maxRows ?? 20));
         const showPercent = chartProperties?.showPercent === true;
-        const useMean = channelSemantics.x?.aggregationDefault === 'average';
+        const useMean = resolveDisplayAggregate(channelSemantics.x, ctx.encodings?.x?.aggregate) === 'average';
         const reversed = !!channelSemantics.y?.reversed;
         // Ordinal measures (Rank) are standings, not magnitudes — length-encoding
         // them inverts the ranking (see issue #85). Honor the documented `Rank`
@@ -504,7 +505,8 @@ export const plBarTableDef: ChartTemplateDef = {
             key: 'showPercent', label: '% of total', type: 'binary', defaultValue: false,
             check: (ctx) => {
                 const mcs = ctx.channelSemantics?.x;
-                if (!mcs?.field || mcs.type !== 'quantitative' || mcs.aggregationDefault === 'average') {
+                if (!mcs?.field || mcs.type !== 'quantitative'
+                    || resolveDisplayAggregate(mcs, ctx.encodings?.x?.aggregate) !== 'sum') {
                     return { applicable: false };
                 }
                 let sum = 0, hasNeg = false, hasPos = false, count = 0;

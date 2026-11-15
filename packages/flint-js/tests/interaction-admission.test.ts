@@ -5,6 +5,7 @@ import { brushAngle, brushX, brushY, clickHighlight, dragReorder, isCanvasIntera
 import type { CanvasInteractionDef } from '../src/interactive/interactions';
 import type { InteractionEntry } from '../src/core/interaction-spec';
 import { addVegaLiteInteractions } from '../src/vegalite/interactions/compile';
+import { baselineInteractions } from '../src/vegalite/interactions/baseline';
 import { assembleVegaLite } from '../src/vegalite/assemble';
 
 /** A Cartesian chart with elements, a region, a legend, and one navigable axis. */
@@ -66,6 +67,20 @@ describe('admitInteractions', () => {
         const result = admitInteractions(NO_SEMANTICS, fromSpec([{ type: 'click-highlight' }]));
         expect(result.admitted).toEqual([]);
         expect(result.warnings[0]).toMatchObject({ code: 'unsupported_interaction' });
+    });
+
+    it('the baseline legend dim gives way, silently, to a legend click the spec asks for', () => {
+        const baseline = baselineInteractions(CARTESIAN, undefined);
+        expect(ids(baseline)).toEqual(['flint-legend-dim']);
+        const result = admitInteractions(CARTESIAN, [...fromSpec([{ type: 'legend-toggle' }]), ...baseline]);
+        expect(ids(result.admitted)).toEqual(['legend-toggle']);
+        expect(result.warnings).toEqual([]);
+    });
+
+    it('has no baseline on a chart without a legend, or when the spec turns it off', () => {
+        expect(baselineInteractions(NO_SEMANTICS, undefined)).toEqual([]);
+        expect(baselineInteractions(CARTESIAN, false)).toEqual([]);
+        expect(baselineInteractions(CARTESIAN, { legend: false })).toEqual([]);
     });
 
     it('keeps one navigation interaction: a second spec navigate yields, a second code navigate throws', () => {

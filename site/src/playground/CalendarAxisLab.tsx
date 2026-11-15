@@ -3,7 +3,7 @@ import { assembleVegaLite, type ChartAssemblyInput } from 'flint-chart';
 import { VegaLiteView } from '../components/VegaLiteView';
 import './axis-label-lab.css';
 
-interface CalendarExample {
+export interface CalendarExample {
   id: string;
   title: string;
   start: string;
@@ -24,7 +24,7 @@ const UTC_RECORDED_AXIS = {
   labelFlush: false as const,
 };
 
-const INSPECTION_EXAMPLES: CalendarExample[] = [
+export const INSPECTION_EXAMPLES: CalendarExample[] = [
   { id: 'inspection-cadence', title: '1. Daily detail / three months', start: '2024-01-05', end: '2024-04-05', stepHours: 24, planningWidth: 480 },
   { id: 'inspection-resize', title: '2. Monthly detail / March to November', start: '2024-03-01', end: '2024-11-01', stepHours: 24, planningWidth: 900 },
   { id: 'inspection-portability', title: '3a. Timezone / UTC plan, local renderer', start: '2024-12-31T18:00:00Z', end: '2025-01-01T12:00:00Z', stepHours: 0.5, planningWidth: 600, recordedAxis: UTC_RECORDED_AXIS },
@@ -32,7 +32,7 @@ const INSPECTION_EXAMPLES: CalendarExample[] = [
   { id: 'inspection-single-date', title: '4. Single date / missing context', start: '2024-02-29', end: '2024-02-29', stepHours: 24, planningWidth: 480 },
 ];
 
-const EXAMPLES: CalendarExample[] = [
+export const EXAMPLES: CalendarExample[] = [
   { id: 'year-boundaries', title: 'January boundaries', start: '2020-01-01', end: '2022-01-01', stepHours: 168 },
   { id: 'partial-years', title: 'Weekly series / partial years', start: '2020-04-06', end: '2024-12-30', stepHours: 168 },
   { id: 'sparse-dates', title: 'Sparse observations', start: '2020-01-01', end: '2024-12-30', stepHours: 2160 },
@@ -45,7 +45,7 @@ const EXAMPLES: CalendarExample[] = [
   { id: 'vertical', title: 'Vertical date axis', start: '2020-01-01', end: '2024-12-30', stepHours: 168, vertical: true },
 ];
 
-function exampleInput(example: CalendarExample, width: number, height: number, theme: string): ChartAssemblyInput {
+export function exampleInput(example: CalendarExample, width: number, height: number, theme: string): ChartAssemblyInput {
   const semanticType = example.semanticType ?? (example.stepHours < 24 ? 'DateTime' : 'Date');
   const start = Date.parse(example.start);
   const end = Date.parse(example.end);

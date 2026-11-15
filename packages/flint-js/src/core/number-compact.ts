@@ -85,11 +85,29 @@ export function compactApplies(
     return types.includes(entry.t1);
 }
 
+/**
+ * The least magnitude that prints in a power of a thousand: the power itself, or for the powers
+ * above the first, the point where the unit below rounds to 1000 (999,500 prints as 1M, not
+ * 1000k). Three significant figures round at 999.5; `decimals` fixed decimals at 1000 − ½·10⁻ᵈ.
+ */
+export function compactFloor(power: number, decimals?: number): number {
+    if (power <= 1) return 10 ** (3 * power);
+    const rollsAt = decimals === undefined ? 999.5 : 1000 - 0.5 * 10 ** -decimals;
+    return rollsAt * 10 ** (3 * (power - 1));
+}
+
+/** The power of a thousand a magnitude prints in, at three significant figures or `decimals` fixed decimals. */
+export function compactPower(a: number, decimals?: number): number {
+    let power = 0;
+    while (power < 4 && a >= compactFloor(power + 1, decimals)) power++;
+    return power;
+}
+
 /** The unit a set of values is compacted to: the largest power of a thousand its largest value reaches. */
-export function compactUnit(maxAbs: number, rule: CompactRule): { divisor: number; suffix: string } | undefined {
+export function compactUnit(maxAbs: number, rule: CompactRule): { divisor: number; suffix: string; power: number } | undefined {
     if (!(maxAbs >= rule.threshold) || maxAbs < 1000) return undefined;
     const power = Math.min(4, Math.floor(Math.log10(maxAbs) / 3));
-    return { divisor: 10 ** (3 * power), suffix: rule.suffixes[power - 1] };
+    return { divisor: 10 ** (3 * power), suffix: rule.suffixes[power - 1], power };
 }
 
 /**
@@ -127,12 +145,19 @@ export function compactPrint(values: number[], rule: CompactRule, mode: 'exact' 
         const decimals = mode === 'significant' ? rule.decimals : undefined;
         return { per: 'value', suffixes: rule.suffixes, threshold: Math.max(1000, rule.threshold), ...(below ? { below } : {}), ...(decimals !== undefined ? { decimals } : {}) };
     }
-    const unit = compactUnit(maxAbs, rule);
-    if (!unit) return undefined;
-    const needed = compactDecimals(values, unit.divisor, mode);
+    const found = compactUnit(maxAbs, rule);
+    if (!found) return undefined;
     // A stated precision is for labels; a ruler's ticks keep only the digits that tell them apart.
-    if (rule.decimals !== undefined && mode === 'significant') return { per: 'scale', ...unit, decimals: rule.decimals, trim: false };
-    return { per: 'scale', ...unit, decimals: needed, trim: mode === 'significant' };
+    const stated = rule.decimals !== undefined && mode === 'significant';
+    const decimalsIn = (divisor: number) => stated ? rule.decimals! : compactDecimals(values, divisor, mode);
+    let { power } = found;
+    let decimals = decimalsIn(found.divisor);
+    // 999,600 rounds to 1000k; the set prints in M.
+    if (power < 4 && Number((maxAbs / found.divisor).toFixed(decimals)) >= 1000) {
+        power += 1;
+        decimals = decimalsIn(10 ** (3 * power));
+    }
+    return { per: 'scale', divisor: 10 ** (3 * power), suffix: rule.suffixes[power - 1], decimals, trim: !stated && mode === 'significant' };
 }
 
 /** A value as it prints, compacted. */
@@ -144,7 +169,7 @@ export function formatCompact(value: number, print: CompactPrint, format: (patte
     const a = Math.abs(value);
     const sign = print.signed ? '+' : '';
     if (a < print.threshold) return format(print.below ?? `${sign},.3~r`)(value);
-    const power = Math.min(4, Math.floor(Math.log10(a) / 3));
+    const power = Math.max(1, compactPower(a, print.decimals));
     return format(print.decimals !== undefined ? `${sign},.${print.decimals}f` : `${sign}.3~r`)(value / 10 ** (3 * power)) + print.suffixes[power - 1];
 }
 
@@ -158,7 +183,7 @@ export function compactExpr(value: string, print: CompactPrint): string {
     let expr = `format(${value}, ${q(print.below ?? `${sign},.3~r`)})`;
     for (let power = 1; power <= 4; power++) {
         const at = 10 ** (3 * power);
-        const floor = Math.max(at, print.threshold);
+        const floor = Math.max(compactFloor(power, print.decimals), print.threshold);
         const pattern = print.decimals !== undefined ? `${sign},.${print.decimals}f` : `${sign}.3~r`;
         expr = `(abs(${value}) >= ${floor} ? format(${value} / ${at}, ${q(pattern)}) + ${q(print.suffixes[power - 1])} : ${expr})`;
     }

@@ -13,6 +13,336 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Every `annotate-text` note is a caption after Blabber's `text`: plain words in the chart's label
+  face, haloed in the page, with a leader only where the caption is not plainly beside what it
+  names. The card (a bordered, shadowed box) that notes on a stretch of a line or area, a pie
+  slice, a whole shape, a map region or a bullet's two parts still drew is gone; a host that wants
+  a callout box draws one with `set-overlay` or `set-freeform-overlay`. Each note is placed by the
+  same lightweight search, from places that suit what it names: a stretch at its middle or a
+  quarter along (an area's caption off the side away from its fill), a slice from inside its wedge
+  out past the pie, a violin at the ellipse its box holds, a region at its middle with the other
+  regions as ground. `highlight` now marks these too: a stretch is drawn again in its ink, a slice
+  or a shape faintly outlined. A bullet's note names its actual bar, with one leader.
+- `AnnotationSpec` is what an update writes: `text`, `anchor` and `highlight`. The `candidates` and
+  `subject` a template's presenter adds are on the internal `PresentedAnnotationSpec`.
+  `AnnotationCandidate`'s `anglePreference`, `textAlign`, `maxDistance`, `priority` and
+  `connectorAnchors` are ignored and deprecated.
+- Annotations take their colours from the house and read on its page and on its marks. A note is set
+  a step heavier than the chart's labels (semibold over regular ones) in the primary text ink, so it
+  is not taken for a label beside it; a house's `type.annotation` role sets it otherwise. Leaders
+  are Blabber's neutral grey. A region's wash is the house's `ink.accent` where that stands apart
+  from the page and every mark (in most houses it is the data's own ink), else the hue of the
+  house's categorical palette furthest from them (never a grey), else a callout hue. Halos are the
+  plot's own surface, and a caption standing on a wash has none. A cue drawn on a mark (an area's
+  edge, a dot on its fill) is in the note's ink or the page's colour, whichever reads on the mark.
+  A stretch of an area is cued in that ink, not its own fill; one too short to read is cued as a dot.
+- A note's leader leaves its mark square to the side it names and is never drawn along the mark's
+  own edge. From a bar's value end it runs out along the bar first (at least ~0.7 of a font size)
+  and turns square toward a caption that is not straight ahead: down into one below the end, or
+  along and in to one beside it. A leader that would graze a cell's or a bar's side runs out from
+  it the same way.
+
+### Added
+
+- A spec carries its own `updates` (`ChartAssemblyInput.updates`): the notes, overlays, emphasis and
+  viewport the chart applies once it is drawn, the same layers a host passes to `mountChart` or
+  `<FlintChart updates>`, so a copied spec keeps them. The spec's are applied first; a host update
+  with the same id replaces the spec's; `validateChart` checks both. The interactive runtime applies
+  them; a static output (`assembleVegaLite`, `renderSvg`, the other backends) draws the chart without
+  them, with an `info` warning (`updates-not-compiled`).
+- A `Map`'s `text` names its points beside them, as an atlas names its places: each label is placed
+  at compile time, through the projection the map will draw, right of its dot, else left, above or
+  below — clear of every dot, every label placed before it, the plot's edge and, where it can, a
+  route's lines. The largest dots are named first where `size` sizes them; a point whose label has no
+  room is left unnamed, with an `info` warning (`map-labels-dropped`). A label keeps its point and its
+  offset in px, so it stays beside its point through a pan, a zoom or a globe's turn.
+- A `Choropleth`'s `text` names its regions at their middles, through the live projection, each
+  shown only while its region is wider and taller on screen than its label: a small region's name
+  appears as a zoom brings it close. Each label is white or a dark ink, whichever reads better on its
+  region's fill (its colour scale's own value, so classes and schemes are followed), haloed in that
+  fill: unseen inside the region, readable where the label runs past a coast.
+- A `Map`'s `shape` tells its points apart by symbol (filled, with a key), as a scatter's does.
+- Plotly draws a map's `text` beside its points and a choropleth's at its regions, and a map's
+  `shape` as its markers' symbols.
+- `mapStyle` takes a style of the caller's own besides the named ones: `{ base?, sea?, land?,
+  coast?, border?, noData?, graticule?, disputed? }`, a named style (`auto` when unset) with any of
+  its colours restated. A stated `sea` fills a flat map's plot as well as a globe's water. A
+  property's other accepted values (a `boundaries` file, this style) are now listed in the chart
+  reference.
+- An overlay's `style.fontStyle` (`'italic'`) sets its text in italic, as a map's sea names are.
+- A route map's `stops` property draws its stops as dots: `'all'` (or `true`) at every stop, `'ends'`
+  only where each run of legs in one colour starts and ends (a chapter of a voyage), the stops between
+  marked by their arrows alone. Dots are one size (from the routes' typical width, 2.5–4 px), sized by `size`
+  (zero-based by area, 2.5–7 px, with its own key; `size` draws them at every stop unless `stops`
+  says otherwise), or all at `stopRadius`. Plotly draws them alike. A leg leaves from
+  the edge of its dot's halo and its head's tip stops at the next one's.
+
+### Fixed
+
+- A map's overlay labels and points are cut at the plot's edge, as its land and lines are: a label
+  whose place sits by the edge no longer runs out over the frame.
+- A theme that `extends` a house and recolours its text ink or page takes the house's type with it:
+  a role the house set in one of its text inks (the NYT's headline, its deck) follows that ink, and
+  on a recoloured page a role colour that would no longer read is moved until it does. A dark page
+  extending `nyt` no longer sets its title in near-black. A colour the extension states is kept.
+- A size key keys the data's least value where that is round and its smallest value lands just
+  off it: a crew that dwindles to one man keys 1, not 2.
+- A route's line ends at its arrowhead's base (a hair past it, so no seam shows) instead of running
+  well into the head: a faded route no longer shows the line's end through its translucent head.
+
+### Deprecated
+
+- The `set-annotation` op. Write `annotate-text`, which it means. It is still read in 1.x, but no
+  longer listed in `CHART_UPDATE_OPS` (it is in `DEPRECATED_UPDATE_OPS`); `validateChart` reports
+  it as a `deprecated_op` warning, the runtime warns once on the console, and the MCP schema marks
+  it deprecated. It will be removed in 2.0.
+
+## [1.0.2] - 2026-11-06
+
+Released together for `flint-chart`, `flint-chart-mcp`, and the Copilot Canvas plugin.
+
+### Added
+
+- Maps draw the boundaries `chartProperties.boundaries` names. `"world-bank"`, the default world
+  map, is World Bank Official Boundaries (CC BY 4.0): areas of non-determined legal status are
+  regions of their own, the borders they share are dotted, and the map credits the World Bank at
+  its foot, with its disclaimer on hover. `"natural-earth"` draws Natural Earth's de facto borders.
+  A chart can instead give a file of its own, by URL or inline:
+  `{ url | values, feature, ids, key, disputed, attribution }`. `ids` says what the file's feature
+  ids are (`iso-numeric`, `iso3`, `iso2`, `fips` or `as-is`), and the rows are read into that form,
+  so country names and codes still join a file keyed by ISO alpha-3. A file of country codes is
+  framed and drawn as the world map is; one keyed by FIPS or by its own keys is fitted to its
+  shapes. A name Flint does not ship, or a malformed file, draws the default with a warning.
+- The named boundaries are published at `https://microsoft.github.io/flint-chart/geo/v1/`, a
+  version whose files never change once deployed, so a compiled spec draws them wherever it is
+  rendered. Flint's renderers load the copies bundled in the package on a map's first draw and
+  fetch nothing; `withBundledBoundaries` gives a Vega view of a host's own the same loader, and
+  `inlineBoundaries` (new `flint-chart/geo` entry) writes them into a compiled spec for a renderer
+  with no network. Sources and licences are in `src/geo/NOTICE.md`.
+- A map frames its data (`chartProperties.fit`: `auto`, `data`, `continent`, `whole`): the
+  country, region or continent the rows cover, drawn in a projection centred on it, Antarctica
+  only where the data names it. The plot fills the canvas once the title and keys have their room.
+  A globe (`projection: "orthographic"`) floats with its sea and rim and hides its far side; a
+  world map sharpens from the coarse to the medium boundaries as it is zoomed; a flat map can be
+  dragged half its plot past its edges.
+- Choropleth classes (`classes`: `auto`, `quantile`, `equal`, `jenks`, `continuous`; `classCount`
+  3–9), map styles (`mapStyle`: `auto` from the theme, `light`, `muted`, `atlas`, `dark`,
+  `minimal`), `graticule` and `borderWidth`.
+- A `Map` with an `order` encoding joins its points into routes: one per `detail` value, else per
+  value of a categorical `color`, which the route takes. A route of stops bows each leg to the left
+  of travel (so a leg out and the leg back part ways) and puts an arrowhead at its end, short of the
+  stop's dot; a track of more than 24 legs follows great circles with one head at its end.
+  `chartProperties.arrows` (default `true`) turns the heads off and `curve` (`auto`, `arc`,
+  `great-circle`, `straight`) chooses the legs. The lines are geoshapes the projection draws, cut at
+  the antimeridian and hidden past a globe's horizon, over a casing in the ground's light; each
+  head reads its heading from the live projection inside the spec, so it turns with a pan, zoom or
+  globe drag in any Vega renderer. Plotly draws the same routes, its heads at mid-leg.
+- A `Map`'s `strokeWidth` channel sets each leg's width, from the row it leaves (zero-based, 1 to 8 px,
+  with a line-width key), as Data Formulator draws flows; `size` stays the dots' area on a route map as
+  on any point map, so one map can widen its legs by one measure and size its stops by another. Each arrowhead is sized to its line and joined to it — the line
+  ends square inside the head — and set on its line: its tip at the stop and the middle of its base
+  on the line a head's length back, however sharply the line turns there. A leg too short on screen
+  for its head shrinks it to fit, and below 60% of its size keeps its line alone. Both are worked out
+  through the live projection (the head's on its own data, its tail of points projected once), so
+  they follow a pan or zoom. A route is
+  drawn as its arrows alone: its stops are not drawn, but still carry the tooltips, the hover and
+  notes on a stop, and the colour key. A route without a series colour takes the theme's mark colour
+  (a neutral ink beside points coloured by another field). Lines are square-ended and mitred, and a
+  hairline halo — white on a light map, the ground on a dark one, as Data Formulator draws it — runs
+  round the line and its head alike. Route
+  expressions use only functions a CSP-safe Vega (`vega-interpreter`) provides.
+- A route's legs are targets, as a line chart's segments are: each is keyed to the row it leaves
+  from, so hover, emphasis and hiding reach it with its stop, and `annotate-text` with
+  `visual: { kind: 'path' }` notes the leg, the caption seated on its curve and joined to it by its
+  leader. The leg is not drawn again over itself, which would cover the stops and heads it meets.
+  Notes on stops and `annotate-enclosure` round groups of stops work as on any chart.
+- On a map, `set-overlay` and `annotate-region` are placed by longitude and latitude through the
+  map's projection, following a pan, a zoom or a turning globe: an overlay's `longitude` and
+  `latitude` (with `longitude2` and `latitude2` for a rule or a rect) place points, text, lines along
+  great circles and boxes; a region's `longitude: [west, east]` and `latitude: [south, north]` shade
+  the box between them, its edges along the meridians and parallels.
+- `keyType` declares what a choropleth's key holds (`iso3`, `iso2`, `iso-numeric`, `country-name`,
+  `us-state`, `fips`), so "CA" reads as Canada or as California. The join keeps every region (no
+  value: the no-data fill), combines rows that name one region by the encoding's aggregate, and
+  warns of keys that match no region, groups of countries ("World", "OECD"), countries the map
+  leaves out, and a total coloured by area.
+- A template can owe a credit for what it draws (`ChartTemplateDef.credit`): a line of its own at
+  the chart's foot, with a link and a note on hover, drawn whether or not the chart gives a source.
+  A template can grow its plot to the canvas (`fillsCanvas`), its furniture measured first.
+
+- Two update ops that annotate a stretch of the chart or a group of its marks, after Blabber's
+  `region` and `enclose`, in Vega-Lite. `annotate-region` shades a period, a band of values, a
+  box or a run of adjacent categories, with an optional caption centred on it, clear of the
+  series it crosses, or outside on a leader when nothing inside is clear. Its options are
+  `color`, `opacity`, `layer: 'under' | 'over'` and `placement`. Regions on one chart take
+  distinct muted washes. A wash under the marks is cut away where they stand; over an area or
+  a heatmap it is drawn over them. `annotate-enclosure` outlines each target group: bars and
+  cells by a rectangle, other marks by a padded hull, pie slices by their own wedge.
+  `shape: 'ellipse' | 'circle'` is also offered. A cluster that shares a colour is outlined in
+  it, any other group in Blabber's neutral grey, over a thin halo of the page so the line reads
+  on dark marks, and one caption is shared, with leaders to two or three outlines (`connect: 'auto'
+  | 'all' | 'none'`). Both are named, so several stand together, and `value: null` clears
+  one. `validateChart` checks a region's bounds against the chart's axes. A captioned stretch of x
+  whose marks reach too near the plot's top for its caption (`AssembleOptions.regions`, set from
+  the first updates) gets room as a note does. The axis runs on past the stretch's tallest mark,
+  enough for the caption just inside the plot's top with 8 px of air. A stretch that has room
+  above its marks, or a line that has room below, takes none. A histogram's bins and counts are
+  worked out as Vega bins them, so its notes and regions get that room too. A histogram's bars,
+  standing on one baseline, are not taken for a heatmap's cells, so a region's wash stays under them.
+  The caption on a mark is now `annotate-text`;
+  `set-annotation` stays as its older name.
+- ECharts, Chart.js and Plotly lay out their frame with the layout's own rules, in each library's
+  look: a headline and deck broken to full lines with no widow (set a size down where that fits one
+  line), band labels wrapped, turned, thinned or cut by the shared band-label plan, axis gutters and
+  names measured (a title longer than its axis on two lines), keys with long names on lines beside
+  the plot or moved to the foot, many lines thinned, and a canvas fit that holds key names short,
+  moves keys to the foot or lays the plot out smaller where the host would otherwise shrink the
+  drawing past legibility. ECharts and Chart.js now draw `chart_spec.title` and `subtitle`. The
+  verdict rides on the spec as `_canvasFit`. The dev site's *Backend layout* pages draw the
+  Vega-Lite layout labs' cases in each backend.
+- Themed Plotly charts draw the house's header (`planHeader`: tabs, rules) and source line
+  (`planSource`), start the headline, key and source at the chart's left edge, stand the value
+  axis on the right where the house does, title the key where the house titles keys, and give
+  back foot room kept for names the house laid flat or an axis title it moved into the deck.
+- Each backend states how its library draws the layout's furniture in a profile (`BackendProfile`:
+  key entry geometry, row wrapping, axis label and title spacing), read off the library's defaults
+  and source, and the shared estimators (`keyBlock`) measure with it. Plotly's keys, margins and
+  facet grids are now measured as Plotly draws them: no fixed 64 px gutter, keys estimated as
+  Plotly wraps them (a grid at the widest entry), axis titles taken away removed rather than left
+  empty, a tall key of long names stood beside the plot where that fits the box, and facets with
+  one shared title per axis, x labels only under each column's last panel and flat thinned times.
+- Plotly bars over a run of dates (a temporal field on the band axis) stand on Plotly's date
+  axis with its calendar ticks, flat and thinned, rather than one turned label a month. The
+  backends' canvas fit scores a treatment by how far its host would shrink the drawing as well as
+  by its flags, and may set the key's text a size smaller (`canvasTreatment.keyScale`, 10 px floor).
+  Key names held short by the canvas fit are held to the same width in every backend, past each
+  library's own symbol room (Plotly's key had left its names 70 px, so the treatment did nothing).
+- A narrow chart's title (two bars under a long headline) is broken to the width its box allows,
+  not the chart's own, and the drawing widens to hold it: the backends no longer stack a headline
+  into many lines over a thin plot. Plotly measures a house's headline in the case it draws it
+  (an upper-cased headline had run past the figure's edge).
+- A Plotly key that a house sets in a row above or below the plot sets its names for the row (whole,
+  or broken where that lets more share a row) rather than keeping names broken for a column beside
+  the plot.
+- Plotly scatter and line axes start and end on labelled ticks, as Vega-Lite's nice domains do (a
+  range rounded out to its tick step, a step further where an edge bubble would be clipped), and a
+  log axis over a few decades is labelled at 1·2·5 of each decade where those labels fit.
+- A Plotly pie whose slice names run long beside its radius names its slices in a key beside it
+  (long names on lines) and prints the shares inside, rather than standing the names outside and
+  shrinking the pie to a small disc among them; a house's key on top stands beside a pie.
+  A themed pie whose callouts would stand outside it is keyed too (in the house's row where it
+  fits), so Plotly's automargin no longer moves the plot, and the header hung from it, after the
+  frame placed them.
+  Plotly pies and donuts take a `sliceNames` chart property (`auto`, `onSlices`, `key`), which a
+  house may also set in `chartDefaults`, to keep the names on the slices or always set them in a key.
+- A Plotly key in rows above or below the plot flows, each entry its own width, rather than standing
+  as Plotly's grid at its widest entry, where one long name left one entry a row.
+- Plotly facet panels are ticked from their own height (y) and width (x), the range rounded to the
+  step; a house's tick count is no longer shared out over the grid, which had left a panel's y axis
+  two labels (0, 20).
+- Plotly facet panels tick their years by the width each panel is drawn at, with Vega-Lite's
+  temporal rule: the finest calendar step (1, 2, 5, 10 … years) whose labels stand apart by half
+  of each one's width and 0.6 em. Plotly's own `nticks` had left a wide panel two labels.
+- Plotly keys in rows are measured as Plotly wraps its grouped rows (an entry steps on by its gap,
+  its text box a little wider than its advance), so a key on top no longer runs its last row into
+  the plot; a key at the foot stands under the x labels in room of its own rather than letting
+  automargin take its height from the plot; a few px separate a title from a key hung under it; and
+  a time axis's labels are measured as Plotly prints them (a second line for the year under days).
+- Plotly draws a key to a size channel, which Plotly has none of: a few round values
+  (`roundSample`, as many as the edge holds) as circles at the size the chart draws them, with the
+  field's name, in a row under a key in rows or beside the plot under the colour key.
+- Cartoon's dots are solid (`marks.point.opacity: 1`): stickers stack, the dark edge of one keeping
+  the one beneath readable, in Vega-Lite as in Plotly, whose dots now take a house's outline.
+- The backends' canvas fit may set the library's type a size down (`canvasTreatment.labelScale`,
+  `titleScale`: Plotly 12 → 10 px ticks, 14 → 12 px axis titles, 17 → 14.5 px headline, never below
+  10 / 13 px), alongside key names and key text; type is taken smaller only where the host then
+  shrinks the drawing less by enough that the text reads at least as large on screen. A Plotly key
+  is set at its ticks' size (12 px), not the axis titles' (14 px).
+- Plotly sizes a bubble chart's points on one scale over every series, from zero, as Vega-Lite does
+  (a house's size range had been applied to each series apart, so each series' largest bubble drew
+  at the largest size), and draws them largest first, so small bubbles stay in sight.
+- Plotly leaves off the line along the index axis where the value scale's floor is not zero and the
+  house grids its values (`floating: 'omit'`), as Vega-Lite does: zero carries the base (no second
+  baseline under a scatter that crosses zero). A banded axis of dates names its bands as a calendar
+  does (`Jan` over `2025`, `Mar`, …), flat, every few bands where one will not hold a name, as
+  ECharts and Chart.js already did, rather than one turned `2025-01` a band.
+- ECharts binned colour scales break at round values (`roundBinEdges`), labelled as ranges; a
+  continuous size or colour ramp beside the plot stands from the plot's top with its title
+  centred over the bar.
+
+### Changed
+
+- **Visible change:** world maps draw World Bank Official Boundaries, credited at their foot,
+  where they drew Natural Earth's; choropleths are classed in five quantile classes where they
+  shaded a continuous ramp; a map frames its data rather than the whole world; and maps (`Map`,
+  `Choropleth`) draw no house chrome (header, rules, logos, footer credit) unless `chrome` asks.
+- **Visible change:** on a dark map style the borders are gaps in the ground's colour rather than
+  bright lines, land and no-data regions are lifted off the dark water, and points wear a thin ring
+  so they hold against both. A map's credit is set a size under the source line (0.8 of it, 9 px
+  floor), and a point map's land is outlined at the map's own border width (0.4 px on the world,
+  0.5 px on the US) rather than 1 px; borders keep their width at any zoom.
+- **Visible change:** a point or route map left to the theme stands on a reference map's ground:
+  water fills a world map's frame in a cool tint, land lies light on it, the coast outlines the land,
+  and the borders between countries are thin lines drawn over that outline (a mesh of their own)
+  rather than gaps, which vanish between regions of one fill. A US map, or land of the caller's own,
+  stays on the page with its land toned. Every style outlines a point map's land at its coast.
+  Choropleths take the same ground: water behind a world map, regions outlined at the coast, and the
+  borders between them thin lines of their own (a mesh over the regions) rather than white gaps; a
+  US map stays on the page. A map of runtime levels (`level: 'auto'`) keeps its outlines.
+- A map keeps its frame's shape and grows until one side meets the canvas; its key stands on the
+  side with the room left over (beside a wide map in a tall box, above or below a tall one) when
+  that leaves the map larger.
+- **MCP:** the chart view carries no boundary files and declares
+  `https://microsoft.github.io` in its CSP (`connectDomains`); a map fetches its named boundaries
+  from there.
+- A note on a bar whose value is printed past its end continues the printed value instead of
+  pointing past it: it stands after the label, joined to it, so "0.616 — Down from 0.706 before
+  taxes" reads as one statement rather than a value label and a second annotation.
+- **Visible change:** `set-style` emphasis (`state: 'emphasized'` or `'focused'`) recedes the other
+  marks to 0.6 of their own opacity by default instead of to 0.25, so the rest of the chart stays
+  readable. A new `emphasis: 'light' | 'strong' | 'exclusive'` sets how far they recede (0.6,
+  0.35, 0.2 of their opacity, so a dot drawn at 0.7 recedes from 0.7), like a note's `highlight`;
+  `mutedOpacity` still states the receded opacity outright, and the presets keep their 0.25.
+  A region caption asked for a side its region is too narrow for stands as near that side as fits.
+  The value labels of the marks set back recede no further than half, and a label drawn on its
+  mark switches to the page's ink, so values stay readable under every house: before, faded bars
+  kept a label ink chosen for the full-strength fill (black on dark blue, white on pale blue).
+
+- **Visible change:** a note that points at one mark (a dot, a bar's value end, a cell, a line's
+  point) is now drawn as a caption beside the mark instead of a card, in Vega-Lite. The caption
+  uses the chart's own axis-label face one size up, haloed in the chart's background. A short
+  leader to the mark's outline is drawn only when the caption stands off the mark or another mark
+  sits as close. Placement (`core/annotation`) tries a ring of seats around the mark and keeps the
+  cheapest. Leaving the canvas costs most, then covering marks, text or lines, then leader length.
+  Notes are placed one at a time, each clear of the captions and leaders placed before it. There is
+  no joint search. Notes on a stretch of a line or area, a slice, or a region keep their card.
+  Restyle captions with `--flint-annotation-color`, `--flint-annotation-halo` and
+  `--flint-annotation-line-color`.
+- **Visible change:** the chart now helps its notes. A note's `highlight` sets how much the
+  mark it names stands out. `'light'` is the default: the mark is lifted above its
+  neighbours with a halo, a line's point is drawn as a dot in the line's colour, and a bar
+  or cell gets a faint outline. `'strong'` adds a ring round a dot and a full outline round
+  a bar. `'exclusive'` is strong and fades every other mark, as `set-style` `emphasized`
+  does. `'none'` leaves the mark as drawn. The notes a chart mounts with (its first
+  `updates`, or `AssembleOptions.notes`) also get room: a noted mark at the top of a measure
+  axis (the tallest bar, a peak) makes the axis run on just far enough for the caption and the
+  nearest seat over it (0.9 of a font size), ending at a fine round step (a twentieth of the
+  span) rather than the next major tick, so a one-line caption takes about 30 px. This uses at
+  most a third of the axis and keeps any domain end the spec states. Long captions now
+  break into even lines, preferring a break after a colon or comma, instead of leaving one
+  word alone on the last line. A caption too wide for the gap beside its mark may stand in two
+  even lines. A note on a bar's value stands past the value face, centred on it (or slid aside
+  as far as its own edge), with a straight leader to the face's centre, as Blabber's bar
+  captions do; the ring round the bar's end is only an escape. A note now resolves to its mark
+  rather than to the mark's value label.
+- `validateChart` now gives an info `note_repeats_chart` when a note repeats a value the
+  chart already prints on its mark, such as "Online leads: 61" over a bar labelled 61. A
+  note should say what the chart does not. The interaction skill now says so too.
+- A heatmap side over a whole run of months or quarters (every period from the first to the last,
+  up to 50) is drawn as equal cells named by the calendar (`Jan` over `2025`, `Feb`, …) in
+  Vega-Lite too, as ECharts and Plotly draw it. On a time scale its cells, one width each, stood
+  at their months' starts, 28 to 31 days apart, with uneven gaps. The time scale stays one
+  `xAxisType` / `yAxisType` choice away; a run with a gap, or of days, weeks or years, keeps it.
 - **Breaking (MCP):** the server keeps nothing between calls, so it runs
   stateless. `show` takes the spec itself, as `chart` or `board`, and draws it;
   `validate_chart` and the new `validate_board` check a spec and return the
@@ -24,6 +354,121 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   context gives the fields (`theme_spec`, `grid`, `chart_spec`) that keep them in
   the next `show`. A card the host draws again without its result calls `show`
   with the spec it was given.
+- A stepped colour scale — a house that bins its ramp (`consumption: 'quantize'`: pop, swiss,
+  cartoon, de-stijl) or an author's `bins` — is cut at round values (`roundColorClasses`). The
+  step is round (1, 2, 2.5 or 5 of a power of ten), chosen by Talbot, Lin & Hanrahan's extended
+  labeling score; a diverging field's pivot is a break, and each side takes only the classes its
+  data reaches, the short arm the pale end of the ramp. A heatmap of −6.7 … 33.5 °C reads 0, 10,
+  20, 30, where equal cuts of a domain made symmetric at ±33.5 read "−20, −7, 7, 20" for breaks at
+  ±20.1 and ±6.7 and left two cold classes empty. A house's count is a target (about 5); an
+  author's `bins` is held where a round step closes that many classes, else the outer two open.
+  Neither side of the pivot takes more than four classes where a coarser step holds it, and each
+  class takes the colour at its far edge, so the classes beside a break show their sign. A pivot
+  the type always has (`Correlation`, `Sentiment`, a stated `divergingMidpoint`) centres a neutral
+  class instead; the new `divergingNeutral` annotation sets its half-width, or `false` for a break.
+  Vega-Lite draws a threshold scale whose key prints each break in full; ECharts' author bins break
+  at the pivot too. Grounding reports a diverging ramp whose arms differ by more than 3 L* at
+  mirrored points (`diverging-ramp-unbalanced`): pop, de-stijl, swiss and cartoon do today.
+
+### Fixed
+
+- A compact number that rounds up to the next power of a thousand is written in that power:
+  `999,600` prints `1M`, not `1000k` (or `1,000k` where a set shares one unit), and `999,600,000`
+  prints `1B`, as d3's `~s` and the KPI tile already do. A stated precision decides where it
+  rolls over: at two decimals `999,960` stays `999.96k`.
+  ([#172](https://github.com/microsoft/flint-chart/issues/172))
+- A note's, a region's or an enclosure's caption no longer stands on the source line, a map's
+  credit or a house's header and rules, which are drawn beside the chart rather than in it; and a
+  caption round a map's marks no longer treats the land and water as marks it must keep off.
+- The canvas fit reserved 8 px of padding round the drawing where Vega-Lite pads by 5, so a chart
+  sized to its box ran a few px over it.
+- Dates that arrive as ISO timestamps (`"2005-05-01T00:00:00.000"`, `"…Z"`, `"2005-05-01 00:00:00"`,
+  as a database `DATE` column serialised to JSON often is) are read as dates under `Year`,
+  `YearMonth`, `Date` and the other calendar types: a midnight timestamp becomes its date, so the
+  axis shortens its labels (`Jun · Jul · Aug`) as it does for `"2005-05-01"` instead of printing the
+  full timestamp. A `Date` object at local midnight reads the same way. A timestamp without a zone
+  is read in UTC, so marks sit on their date whatever the machine's time zone (before, a Pacific
+  machine drew them 7 h late). A timestamp with a time of day keeps it (one with a zone offset is
+  kept as written).
+- An enclosure round dots at the edge of the plot is drawn whole: where a dot it encloses sits
+  within 12 px of a continuous axis's end, that axis is padded by 12 px (`AssembleOptions.enclosures`,
+  set from the chart's first updates), instead of the outline being cut at the plot's edge.
+- The room kept for value labels past the ends of horizontal bars now runs the axis on rather than
+  cutting the axis short. The domain extends by the share of the plot the labels take (Flint's own
+  ticks continue at their step), so the axis line, its ticks and the gridlines reach the plot's
+  edge; before, they stopped at the last tick and left an empty stretch with no scale. Bars keep
+  their lengths. Bars that grow both ways, or run on a reversed scale (a pyramid), keep the inset.
+- Four kinds of chart update that `validateChart` reported as applying were dropped when drawn
+  (found by the annotation experiment's pilot). A key with a number now matches a field drawn as
+  categories, whose values Vega-Lite carries as text (`{ Year: 2016 }` on a banded year). A
+  series with a single row on a line chart is drawn as a point, so its value shows and a note
+  can point at it. A region caption asked for a placement its region is too small to hold is
+  placed where it fits instead of dropped, and `placement: 'above'` or `'below'` stands just past
+  a band's own edge, or moves inside a full-height stretch where the header holds the seat over
+  the plot. An overlay with `strokeDash: 'dash'` or `'dot'` draws, and an overlay the renderer
+  cannot read no longer stops the chart's other updates from drawing.
+- An enclosure round a cluster of dots takes the cluster's fill colour, not the outline a house
+  draws round every dot (every cluster came out black under `pop`).
+
+- A stepped colour key standing beside the plot (an author's `bins` without a theme) runs no
+  longer than the plot. Vega-Lite drops a binned key's own `gradientLength` and drew the ramp at
+  its 200 px default, twice the height of a short heatmap; the planned length now goes on the
+  legend config, which the ramp reads.
+- A size key prints the values it lists. Vega-Lite labelled the round values it sampled with the
+  scale's tick format, so a key for 0.5, 1 and 2.5 read "1, 1, 3" (a Map's "0, 1, 1, 3"); each key
+  now carries a format precise enough for its values, keeping the field's own (a share, a currency)
+  with its precision raised, and the key's width is measured from those labels. Plotly's size key
+  no longer rounds values below 0.001 to "0", nor ECharts' size map its ends below 1.
+- A tooltip on an interactively filtered stacked chart (a bar coloured by its own category) no
+  longer lists Vega-Lite's `_<field>_sort_index`: the colour domain the filter pins made Vega-Lite
+  order the stack by that index, which a tooltip on every encoding listed.
+- Bars sorted by value (`sortBy: "x"`) stay in value order under every house. A house's value
+  labels and row names draw on the bars' band, and Vega-Lite drops a sort the layers cannot share,
+  so nyt, economist, powerbi, powerbi-light, pop and de-stijl drew the bars in name order (and
+  datawrapper's names above the bars failed to compile in 1.0.1). Every layer on such a band now
+  states the same order, computed as Vega-Lite sorts the bars.
+- A Vega-Lite chart given a `canvasSize` is drawn within it. The canvas fit left a chart that read
+  well drawn larger than its box — keys beside a plot that filled the width, a title over one that
+  filled the height — for the host to scale; a host that drew the SVG at its own size cut them off.
+  The chart is now laid out again for a smaller room, so the plot gives up the room and the keys,
+  labels and title stand inside the canvas (`_canvasFit.treatment.contain`, reported as
+  `canvas-contain`). The plot keeps at least half of each side, and no value is cut or label turned
+  for the room; what cannot be brought within is left nearer, for the host to scale. Charts without
+  a `canvasSize`, composite charts, the other backends and `canvasFit: 'off'` are unchanged. A
+  chart that ran past its `canvasSize` now draws a smaller plot; `canvasFit: 'off'` keeps the
+  drawing as it was.
+- `filterControls` filters a Vega-Lite chart with an `aggregate` encoding (an average, a count, a
+  sum) or several y fields. The rows a filter left were swapped in raw, while the chart's data had
+  been folded and aggregated when it was built, so the bars found no value and the plot emptied
+  (clearing the filter emptied it too). Swapped-in rows (`set-data`) are now shaped as the chart's
+  own rows were; rows the host aggregated already pass through as before.
+- A note (`set-annotation`) keyed to an interior point of a line drawn with points attaches to that
+  point. The key matched both the point and the segment that starts there, so every point but a
+  series' last reported `unsupported_update: … matched nothing`.
+- A chart with no theme draws on the host's background: `options.background`, and the
+  `background` the React view, the interactive renderer and `renderSvg` take, now reach the spec,
+  where Vega-Lite's default white outranked them. A theme whose surface defers to the host
+  (`ink.surface.source: 'host'`) follows it too; a theme with its own canvas keeps it.
+- A `Percentage` stored as fractions prints as percentages (`16.4%`, not `0.164`) with no
+  `intrinsicDomain` stated, read from the values as its domain and a KPI already were.
+- An app no longer fails to build for want of a backend it does not draw with (#155):
+  `flint-chart` now depends on every backend it draws with (`vega`, `vega-lite`, `vega-tooltip`,
+  `echarts`, `chart.js`, `plotly.js-dist-min`), so `npm install flint-chart` is the whole install
+  and `flint-chart/react` and `flint-chart/interactive` draw on any backend as installed. React
+  stays an optional peer; the unused `plotly.js` peer is dropped. Plotly is held to `^2.35.0`, the
+  line Flint's Plotly layout is tested against.
+  - For an app bundled into one file (no code splitting), new entries `flint-chart/react/<backend>`
+    and `flint-chart/interactive/<backend>` (`vegalite`, `echarts`, `chartjs`, `plotly`) export
+    the same names but reach only that backend, so the file carries one library. `<FlintChart>`
+    and `mountChart` take a `renderers` map of factories from `flint-chart/<backend>/interactive`
+    to draw another backend from such an entry. The MCP view imports the Vega-Lite entries in
+    place of stubbing the other backends at build time.
+- A percentage field's storage is no longer guessed from the values where the annotation states
+  it: the new `percentScale` (`"fraction"` | `"percent"`) annotation is used as stated, and an
+  `intrinsicDomain` within ±1 (fractions) or reaching 100 (percent points) settles it too. A growth
+  rate stored as fractions mostly past 1 (2.4 for 240%) was printed as "2.4%", and the same column
+  was formatted two ways depending on which rows a query returned. Axes, tooltips, value domains
+  and KPI cards all read the stated scale (#154).
 
 ## [1.0.1] - 2026-10-21
 
@@ -521,7 +966,8 @@ Released together for `flint-chart`, `flint-chart-mcp`, and the Copilot Canvas p
 - Treated only lowercase `start` and `end` Waterfall Type values as total
   anchors in Vega-Lite; other values now remain floating deltas colored by sign.
 
-[Unreleased]: https://github.com/microsoft/flint-chart/compare/1.0.1...HEAD
+[Unreleased]: https://github.com/microsoft/flint-chart/compare/1.0.2...HEAD
+[1.0.2]: https://github.com/microsoft/flint-chart/compare/1.0.1...1.0.2
 [1.0.1]: https://github.com/microsoft/flint-chart/compare/1.0.0...1.0.1
 [1.0.0]: https://github.com/microsoft/flint-chart/compare/0.5.1...1.0.0
 [0.5.1]: https://github.com/microsoft/flint-chart/compare/0.5...0.5.1

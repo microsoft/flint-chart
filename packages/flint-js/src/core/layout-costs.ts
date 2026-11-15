@@ -22,6 +22,9 @@ export const LAYOUT_COSTS = {
         names: 0.4,
         /** Long names down the y axis wrap onto a second line. */
         rowNames: 0.4,
+        /** The axis labels a size down, and more the smaller they get, per share of their size given up. */
+        labels: 0.3,
+        labelsPerShare: 0.6,
         /** Key names held narrower still. */
         namesNarrow: 0.05,
         /** The headline and deck one size down. */

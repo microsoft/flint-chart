@@ -91,11 +91,13 @@ describe('MCP server over HTTP (stateless streamable transport)', () => {
     expect(text).toMatch(/disabled/i);
   });
 
-  it('documents data.url as disabled in the render_chart input schema', async () => {
+  it('documents data.url as disabled in show, the schema every chart tool refers to', async () => {
     const { tools } = await client.listTools();
-    const render = tools.find((t) => t.name === 'render_chart');
-    const urlSchema: any = (render?.inputSchema as any)?.properties?.data?.properties?.url;
+    const show = tools.find((t) => t.name === 'show');
+    const urlSchema: any = (show?.inputSchema as any)?.properties?.chart?.properties?.data?.properties?.url;
     expect(urlSchema?.description).toMatch(/disabled/i);
+    const render = tools.find((t) => t.name === 'render_chart');
+    expect((render?.inputSchema as any)?.properties?.data?.description).toBe('As `chart.data` on the show tool.');
   });
 
   it('serves a health endpoint', async () => {

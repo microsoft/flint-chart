@@ -125,6 +125,8 @@ export function admitInteractions(
         code: 'unsupported_interaction' | 'conflicting_interactions',
         message: string,
     ): false => {
+        // A baseline behaviour the chart cannot honour is simply not there.
+        if (interaction.origin === 'baseline') return false;
         if (interaction.origin !== 'spec') throw new Error(message);
         warnings.push({ severity: 'warning', code, message: `${message} ${DROPPED}` });
         return false;
@@ -159,6 +161,18 @@ export function admitInteractions(
         const shared = firstSharedTrigger(admitted);
         if (!shared) break;
         const { trigger, earlier, later } = shared;
+        // A baseline behaviour gives way to anything asked for, silently: narrowed where it can keep
+        // the rest, else gone.
+        const baseline = later.origin === 'baseline' && earlier.origin !== 'baseline' ? later
+            : earlier.origin === 'baseline' && later.origin !== 'baseline' ? earlier : undefined;
+        if (baseline) {
+            const copy = without(baseline, trigger);
+            const stillShares = copy && triggersOf(copy).some((other) => other.id === trigger.id);
+            admitted = copy && !stillShares
+                ? admitted.map((candidate) => (candidate === baseline ? copy : candidate))
+                : admitted.filter((candidate) => candidate !== baseline);
+            continue;
+        }
         const narrowed = [earlier, later]
             .map((interaction) => ({ interaction, copy: without(interaction, trigger) }))
             .filter(({ copy }) => copy);

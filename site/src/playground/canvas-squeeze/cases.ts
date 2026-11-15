@@ -495,6 +495,17 @@ export const CASES: SqueezeCase[] = [
     }),
   },
   {
+    id: 'ch-pie-callouts-economist', kind: 'squeezed', issue: 'keysTop', group: 'challenge', name: 'A pie with outside callouts, Economist',
+    note: 'Four slices, two of them thin, under the red tab: the names stay as callouts round the pie and the thin slices\u2019 stand outside it.',
+    expect: 'The red tab stays on the canvas\u2019s top edge over the headline, wherever the callouts push the pie\u2019s margins.',
+    theme: 'economist',
+    input: own([
+      { Fuel: 'Natural gas', Share: 58 }, { Fuel: 'Coal', Share: 34 }, { Fuel: 'Nuclear and hydroelectric', Share: 5 }, { Fuel: 'Oil and other liquid fuels', Share: 3 },
+    ], { Fuel: 'Category', Share: 'Percentage' }, {
+      chartType: 'Pie Chart', encodings: { color: 'Fuel', size: 'Share' }, title: 'Power generation by fuel', subtitle: 'Share of output, %',
+    }),
+  },
+  {
     id: 'ch-series-end', kind: 'healthy', issue: 'control', group: 'challenge', name: 'Lines named at their ends, NYT',
     note: 'Three regions, which NYT names at the ends of their lines instead of in a key.',
     expect: 'Nothing to move: the names sit beside the lines. The layout should leave it as planned.',

@@ -17,6 +17,9 @@ jobs:
       fail-fast: false
       matrix:
         node: [20, 22]
+    env:
+      # The package's type declarations outgrow Node's default heap.
+      NODE_OPTIONS: --max-old-space-size=8192
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -40,6 +43,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+        env:
+          # The package's type declarations outgrow Node's default heap.
+          NODE_OPTIONS: --max-old-space-size=8192
       - run: npm run site:build
         env:
           # The site bundle outgrows Node's default ~4 GB heap; the runner has 16 GB.

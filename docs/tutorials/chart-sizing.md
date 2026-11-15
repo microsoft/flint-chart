@@ -65,8 +65,8 @@ Choose the mode by setting `baseSize`, `canvasSize`, or both:
 |------|-----|--------------|
 | **Default auto layout** | neither | Flint targets `400 × 320` and may grow when the data is dense. |
 | **Target size** | `baseSize` | Flint aims for your preferred size, but can still grow if readability needs it. |
-| **Fixed slot** | `canvasSize` | Flint fits the chart inside that box and never overflows it. Use this for dashboards and cards with hard dimensions. |
-| **Bounded growth** | both | Flint starts from `baseSize`, grows only when needed, and never exceeds `canvasSize`. |
+| **Fixed slot** | `canvasSize` | Flint lays the chart out to read well inside that box. Use this for dashboards and cards with hard dimensions, and scale the drawing into the slot (see [When the box is tight](#when-the-box-is-tight)). |
+| **Bounded growth** | both | Flint starts from `baseSize`, grows only when needed, and never stretches the plot past `canvasSize`. |
 
 For the full equations and implementation details, see
 [Auto Layout Algorithm](/documentation/layout-model).
@@ -99,7 +99,7 @@ Drop `canvasSize` to let the chart grow to `baseSize × maxStretch`, or lower
 `options.maxStretch` to tighten the default ceiling for fixed dashboard cells.
 
 For a **fixed slot**, the simplest form is `canvasSize` on its own — Flint then
-treats it as a box the chart fills and shrinks to fit, never overflowing:
+treats it as a box the chart fills and shrinks to fit:
 
 ```json
 {
@@ -146,11 +146,26 @@ never lays a chart out larger for the host to shrink: a chart nothing mends is d
 and whether to scroll or scale it is the reader's or the host's choice.
 
 A chart that reads well but is drawn a little larger than its box gets only the gentlest edits — keys
-in a row on their edge, or names wrapped — and only where they bring it nearer its box with nothing
+in a row on their edge, names wrapped, or names wrapped down the y axis set a size or two smaller (never
+below three-quarters of the theme's size, so two-line rows stand shorter) — and only where they bring it nearer its box with nothing
 going wrong. A chart that reads well as planned is otherwise never changed, nothing is dropped, and the chart's own shape
 is never changed. A title spans the whole drawing, keys beside the plot included, and so does a row of keys above or below it. Each stands where the theme sets it — a centred title over the plot, keys from its start — and, where it would run past the drawing's edge there, moves the least that keeps it within. A partial edit that trades one problem for another — a drawing too wide made too tall — is not kept, nor one that makes text already too small smaller still. A headline that must break is broken at its own size, each line filled to the
 width (a lone last word evened out), unless a size down saves a line. Set `options.canvasFit` to
 `'off'` to lay a chart out exactly as planned.
+
+**The drawing stands within its canvas.** Where a `canvasSize` is given and the drawing still runs
+past it — keys beside a plot that fills the width, a title over a plot that fills the height — the
+chart is laid out once more for a smaller room, the edits above kept, so the plot gives up the room
+and the keys, labels and title stand inside the canvas. The plot never gives up more than half of a
+side, and the room is never bought by cutting values or turning labels the chart kept flat. This
+applies to single Vega-Lite views; it is reported as `canvas-contain` and skipped with
+`canvasFit: 'off'`. A chart without a `canvasSize` is laid out as before.
+
+**Scale what is left into the slot.** A drawing that still runs a little past its box — a dense
+banded axis, a facet grid, a chart from another backend — reads well once the host scales it into
+the box (down to 70%). A host that draws charts at their own size should scale the SVG or canvas to
+`min(1, box ÷ drawn)` on each side (contain), and, rendering on a server, measure text as its
+renderer does (`setTextMeasurer`), so the plan's estimate matches the drawing.
 
 ## Font size
 

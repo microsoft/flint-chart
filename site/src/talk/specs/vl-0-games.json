@@ -1,0 +1,24 @@
+{
+  "data": {
+    "url": "intro-games.json"
+  },
+  "width": 240,
+  "height": 200,
+  "mark": "rect",
+  "encoding": {
+    "x": {
+      "field": "year",
+      "type": "ordinal"
+    },
+    "y": {
+      "field": "game",
+      "type": "nominal"
+    },
+    "color": {
+      "field": "activeUsers",
+      "type": "quantitative",
+      "aggregate": "mean",
+      "title": "Average active users"
+    }
+  }
+}

@@ -3,7 +3,9 @@ import { siteTheme } from '../shared/theme';
 import './playground.css';
 
 type NavLeaf = { to: string; label: string; end?: boolean };
-type NavEntry = NavLeaf | { group: string; children: NavLeaf[] };
+/** A heading splits a long menu into topics; it is not a link. */
+type NavItem = NavLeaf | { heading: string };
+type NavEntry = NavLeaf | { group: string; children: NavItem[] };
 
 const pages: NavEntry[] = [
   {
@@ -11,6 +13,7 @@ const pages: NavEntry[] = [
     children: [
       { to: 'illustrations', label: 'Gallery', end: true },
       { to: 'illustrations/architecture', label: 'Architecture' },
+      { to: '/dev/design', label: 'Design blueprint' },
       { to: 'demo-wall', label: 'Demo wall' },
       { to: 'full-test-cases', label: 'Full test cases' },
     ],
@@ -18,19 +21,30 @@ const pages: NavEntry[] = [
   {
     group: 'Layout',
     children: [
-      { to: 'labs', label: 'Overview' },
+      { heading: 'Tools' },
       { to: 'layout-inspector', label: 'Layout inspector' },
       { to: 'layout-plan', label: 'Layout plan demos' },
-      { to: 'overflow-viewport', label: 'Overflow viewport' },
-      { to: 'zoom-clipping', label: 'Zoom clipping' },
-      { to: 'band-stretching', label: 'Band stretching' },
+      { to: 'labs', label: 'Figures: colour, bands, dodge' },
+      { heading: 'Fit and overflow' },
+      { to: 'canvas-fit', label: 'Canvas fit' },
+      { to: 'viewport', label: 'Viewport and clipping' },
+      { heading: 'Axes and titles' },
       { to: 'axis-label', label: 'Axis labels' },
-      { to: 'calendar-axis', label: 'Calendar axes' },
-      { to: 'categorical-temporal', label: 'Categorical temporal' },
-      { to: 'canvas-squeeze', label: 'Canvas squeeze' },
+      { to: 'time-axes', label: 'Time axes' },
+      { to: 'titles', label: 'Titles' },
+      { heading: 'Marks, colour and maps' },
       { to: 'density', label: 'Density' },
       { to: 'legend', label: 'Legend' },
-      { to: 'color', label: 'Color' },
+      { to: 'colour', label: 'Colour' },
+      { to: 'maps', label: 'Maps' },
+    ],
+  },
+  {
+    group: 'Backend layout',
+    children: [
+      { to: 'backend-layout/echarts', label: 'ECharts' },
+      { to: 'backend-layout/chartjs', label: 'Chart.js' },
+      { to: 'backend-layout/plotly', label: 'Plotly' },
     ],
   },
   {
@@ -38,9 +52,14 @@ const pages: NavEntry[] = [
     children: [
       { to: 'interaction-test-cases', label: 'Test cases' },
       { to: 'interaction-coverage', label: 'Coverage' },
+      { to: 'baseline', label: 'Baseline behaviour' },
+      { to: 'tooltip-compare', label: 'Tooltip: Vega-Lite vs baseline' },
+      { to: 'baseline-sweep', label: 'Baseline sweep (all chart types)' },
       { to: 'interaction-conflicts', label: 'Conflict cases' },
       { to: 'chart-api-design', label: 'API design: FlintChart' },
       { to: 'annotation-lab', label: 'Annotation lab' },
+      { to: 'annotation-captions', label: 'Annotation captions' },
+      { to: 'muted-annotations', label: 'Muted annotations' },
       { to: 'interaction-dashboard', label: 'Demo: dashboard' },
       { to: 'external-to-chart', label: 'Demo: external to chart' },
       { to: 'chart-to-external', label: 'Demo: chart to external' },
@@ -51,22 +70,17 @@ const pages: NavEntry[] = [
     group: 'Themes',
     children: [
       { to: 'theme-labs', label: 'Theme lab' },
-      { to: 'theme-lab-r2', label: 'R2 evaluation' },
-      { to: 'theme-lab-real', label: 'Real-world evaluation' },
-      { to: 'label-experiment', label: 'Label experiment' },
-      { to: 'style-references', label: 'Style references' },
-      { to: 'new-theme-test', label: 'New theme test' },
+      { to: 'new-theme-test', label: 'Style guides' },
       { to: 'theme-improvement', label: 'Theme improvement' },
-      { to: 'label-angles', label: 'Label angles' },
       { to: 'row-names', label: 'Names above bars' },
     ],
   },
   {
     group: 'Release examples',
     children: [
+      { to: 'release-examples/1.0.2', label: '1.0.2' },
       { to: 'release-examples/1.0.0', label: '1.0.0' },
-      { to: 'release-examples/application-demos', label: 'Application demos' },
-      { to: 'release-examples/test-examples', label: 'Test examples' },
+      { to: 'fun/greek', label: 'Greek myths on maps' },
     ],
   },
   {
@@ -75,18 +89,18 @@ const pages: NavEntry[] = [
       { to: 'mcp-ui', label: 'MCP UI test' },
       { to: 'mcp-stories', label: 'MCP chat stories' },
       { to: 'debug-gym', label: 'Debug gym' },
-      { to: 'agent-comparison', label: 'Agent comparison' },
-      { to: 'dense-marks', label: 'Dense marks: D3 vs Flint' },
       { to: 'interaction-coverage', label: 'Interaction coverage' },
     ],
   },
+  // Eval runs are local (site/public/eval is gitignored), so the tab exists only in dev builds.
+  ...(import.meta.env.DEV ? [{ to: 'eval', label: 'Eval' }] : []),
 ];
 
-function NavGroupMenu({ group, children }: { group: string; children: NavLeaf[] }) {
+function NavGroupMenu({ group, children }: { group: string; children: NavItem[] }) {
   const { pathname } = useLocation();
-  // A page may carry further segments (style-references/swiss), so match the
-  // page rather than the end of the path.
-  const active = children.some((c) => pathname.includes(`/${c.to}`));
+  const leaves = children.filter((c): c is NavLeaf => 'to' in c);
+  // A page may carry further segments, so match the page rather than the end of the path.
+  const active = leaves.some((c) => pathname.includes(`/${c.to}`));
   return (
     <div className="dev-nav-group">
       <button
@@ -96,18 +110,24 @@ function NavGroupMenu({ group, children }: { group: string; children: NavLeaf[] 
       >
         {group} <span aria-hidden="true" className="dev-nav-caret">▾</span>
       </button>
-      <div className="dev-nav-dropdown" role="menu">
-        {children.map((page) => (
-          <NavLink
-            key={page.to}
-            to={page.to}
-            end={page.end}
-            role="menuitem"
-            className={({ isActive }) => isActive ? 'dev-nav-link dev-nav-link-active' : 'dev-nav-link'}
-          >
-            {page.label}
-          </NavLink>
-        ))}
+      <div className="dev-nav-dropdown">
+        <div className="dev-nav-dropdown-panel" role="menu">
+          {children.map((page) => ('heading' in page ? (
+            <div key={page.heading} className="dev-nav-heading" role="presentation">{page.heading}</div>
+          ) : (
+            <NavLink
+              key={page.to}
+              to={page.to}
+              end={page.end}
+              role="menuitem"
+              // Focus would keep the menu open (`:focus-within`) after the page it opened.
+              onClick={(event) => event.currentTarget.blur()}
+              className={({ isActive }) => isActive ? 'dev-nav-link dev-nav-link-active' : 'dev-nav-link'}
+            >
+              {page.label}
+            </NavLink>
+          )))}
+        </div>
       </div>
     </div>
   );

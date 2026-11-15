@@ -3,6 +3,7 @@ import type { ChartAssemblyInput } from 'flint-chart';
 import { FlintChart } from 'flint-chart/react';
 import { expressionInterpreter } from 'vega-interpreter';
 import { BACKENDS, getSupportedBackends, type PreviewBackend } from '../shared/supported-backends';
+import { anomalyInput } from './anomaly-data';
 import './overflow-viewport-lab.css';
 
 const categoryRows = Array.from({ length: 160 }, (_, index) => ({
@@ -52,6 +53,35 @@ const heatmapInput: ChartAssemblyInput = {
   },
   data: { values: heatmapRows },
 };
+
+function RegressionDemo() {
+  return (
+    <section className="ov-demo">
+      <header className="ov-demo-header">
+        <div>
+          <h2>{anomalyInput.chart_spec.title}</h2>
+          <p>
+            144 numeric years in a 600 px card, mounted as the interaction eval mounts it
+            (<code>width=&quot;100%&quot; height=&#123;400&#125; fit=&quot;relayout&quot;</code>). Check three things: the cells
+            draw (the rail windows numeric years against its text categories), every window labels every fifth
+            year as you scroll, and the rail sits under the Year axis, above the source line.
+          </p>
+        </div>
+      </header>
+      <div className="ov-stage ov-interactive-stage" style={{ maxWidth: 600 }}>
+        <FlintChart
+          spec={anomalyInput}
+          renderer="svg"
+          width="100%"
+          height={400}
+          fit="relayout"
+          expressionInterpreter={expressionInterpreter}
+          ariaLabel={anomalyInput.chart_spec.title}
+        />
+      </div>
+    </section>
+  );
+}
 
 function InteractiveBackendSurface({ input, backend, renderer = 'canvas' }: {
   input: ChartAssemblyInput;
@@ -156,6 +186,12 @@ export function OverflowViewportLab() {
         <h1>Overflow viewport lab</h1>
         <p>Category capacity becomes a navigable viewport only after the chart reaches its stretch ceiling and bands reach their normal minimum step. Static output still uses the first window; interactive hosts retain the complete ordered domain.</p>
       </header>
+
+      <div className="ov-section-heading">
+        <span>Regressions</span>
+        <small>Charts that once broke on a viewport, kept here as they broke.</small>
+      </div>
+      <RegressionDemo />
 
       <div className="ov-section-heading">
         <span>Retained MCP App path</span>

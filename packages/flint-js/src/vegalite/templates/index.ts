@@ -11,7 +11,7 @@
 
 import { ChartTemplateDef } from '../../core/types';
 import type { ChartPropertyDef, OptionEvalContext } from '../../core/types';
-import { BANDED_CHART_TYPES, readsAsSnapshots } from '../../core/decisions';
+import { BANDED_CHART_TYPES, GRID_CHART_TYPES, isDateField, readsAsCalendarRun, readsAsSnapshots } from '../../core/decisions';
 
 // --- Individual chart imports ---
 import { scatterPlotDef, regressionDef, rangedDotPlotDef, boxplotDef } from './scatter';
@@ -176,19 +176,20 @@ const AXIS_DTYPE_CHARTS = new Set([
  *  continuous time scale makes sense, so the toggle is not offered. */
 const AXIS_DTYPE_MAX_CATEGORIES = 50;
 
-function makeAxisDtypeCheck(axis: 'x' | 'y', banded: boolean) {
+function makeAxisDtypeCheck(axis: 'x' | 'y', banded: boolean, grid: boolean) {
     return (ctx: OptionEvalContext): { applicable: boolean; recommendedValue?: any } => {
         const cs = ctx.channelSemantics?.[axis];
         if (!cs?.field) return { applicable: false };
-        // Dates read as snapshots along a banded chart are drawn discrete by default; a time
-        // scale stays one choice away.
-        const snapshots = Boolean(cs.snapshots) || (banded && cs.type === 'temporal'
-            && readsAsSnapshots((ctx.data ?? []).map(r => r[cs.field])));
-        const recommendedValue = snapshots ? 'nominal' : 'temporal';
+        const values = (ctx.data ?? []).map(r => r[cs.field]);
+        // Dates read as snapshots along a banded chart, or as a whole calendar run along a grid's
+        // side, are drawn discrete by default; a time scale stays one choice away.
+        const snapshots = Boolean(cs.snapshots) || (banded && cs.type === 'temporal' && readsAsSnapshots(values));
+        const calendarRun = grid && isDateField(cs.semanticAnnotation?.semanticType, values) && readsAsCalendarRun(values);
+        const recommendedValue = snapshots || calendarRun ? 'nominal' : 'temporal';
         // Once the user picks a value the override flips cs.type, so keep
         // the control visible on any explicit choice.
         const choice = ctx.chartProperties?.[`${axis}AxisType`];
-        if (choice != null || cs.snapshots) return { applicable: true, recommendedValue };
+        if (choice != null || cs.snapshots || calendarRun) return { applicable: true, recommendedValue };
         // Otherwise offer only the genuine dual-interpretation case: a
         // date-like axis the resolver made temporal, with a modest number of
         // distinct values so discrete bands stay readable.
@@ -201,14 +202,14 @@ function makeAxisDtypeCheck(axis: 'x' | 'y', banded: boolean) {
     };
 }
 
-function axisDtypeProperties(banded: boolean): ChartPropertyDef[] {
+function axisDtypeProperties(banded: boolean, grid: boolean): ChartPropertyDef[] {
     return (['x', 'y'] as const).map((axis) => ({
         key: `${axis}AxisType`, label: `${axis.toUpperCase()} as`, type: 'discrete' as const,
         options: [
             { value: 'temporal', label: 'Temporal' },
             { value: 'nominal', label: 'Discrete' },
         ],
-        check: makeAxisDtypeCheck(axis, banded),
+        check: makeAxisDtypeCheck(axis, banded, grid),
     }));
 }
 
@@ -264,7 +265,7 @@ function withInjectedProperties(def: ChartTemplateDef): ChartTemplateDef {
         ...(supportsFacetAxisControl ? FACET_AXIS_PROPERTIES : []),
         ...(isPosition ? LOG_SCALE_PROPERTIES : []),
         ...(isPosition ? ZERO_BASELINE_PROPERTIES : []),
-        ...(wantsAxisDtype ? axisDtypeProperties(BANDED_CHART_TYPES.has(def.chart)) : []),
+        ...(wantsAxisDtype ? axisDtypeProperties(BANDED_CHART_TYPES.has(def.chart), GRID_CHART_TYPES.has(def.chart)) : []),
         ...(VALUE_LABEL_CHARTS.has(def.chart) ? VALUE_LABEL_PROPERTIES : []),
     ];
     if (extra.length === 0) return def;

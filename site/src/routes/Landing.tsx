@@ -86,15 +86,14 @@ export function Landing() {
                 {t('landing.leadInsight')}
               </p>
               <p style={{ ...leadStyle, marginTop: 14 }}>
-                {t('landing.leadHighlight2', {
-                  chartTypes: CHART_FAMILY_COUNT,
-                  backends: BACKEND_ROSTER_LINKS.length,
-                  themes: Object.keys(THEME_PRESETS).length,
-                  presets: INTERACTION_PRESET_TYPES.length,
-                })}
-                {t('landing.leadStop')}
                 <Trans
-                  i18nKey="landing.leadAfter"
+                  i18nKey="landing.leadCustomize"
+                  values={{
+                    chartTypes: CHART_FAMILY_COUNT,
+                    backends: BACKEND_ROSTER_LINKS.length,
+                    themes: Object.keys(THEME_PRESETS).length,
+                    presets: INTERACTION_PRESET_TYPES.length,
+                  }}
                   components={{
                     themeLab: <LocaleLink className="site-text-link" style={contributorLinkStyle} to="/theme-lab" />,
                     advanced: <LocaleLink className="site-text-link" style={contributorLinkStyle} to="/interactions/advanced" />,
@@ -448,7 +447,7 @@ type ShowcaseExampleKey =
   | 'inspect'
   | 'globe'
   | 'climatePhase'
-  | 'drawIt'
+  | 'odyssey'
   | 'countryTable'
   | 'originTable'
   | 'companionTabs'
@@ -762,15 +761,21 @@ const SHOWCASE_EXAMPLES: ShowcaseExample[] = [
     },
   },
   {
-    id: 'draw-it',
-    exampleKey: 'drawIt',
+    id: 'odyssey',
+    exampleKey: 'odyssey',
     group: 'interactions',
     application: {
-      caseId: 'you-draw-it',
-      theme: 'datawrapper',
+      caseId: 'journey-of-odysseus',
       width: 680,
-      load: () => withApplicationStyles(import('../playground/YouDrawItStage')
-        .then((module) => ({ Demo: () => <module.YouDrawItStage />, spec: module.DRAW_IT_INPUT }))),
+      load: () => withApplicationStyles(import('../playground/OdysseyStoryStage')
+        .then((module) => ({
+          Demo: function OdysseyDemo({ themeId }: { themeId: string | null }) {
+            const look = useMemo(() => module.odysseyLookInHouse(themeId), [themeId]);
+            return <module.OdysseyStoryStage compact look={look} />;
+          },
+          // The house's palette is the chart's default, so the spec leaves the legs' colours to it.
+          spec: module.odysseySpec({ ...module.odysseyLookInHouse(null), legInks: undefined }),
+        }))),
     },
   },
   {
@@ -1817,8 +1822,8 @@ const tryItSectionStyle: CSSProperties = {
   gridTemplateColumns: 'minmax(0, 300px) minmax(0, 1fr)',
   gap: 32,
   alignItems: 'start',
-  paddingTop: 20,
-  paddingBottom: 28,
+  paddingTop: 44,
+  paddingBottom: 48,
 };
 
 const tryItTextColStyle: CSSProperties = {
@@ -1865,8 +1870,8 @@ const newsSectionStyle: CSSProperties = {
   display: 'grid',
   gridTemplateColumns: '110px minmax(0, 1fr)',
   gap: 24,
-  paddingTop: 16,
-  paddingBottom: 16,
+  paddingTop: 28,
+  paddingBottom: 28,
   borderTop: `1px solid ${HAIRLINE}`,
   borderBottom: `1px solid ${HAIRLINE}`,
 };
@@ -2226,6 +2231,12 @@ const landingInteractiveStyles = `
 
   .landing-application .climate-phase-shell .ic-flint-dimpvis-panel {
     border: 0;
+    background: transparent;
+  }
+
+  .landing-application [data-app='odyssey'] .ic-flint-dimpvis-mount {
+    border: 0;
+    border-radius: 0;
     background: transparent;
   }
 

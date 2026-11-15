@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { assembleVegaLite, assembleECharts, assembleChartjs } from '../src';
-import { readsAsSnapshots, chronologicalOrder } from '../src/core/decisions';
+import { readsAsSnapshots, readsAsCalendarRun, chronologicalOrder } from '../src/core/decisions';
 import { calendarLabels, crowdedCalendarLabels } from '../src/core/calendar-labels';
 import { inferVisCategory } from '../src/core/semantic-types';
 import { contrastRatio, sampleRampBins } from '../src/core/theme/presence';
@@ -48,6 +48,33 @@ describe('dates read as snapshots', () => {
         expect(line.encoding.x.type).toBe('temporal');
         const long = assembleVegaLite(bars(months('2024-01', 24), 'YearMonth'));
         expect(long.encoding.x.type).toBe('temporal');
+    });
+
+    it('reads a whole run of months or quarters as a calendar run; days, years and gapped runs stay time', () => {
+        expect(readsAsCalendarRun(months('2025-01', 12))).toBe(true);
+        expect(readsAsCalendarRun(months('2024-01', 8, 3))).toBe(true);
+        expect(readsAsCalendarRun(months('2025-01', 12).filter((_, i) => i !== 5))).toBe(false);
+        expect(readsAsCalendarRun([2020, 2021, 2022, 2023, 2024])).toBe(false);
+        const days = Array.from({ length: 14 }, (_, i) => new Date(Date.UTC(2025, 0, 1 + i)).toISOString().slice(0, 10));
+        expect(readsAsCalendarRun(days)).toBe(false);
+        expect(readsAsCalendarRun(months('2020-01', 60))).toBe(false);
+    });
+
+    it('tiles a heatmap over a whole run of months as equal cells on every backend', () => {
+        const input = {
+            data: { values: months('2025-01', 12).flatMap((when) => ['A', 'B', 'C'].map((k, i) => ({ when, k, v: i }))) },
+            semantic_types: { when: 'YearMonth', k: 'Category', v: 'Quantity' },
+            chart_spec: { chartType: 'Heatmap', encodings: { x: 'when', y: 'k', color: 'v' }, baseSize: { width: 400, height: 200 } },
+        } as any;
+        const vl = assembleVegaLite(input);
+        expect(vl.encoding.x.type).toBe('ordinal');
+        expect(vl.config.axisX.labelExpr).toContain('[["Jan","2025"],["Feb"]');
+        expect(assembleECharts(input).xAxis.type).toBe('category');
+        // A gap in the run keeps the time scale, and with it the hole.
+        const gapped = { ...input, data: { values: input.data.values.filter((r: any) => r.when !== '2025-06') } };
+        expect(assembleVegaLite(gapped).encoding.x.type).toBe('temporal');
+        // A bar chart over the same run stays a run of time.
+        expect(assembleVegaLite(bars(months('2025-01', 12), 'YearMonth')).encoding.x.type).toBe('temporal');
     });
 
     it('lets an explicit type win', () => {

@@ -675,6 +675,98 @@ function PlotlyCurveGym() {
   );
 }
 
+// ---------------------------------------------------------------- canvas box
+const NETFLIX_TITLES = [
+  ['Back in Action', 164.7, 'Movies'], ['Adolescence: Limited Series', 144.8, 'Shows'],
+  ['Squid Game: Season 2 // 오징어 게임: 시즌 2', 117.3, 'Shows'], ['STRAW', 102.9, 'Movies'],
+  ['The Life List', 95.5, 'Movies'], ['Exterritorial', 87.5, 'Movies'], ['Havoc', 86.9, 'Movies'],
+  ['Squid Game: Season 3 // 오징어 게임: 시즌 3', 71.5, 'Shows'], ['Zero Day: Limited Series', 61.3, 'Shows'],
+  ['Missing You: Limited Series', 58, 'Shows'],
+].map(([title, views, format]) => ({ title, views: (views as number) * 1e6, format }));
+const BOX_THEMES = [undefined, 'datawrapper', 'nyt', 'economist', 'bbc'] as const;
+const BOX_STRETCHES = [1.5, 2] as const;
+
+function boxInput(theme: string | undefined, stretch: number): ChartAssemblyInput {
+  return {
+    data: { values: NETFLIX_TITLES },
+    semantic_types: { title: 'Name', views: 'Count', format: 'Category' },
+    chart_spec: {
+      chartType: 'Bar Chart',
+      encodings: {
+        x: { field: 'views', type: 'quantitative' },
+        y: { field: 'title', type: 'nominal', sortOrder: 'descending', sortBy: 'x' },
+        color: { field: 'format' },
+      },
+      title: 'Most-viewed movies and show seasons, January–June 2025',
+      subtitle: 'Top five per format; views are runtime-normalized viewing equivalents',
+      baseSize: { width: 400, height: 300 },
+      canvasSize: { width: 400 * stretch, height: 300 * stretch },
+    },
+    options: { maxStretch: stretch },
+    ...(theme ? { theme_spec: theme } : {}),
+  } as ChartAssemblyInput;
+}
+
+function BoxCase({ theme, stretch }: { theme: string | undefined; stretch: number }) {
+  const input = useMemo(() => boxInput(theme, stretch), [theme, stretch]);
+  const fit = useMemo(() => ((assembleVegaLite(input) as any)._theme?.report ?? []).find((note: any) => note.code === 'canvas-fit') ?? null, [input]);
+  const box = { width: 400 * stretch, height: 300 * stretch };
+  const host = useRef<HTMLDivElement>(null);
+  const [drawn, setDrawn] = useState<{ width: number; height: number } | null>(null);
+  useEffect(() => {
+    // The chart mounts its SVG a few frames after this card renders.
+    const timer = setInterval(() => {
+      const svg = host.current?.querySelector('svg');
+      if (!svg) return;
+      const rect = svg.getBoundingClientRect();
+      setDrawn((now) => (now && now.width === Math.round(rect.width) && now.height === Math.round(rect.height) ? now : { width: Math.round(rect.width), height: Math.round(rect.height) }));
+    }, 250);
+    return () => clearInterval(timer);
+  }, [input]);
+  // Judged as the canvas fit does: the host scales a drawing into its box, legibly down to 70%.
+  const scale = drawn ? Math.min(1, box.width / drawn.width, box.height / drawn.height) : undefined;
+  const verdict = scale === undefined ? undefined : scale >= 0.97 ? 'inside' : scale >= 0.7 ? 'scaled' : 'illegible';
+  const ink = { inside: '#1a7f37', scaled: '#9a6700', illegible: '#b42318' } as const;
+  return (
+    <div style={{ border: `1px solid ${verdict === 'illegible' ? '#f0c8c8' : verdict === 'scaled' ? '#ead9a8' : '#cfe3d4'}`, borderRadius: 6, padding: 8, background: '#fff' }}>
+      <div style={{ fontSize: 11, marginBottom: 6 }}>
+        <strong>{theme ?? 'no theme'}</strong> · box {box.width} × {box.height} · drawn{' '}
+        <code>{drawn ? `${drawn.width} × ${drawn.height}` : '…'}</code>{' '}
+        {verdict ? <span style={{ color: ink[verdict] }}>{verdict === 'inside' ? '✓ inside' : verdict === 'scaled' ? `host scales to ${Math.round(scale! * 100)}%` : `✗ ${Math.round(scale! * 100)}%, past legibility`}</span> : null}
+        {fit ? <div style={{ color: siteTheme.textMuted, marginTop: 2 }}>fit: {fit.message.replace(/^.*— laid out with /, '')}</div> : null}
+      </div>
+      {/* Drawn at its own size: the dashed frame is the canvas the host asked for. */}
+      <div style={{ position: 'relative', width: box.width, minHeight: box.height }}>
+        <div ref={host} style={{ position: 'relative', zIndex: 1 }}>
+          <FlintView spec={input} renderer="svg" compact />
+        </div>
+        <div style={{ position: 'absolute', left: 0, top: 0, width: box.width, height: box.height, outline: '2px dashed #d93f0b', pointerEvents: 'none', zIndex: 2 }} />
+      </div>
+    </div>
+  );
+}
+
+function CanvasBoxGym() {
+  return (
+    <section style={{ width: 'min(100%, 1720px)' }} data-gym="canvas-box">
+      <header style={{ marginBottom: 8 }}>
+        <h2 style={{ margin: 0, fontSize: 16 }}>Canvas box · long row names under each house</h2>
+        <p style={{ margin: '2px 0 0', fontSize: 11, color: siteTheme.textMuted }}>
+          Ten long titles, sorted by views and coloured by format, at base 400 × 300. Rows: the stretch the host
+          allows (the canvas is base × stretch, the dashed frame); columns: the house. Each chart is drawn at its own
+          size, never scaled to fit, so a chart past its frame shows as a host that does not scale would show it. The
+          verdict is the canvas fit&apos;s: inside its box, or within what a host scales it to legibly (70%).
+        </p>
+      </header>
+      {BOX_STRETCHES.map((stretch) => (
+        <div key={stretch} style={{ display: 'flex', gap: 10, overflowX: 'auto', marginBottom: 10, alignItems: 'flex-start' }}>
+          {BOX_THEMES.map((theme) => <BoxCase key={`${stretch}-${theme ?? 'plain'}`} theme={theme} stretch={stretch} />)}
+        </div>
+      ))}
+    </section>
+  );
+}
+
 /** Mirrors RESULT_COPY_LIMIT and fitsInResult in packages/flint-mcp/src/board.ts (which needs Node). */
 const RESULT_COPY_LIMIT = 4096;
 type CardCase = { id: string; label: string; rows: Record<string, unknown>[]; fromFile?: boolean };
@@ -759,6 +851,7 @@ export function DebugGym() {
         <CasePanel typed />
         <CasePanel typed={false} />
       </div>
+      <CanvasBoxGym />
       <PlotlyCurveGym />
       <McpRedrawGym />
       <SlopeGym />

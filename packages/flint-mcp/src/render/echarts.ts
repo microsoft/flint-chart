@@ -36,9 +36,13 @@ export async function renderECharts(
     width,
     height,
   });
-  chart.setOption(opt);
-  const svg = chart.renderToSVGString();
-  chart.dispose();
+  let svg: string;
+  try {
+    chart.setOption(opt);
+    svg = chart.renderToSVGString();
+  } finally {
+    chart.dispose();
+  }
 
   return svgToResult(svg, {
     backend: 'echarts',

@@ -1,7 +1,7 @@
 {
   "name": "flint-chart",
   "description": "Flint chart authoring MCP, skill, and native interactive chart canvas for Copilot CLI.",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "author": {
     "name": "Microsoft",
     "url": "https://github.com/microsoft/flint-chart"

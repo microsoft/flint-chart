@@ -499,7 +499,7 @@ Canvas definitions have two declarative halves:
 2. Optional `handle()` declares **what update JSON to produce** after normalization.
     Target-bearing events first pass through ChartDef semantic resolution. The handler
     consumes the same `CanvasInteractionEvent` emitted to applications and returns a
-    `ChartUpdate` containing renderer-neutral `set-style`, `set-annotation`,
+    `ChartUpdate` containing renderer-neutral `set-style`, `annotate-text`,
     `set-viewport`, or `set-order` operations.
 
 The backend mount reads `eventSource`; it does not infer a gesture from pointer motion. It installs the required native listeners, supplies renderer coordinates and hit testing, and runs the recognizer requested by the interaction. This keeps an identical drag stream deterministic and author-controlled.
@@ -821,7 +821,10 @@ interface ChartUpdate {
 
 type ChartUpdateOp =
     | { op: 'set-style'; targets: readonly UpdateTarget[]; value: StyleSpec }
-    | { op: 'set-annotation'; target: UpdateTarget; value: AnnotationSpec | null }
+    | { op: 'annotate-text'; target: UpdateTarget; value: AnnotationSpec | null }
+    | { op: 'set-annotation'; target: UpdateTarget; value: AnnotationSpec | null } // deprecated: annotate-text; removed in 2.0
+    | { op: 'annotate-region'; name: string; value: RegionAnnotationSpec | null }
+    | { op: 'annotate-enclosure'; name: string; value: EnclosureAnnotationSpec | null }
     | { op: 'set-viewport'; axes: 'x' | 'y' | 'xy'; value: { x?: Domain; y?: Domain } }
     | {
         op: 'set-order';
@@ -844,7 +847,12 @@ interface StyleSpec {
 Operators are plain JSON. Presets and applications construct object literals directly;
 there are no trivial operator factory functions.
 
-`emphasized` and `focused` recede every other mark to `mutedOpacity`. `highlighted` gives its
+`emphasized` and `focused` recede every other mark; `emphasis` says how far, as a note's
+`highlight` does: `'light'` (the default: the rest keep 0.6 of their own opacity, so they stay
+readable), `'strong'` (0.35) or `'exclusive'` (0.2). `mutedOpacity` states the receded opacity
+outright. The labels of the marks set
+back recede no further than half, and a label drawn on its mark takes the page's ink, so their
+values still read. `highlighted` gives its
 targets their mark's hover cue (a wider line drawn in front, an outline, a contrast step) and
 leaves every other mark as drawn.
 
@@ -896,23 +904,73 @@ type UpdateTarget =
 Selectors accept only ChartDef-declared semantic fields. At runtime they are resolved to
 the same `SemanticTargetRef` shape; the surrounding `ChartUpdateOp` does not change.
 
-ChartDefs may enrich an operator without changing its kind. For example,
-`set-annotation` can begin with text only and gain meaningful connection candidates in
-its `value`:
+`annotate-text` sets a caption on one mark, after Blabber's `text`: the words stand beside the
+mark in the chart's label face, haloed in the page, with a leader only where they are not
+plainly beside it. It is never a card or a callout box; draw those with `set-overlay` or
+`set-freeform-overlay`. `set-annotation` is its deprecated name: still read in 1.x, reported
+by `validateChart` as a `deprecated_op` warning and once on the console, and removed in 2.0.
+
+ChartDefs may enrich an operator without changing its kind: a template's presenter adds where
+on its marks a note may connect (`AnnotationCandidate`), which an update does not write.
+
+In Vega-Lite every note is placed the same lightweight way: a ring of seats round the place
+it names, each priced by what it would cover (marks, text, lines it cuts), how far it stands
+and the leader it needs, and the cheapest kept, one note after another. What it names decides
+the places it is tried from:
+
+- one mark (a dot, a bar's value end, a cell, a line's point): its outline;
+- a stretch of a line or area: its middle and a quarter along either way, an area's from
+  the side away from its fill;
+- a pie or donut slice: inside its wedge, preferring a seat out past the pie on a leader;
+- a whole shape, such as a violin: the ellipse its box holds;
+- a map's region: its middle, the other regions a ground the halo reads over.
+
+The note's `highlight` sets how much what it names stands out:
+
+- `'none'` leaves it as drawn.
+- `'light'` (the default) lifts a dot above its neighbours with a halo, draws a stretch of a
+  line or area again in its ink, and gives a bar, a cell, a slice or a shape a faint outline.
+- `'strong'` also draws a thin ring round a dot or point, and a full outline round a bar,
+  a cell, a slice or a shape.
+- `'exclusive'` is strong and also fades every other mark, as `set-style` `emphasized`
+  does.
+
+The notes a chart mounts with (its first `updates`) also get
+room in the compile: when a noted mark sits at the top of a vertical measure axis, the axis runs
+on just far enough for the caption at its nearest seat over the mark, ending at a fine round
+step, using at most a third of the axis (`AssembleOptions.notes`). A note added after mount is placed in the room the chart
+already has.
+
+`annotate-region` and `annotate-enclosure` follow Blabber's `region` and `enclose`. A region
+shades a stretch of the plot: one axis gives a band across it, both a box. On a faceted chart
+the stretch is shaded in every panel, each wash cut at its panel. A continuous
+stretch is two bounds, either `null` for the plot's end; a banded one lists the categories it
+covers, which must be adjacent. Its caption is centred on the stretch, clear of the series that
+cross it, and moves outside on a leader only where nothing inside is clear. A stretch of x
+the chart mounts with gets room as a note does where its marks reach too near the plot's top
+for the caption: the axis runs on past the stretch's tallest mark (`AssembleOptions.regions`).
+A wash under the
+marks is cut away where they stand; over an area or a heatmap it is drawn over them. An
+enclosure outlines each of its targets (bars and cells with a rectangle, other marks with a
+hull; `shape` may ask for `ellipse` or `circle`): a cluster sharing a colour in that colour,
+any other group in a neutral grey over a thin halo of the page, and sets one shared caption beside them, with leaders to two or three outlines
+(`connect`). Regions and enclosures are drawn before notes, whose captions keep clear of them.
+
+A note should say what the chart does not show: why the mark stands out, what changed
+there, how it compares. It should not restate the mark's printed value or its axis label.
+`validateChart` gives an info `note_repeats_chart` for a note that repeats a value the
+chart prints on its mark.
 
 ```ts
+// Set by a template's presenter, not by an update. The caption is placed from the first.
 interface AnnotationCandidate {
     connection: 'center' | 'top' | 'right' | 'bottom' | 'left'
-        | 'value-end' | 'value-side' | 'segment-midpoint' | 'outer-radial';
+        | 'value-end' | 'value-side' | 'segment-midpoint' | 'radial-midpoint' | 'outer-radial';
     valueAxis?: 'x' | 'y';
     crossSide?: 'start' | 'end';
     valueInset?: number;
-    anglePreference?: 'normal' | 'oblique';
-    textAlign?: 'left' | 'center' | 'right';
     connector?: 'line' | 'none';
     maxWidth?: number;
-    maxDistance?: number;
-    priority?: number;
 }
 ```
 

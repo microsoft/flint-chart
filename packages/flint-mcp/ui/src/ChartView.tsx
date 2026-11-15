@@ -14,19 +14,19 @@ import type { App, McpUiHostContext } from '@modelcontextprotocol/ext-apps';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { ChartAssemblyInput, ChartOption, ChartUpdate, ChartWarning } from 'flint-chart';
 import { drawsAsTable, getChartTransform, validateChart, validateLinks } from 'flint-chart';
-import type { ChartChange, ChartState, InteractiveChartSurface } from 'flint-chart/interactive';
-import { FlintChart, FlintTable } from 'flint-chart/react';
+import type { ChartChange, ChartState, InteractiveChartSurface } from 'flint-chart/interactive/vegalite';
+import { FlintChart, FlintTable } from 'flint-chart/react/vegalite';
 import { expressionInterpreter } from 'vega-interpreter';
 
 import { ActionButton, ThemeControl } from './controls';
 import type { Board } from './BoardView';
-import { APP_PREVIEW_CANVAS_SIZE, assemblePreviewSpec, renderFlintSvg, usesAutoPreviewSize, withAppPreviewDefaults } from './render';
+import { APP_PREVIEW_CANVAS_SIZE, assemblePreviewSpec, previewMaxWidth, renderFlintSvg, withAppPreviewDefaults } from './render';
 import { chartIconFor } from './chart-icons';
 import { SelectionChips, chipText, impliedParts, partText, type SelectionChip } from './selection-chips';
 import { VIEW_SWITCH_LABEL, ViewSwitchIcon, useChartTable, type CellView } from './chart-table-view';
 import { tablePng } from './table-export';
 import { usePageScroll } from './page-scroll';
-import { conditionUpdates, selectionParts, type LinkCondition } from 'flint-chart/interactive';
+import { conditionUpdates, selectionParts, type LinkCondition } from 'flint-chart/interactive/vegalite';
 import { chartContext, chartView, type ChartGesture } from '../../src/chart-context';
 import {
   buildPanelModel,
@@ -723,9 +723,7 @@ export function ChartView({ app, shown, hostContext }: { app: App; shown: Board;
     }
   }, [app, current, chartWidth, table]);
 
-  // The live chart takes the frame width itself: as the ceiling when the preview
-  // picks the size, scaled down when the spec states its own.
-  const autoSize = usesAutoPreviewSize(current);
+  const maxWidth = previewMaxWidth(current);
   // Each send replaces the model context, so every send carries the whole chart:
   // after each build (mount, new updates, panel edit) and each committed gesture.
   const lastContext = useRef<string | null>(null);
@@ -884,7 +882,9 @@ export function ChartView({ app, shown, hostContext }: { app: App; shown: Board;
                   chartId="flint-chart-view"
                   width="100%"
                   height={paned ? '100%' : overCeiling ? APP_PREVIEW_CANVAS_SIZE.height : undefined}
-                  fit={autoSize ? 'relayout' : 'scale-down'}
+                  fit="relayout"
+                  // The room the chart lays out into is the frame, up to 1.5x its footprint.
+                  style={!paned ? { maxWidth, marginInline: 'auto' } : undefined}
                   fallback={<span className="chart-pending">Rendering…</span>}
                   onWarnings={setSurfaceWarnings}
                   onRender={handleRender}

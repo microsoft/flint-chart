@@ -4,7 +4,7 @@
       "command": "npx",
       "args": [
         "--yes",
-        "flint-chart-mcp@1.0.1"
+        "flint-chart-mcp@1.0.2"
       ],
       "cwd": "${PLUGIN_ROOT}"
     }

@@ -104,3 +104,15 @@ describe('S1: a logo credit at the line’s other end', () => {
         expect(spec._theme.report.map((r: any) => r.code)).toContain('credit-image-not-drawn');
     });
 });
+
+describe('S1: a lead-in the author already wrote', () => {
+    it('is said once', async () => {
+        const { withoutLeadIn } = await import('../src/core/source-plan');
+        expect(withoutLeadIn('Source: Gapminder', 'Source:')).toBe('Gapminder');
+        expect(withoutLeadIn('sources: UN, World Bank', 'Source:')).toBe('UN, World Bank');
+        expect(withoutLeadIn('Gapminder', 'Source:')).toBe('Gapminder');
+        expect(withoutLeadIn('Source of truth: the ledger', 'Source:')).toBe('Source of truth: the ledger');
+        expect(withoutLeadIn('Source: Gapminder', undefined)).toBe('Source: Gapminder');
+        expect(withoutLeadIn('Source:', 'Source:')).toBe('Source:');
+    });
+});

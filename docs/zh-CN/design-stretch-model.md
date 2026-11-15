@@ -22,7 +22,7 @@
 | Field | Role in the model | Default |
 |-------|-------------------|---------|
 | `baseSize` | **目标。** 静息长度 $L_0$ / 基准画布 $W_0 \times H_0$，下方所有「pressure = demand ÷ supply」比率均相对此值衡量。 | $400 \times 320$ |
-| `canvasSize` | **硬上限。** 任意维度（含 facet 网格）的最大 stretch 尺寸。 | none → $\text{baseSize} \times \text{maxStretch}$（默认 $1.5\times$） |
+| `canvasSize` | **拉伸上限。** 绘图区（含 facet 网格）在任意维度上都不会拉伸超过它；标题、图例和坐标轴共用这个框，画布适配留下的略大的绘制结果由宿主缩放进框（见尺寸教程中的画布适配）。 | none → $\text{baseSize} \times \text{maxStretch}$（默认 $1.5\times$） |
 
 stretch 乘数 $\beta$ 限制轴相对基准可增长的距离，按维度设置：
 
