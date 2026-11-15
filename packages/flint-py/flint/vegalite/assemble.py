@@ -8,7 +8,7 @@ import re
 from typing import Any, Optional
 
 from ..core.semantic_types import infer_vis_category, compute_zero_decision
-from ..core.resolve_semantics import resolve_channel_semantics, convert_temporal_data
+from ..core.resolve_semantics import _resolve_channel_types, resolve_channel_semantics, convert_temporal_data
 from ..core.field_semantics import to_type_string
 from ..core.filter_overflow import filter_overflow
 from ..core.encoding_overrides import apply_encoding_overrides
@@ -135,20 +135,18 @@ def assemble_vegalite(input_doc: dict) -> dict:
     # Some actions (e.g. Sort) must know each channel's resolved encoding TYPE
     # to decide which position axis is the discrete category and which is the
     # measure. The host leaves `type` unset ("auto") for most encodings, so we
-    # run a preliminary semantics pass to fill in the inferred types, compose
+    # resolve preliminary types, compose
     # the overrides onto the type-enriched encodings, then re-resolve semantics
     # on the result below (so that, e.g., a value-sort correctly suppresses the
     # field's canonical ordinal ordering).
     converted_data = convert_temporal_data(data, semantic_types)
-    prelim_semantics = resolve_channel_semantics(
-        raw_encodings, data, semantic_types, converted_data,
-    )
+    prelim_types = _resolve_channel_types(raw_encodings, data, semantic_types)
     typed_raw_encodings: dict = {}
     for ch, enc in raw_encodings.items():
         if enc.get("type"):
             typed_raw_encodings[ch] = enc
         else:
-            typed_raw_encodings[ch] = {**enc, "type": (prelim_semantics.get(ch) or {}).get("type")}
+            typed_raw_encodings[ch] = {**enc, "type": prelim_types.get(ch)}
 
     # Axis dtype override (`xAxisType` / `yAxisType` properties): the user can
     # force a position channel's interpretation between a continuous time scale

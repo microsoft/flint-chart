@@ -1,0 +1,114 @@
+{
+  "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+  "platform": "Linux-6.12.8+-x86_64-with-glibc2.39",
+  "baseline_revision": "a794557384adcc3293a77043f6b9aff1c33d152c",
+  "baseline_assemble_sha256": "accb132bcb06c9c2f6d5425b665edc95bc41df43aa7c7890e531e58b039fc7b6",
+  "baseline_semantics_sha256": "d21f1746fc86ee3afcd6526e6f6e9e4b3ac6237f7e9e413c726183cb3a28d4df",
+  "change_assemble_sha256": "094ee38e9ff497f7a1d64e886a8df55e18e6e679851931c1b79df233b8fdfe90",
+  "change_semantics_sha256": "ab98673a7bf5e6f5217afdce12ceb65459135f72084867ed573de81f0bee8da1",
+  "fixtures": {
+    "1000": {
+      "fixture_sha256": "89d6dd2d09de03d573661bbcf9a58e233e408ba2523aa7e251379373ebb723cb",
+      "output_sha256": "5133b184f30d68acc3aae01aa2dcdeb3df4819a5fa42fcb7abef11d16460b1b7",
+      "samples": [
+        {
+          "round": 1,
+          "version": "baseline",
+          "seconds": 0.0161830000001828,
+          "peak_bytes": 332705
+        },
+        {
+          "round": 1,
+          "version": "change",
+          "seconds": 0.013857526000037979,
+          "peak_bytes": 330191
+        },
+        {
+          "round": 2,
+          "version": "change",
+          "seconds": 0.01339831299992511,
+          "peak_bytes": 330191
+        },
+        {
+          "round": 2,
+          "version": "baseline",
+          "seconds": 0.016444218000060573,
+          "peak_bytes": 332705
+        },
+        {
+          "round": 3,
+          "version": "baseline",
+          "seconds": 0.016307415000028413,
+          "peak_bytes": 332705
+        },
+        {
+          "round": 3,
+          "version": "change",
+          "seconds": 0.012800691999927949,
+          "peak_bytes": 330191
+        }
+      ],
+      "median_seconds": {
+        "baseline": 0.016307415000028413,
+        "change": 0.01339831299992511
+      },
+      "median_peak_bytes": {
+        "baseline": 332705,
+        "change": 330191
+      }
+    },
+    "10000": {
+      "fixture_sha256": "b4b379fb709d0044270563ddd45a0df184d5a630d677d152fc086701963a38dd",
+      "output_sha256": "e6eb52df97e21244b529e863ed4fea25f3391a88b8fd6ab30a7e603284d08e5c",
+      "samples": [
+        {
+          "round": 1,
+          "version": "baseline",
+          "seconds": 0.15185693099988384,
+          "peak_bytes": 2968192
+        },
+        {
+          "round": 1,
+          "version": "change",
+          "seconds": 0.12157827100008944,
+          "peak_bytes": 2968192
+        },
+        {
+          "round": 2,
+          "version": "change",
+          "seconds": 0.12095029600004636,
+          "peak_bytes": 2968192
+        },
+        {
+          "round": 2,
+          "version": "baseline",
+          "seconds": 0.15269938599999477,
+          "peak_bytes": 2968192
+        },
+        {
+          "round": 3,
+          "version": "baseline",
+          "seconds": 0.15294669400009298,
+          "peak_bytes": 2968192
+        },
+        {
+          "round": 3,
+          "version": "change",
+          "seconds": 0.12123961699990105,
+          "peak_bytes": 2968192
+        }
+      ],
+      "median_seconds": {
+        "baseline": 0.15269938599999477,
+        "change": 0.12123961699990105
+      },
+      "median_peak_bytes": {
+        "baseline": 2968192,
+        "change": 2968192
+      }
+    }
+  },
+  "change_revision": "a42b6b20332f8469ad8a0be138a2f06c13dec2c6",
+  "python_dateutil": "2.9.0.post0",
+  "capture_note": "Samples captured with an equivalent harness loading git-show baseline files; runtime and change revision metadata added afterward. Reproducer loads the same source directly from git."
+}
