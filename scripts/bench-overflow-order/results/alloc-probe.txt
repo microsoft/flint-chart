@@ -1,0 +1,7 @@
+nothing                              tab_delta 505496 used_delta 22376
+1 small object                       tab_delta 431240 used_delta 22344
+1000 small objects                   tab_delta 630952 used_delta 79920
+Float64Array 1e6 (8MB off-heap)      tab_delta 597424 used_delta 2440
+Array 1e6 doubles (~8MB)             tab_delta 17526800 used_delta 16177552
+Set of 10k strings                   tab_delta 2160072 used_delta 1457280
+node v26.12.1 v8 14.6.202.34-node.40 typeof number
