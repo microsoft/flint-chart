@@ -612,7 +612,8 @@ export interface ThemeLegend {
     /**
      * The symbol beside each name in a key to categories: `auto` (default) takes it from the mark —
      * a square for bars, a stroke for lines, the dot's own shape for points; `square`, `circle` or
-     * `line` (a short stroke) draw that symbol for every mark. A key whose entries are shapes (a
+     * `line` (a short stroke) draw that symbol for every mark, except that a square or circle is
+     * a filled chip and a line series keeps its stroke. A key whose entries are shapes (a
      * shape channel) or sizes keeps its own symbols. Vega-Lite only.
      */
     swatch?: 'auto' | 'square' | 'circle' | 'line';

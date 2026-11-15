@@ -640,11 +640,13 @@ export function proximityTooltip(item: any, point: { x: number; y: number }): { 
         return { value: vertex?.tooltip ?? item.tooltip, dot: { x: at.x, y: at.y, color, lineWidth: typeof item.strokeWidth === 'number' ? item.strokeWidth : undefined } };
     }
     if (marktype === 'symbol' && typeof item.x === 'number' && typeof item.y === 'number') {
-        // Vega draws a circle symbol of `size` with radius √size / 2; a stroke adds half its width.
-        const stroke = item.stroke && item.stroke !== 'transparent' && typeof item.strokeWidth === 'number' ? item.strokeWidth / 2 : 0;
-        const radius = Math.sqrt(typeof item.size === 'number' ? item.size : 64) / 2 + stroke;
-        const color = [item.fill, item.stroke].find((paint) => typeof paint === 'string' && paint !== 'transparent' && paint !== 'none');
-        return { value: item.tooltip, dot: { x: item.x, y: item.y, radius, color } };
+        // Vega draws a circle symbol of `size` with radius √size / 2, its stroke centred on that edge.
+        const radius = Math.sqrt(typeof item.size === 'number' ? item.size : 64) / 2;
+        const paint = (value: unknown): string | undefined =>
+            typeof value === 'string' && value !== 'transparent' && value !== 'none' ? value : undefined;
+        const stroke = paint(item.stroke) && typeof item.strokeWidth === 'number' && item.strokeWidth > 0
+            ? { stroke: paint(item.stroke), strokeWidth: item.strokeWidth } : {};
+        return { value: item.tooltip, dot: { x: item.x, y: item.y, radius, color: paint(item.fill) ?? paint(item.stroke), ...stroke } };
     }
     return { value: item.tooltip };
 }

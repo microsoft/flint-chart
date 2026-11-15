@@ -829,7 +829,10 @@ function bindRoles(ctx: GroundingContext): Bindings {
     });
     const { measureChannels, categoricalChannel } = axisRoles({ x: fieldFacts('x'), y: fieldFacts('y') });
 
-    const seriesChannel = SERIES_CHANNELS.find((c) => ctx.channelSemantics?.[c]?.field)
+    // On a bar, `detail` splits each bar into segments that read as one (`sealDetailSegments`); it is
+    // a series only where marks are drawn apart (a line, a ranged bar).
+    const segmentsOnly = ctx.markTypes.includes('bar') && !ctx.channelSemantics?.x2?.field && !ctx.channelSemantics?.y2?.field;
+    const seriesChannel = SERIES_CHANNELS.find((c) => ctx.channelSemantics?.[c]?.field && !(c === 'detail' && segmentsOnly))
         ?? (ctx.positional?.color?.field ? 'color' : undefined);
     const facetChannel = FACET_CHANNELS.find((c) => ctx.channelSemantics?.[c]?.field);
     return { measureChannels, categoricalChannel, seriesChannel, facetChannel };

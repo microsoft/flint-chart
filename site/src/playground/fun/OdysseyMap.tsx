@@ -37,7 +37,6 @@ const DARK_THEMES = new Set(['powerbi']);
 
 const CURVES: OdysseyLook['curve'][] = ['auto', 'arc', 'great-circle', 'straight'];
 const BORDER_WIDTHS = ['', '0', '0.5', '1', '1.5', '2'];
-const STOP_RADII = ['', '2', '3', '4', '5', '6', '8'];
 
 /** The calm ground the demo first had: atlas with a softer sea and paler land. */
 const CALM: Record<string, string> = { base: 'atlas', sea: '#d3e3ed', land: '#f7f6f2', coast: '#a9bdcb', border: '#dcd8cf' };
@@ -75,8 +74,6 @@ export function useStoryLook(): { look: OdysseyLook; own: boolean; controls: JSX
   const [arrows, setArrows] = useState(true);
   const [graticule, setGraticule] = useState(false);
   const [borderWidth, setBorderWidth] = useState(String(DEFAULT_LOOK.borderWidth ?? ''));
-  const [stops, setStops] = useState(DEFAULT_LOOK.stops);
-  const [stopRadius, setStopRadius] = useState('');
 
   const look = useMemo<OdysseyLook>(() => ({
     mapStyle: ground === 'calm' ? CALM : ground === 'custom' ? { base: 'atlas', ...custom } : ground,
@@ -86,10 +83,8 @@ export function useStoryLook(): { look: OdysseyLook; own: boolean; controls: JSX
     arrows,
     graticule,
     ...(borderWidth !== '' ? { borderWidth: Number(borderWidth) } : {}),
-    stops,
-    ...(stopRadius !== '' ? { stopRadius: Number(stopRadius) } : {}),
     seaLabel: seaLabelFor(ground, custom, theme),
-  }), [ground, custom, palette, theme, curve, arrows, graticule, borderWidth, stops, stopRadius]);
+  }), [ground, custom, palette, theme, curve, arrows, graticule, borderWidth]);
 
   const controls = (
       <details className="story-looks" open>
@@ -126,20 +121,6 @@ export function useStoryLook(): { look: OdysseyLook; own: boolean; controls: JSX
             <span>Border width</span>
             <select value={borderWidth} onChange={(event) => setBorderWidth(event.target.value)}>
               {BORDER_WIDTHS.map((value) => <option key={value} value={value}>{value || 'Style’s own'}</option>)}
-            </select>
-          </label>
-          <label className="odyssey-lab-field">
-            <span>Stop radius</span>
-            <select value={stopRadius} disabled={stops === 'none'} onChange={(event) => setStopRadius(event.target.value)}>
-              {STOP_RADII.map((value) => <option key={value} value={value}>{value || 'Auto (one size)'}</option>)}
-            </select>
-          </label>
-          <label className="odyssey-lab-field">
-            <span>Stops</span>
-            <select value={stops} onChange={(event) => setStops(event.target.value as OdysseyLook['stops'])}>
-              <option value="ends">ends: each chapter's start and end</option>
-              <option value="all">all: every stop</option>
-              <option value="none">none</option>
             </select>
           </label>
           <div className="odyssey-lab-toggles">

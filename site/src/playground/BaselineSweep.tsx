@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { FlintChart } from 'flint-chart/react';
 import { TEST_GENERATORS } from 'flint-chart/test-data';
 import { selectVariants } from '../shared/wall-variants';
-import { testCaseToAssemblyInput, thumbnailCanvasSize } from '../shared/test-case-utils';
+import { testCaseToAssemblyInput, thumbnailCanvasSize, withHouse } from '../shared/test-case-utils';
 import { getSupportedBackends } from '../shared/supported-backends';
 
 // A test target for the baseline (nearest-mark tooltip, legend dim): the gallery's variants of one
@@ -11,6 +11,7 @@ import { getSupportedBackends } from '../shared/supported-backends';
 
 // Only what Vega-Lite draws: the baseline lives in the Vega-Lite mount (Density Contour, say, is Plotly-only).
 // A group is kept when any of its cases is a chart type Vega-Lite has a template for.
+const THEMES = ['', 'bbc', 'economist', 'pop', 'powerbi', 'cartoon', 'de-stijl', 'nyt', 'swiss', 'apple', 'material', 'datawrapper', 'mckinsey', 'nature', 'powerbi-light'];
 const drawsInVegaLite = (testCase: { chartType: string }): boolean => getSupportedBackends(testCase.chartType).includes('vegalite');
 const TYPES = Object.keys(TEST_GENERATORS).filter((type) => TEST_GENERATORS[type]().some(drawsInVegaLite));
 
@@ -19,13 +20,15 @@ export function BaselineSweep() {
     const index = Math.min(Math.max(Number(params.get('type') ?? 0) || 0, 0), TYPES.length - 1);
     // `?inspect=1` asks every case for `inspect-index`, to check the inspect presets the same way.
     const inspect = params.get('inspect') === '1';
+    const theme = params.get('theme') ?? '';
     const chartType = TYPES[index] ?? TYPES[0];
     const cases = useMemo(() => selectVariants(TEST_GENERATORS[chartType]().filter(drawsInVegaLite)), [chartType]);
 
-    const go = (next: { type?: number; inspect?: boolean }): void => {
+    const go = (next: { type?: number; inspect?: boolean; theme?: string }): void => {
         const type = next.type ?? index;
         const withInspect = next.inspect ?? inspect;
-        setParams(withInspect ? { type: String(type), inspect: '1' } : { type: String(type) });
+        const house = next.theme ?? theme;
+        setParams({ type: String(type), ...(withInspect ? { inspect: '1' } : {}), ...(house ? { theme: house } : {}) });
         window.scrollTo(0, 0);
     };
 
@@ -46,12 +49,15 @@ export function BaselineSweep() {
                     <input type="checkbox" checked={inspect} onChange={(event) => go({ inspect: event.target.checked })} />
                     Ask for inspect-index
                 </label>
+                <select value={theme} onChange={(event) => go({ theme: event.target.value })} aria-label="Theme">
+                    {THEMES.map((id) => <option key={id} value={id}>{id || 'no theme'}</option>)}
+                </select>
                 <span style={{ color: '#57606a' }}>{cases.length} variant{cases.length === 1 ? '' : 's'}</span>
             </div>
             {cases.map((testCase, i) => (
                 <section key={`${chartType}-${i}`} data-sweep-case={i} data-sweep-title={testCase.title} style={{ width: 'fit-content' }}>
                     <div style={{ fontSize: 12, color: '#57606a', marginBottom: 4 }}>{testCase.title}</div>
-                    <FlintChart spec={{ ...testCaseToAssemblyInput(testCase, thumbnailCanvasSize(testCase)), ...(inspect ? { interaction_spec: { interactions: [{ type: 'inspect-index' }] } } : {}) } as any} renderer="svg" ariaLabel={testCase.title} />
+                    <FlintChart spec={{ ...withHouse(testCaseToAssemblyInput(testCase, thumbnailCanvasSize(testCase)), theme || undefined), ...(inspect ? { interaction_spec: { interactions: [{ type: 'inspect-index' }] } } : {}) } as any} renderer="svg" ariaLabel={testCase.title} />
                 </section>
             ))}
         </div>

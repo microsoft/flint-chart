@@ -382,6 +382,25 @@ export const MIN_OUTLINE_WIDTH = 0.6;
 export const MIN_HALO_DOT = 28;
 
 /** A ring for a dot of `size` px²: `share` of the radius, at least `floor`, never more than the house's width. */
+
+/** One row per bar, its measure summed over the segments a bar split by `detail` draws. */
+function barTotals(structure: ChartStructure, channelSemantics: Record<string, ChannelSemantics>, rows: any[]): any[] {
+    const axis = stackedAxis(structure);
+    const measure = axis ? structure[axis]?.fields[0] : undefined;
+    const detail = channelSemantics.detail?.field;
+    if (!measure || !detail) return rows;
+    const keys = [...new Set(Object.values(channelSemantics).map((c) => c?.field)
+        .filter((field): field is string => typeof field === 'string' && field !== measure && field !== detail))];
+    const totals = new Map<string, any>();
+    for (const row of rows) {
+        const key = JSON.stringify(keys.map((k) => row?.[k]));
+        const total = totals.get(key) ?? totals.set(key, { ...Object.fromEntries(keys.map((k) => [k, row?.[k]])), [measure]: 0 }).get(key);
+        const v = Number(row?.[measure]);
+        if (Number.isFinite(v)) total[measure] += v;
+    }
+    return [...totals.values()];
+}
+
 export function ringWidth(size: number, share: number, houseWidth: number, floor = 0): number {
     const radius = Math.sqrt(size / Math.PI);
     return Math.min(houseWidth, Math.max(floor, Number((radius * share).toFixed(2))));
@@ -1856,6 +1875,7 @@ function planAroundPlot(prepared: PreparedPlan, reserve: FurnitureReserve): Layo
         canvasSize: size.baseSize,
         assembleOptions: effectiveOptions,
         channelSemantics,
+        encodings,
         table: values,
         fullTable: convertedData,
         semanticTypes: context.semanticTypes,
@@ -1920,6 +1940,13 @@ function planAroundPlot(prepared: PreparedPlan, reserve: FurnitureReserve): Layo
     });
 
     const segmented = segmentedBands(structure, values, [channelSemantics.column?.field, channelSemantics.row?.field]);
+    // A bar split only by `detail` stacks its segments (the axis spans their sum) but reads, and is
+    // labelled, as one bar: its segments are there for selection and links.
+    const detailOnly = structure.marks.includes('bar') && Boolean(channelSemantics.detail?.field)
+        && !channelSemantics.color?.field && !channelSemantics.x2?.field && !channelSemantics.y2?.field;
+    const stackedSegments = segmented && !detailOnly;
+    // What it shows, and its labels print, is each bar's total: the design is grounded on those.
+    const barRows = detailOnly && segmented ? barTotals(structure, channelSemantics, values) : values;
     const title = printedTitle(context, structure);
     // Grounding runs whether or not a theme was named, with the neutral one when it was not: some
     // design questions are Flint's own, such as whether this chart can carry its values at this density.
@@ -1938,12 +1965,12 @@ function planAroundPlot(prepared: PreparedPlan, reserve: FurnitureReserve): Layo
             ...(structure.y ? { y: { type: structure.y.type, field: structure.y.derived ? undefined : structure.y.fields[0] } } : {}),
             ...(structure.series?.field ? { color: { field: structure.series.field, type: structure.series.type } }
                 : structure.series?.derived ? { color: { field: structure.series.derived, type: structure.series.type, derived: true } } : {}),
-            ...(segmented ? { stacked: true } : {}),
+            ...(stackedSegments ? { stacked: true } : {}),
         },
         layout: layoutResult,
-        table: values,
+        table: barRows,
         canvasSize: size.baseSize,
-        stacked: structure.stacking === 'normalized' ? 'normalize' : segmented,
+        stacked: structure.stacking === 'normalized' ? 'normalize' : stackedSegments,
         partToWhole: structure.marks.includes('arc'),
         titled: Boolean(title),
         headline: headlineText(title),
@@ -2064,13 +2091,13 @@ function planAroundPlot(prepared: PreparedPlan, reserve: FurnitureReserve): Layo
     let titlePlan = composite ? undefined : context.pins?.title ?? planTitle(titleInputs);
 
     const labelLengths = drawnLengths(plot, titlePlan, undefined);
-    let valueLabels = planValueLabels({ design, structure, segmented, channelSemantics, rows: values, lengths: labelLengths });
+    let valueLabels = planValueLabels({ design, structure, segmented: stackedSegments, channelSemantics, rows: barRows, lengths: labelLengths });
     // A house that would rather every label read alike prints them all past the bar's end once one
     // bar is too short for its own (L4).
     if (valueLabels && !('refused' in valueLabels) && design.dataLabels.fallback === 'allOutside'
         && (valueLabels.channel === 'x' || valueLabels.channel === 'y')
-        && someLabelsOverrun(valueLabels, design, values, labelLengths[valueLabels.channel])) {
-        valueLabels = planValueLabels({ design, structure, segmented, channelSemantics, rows: values, lengths: labelLengths, outside: true });
+        && someLabelsOverrun(valueLabels, design, barRows, labelLengths[valueLabels.channel])) {
+        valueLabels = planValueLabels({ design, structure, segmented: stackedSegments, channelSemantics, rows: barRows, lengths: labelLengths, outside: true });
         report.push({ stage: 'realize', path: 'dataLabels.fallback', code: 'value-labels-all-outside',
             message: 'some bars are too short to hold their own label, so every label is printed past its bar’s end, as the house asks' });
     }
@@ -2150,7 +2177,7 @@ function planAroundPlot(prepared: PreparedPlan, reserve: FurnitureReserve): Layo
     // Inside labels are checked one by one against the axis as it will be drawn.
     if (valueLabels && !('refused' in valueLabels) && valueLabels.inside && (valueLabels.channel === 'x' || valueLabels.channel === 'y')) {
         const along = valueLabels.channel;
-        valueLabels = fitInsideLabels(valueLabels, design, values, { length: drawnLengths(plot, titlePlan, valueLabels)[along], domain: rulers[along]?.domain });
+        valueLabels = fitInsideLabels(valueLabels, design, barRows, { length: drawnLengths(plot, titlePlan, valueLabels)[along], domain: rulers[along]?.domain });
     }
     const displayNames = chartDisplayNames(context.fieldDisplayNames, analysis.staticSeries ?? undefined);
     const channelTitles: Partial<Record<string, string>> = {};

@@ -424,22 +424,32 @@ in a neutral ink and the points keep their colour.
   and the leg back part ways) and follows great circles on a globe or along a track of more than 24
   legs; `arc`, `great-circle` and `straight` (a constant compass bearing) choose one.
 - `strokeWidth` is the routes' width, leg by leg from the row each leaves: zero-based, linear, 1 to
-  8 px, with a line-width key. On a map without `order` it has no legs to widen and is left out, with
+  8 px, with a line-width key. Where many long legs crowd the plot, the widest thins (to no less
+  than 40% of 8 px), so their ink stays about 6% of the plot. On a map without `order` it has no legs to widen and is left out, with
   a warning. `size` stays the dots' area, so one map can carry both.
-- A route is drawn as its arrows alone: its stops are not drawn, but keep the tooltips, hover, notes
-  and colour key. `stops: 'all'` (or `true`) draws them as dots; `stops: 'ends'` only where each
-  run of legs in one colour starts and ends, the stops between marked by their arrows. Dots are one
-  size (from the routes' typical width, 2.5–4 px); `size` sizes them by value (zero-based by area,
-  2.5–7 px, with a key, and draws them at every stop unless `stops` is set), and `stopRadius` fixes
-  one radius. A leg leaves from the edge of its
-  dot's halo, and its head's tip stops at the next one's. A route without a series colour is drawn in the theme's mark colour (a neutral ink
-  beside points coloured by another field), square-ended and mitred, with a hairline halo (white on
-  a light map, the ground on a dark one) round each line and its head.
+- A route is drawn as its lines and arrowheads, between the stops' true places; it draws no dot of
+  its own. The stops are the map's points, and the encodings say which take a dot: every stop where
+  the points carry something the routes do not — `size` (by value, zero-based by area, 2.5–7 px, with
+  a key), `shape`, `text` (a label's anchor) or a quantity's `color` — else only each route's first
+  stop, where no arrowhead marks it. A dot is one size by default (from the routes' typical width,
+  2.5–4 px). An undrawn stop keeps its tooltip, hover and notes. Dots lie beneath the routes, drawn in
+  two passes: every halo (the lines', the heads', each dot's rim), then every ink (dots, lines,
+  heads), so a line, its dot and the head arriving at it read as one shape. A route without a series
+  colour is drawn in the theme's mark colour (a neutral ink beside points coloured by another
+  field), square-ended and mitred, with a hairline halo (white on a light map, the ground on a dark
+  one). Any other dot is the author's to add, as an update layer.
 - `arrows` (default `true`): an arrowhead at the end of each leg, or at the end of a track only,
   sized to its line and set on it: its tip at the stop, the middle of its base on the line a head's
-  length back, the line ending square inside it. A leg too short on screen for its head shrinks it
-  to fit, and below 60% of its size keeps its line alone. Each head reads its heading, and each line its length, from
-  the live projection inside the spec, so both follow a pan, zoom or globe drag in any Vega renderer.
+  length back, the line ending square inside it. Its length and width grow with the line's width. A
+  leg too short on screen for its head shrinks it, to 60% of its size and then to the leg's own
+  length, so a short leg keeps a small head; only a leg a few px long keeps its line alone. Where
+  three or more legs arrive at one stop, their heads stand on a ring round it, shrunk with their
+  number, and past twelve only the widest keep one. Each head reads its heading, and each line its
+  length, from the live projection inside the spec, so both follow a pan, zoom or globe drag in any
+  Vega renderer.
+- `text` names points beside them, the most salient first (the largest dots by `size`, else the
+  ends of a quantity's `color`), at most one per 36,000 px² of the plot; the rest keep their
+  tooltips.
 - The lines are geoshapes: the projection draws them, cut at the antimeridian and hidden past a
   globe's horizon. They and their heads take no tooltip; the points keep theirs.
 

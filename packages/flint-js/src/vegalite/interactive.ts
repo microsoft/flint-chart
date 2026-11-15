@@ -68,10 +68,31 @@ import { createDefaultStyle, DEFAULT_OPTIONS, Handler } from 'vega-tooltip';
 
 let tooltipSerial = 0;
 
-function createTooltip(container: HTMLElement) {
+/** The house's type for the tooltip: its label face, at its label size kept between 11 and 13 px. */
+export function tooltipType(vlSpec: { config?: Record<string, any> }): { family: string; size: number } | undefined {
+    const config = vlSpec.config ?? {};
+    const family = config.legend?.labelFont ?? config.axis?.labelFont ?? config.font;
+    if (typeof family !== 'string' || family === '') return undefined;
+    // The layout sizes each guide's labels for its own room; the largest is the house's reading size.
+    const sizes = [config.legend, config.axis, config.axisX, config.axisY]
+        .map((guide) => guide?.labelFontSize).filter((value): value is number => typeof value === 'number');
+    const size = sizes.length > 0 ? Math.max(...sizes) : 11;
+    return { family, size: Math.min(13, Math.max(11, size)) };
+}
+
+function createTooltip(container: HTMLElement, type?: { family: string; size: number }) {
+    // Every chart on a page shares Vega's one tooltip element: each shows it in its own house's type.
+    const styled = (call: Handler['call'], element: () => HTMLElement | null): Handler['call'] =>
+        function (this: unknown, handler, event, item, value) {
+            call.call(this, handler, event, item, value);
+            const shown = element();
+            if (!shown || value == null || value === '') return;
+            shown.style.fontFamily = type?.family ?? '';
+            shown.style.fontSize = type ? `${type.size}px` : '';
+        };
     if (container.ownerDocument === document) {
         const handler = new Handler();
-        return { call: handler.call, destroy: () => undefined };
+        return { call: styled(handler.call.bind(handler), () => document.getElementById(DEFAULT_OPTIONS.id)), destroy: () => undefined };
     }
     const owner = container.ownerDocument;
     const element = owner.createElement('div');
@@ -98,7 +119,7 @@ function createTooltip(container: HTMLElement) {
         element.classList.add('visible');
         panel.show();
     };
-    return { call, destroy() { panel.destroy(); style.remove(); } };
+    return { call: styled(call, () => element), destroy() { panel.destroy(); style.remove(); } };
 }
 
 export interface VegaInteractiveRendererOptions {
@@ -442,11 +463,10 @@ export function createVegaInteractiveRenderer(
                     interactions,
                     options.enableSemanticUpdates || baselineTooltip,
                 );
-                if (viewports.length === 0 && filtersRows) {
-                    pinColorDomains(shapedSpec);
-                    // A pinned domain orders a stack by a sort index Vega-Lite would list in the tooltip.
-                    vlListTooltipFields(shapedSpec);
-                }
+                if (viewports.length === 0 && filtersRows) pinColorDomains(shapedSpec);
+                // A domain pinned here (the legend's, or the colours a filter keeps) orders a stack by a
+                // sort index Vega-Lite would list in the tooltip: the tooltip's fields are listed again.
+                vlListTooltipFields(shapedSpec);
                 const vegaSpec = enableGuideLabelTooltips(compile(shapedSpec).spec as any);
                 const relaidSignals = filtersRows ? layoutSignals(vegaSpec) : [];
                 let livePlanner: LiveLayoutPlanner | undefined;
@@ -588,7 +608,7 @@ export function createVegaInteractiveRenderer(
                 } as any,
             );
             view.logLevel(VegaError);
-            const tooltip = createTooltip(container);
+            const tooltip = createTooltip(container, tooltipType(vlSpec));
             // Vega's exact hover drives the tooltip; with the baseline, a line or point a few px away
             // takes it over (the readout), and gives it back when the pointer moves off.
             // An inspect preset the chart admitted reads values on hover itself: the tooltip stays out of its way.

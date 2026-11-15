@@ -260,6 +260,23 @@ export function vegaLiteBuiltFacts(spec: any, table: any[]): BuiltFacts {
     return { marks: collectMarkTypes(spec), fields, transformed, stacking: stacking ?? (implicit ? 'stacked' : 'none'), segmented, baselines, ownScales, fitted, rounded, reversed, keys: [...keys.values()] };
 }
 
+/**
+ * A bar whose `detail` field is not its colour is drawn as a stack of segments, one per value, so a
+ * selection or a link can pick a value's share out; it should still read as one bar. Read off the
+ * encodings, which survive a bar being wrapped into a layer.
+ */
+function detailSegments(node: any, encoding: any): boolean {
+    // A ranged bar (a Gantt task) spans its own interval and adjoins nothing.
+    if (markTypeOf(node.mark) !== 'bar' || encoding?.x2 || encoding?.y2) return false;
+    const detail = encoding?.detail?.field;
+    return Boolean(detail) && detail !== (encoding.color?.field ?? encoding.fill?.field);
+}
+
+/** A node's encoding over its top-level parent's, for the passes that walk without carrying one. */
+function withSpecEncoding(spec: any, node: any): any {
+    return { ...(spec.spec?.encoding ?? {}), ...(spec.encoding ?? {}), ...(node.encoding ?? {}) };
+}
+
 function walk(node: any, visit: (n: any) => void): void {
     if (!node || typeof node !== 'object') return;
     visit(node);
@@ -396,6 +413,7 @@ export function realizeThemeVegaLite(
     applyReadableSeriesText(spec, d, say);
     applyTextures(spec, d);
     applyGradientFills(spec, d, table, say);
+    inkAreaEdges(spec);
     applyTypeCase(spec, config, d, table, say);
     applyDisplayType(spec, d);
     applyTableStyle(spec, d);
@@ -411,6 +429,23 @@ export function realizeThemeVegaLite(
     const wrapped = applyFurniture(spec, d, rules);
 
     return wrapped ? report : report;
+}
+
+/**
+ * An area's edge (`areaEdge`) is Vega-Lite's line overlay, which follows a colour encoding but not
+ * an ink written on the area's own mark: a single series inked on the mark alone would get the
+ * renderer's default blue edge. The edge takes the area's ink, once every pass that sets it is done.
+ */
+function inkAreaEdges(spec: any): void {
+    walk(spec, (node) => {
+        if (markTypeOf(node.mark) !== 'area') return;
+        const mark = normalizeMark(node.mark);
+        const line = mark.line;
+        if (!line || typeof line !== 'object' || line.color != null || line.stroke != null) return;
+        const ink = typeof mark.color === 'string' ? mark.color
+            : typeof mark.fill === 'string' && !mark.fill.startsWith('url(') ? mark.fill : undefined;
+        if (ink) node.mark = { ...mark, line: { ...line, color: ink } };
+    });
 }
 
 /**
@@ -548,10 +583,14 @@ const VEGA_SWATCH: Record<NonNullable<DesignDecisions['legend']['swatch']>, stri
     square: 'square', circle: 'circle', line: 'stroke',
 };
 
+/** Marks drawn in stroke alone, whose key symbols Vega-Lite leaves unfilled. */
+const STROKED_MARKS = new Set(['line', 'trail', 'rule']);
+
 /**
  * The house's swatch for every key to categories. Written on the encoding, where Vega-Lite reads
  * it before the symbol it would infer from the mark. A key that is itself a shape or a size keeps
- * its symbols: those *are* the entries.
+ * its symbols: those *are* the entries. A square or circle is a chip of fill, and a line is drawn
+ * in stroke alone, so its key would be a hollow outline: a stroked mark keeps its own short stroke.
  */
 function applyLegendSwatch(spec: any, d: DesignDecisions): void {
     const swatch = d.legend.swatch;
@@ -560,6 +599,7 @@ function applyLegendSwatch(spec: any, d: DesignDecisions): void {
     walk(spec, (node) => {
         const enc = node.encoding;
         if (!enc) return;
+        if (swatch !== 'line' && STROKED_MARKS.has(markTypeOf(node.mark) ?? '')) return;
         for (const channel of ['color', 'fill', 'stroke'] as const) {
             const def = enc[channel];
             if (!def?.field || def.legend === null) continue;
@@ -715,10 +755,12 @@ function placeRowNamesAbove(spec: any, d: DesignDecisions, table: any[], plan: N
  * facet sorts for itself, and a sort the rows cannot reproduce, stay Vega-Lite's.
  */
 export function alignBandOrders(spec: any, table: any[]): void {
+    // A column computed per row (a value label's printed text) leaves the rows, and so their order, as they are.
+    const keepsRows = (transform: any) => Object.keys(transform ?? {}).every((key) => key === 'calculate' || key === 'as');
     const visit = (node: any, transformed: boolean): void => {
         if (!node || typeof node !== 'object') return;
         // Rows a transform reshapes are not the table's: their order is Vega-Lite's to compute.
-        const reshaped = transformed || Boolean(node.transform?.length) || Boolean(node.data && node !== spec);
+        const reshaped = transformed || (node.transform ?? []).some((t: any) => !keepsRows(t)) || Boolean(node.data && node !== spec);
         if (node.spec) visit(node.spec, reshaped);
         if (!Array.isArray(node.layer) || reshaped) return;
         for (const channel of ['x', 'y'] as const) {
@@ -728,6 +770,8 @@ export function alignBandOrders(spec: any, table: any[]): void {
             if (units.length < 2) continue;
             const field = units[0].enc[channel].field;
             if (units.some(({ enc }: any) => enc[channel].field !== field)) continue;
+            // A computed column that rewrites the band's own field reorders it.
+            if ((node.transform ?? []).some((t: any) => t?.as === field)) continue;
             const ordered = (sort: any) => sort != null && !Array.isArray(sort) && sort !== 'ascending' && sort !== 'descending';
             // The order is the drawn marks', not a label's: the first layer the theme did not add.
             const source = units.find(({ unit, enc }: any) => !unit.__themeSynthetic && ordered(enc[channel].sort))
@@ -2623,6 +2667,9 @@ function applyMarks(
                 const enc = node.encoding ?? {};
                 const banded = Boolean(enc.color?.field ?? enc.fill?.field ?? spec.encoding?.color?.field);
                 if (!banded || isLiteralMark(node)) return;
+                // An area that draws its own edge (`areaEdge`) is already parted from the band
+                // above by that line; a surface stroke round it would also cut the axes it meets.
+                if (normalizeMark(node.mark).line) return;
                 node.mark = {
                     ...normalizeMark(node.mark),
                     stroke: m.separator!.color,
@@ -2633,6 +2680,8 @@ function applyMarks(
             }
             if (mark !== 'bar' && mark !== 'rect') return;
             if (isLiteralMark(node)) return;
+            // Segments of one bar (`sealDetailSegments`) are not held apart.
+            if (detailSegments(node, withSpecEncoding(spec, node))) return;
             // A cell in a grid is not a bar in a row: it adjoins on both axes
             // and its fill is the reading, so how it is held apart is its own
             // decision, taken below.
@@ -2682,6 +2731,8 @@ function applyMarks(
         walk(spec, (node) => {
             if (markTypeOf(node.mark) !== 'bar') return;
             if (isLiteralMark(node)) return;
+            // An outline round each segment of one bar would draw the segments, not the bar.
+            if (detailSegments(node, withSpecEncoding(spec, node))) return;
             const enc = node.encoding ?? {};
             if (isGridCell(node, enc)) return;
             const mark = normalizeMark(node.mark);
@@ -4616,6 +4667,23 @@ function labelOneBody(
         return;
     }
     const stackedSegments = planned.form === 'segments';
+    // A bar split by `detail` reads as one bar, so its label prints the bar's total: the label drops
+    // `detail`, and sums its rows first unless Vega-Lite aggregates the measure already.
+    const segmentsOfOne = Boolean(primary) && detailSegments(primary, enc);
+    const labelRows: { transform: any[] } = { transform: [] };
+    // What the labels print, they are measured by: each bar's total, not its segments.
+    if (segmentsOfOne && !measure.aggregate) {
+        const keys = [...new Set((['x', 'y', 'xOffset', 'yOffset', 'color', 'row', 'column', 'facet'] as const)
+            .map((ch) => enc[ch]?.field).filter((field): field is string => typeof field === 'string' && field !== measure.field))];
+        const totals = new Map<string, any>();
+        for (const row of table) {
+            const key = JSON.stringify(keys.map((k) => row?.[k]));
+            const total = totals.get(key) ?? totals.set(key, { ...Object.fromEntries(keys.map((k) => [k, row?.[k]])), [measure.field]: 0 }).get(key);
+            const v = Number(row?.[measure.field]);
+            if (Number.isFinite(v)) total[measure.field] += v;
+        }
+        table = [...totals.values()];
+    }
 
     const horizontal = measureChannel === 'x';
     // The plan decides: a house's `atMark` can still print every label past the bar (`allOutside`).
@@ -4831,13 +4899,14 @@ function labelOneBody(
     // A compacted label is a string computed per row: an aggregated one keeps its format.
     const compact = measure.aggregate ? undefined : d.dataLabels.compact;
     if (d.dataLabels.unit || compact) {
-        printWithUnit(body, { encoding: labelEncoding }, measure.field, d.dataLabels.format, d.dataLabels.unit, compact);
+        printWithUnit(segmentsOfOne && !measure.aggregate ? labelRows : body, { encoding: labelEncoding }, measure.field, d.dataLabels.format, d.dataLabels.unit, compact);
     }
     // `facet`, `row` and `column` split the data; Vega-Lite refuses them inside
     // a layer and `appendLayer` promotes them to a real facet operator that
     // covers every layer, the label included. Copied onto the label they are a
     // second, conflicting split — so they are left to the operator.
     for (const ch of ['x', 'y', 'xOffset', 'yOffset', 'detail', 'theta', 'radius'] as const) {
+        if (ch === 'detail' && segmentsOfOne) continue;
         if (enc[ch]) labelEncoding[ch] = stripAxis(enc[ch]);
     }
     // A label anchored at the base or the middle of its bar is placed at 0 or half its value, on the
@@ -5021,7 +5090,15 @@ function labelOneBody(
     // in front of whatever else the label layer derives.
     // Under a live layout, labels the plan does not print leave the data rather than
     // the view; all of them leave together, so no stack is cut.
+    const segmentTotals = segmentsOfOne && !measure.aggregate ? [{
+        aggregate: [{ op: 'sum', field: measure.field, as: measure.field }],
+        groupby: [...new Set((['x', 'y', 'xOffset', 'yOffset', 'detail'] as const)
+            .filter((ch) => ch !== measureChannel)
+            .flatMap((ch) => [].concat(labelEncoding[ch] ?? []).map((e: any) => e?.field))
+            .filter((field): field is string => typeof field === 'string' && field !== '__flintLabelAt'))],
+    }, ...labelRows.transform] : [];
     const labelTransforms = [
+        ...segmentTotals,
         ...(anchorTransform ? [anchorTransform] : []),
         ...(stackOrderTransform ? [stackOrderTransform] : []),
         ...(stackedTransform ?? []),
@@ -5106,14 +5183,14 @@ function labelOneBody(
     const split = (threshold: number, comparison: '<' | '>', message: string) => {
         const v = `abs(datum[${JSON.stringify(measure.field)}])`;
         const flipped = !inside;
-        layer.transform = [...(anchorTransform ? [anchorTransform] : []), { filter: `${v} ${comparison === '<' ? '>=' : '<='} ${threshold}` }];
+        layer.transform = [...segmentTotals, ...(anchorTransform ? [anchorTransform] : []), { filter: `${v} ${comparison === '<' ? '>=' : '<='} ${threshold}` }];
         const { color: insideInk, ...rest } = labelEncoding;
         const keepsSeriesInk = d.dataLabels.inkMode === 'matchSeries' && insideInk?.field;
         const movedEncoding = { ...rest, ...(keepsSeriesInk ? { color: insideInk } : {}), [measureChannel]: valueAt };
         const movedInk = flipped ? flipInk(true) : onPlot(flipInk(false) ?? d.text.primary);
         const other: any = withInteractionTextLabel({
             __themeSynthetic: true,
-            transform: [{ filter: `${v} ${comparison} ${threshold}` }],
+            transform: [...segmentTotals, { filter: `${v} ${comparison} ${threshold}` }],
             mark: { ...markDef, ...geometry(flipped), ...(keepsSeriesInk ? {} : { color: movedInk }) },
             encoding: movedEncoding,
         }, { presentation: flipped ? 'on-mark' : 'independent' });
@@ -5671,6 +5748,45 @@ function applyBarMinLength(spec: any, min: number, table: any[], plotWidth: numb
         }
         for (const layer of added) appendLayer(body, layer);
     }
+}
+
+/**
+ * A bar split into segments by its `detail` field reads as one bar: each segment takes a hairline in
+ * its own ink, so no seam shows where segments meet, and no separator or outline is drawn between
+ * them. Run once the inks are final, themed or not. A segment's stroke mirrors a colour field's
+ * scale; a bar in one ink takes the ink its mark or the config states.
+ */
+export function sealDetailSegments(spec: any): void {
+    const config = spec.config ?? {};
+    const visit = (node: any, from: any) => {
+        if (!node || typeof node !== 'object') return;
+        const seen = mergedEncoding(node, from);
+        if (detailSegments(node, seen)) {
+            const mark = normalizeMark(node.mark);
+            const colour = seen.fill?.field ? seen.fill : seen.color?.field ? seen.color : undefined;
+            const fill = typeof mark.fill === 'string' ? mark.fill : undefined;
+            const seal = { strokeWidth: 1, ...(mark.fillOpacity !== undefined ? { strokeOpacity: mark.fillOpacity } : {}) };
+            if (fill?.startsWith('url(')) {
+                // A texture has its own seams; leave it.
+            } else if (seen.stroke) {
+                // A stroke the house already maps (a texture's darker edge) stays.
+            } else if (colour) {
+                const { title: _title, legend: _legend, ...rest } = colour;
+                void _title; void _legend;
+                node.encoding = { ...(node.encoding ?? {}), stroke: { ...rest, legend: null } };
+                const { stroke: _stroke, ...unstroked } = mark;
+                void _stroke;
+                node.mark = { ...unstroked, ...seal };
+            } else {
+                const ink = fill ?? (typeof mark.color === 'string' ? mark.color : undefined)
+                    ?? config.bar?.color ?? config.mark?.color ?? config.range?.category?.[0] ?? '#4c78a8';
+                node.mark = { ...mark, stroke: ink, ...seal };
+            }
+        }
+        for (const key of ['layer', 'vconcat', 'hconcat', 'concat']) if (Array.isArray(node[key])) node[key].forEach((c: any) => visit(c, seen));
+        if (node.spec) visit(node.spec, seen);
+    };
+    visit(spec, undefined);
 }
 
 /**

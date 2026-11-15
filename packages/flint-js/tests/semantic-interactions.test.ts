@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { changeset, parse, View, type GroupMark } from 'vega';
 import { expressionInterpreter } from 'vega-interpreter';
 import { compile } from 'vega-lite';
-import { scaleAwareCanvasPicking } from '../src/vegalite/interactive';
+import { scaleAwareCanvasPicking, tooltipType } from '../src/vegalite/interactive';
 import { rendererElement, vegaRendererOrigin } from '../src/vegalite/interactions/hit-adapter';
 import { assembleVegaLite, indexAxisOf } from '../src/vegalite/assemble';
 import { axisHighlight, brushAngle, brushX, brushZoom, clickAnnotate, clickHighlight, dragReorder, externalInteraction, inspect, legendToggle, navigate, select } from '../src/interactive/interactions';
@@ -4746,6 +4746,37 @@ describe('set-style visibility', () => {
         expect(spec.encoding.color.scale.domain).toEqual(['Female', 'Male']);
     });
 
+    it('pins a legend in the order of the rows when the colour is unsorted, and its edge in the same order', () => {
+        const spec: Record<string, any> = {
+            _interactionSemantics: {
+                capabilities: ALL_CAPABILITIES,
+                fields: ['Team', 'Gold'],
+                legendFields: { color: 'Team' },
+                selectableMarks: ['circle'],
+            },
+            data: {
+                values: [
+                    { Team: 'United States', Gold: 40, Silver: 44 },
+                    { Team: 'China', Gold: 40, Silver: 27 },
+                    { Team: 'Australia', Gold: 18, Silver: 19 },
+                ],
+            },
+            mark: { type: 'circle', strokeWidth: 1 },
+            encoding: {
+                x: { field: 'Gold', type: 'quantitative' },
+                y: { field: 'Silver', type: 'quantitative' },
+                color: { field: 'Team', type: 'nominal', sort: null, scale: { range: ['#4e79a7', '#f28e2c', '#ffffb3'] } },
+                // A faint ink's darker edge, as the theme draws it: the same field on a second scale.
+                stroke: { field: 'Team', type: 'nominal', sort: null, scale: { range: ['#4e79a7', '#f28e2c', '#b3b37d'] }, legend: null },
+            },
+        };
+
+        addVegaLiteInteractions(spec, [legendToggle()]);
+
+        expect(spec.encoding.color.scale.domain).toEqual(['United States', 'China', 'Australia']);
+        expect(spec.encoding.stroke.scale.domain).toEqual(spec.encoding.color.scale.domain);
+    });
+
     it('pins an aggregate-sorted donut legend so hidden slices keep their keys', () => {
         const spec: Record<string, any> = {
             _interactionSemantics: {
@@ -4970,5 +5001,13 @@ describe('waterfall legend', () => {
             resolvedEncodings: { x: { field: 'Step', type: 'nominal' }, y: { field: 'Value', type: 'quantitative' }, color: { field: 'Type', type: 'nominal' } } as never,
         }));
         expect(semantics.legendFields).toEqual({ color: '__wf_color' });
+    });
+});
+
+describe('tooltip type', () => {
+    it('takes the house\'s label face at its largest label size, kept to 11–13 px, and nothing with no house', () => {
+        expect(tooltipType({ config: { legend: { labelFont: 'Reith', labelFontSize: 9 }, axisX: { labelFontSize: 16 } } })).toEqual({ family: 'Reith', size: 13 });
+        expect(tooltipType({ config: { font: 'Futura', axisY: { labelFontSize: 8 } } })).toEqual({ family: 'Futura', size: 11 });
+        expect(tooltipType({ config: { axis: { labelFontSize: 12 } } })).toBeUndefined();
     });
 });

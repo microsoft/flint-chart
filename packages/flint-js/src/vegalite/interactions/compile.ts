@@ -112,7 +112,8 @@ function expandInteractiveLinePoints(spec: Record<string, any>): void {
     if (type === 'line' && typeof spec.mark === 'object' && spec.mark.point) {
         const lineMark = { ...spec.mark };
         const point = lineMark.point;
-        delete lineMark.point;
+        // The dots move to their own layer; `false` keeps a house's `config.line.point` from drawing them again.
+        lineMark.point = false;
         spec.layer = [
             { mark: lineMark },
             { mark: typeof point === 'object' ? { type: 'point', ...point } : { type: 'point', filled: true } },
@@ -456,7 +457,8 @@ function pinChannelDomain(
             };
             const direction = sort.order === 'ascending' ? 1 : -1;
             values.sort((left, right) => direction * (aggregate(left) - aggregate(right)));
-        } else {
+        } else if (sort !== null) {
+            // `sort: null` is the order the rows give, which `values` already holds.
             values.sort((left, right) => (left as any) < (right as any) ? -1 : (left as any) > (right as any) ? 1 : 0);
             if (sort === 'descending') values.reverse();
         }
@@ -487,7 +489,10 @@ function pinLegendDomains(
         if (channel === 'size' || channel === 'opacity') continue;
         const values = [...new Set(rows.map((row) => row?.[field]).filter((value) => value !== undefined))];
         if (values.length === 0 || values.some((value) => typeof value !== 'string' && typeof value !== 'number')) continue;
-        pinChannelDomain(spec, channel === 'color' ? 'color' : channel, field, rows);
+        pinChannelDomain(spec, channel, field, rows);
+        // A theme can draw the same field again as a mark's edge or fill (a faint ink's darker
+        // outline): it must keep the colour's order, or each mark takes another series' edge.
+        if (channel === 'color') for (const twin of ['stroke', 'fill']) pinChannelDomain(spec, twin, field, rows);
     }
 }
 

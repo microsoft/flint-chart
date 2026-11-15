@@ -4,7 +4,7 @@ import { applyAggregation, resolveImplicitAggregation } from './aggregate';
 import { applyEncodingOverrides } from './encoding-overrides';
 import { applyTransform, TRANSFORM_ARRANGE_KEY, TRANSFORM_CHART_TYPE_KEY } from './pivot';
 import { convertTemporalData, repairEncodingSorts, resolveChannelSemantics, resolveChannelTypes } from './resolve-semantics';
-import { computeZeroDecision } from './semantic-types';
+import { computeZeroDecision, zeroMarkType } from './semantic-types';
 import { normalizeStaticSeries } from './static-series';
 
 /** What a compile learns from the data and the chart spec, before any room or theme is read. */
@@ -156,7 +156,7 @@ export function analyzeChart(
     );
 
     // Finalize zero-baseline (requires template mark knowledge)
-    const effectiveMarkType = templateMarkType || 'point';
+    const effectiveMarkType = zeroMarkType(template.chart, templateMarkType);
     for (const [channel, cs] of Object.entries(channelSemantics)) {
         if ((channel === 'x' || channel === 'y') && cs.type === 'quantitative') {
             const numericValues = data

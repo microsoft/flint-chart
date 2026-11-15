@@ -60,9 +60,6 @@ export interface OdysseyLook {
   arrows: boolean;
   graticule: boolean;
   borderWidth?: number;
-  /** Dots at every stop, at each chapter's start and end (`ends`), or none; `stopRadius` their radius in px, else the map's own. */
-  stops: 'all' | 'ends' | 'none';
-  stopRadius?: number;
   /** The sea names' ink and the halo they stand in, to read on the ground's water. */
   seaLabel: { fill: string; halo: string };
 }
@@ -77,7 +74,6 @@ export const DEFAULT_LOOK: OdysseyLook = {
   arrows: true,
   graticule: false,
   borderWidth: 0.5,
-  stops: 'ends',
   // The atlas's water, so a route crossing a sea's name does not cut it.
   seaLabel: { fill: '#5f7d92', halo: '#dbe9f2' },
 };
@@ -126,8 +122,6 @@ export function odysseySpec(look: OdysseyLook = DEFAULT_LOOK, size?: { width: nu
         ...(look.arrows ? {} : { arrows: false }),
         ...(look.graticule ? { graticule: true } : {}),
         ...(look.borderWidth !== undefined ? { borderWidth: look.borderWidth } : {}),
-        ...(look.stops !== 'none' ? { stops: look.stops } : {}),
-        ...(look.stops !== 'none' && look.stopRadius !== undefined ? { stopRadius: look.stopRadius } : {}),
       },
       // Wider than tall, as the Mediterranean the voyage crosses is.
       canvasSize: size ?? { width: 600, height: 600 },

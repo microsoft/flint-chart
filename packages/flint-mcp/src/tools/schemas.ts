@@ -95,7 +95,7 @@ export const chartSpecSchema = z
       .object({ width: z.number(), height: z.number() })
       .optional()
       .describe(
-        'Target canvas size in px (default 400×320). Flint\'s layout model stretches around this base up to the ceiling.',
+        'Target canvas size in px (default 400×320). Flint\'s layout model stretches around this base up to the ceiling. Set it to suit where the chart is shown when you know; when omitted the MCP card starts at 300×300, grows up to 1.5× for dense data, and fits the host\'s width.',
       ),
     canvasSize: z
       .object({ width: z.number(), height: z.number() })
@@ -121,7 +121,7 @@ export function buildAssemblyInputShape(disableFileReference = false) {
       .record(z.string(), z.any())
       .optional()
       .describe(
-        'Field name → semantic type, e.g. { revenue: "Quantity", country: "Country" }. A value may instead be an annotation object when the type alone understates what you know, e.g. { rating: { semanticType: "Score", intrinsicDomain: [1, 5] } } — see get_flint_skill with skill "chart", section "Step 3 — annotate with semantic types".',
+        'Field name → semantic type, e.g. { revenue: "Quantity", country: "Country" }. A value may instead be an annotation object when the type alone understates what you know, e.g. { rating: { semanticType: "Score", intrinsicDomain: [1, 5] } } — see get_flint_skill with skill "chart", section "Semantic types".',
       ),
     chart_spec: chartSpecSchema,
     theme_spec: z
@@ -151,7 +151,7 @@ export function buildAssemblyInputShape(disableFileReference = false) {
       })
       .optional()
       .describe(
-        'How the chart behaves on screen (Vega-Lite only). Lists interaction presets by type with their options nested under `options`. An entry the chart type cannot honour is dropped with a warning and the chart still renders; validate_chart reports the same warnings. Call get_flint_skill with skill "interaction", section "Add interactions to the chart", before you write one.',
+        'How the chart behaves on screen (Vega-Lite only). Lists interaction presets by type with their options nested under `options`. An entry the chart type cannot honour is dropped with a warning and the chart still renders; validate_chart reports the same warnings. Call get_flint_skill with skill "interaction", section "Add interactions", before you write one.',
       ),
     options: z
       .record(z.string(), z.any())
@@ -248,4 +248,25 @@ export function toAssemblyInput(args: AssemblyInputArgs): ChartAssemblyInput {
     options: args.options,
     field_display_names: args.field_display_names,
   } as ChartAssemblyInput;
+}
+
+/**
+ * A tool's arguments that take the same fields as another tool's full schema, written as references
+ * to it: every tool definition rides in the model's prompt, so one full copy (on `show`) serves them
+ * all. Fields keep their names and whether they are required; the full schema checks them in the
+ * handler ({@link checkArgs}).
+ */
+export function referencedShape(shape: z.ZodRawShape, where: string): z.ZodRawShape {
+  return Object.fromEntries(Object.entries(shape).map(([key, schema]) => {
+    const loose = z.any().describe(`As \`${where}.${key}\` on the show tool.`);
+    return [key, schema.isOptional() ? loose.optional() : loose.refine((value) => value !== undefined, { message: 'Required' })];
+  }));
+}
+
+/** Arguments checked against a full schema, with every problem named by its path. */
+export function checkArgs<T extends z.ZodRawShape>(shape: T, args: unknown): z.infer<z.ZodObject<T>> {
+  const parsed = z.object(shape).safeParse(args);
+  if (parsed.success) return parsed.data;
+  const problems = parsed.error.issues.map((issue) => `${issue.path.join('.') || '(arguments)'}: ${issue.message}`);
+  throw new Error(`Invalid arguments: ${problems.join('; ')}.`);
 }

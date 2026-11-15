@@ -46,6 +46,22 @@ describe('M1: an area’s edge is its own line', () => {
         const outlined = stackedBars({ id: 'o', geometry: { band: { outline: 'full', outlineWidth: 1 } } });
         expect(nodes(outlined, 'bar').some((bar: any) => bar.mark.stroke)).toBe(true);
     });
+
+    it('draws a single series’ edge in the area’s own ink, not the renderer’s default', () => {
+        const spec = assembleVegaLite({
+            data: { values: MIX.filter((r) => r.Source === 'Coal') }, semantic_types: { Year: 'Year', TWh: 'Quantity' },
+            chart_spec: { chartType: 'Area Chart', encodings: { x: 'Year', y: 'TWh' } },
+            theme_spec: { ...EDGE, ink: { series: { single: '#e2231a' } } },
+        } as any) as any;
+        const [area] = nodes(spec, 'area');
+        expect(area.mark.line.color).toBe(area.mark.color);
+    });
+
+    it('lets the edge part stacked bands in place of a surface separator', () => {
+        const [area] = nodes(stackedArea({ ...EDGE, marks: { separator: { presence: 'full', source: 'surface', width: 1.5 } } }), 'area');
+        expect(area.mark.line).toBeDefined();
+        expect(area.mark.stroke).toBeUndefined();
+    });
 });
 
 describe('M2: a bar’s fill and its edge', () => {
@@ -296,6 +312,15 @@ describe('a house’s key swatch (`legend.swatch`)', () => {
 
     it('leaves the mark’s own symbol under `auto`', () => {
         expect(symbolTypes(stackedArea({ id: 'auto', legend: { swatch: 'auto' } }))).toEqual(symbolTypes(stackedArea({ id: 'none' })));
+    });
+
+    it('keeps a line series’ stroke under a square swatch, which would draw it hollow', () => {
+        const lines = assembleVegaLite({
+            data: { values: MIX }, semantic_types: { Year: 'Year', Source: 'Category', TWh: 'Quantity' },
+            chart_spec: { chartType: 'Line Chart', encodings: { x: 'Year', y: 'TWh', color: 'Source' } },
+            theme_spec: { id: 'sq', legend: { swatch: 'square' } },
+        } as any) as any;
+        expect(symbolTypes(lines)).not.toContain('square');
     });
 
     it('reports that Plotly cannot draw it', () => {

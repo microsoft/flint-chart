@@ -4,6 +4,7 @@
 import type { ChartLink } from 'flint-chart';
 import { boardColumns, boardRows, gridLines, layoutLines } from './board-layout.js';
 import { boardReview, type Board, type ChartOutcome } from './board.js';
+import { isKpi } from './board-layout.js';
 
 /**
  * What validate_chart, validate_board and show tell the model about a spec: only what it should act
@@ -16,37 +17,78 @@ export function shownText(board: Pick<Board, 'kind'>): string {
     'To change it, change the spec and call show again: a new card shows it, and earlier cards stay as they were.';
 }
 
-const TO_FIX = 'Nothing is on screen: fix what this report lists, then call show with the same spec.';
+const TO_FIX = 'Nothing is on screen: fix what this report lists, then call show with the whole spec.';
 const CLEAN = 'Nothing to fix: call show with this spec.';
+/** The head of a report held back by show: the card says it is being revised, and the model gets the fixes. */
+export const HELD = 'Not drawn yet: fix what this report lists, then call show again with the whole spec.';
+const FIX_HEAD = 'Fix before it draws:';
+const NOTED_HEAD = 'Noted (the card draws with these; change nothing now unless the user asks, and mention what matters in your reply):';
 
-/** A chart or board as the model reads it after validate_chart, validate_board or show. */
-export function viewReport(board: Board, outcomes: readonly ChartOutcome[], notes: readonly string[] = [], shown = false): string {
-  const body = board.kind === 'board' ? boardBody(board, outcomes, notes) : [...notes, ...outcomes.flatMap((outcome) => outcome.findings)].map(bullet);
-  const info = board.kind === 'board' ? linkNotes(board) : [];
-  const next = shown ? shownText(board) : body.length > 0 ? TO_FIX : CLEAN;
-  if (board.kind === 'chart') return [next, ...body].join('\n');
-  const head = `Board${board.title ? ` "${board.title}"` : ''}: ${board.charts.length} chart${board.charts.length === 1 ? '' : 's'} (${board.charts.map((chart) => chart.id).join(', ') || 'none'}).`;
-  const rest = [...body, ...info];
-  return [head, next, ...(board.charts.length > 0 ? [layoutLine(board)] : []), ...(rest.length > 0 ? ['', ...rest] : [])].join('\n');
+/** What a report says, split: what keeps a chart or board from being drawn, and what it draws with. */
+export interface ReportBody {
+  fix: string[];
+  noted: string[];
 }
 
-/** The board's findings: each chart's, a finding several charts share said once, then links and review. */
-function boardBody(board: Board, outcomes: readonly ChartOutcome[], notes: readonly string[]): string[] {
-  const lines = notes.map(bullet);
+/** The findings of a chart or board, split into what holds it back and what it draws with. */
+export function reportBody(board: Board, outcomes: readonly ChartOutcome[], notes: readonly string[] = []): ReportBody {
+  if (board.kind === 'chart') {
+    const findings = outcomes.flatMap((outcome) => outcome.findings);
+    return {
+      fix: findings.filter(isError).map(bullet),
+      noted: [...notes, ...findings.filter((finding) => !isError(finding))].map(bullet),
+    };
+  }
+  return boardBody(board, outcomes, notes);
+}
+
+/** A chart or board as the model reads it after validate_chart, validate_board or show. */
+export function viewReport(board: Board, outcomes: readonly ChartOutcome[], notes: readonly string[] = [], shown: 'shown' | 'held' | false = false): string {
+  const { fix, noted } = reportBody(board, outcomes, notes);
+  const next = shown === 'shown' ? shownText(board) : shown === 'held' ? HELD : fix.length > 0 ? TO_FIX : CLEAN;
+  // A chart that draws needs no "noted" heading for one or two warnings; a board groups them.
+  const sections = [
+    ...(fix.length > 0 ? [FIX_HEAD, ...fix] : []),
+    ...(noted.length > 0 ? [NOTED_HEAD, ...noted] : []),
+  ];
+  if (board.kind === 'chart') return [next, ...sections].join('\n');
+  const head = `Board${board.title ? ` "${board.title}"` : ''}: ${board.charts.length} chart${board.charts.length === 1 ? '' : 's'} (${board.charts.map((chart) => chart.id).join(', ') || 'none'}).`;
+  return [head, next, ...(board.charts.length > 0 ? [layoutLine(board)] : []), ...(sections.length > 0 ? ['', ...sections] : [])].join('\n');
+}
+
+function isError(finding: string): boolean {
+  return finding.startsWith('✗');
+}
+
+/** Findings that several charts share, said once under all their ids. */
+function grouped(outcomes: readonly ChartOutcome[], keep: (finding: string) => boolean): string[] {
   const charts = new Map<string, string[]>();
   for (const outcome of outcomes) {
-    for (const finding of outcome.findings) charts.set(finding, [...(charts.get(finding) ?? []), outcome.id]);
+    for (const finding of outcome.findings.filter(keep)) charts.set(finding, [...(charts.get(finding) ?? []), outcome.id]);
   }
   const groups = new Map<string, string[]>();
   for (const [finding, ids] of charts) groups.set(ids.join(', '), [...(groups.get(ids.join(', ')) ?? []), finding]);
-  for (const [ids, findings] of groups) lines.push(`${ids}:`, ...findings.map(bullet));
-  const unlinked = Object.entries(board.link_spec ? board.linked ?? {} : {}).filter(([, link]) => isUnlinked(link));
-  if (unlinked.length > 0) {
-    lines.push(`Links (${board.link_spec!.fields.join(', ')}):`, ...unlinked.map(([id, link]) => bullet(`✗ ${id}: not linked${link.notes.length > 0 ? `; ${link.notes.join('; ')}` : ''}`)));
-  }
+  return [...groups].flatMap(([ids, findings]) => [`${ids}:`, ...findings.map(bullet)]);
+}
+
+/** The board's findings: each chart's, a finding several charts share said once, then links and review. */
+function boardBody(board: Board, outcomes: readonly ChartOutcome[], notes: readonly string[]): ReportBody {
+  const links = linkFindings(board);
   const review = boardReview(board);
-  if (review.length > 0) lines.push('Review:', ...review.map(bullet));
-  return lines;
+  const fields = board.link_spec?.fields.join(', ');
+  return {
+    fix: [
+      ...grouped(outcomes, isError),
+      ...(links.fix.length > 0 ? [`Links (${fields}):`, ...links.fix.map(bullet)] : []),
+      ...(review.fix.length > 0 ? ['Review:', ...review.fix.map(bullet)] : []),
+    ],
+    noted: [
+      ...notes.map(bullet),
+      ...grouped(outcomes, (finding) => !isError(finding)),
+      ...(links.noted.length > 0 ? [`Link notes (${fields}); change nothing unless the user asked for that connection:`, ...links.noted.map(bullet)] : []),
+      ...(review.noted.length > 0 ? ['Review:', ...review.noted.map(bullet)] : []),
+    ],
+  };
 }
 
 function bullet(text: string): string {
@@ -69,15 +111,34 @@ function isUnlinked(link: ChartLink): boolean {
 }
 
 /**
- * What linked charts leave out of the link: a field they do not carry, a selection they cannot send.
- * Not something to fix unless the user asked for that connection.
+ * What the link leaves out. To fix: a chart whose data has a linked field its marks do not carry, an
+ * unknown chart id, a field fewer than two charts carry (it joins nothing). Noted: what linked charts
+ * leave out. Silent: a chart taken out of the link (send and receive false), and a KPI tile that has
+ * none of the fields.
  */
-function linkNotes(board: Board): string[] {
-  if (!board.link_spec || !board.linked) return [];
-  const notes = Object.entries(board.linked).filter(([, link]) => !isUnlinked(link) && link.notes.length > 0);
-  if (notes.length === 0) return [];
-  return [
-    `Link notes (${board.link_spec.fields.join(', ')}); change nothing unless the user asked for that connection:`,
-    ...notes.map(([id, link]) => bullet(`${id}: ${link.notes.join('; ')}`)),
-  ];
+function linkFindings(board: Board): ReportBody {
+  const fix: string[] = [];
+  const noted: string[] = [];
+  if (!board.link_spec || !board.linked) return { fix, noted };
+  const roles = board.link_spec.charts ?? {};
+  const types = new Map(board.charts.map((chart) => [chart.id, chart.input.chart_spec.chartType]));
+  for (const [id, link] of Object.entries(board.linked)) {
+    if (roles[id]?.send === false && roles[id]?.receive === false) continue;
+    if (isUnlinked(link)) {
+      const fixable = link.notes.some((note) => note.includes('its marks do not carry') || note.startsWith('no chart "'));
+      if (fixable) fix.push(`✗ ${id}: not linked; ${link.notes.join('; ')}`);
+      else if (!isKpi(types.get(id) ?? '')) noted.push(`${id}: not linked; ${link.notes.join('; ')}`);
+    } else if (link.notes.length > 0) {
+      noted.push(`${id}: ${link.notes.join('; ')}`);
+    }
+  }
+  for (const field of board.link_spec.fields) {
+    const carriers = board.charts.map((chart) => chart.id)
+      .filter((id) => board.linked![id] && !board.linked![id].notes.some((note) => note.startsWith(`leaves out ${field}:`)));
+    // A chart told to carry the field already says how to join it.
+    if (carriers.length < 2 && !fix.some((line) => line.includes(`its marks do not carry ${field};`))) {
+      fix.push(`✗ ${field} joins nothing: ${carriers.length === 0 ? 'no chart carries it' : `only ${carriers[0]} carries it`}; drop it from link_spec.fields, or encode it on another chart.`);
+    }
+  }
+  return { fix, noted };
 }

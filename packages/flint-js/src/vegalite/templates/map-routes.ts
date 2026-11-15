@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 /**
- * A `Map`'s routes in Vega-Lite: three layers beneath its points.
+ * A `Map`'s routes in Vega-Lite: lines and arrowheads, drawn between the stops' true places.
  *
  * - A casing: each line drawn first, wider, in the ground's own light (white, or the page on a dark
  *   map), so a route stands off the land, the borders and the routes it crosses.
@@ -11,19 +11,26 @@
  *   pan, a zoom or a turn with no rebuild. A route takes its series' colour where the colour names
  *   the series; else it is drawn in a neutral ink and the points keep the colour.
  * - Arrowheads (`chartProperties.arrows`, on by default): a triangle at the end of each leg, its
- *   tip short of the stop's dot. Its heading is read off the live projection by the spec itself
- *   (`geoCentroid` of the leg's end and of a point just before it), so it turns with the map in
- *   any Vega renderer, Flint's or a host's.
+ *   tip on the stop. Its heading is read off the live projection by the spec itself (`geoCentroid`
+ *   of the leg's end and of points just before it), so it turns with the map in any Vega renderer,
+ *   Flint's or a host's.
  *
- * The lines are drawn beneath the points, the heads over them. Each leg is a shape of its own and
- * carries the fields of the row it leaves from, as a line chart's segment starts at its row: it
- * takes that row's interaction key, so hover, emphasis, hiding and notes reach it (`kind: 'path'`
- * names the leg, as it names a line's segment), and it recedes with the row. Its casing and head
- * carry the same fields and recede with it, but are no target of their own. None takes a tooltip:
- * the points carry them.
+ * A route draws no dot of its own. The stops are the map's points, drawn as dots beneath the routes
+ * where the points carry something the routes do not (`size`, `shape`, `text`, a quantity's colour),
+ * else only at each route's start, where no head marks it (`routeDotsEverywhere`). An undrawn stop
+ * keeps its tooltip and hover. Layers go in two passes, every halo then every ink — the casings and
+ * heads' halos, then the dots (their rim their halo), the lines and the heads — so a halo parts a
+ * route from the ground but never cuts between a line, its dot and its head. Lines and heads know
+ * nothing of the dots.
+ *
+ * Each leg is a shape of its own and carries the fields of the row it leaves from, as a line chart's
+ * segment starts at its row: it takes that row's interaction key, so hover, emphasis, hiding and
+ * notes reach it (`kind: 'path'` names the leg, as it names a line's segment), and it recedes with
+ * the row. Its casing and head carry the same fields and recede with it, but are no target of their
+ * own. None takes a tooltip: the points carry them.
  */
 
-import { ROUTE_WIDTH, STOP_RADIUS_BY_VALUE, TAIL, buildRoutes, headSize, innerStops, largestMagnitude, legWidths, routeArrows, routeOpacity, routeStopMode, stopRadii, type Route } from '../../chart-types/map-routes';
+import { ROUTE_WIDTH, STOP_RADIUS_BY_VALUE, TAIL, buildRoutes, headSize, largestMagnitude, legWidths, routeArrows, widestLeg, routeDotsEverywhere, routeOpacity, routeStartRows, stopRadii, type Route } from '../../chart-types/map-routes';
 import { frontFacingExpr } from '../../chart-types/geo-frame';
 import { GEO_ROTATE_SIGNAL } from '../interactions/geo-levels';
 import { MAP_ROLE } from './map-style';
@@ -46,25 +53,29 @@ export const ROUTE_PROJECTION_TOKEN = 'projection';
 
 /** The halo's reach past its line, both sides together, in px: a hairline each side, as Data Formulator draws one. */
 const CASING_GROWTH = 1.5;
+/** Legs (and their heads) thinner than this, in px, take no halo. */
+const HALO_MIN_WIDTH = 1.5;
 /** The width of the halo round a head, its stroke centred on the head's edge: a hairline outside it. */
 const HEAD_HALO = 1.5;
-/** How far a head's tip stands off its stop: a hair, the stops being drawn as nothing but their arrows. */
-const HEAD_GAP = 0.6;
 
 /** How a route's ink is chosen when no series colour names it: the theme's mark colour, or a neutral one beside dots coloured by another field. */
 export const ROUTE_INK = '__flintRouteInk';
 /** The width of the halo round a drawn stop, its stroke centred on the dot's edge. */
 const STOP_HALO = 1;
-/** The area round a stop the pointer finds it in, though it is not drawn. */
-const STOP_TARGET_SIZE = 80;
 /** A head is drawn as a path in px about its tip, at the size that makes a symbol's units px. */
 const HEAD_SYMBOL_SIZE = 4;
 /**
- * A head's full size wants its leg this many head lengths long on screen (tip to base, gap and all);
- * a shorter leg shrinks its head to fit, down to `MIN_HEAD` of its size, and below that drops it.
+ * A head's full size wants its leg this many head lengths long on screen (tip to base); a shorter leg
+ * shrinks its head to fit, down to `MIN_HEAD` of its size, then to the leg's own length — a short leg
+ * keeps a small head rather than reading as dot–line–dot. Only a head under `MIN_HEAD_PX` is dropped.
  */
 const SHORT_LEG = 1.6;
 const MIN_HEAD = 0.6;
+const MIN_HEAD_PX = 3;
+/** A stop this many headed legs arrive at takes their heads on a ring round it, shrunk with their number. */
+const RING_ARRIVALS = 3;
+/** At most this many legs arriving at one stop keep a head: the widest. */
+const HEAD_BUDGET = 12;
 /**
  * How far into its head a leg's line runs, in px: a hair, so no seam shows where they meet. The line
  * ends at the head's base rather than inside it: a faded route is drawn translucent, and line and head
@@ -76,20 +87,16 @@ const TIP_LON = 'flintTipLon';
 const TIP_LAT = 'flintTipLat';
 /** The tail: points back along the line from the tip, nearest first (`Route` legs' and arrows' `tail`). */
 export const TAIL_FIELD = 'flintTail';
-/** A head's length on screen, tip gap and all, in px, at its full size. */
+/** A head's length on screen, tip to base, in px, at its full size. */
 const BACK = 'flintBack';
 /** Whether the head shrinks to fit its leg on screen (1) or keeps its size (0: a track's, a globe's, one across the antimeridian). */
 const FIT = 'flintFit';
 /** Whether a leg's line is cut short inside its head (1), or drawn whole (0). */
 const JOIN = 'flintJoin';
+/** How far short of its stop a head's tip stands, in px: 0, or a ring where many heads arrive at one stop. */
+const RING = 'flintRing';
 const HEAD_SHAPE = 'flintHeadShape';
 const CASING_WIDTH_FIELD = 'flintCasingWidth';
-/**
- * How far a leg keeps from the stop it ends at, and from the one it leaves, in px: the one thing the
- * arrows know of the stops' dots — a drawn dot's radius and its halo, 0 where stops are not drawn.
- */
-const END_RADIUS = 'flintEndClear';
-const START_RADIUS = 'flintStartClear';
 
 /** The field that splits rows into routes: `detail`, else a categorical colour. */
 export function routeSeriesField(resolved: Record<string, any>): string | undefined {
@@ -132,12 +139,18 @@ function tailLengthExpr(): string {
 }
 
 /**
- * A head's size on screen as a share of its full size: 1 where its leg is at least `SHORT_LEG` head
- * lengths long, else the share that fits — measured tip to start, straight, which a leg's gentle bow
- * barely shortens. Where it does not shrink (`flintFit` 0), 1.
+ * A head's size on screen as a share of its full size, from its leg's length on screen (`span`, tip to
+ * start, straight, which a leg's gentle bow barely shortens): 1 where the leg is at least `SHORT_LEG`
+ * head lengths long (its ring too), else the share that fits, down to `MIN_HEAD` — and never longer
+ * than the leg itself. Where it does not shrink (`flintFit` 0), 1.
  */
+function scaleFor(span: string): string {
+    const fit = `max(${MIN_HEAD}, min(1, ${span} / (${SHORT_LEG} * (datum.${RING} + datum.${BACK}))))`;
+    return `(datum.${FIT} ? min(${fit}, (0.95 * ${span} - datum.${RING}) / datum.${BACK}) : 1)`;
+}
+
 function headScaleExpr(): string {
-    return `(datum.${FIT} ? min(1, max(0, ${fromTip(TAIL.length - 1)} - datum.${END_RADIUS} - datum.${START_RADIUS}) / (${SHORT_LEG} * datum.${BACK})) : 1)`;
+    return scaleFor(fromTip(TAIL.length - 1));
 }
 
 /** The fields a head's transforms compute: its tail on screen, its points' distances from the tip, its scale, and its heading. */
@@ -156,10 +169,8 @@ const BASE_Y = 'flintBaseY';
  * its tail's points is projected once and the head follows a pan, zoom or turn:
  *
  * - its tail on screen, stop first, and each point's straight distance from the stop;
- * - its scale: 1 where the leg, less its stops' dots, is at least `SHORT_LEG` head lengths long, else
- *   the share that fits;
- * - its tip: on the line its stop's radius from the stop, at the edge of its dot — the stop itself
- *   where stops are not drawn (`stops` false: no radius is read);
+ * - its scale (`scaleFor`): 1 where the leg is long enough, else the share that fits;
+ * - its tip: the stop, or a ring's width short of it where many heads arrive there;
  * - its heading, from its base to its tip. The base is where the line lies the head's length beyond
  *   the tip — so the middle of the base is on the line however sharply the line turns there.
  *
@@ -170,7 +181,7 @@ const BASE_Y = 'flintBaseY';
  * The head is placed by its tip's x and y rather than by longitude and latitude, so these transforms,
  * which read the projection, never feed a fit of the projection to the data.
  */
-function headTransforms(stops: boolean): Record<string, string>[] {
+function headTransforms(): Record<string, string>[] {
     const n = TAIL.length;
     const pt = (k: number) => `datum.${PTS}[${k}]`;
     const d = (k: number) => `datum.${DIST}[${k}]`;
@@ -182,14 +193,14 @@ function headTransforms(stops: boolean): Record<string, string>[] {
         }
         return chosen;
     };
-    const tip = `datum.${END_RADIUS}`;
-    const base = `(${tip} + datum.${BACK} * datum.${SCALE})`;
+    const ring = `datum.${RING}`;
+    const base = `(${ring} + datum.${BACK} * datum.${SCALE})`;
     return [
         { calculate: `[${Array.from({ length: n }, (_, k) => tailAt(k)).join(', ')}]`, as: PTS },
         { calculate: `[${Array.from({ length: n }, (_, k) => distance(`${pt(k)}[0] - ${pt(0)}[0]`, `${pt(k)}[1] - ${pt(0)}[1]`)).join(', ')}]`, as: DIST },
-        { calculate: `datum.${FIT} ? min(1, max(0, ${d(n - 1)} - datum.${END_RADIUS} - datum.${START_RADIUS}) / (${SHORT_LEG} * datum.${BACK})) : 1`, as: SCALE },
-        { calculate: stops ? along(tip, 0) : `${pt(0)}[0]`, as: HEAD_X },
-        { calculate: stops ? along(tip, 1) : `${pt(0)}[1]`, as: HEAD_Y },
+        { calculate: scaleFor(d(n - 1)), as: SCALE },
+        { calculate: `${ring} > 0 ? ${along(ring, 0)} : ${pt(0)}[0]`, as: HEAD_X },
+        { calculate: `${ring} > 0 ? ${along(ring, 1)} : ${pt(0)}[1]`, as: HEAD_Y },
         { calculate: along(base, 0), as: BASE_X },
         { calculate: along(base, 1), as: BASE_Y },
         { calculate: `atan2(datum.${HEAD_Y} - datum.${BASE_Y}, datum.${HEAD_X} - datum.${BASE_X}) * 180 / PI`, as: ANGLE },
@@ -199,67 +210,39 @@ function headTransforms(stops: boolean): Record<string, string>[] {
 }
 
 /**
- * A leg's dash: where it carries a head of at least `MIN_HEAD` of its size, its line up to the head's
- * base and a hair past it (`INTO_HEAD`), so no seam shows and line and head barely overlap; else the
- * whole line. Where its run starts at a drawn stop, it leaves from the dot's edge (`0, gap` first).
+ * A leg's dash: where it carries a head of at least `MIN_HEAD_PX`, its line up to the head's base and a
+ * hair past it (`INTO_HEAD`), so no seam shows and line and head barely overlap; else the whole line.
  */
 function legDashExpr(): string {
     const scale = headScaleExpr();
     const length = `(${tailLengthExpr()})`;
-    const cut = `max(0, datum.${END_RADIUS} + datum.${BACK} * ${scale} - ${INTO_HEAD})`;
-    const start = `datum.${START_RADIUS}`;
-    const headed = `datum.${JOIN} && ${scale} >= ${MIN_HEAD}`;
-    const whole = `${headed} ? [max(0, ${length} - ${cut}), 1000000] : [1000000, 0]`;
-    const gapped = `${headed} ? [0, ${start}, max(0, ${length} - ${cut} - ${start}), 1000000] : [0, ${start}, 1000000, 0]`;
-    return `${start} > 0 ? (${gapped}) : (${whole})`;
-}
-
-/** How a route's stops are drawn: each row's dot radius in px (0 where stops are not drawn), and the dots' size encoding. */
-export interface StopSizing {
-    radius(row: number): number;
-    /** One size for every dot (a symbol's size, its diameter squared), or a scale from the `size` field. */
-    size?: number | Record<string, unknown>;
+    const cut = `max(0, datum.${RING} + datum.${BACK} * ${scale} - ${INTO_HEAD})`;
+    return `datum.${JOIN} && datum.${BACK} * ${scale} >= ${MIN_HEAD_PX} ? [max(0, ${length} - ${cut}), 1000000] : [1000000, 0]`;
 }
 
 const area = (radius: number) => (2 * radius) ** 2;
 
 /**
- * The size of a route's stops, independent of its arrows (`stopRadii`): one for all, a `size` field's
- * value with a key of its own, or `stopRadius`. Where the chart does not ask for stops, none are drawn.
+ * The size of a route's dots (`stopRadii`): one for all, a symbol's size (its diameter squared), or
+ * a scale from the `size` field, with a key of its own.
  */
-export function routeStopSizing(
-    chartProperties: Record<string, any> | undefined,
-    resolved: Record<string, any>,
-    rows: readonly Record<string, unknown>[],
-    widths: readonly number[],
-    dotted: (row: number) => boolean = () => true,
-): StopSizing {
+function routeStopSize(resolved: Record<string, any>, rows: readonly Record<string, unknown>[], widths: readonly number[]): number | Record<string, unknown> {
     const field = resolved.size?.field;
-    if (routeStopMode(chartProperties?.stops, Boolean(field)) === 'none') return { radius: () => 0 };
-    const radii = stopRadii(chartProperties, field, rows, widths);
-    const radius = (row: number) => (dotted(row) ? radii.radius(row) : 0);
-    if (!radii.byValue) return { radius, size: area(radii.radius(0)) };
+    const radii = stopRadii(field, rows, widths);
+    if (!radii.byValue) return area(radii.radius(0));
     // The chart's own key settings (its title, where it stands) carry over; the scale is the stops'.
     const { scale: _scale, ...own } = resolved.size;
     const [low, high] = [area(STOP_RADIUS_BY_VALUE.min), area(STOP_RADIUS_BY_VALUE.max)];
-    return { radius, size: { ...own, field, type: 'quantitative', scale: { domain: [0, radii.byValue.max], range: [low, high], zero: true } } };
+    return { ...own, field, type: 'quantitative', scale: { domain: [0, radii.byValue.max], range: [low, high], zero: true } };
 }
 
-/** How far a leg keeps from a stop: its dot's radius and the halo round it, where it is drawn. */
-const clearance = (radius: number) => (radius > 0 ? radius + STOP_HALO / 2 : 0);
-
 /**
- * Draw a route's stops — the map's own points, which carry its tooltips, hover, notes and colour key —
- * as dots on top of the arrows, or, where the chart does not ask for stops, leave them undrawn but
- * where the pointer finds them. The arrows read nothing of this but each stop's clearance.
+ * A test for the rows not among `shown`, read off a dot's datum: by its route (`detail`, else its
+ * colour) and its place in the route's order, which a row of the table keeps in the dots' data.
  */
-/**
- * A test for the rows among `inner`, read off a dot's datum: by its route (`detail`, else its colour)
- * and its place in the route's order, which a row of the table keeps in the dots' data.
- */
-function innerStopTest(rows: readonly Record<string, unknown>[], resolved: Record<string, any>, inner: readonly number[]): string | undefined {
+function unshownTest(rows: readonly Record<string, unknown>[], resolved: Record<string, any>, shown: readonly number[]): string | undefined {
     const order = resolved.order?.field;
-    if (!order || !inner.length) return undefined;
+    if (!order) return undefined;
     const series = routeSeriesField(resolved);
     const temporal = resolved.order?.type === 'temporal';
     const at = (field: string) => `datum[${JSON.stringify(field)}]`;
@@ -267,38 +250,40 @@ function innerStopTest(rows: readonly Record<string, unknown>[], resolved: Recor
     const orderExpr = temporal ? `(isDate(${at(order)}) ? time(${at(order)}) : ${at(order)})` : at(order);
     const orderKey = (value: unknown) => (temporal && !(value instanceof Date) && typeof value === 'string' ? Date.parse(value) : value instanceof Date ? value.getTime() : value);
     const key = (row: number) => `${series ? `${String(rows[row]?.[series])}|` : ''}${String(orderKey(rows[row]?.[order]))}`;
-    const keys = [...new Set(inner.map(key))];
-    return `indexof(${JSON.stringify(keys)}, ${series ? `'' + ${at(series)} + '|' + ` : ''}'' + ${orderExpr}) >= 0`;
+    const keys = [...new Set(shown.map(key))];
+    return `indexof(${JSON.stringify(keys)}, ${series ? `'' + ${at(series)} + '|' + ` : ''}'' + ${orderExpr}) < 0`;
 }
 
-function styleRouteStops(dots: any, sizing: StopSizing, inner?: string): void {
+/**
+ * Draw a route's stops — the map's own points, which carry its tooltips, hover, notes and colour key —
+ * as dots beneath the routes; those `hidden` names undrawn, but where the pointer finds them. The
+ * routes read nothing of this.
+ */
+function styleRouteStops(dots: any, size: number | Record<string, unknown>, hidden?: string): void {
     const base = typeof dots.mark === 'string' ? { type: dots.mark } : dots.mark;
     // `strokeWidth` is the legs' width, and `size` is read here as the stops' own scale: neither reaches
     // the dots as Vega-Lite's.
     const { size: _size, strokeWidth: _strokeWidth, ...encoding } = dots.encoding ?? {};
     dots.encoding = encoding;
-    if (sizing.size === undefined) {
-        dots.mark = { ...base, filled: true, size: STOP_TARGET_SIZE, opacity: 0, stroke: null };
-        return;
-    }
-    // Opaque and haloed as the route's lines are, so the line it leaves ends under it.
+    // Opaque and haloed, so a dot stands off the casing beneath it and the dots it overlaps.
     dots[MAP_ROLE] = 'routeStop';
     dots.mark = { ...base, filled: true, opacity: 1, fillOpacity: 1, strokeWidth: STOP_HALO };
-    if (typeof sizing.size === 'number') dots.mark.size = sizing.size;
-    else dots.encoding.size = sizing.size;
-    // A stop within a run takes no dot, but keeps its tooltip and hover. A gate only, no value of its
-    // own: interaction keeps it first and manages the rest.
-    if (inner) dots.encoding.opacity = { condition: [{ test: inner, value: 0 }, ...conditionsOf(dots.encoding.opacity)] };
+    if (typeof size === 'number') dots.mark.size = size;
+    else dots.encoding.size = size;
+    // An undrawn stop keeps its tooltip and hover. A gate only, no value of its own: interaction keeps
+    // it first and manages the rest.
+    if (hidden) dots.encoding.opacity = { condition: [{ test: hidden, value: 0 }, ...conditionsOf(dots.encoding.opacity)] };
 }
 
 const conditionsOf = (channel: any): any[] => (channel?.condition ? [channel.condition].flat() : []);
 
 /**
- * Add the casing, line and arrowhead layers of a point map's routes beneath its points.
+ * Add the casing, line and arrowhead layers of a point map's routes, round its points: the casing
+ * beneath them, the lines and heads over them.
  *
  * A route's legs are as wide as `strokeWidth` says (from the row each leaves, zero-based to 8 px), else 1.75
  * px; a key reads the widths. Each head is sized to its line, Data Formulator's way, and set on it:
- * its tip at the stop, the middle of its base on the line a head's length back, the line ending
+ * its tip on the stop, the middle of its base on the line a head's length back, the line ending
  * square at its base. A leg too short on screen for its head shrinks it to fit, and below 60% of its
  * size keeps its line alone. Lines are square-ended and mitred; a hairline halo — white on a light
  * map, the ground on a dark one — runs round line and head alike.
@@ -327,32 +312,38 @@ export function addRouteLayers(
     const allLegs = routes.flatMap((route) => route.legs);
     // The key's domain is every row's, so a leg's width and the key agree.
     const maxValue = size ? largestMagnitude(rows.map((row) => row[size])) : 0;
-    const legValues = size ? legWidths(allLegs.map((leg) => rows[leg.from]?.[size]), maxValue) : [];
+    // The widest leg thins as long, widened legs crowd the plot.
+    const plotSide = Math.sqrt((Number(spec.width) || 400) * (Number(spec.height) || 300));
+    const widest = size ? widestLeg(allLegs, allLegs.map((leg) => rows[leg.from]?.[size]), plotSide) : ROUTE_WIDTH.max;
+    const legValues = size ? legWidths(allLegs.map((leg) => rows[leg.from]?.[size]), maxValue, widest) : [];
     const widths = new Map(allLegs.map((leg, index) => [leg, size ? legValues[index] : ROUTE_WIDTH.plain]));
-    // Under `stops: 'ends'`, a dot where each run of one colour starts and ends; the stops between take none.
-    const colorKey = colorEncoding ? (row: number) => rows[row]?.[colorEncoding.field] : undefined;
-    const inner = new Set(routes.flatMap((route) => innerStops(route, colorKey)));
-    // The stops are sized on their own; a line leaves from its first stop's dot's edge, and a head's tip
-    // stops at the next one's.
-    const dotted = routeStopMode(chartProperties?.stops) === 'ends' ? (row: number) => !inner.has(row) : undefined;
-    const sizing = routeStopSizing(chartProperties, resolved, rows, allLegs.map((leg) => widths.get(leg)!), dotted);
-    const stops = sizing.size !== undefined;
-    if (resolved.size?.field && !stops) {
-        spec._warnings = [...(spec._warnings ?? []), {
-            severity: 'warning', code: 'map-size-without-stops', channel: 'size', field: resolved.size.field,
-            message: `size ('${resolved.size.field}') sizes a route's stops, and stops is 'none': no dot is drawn for it. Leave stops unset or set it to 'all' or 'ends' to draw them.`,
-        }];
-    }
-    const ends = (leg: (typeof allLegs)[number]) => ({ [END_RADIUS]: clearance(sizing.radius(leg.to)), [START_RADIUS]: clearance(sizing.radius(leg.from)) });
+    const stopSize = routeStopSize(resolved, rows, allLegs.map((leg) => widths.get(leg)!));
+    // A dot at every stop where the points carry what the routes do not; else at each route's start.
+    const everywhere = routeDotsEverywhere({
+        size: Boolean(resolved.size?.field), shape: Boolean(resolved.shape?.field), text: Boolean(resolved.text?.field),
+        pointColor: Boolean(color?.field) && !colorEncoding,
+    });
 
-    const arrows = chartProperties?.arrows === false ? [] : routeArrows(routes, chartProperties?.curve, globe);
+    // Heads arriving at one stop: from three on, on a ring round it, shrunk with their number; past a
+    // budget, only the widest legs keep theirs, the rest converging on the stop shows the way.
+    const allArrows = chartProperties?.arrows === false ? [] : routeArrows(routes, chartProperties?.curve, globe);
+    const stopKey = (point: readonly [number, number]) => `${point[0].toFixed(5)},${point[1].toFixed(5)}`;
+    const arriving = new Map<string, typeof allArrows>();
+    for (const arrow of allArrows) arriving.set(stopKey(arrow.tip), [...(arriving.get(stopKey(arrow.tip)) ?? []), arrow]);
+    const kept = new Set([...arriving.values()].flatMap((group) => [...group].sort((a, b) => widths.get(b.leg)! - widths.get(a.leg)!).slice(0, HEAD_BUDGET)));
+    const arrows = allArrows.filter((arrow) => kept.has(arrow));
     const headed = new Map(arrows.map((arrow) => [arrow.leg, arrow]));
+    const crowdAt = (leg: (typeof allLegs)[number]) => {
+        const arrow = headed.get(leg);
+        return arrow ? arriving.get(stopKey(arrow.tip))!.length : 0;
+    };
+    const ringOf = (leg: (typeof allLegs)[number]) => (crowdAt(leg) >= RING_ARRIVALS ? Math.min(8, 2 + 1.5 * Math.sqrt(crowdAt(leg))) : 0);
+    const shrinkOf = (leg: (typeof allLegs)[number]) => (crowdAt(leg) >= RING_ARRIVALS ? Math.max(0.6, Math.sqrt(RING_ARRIVALS / crowdAt(leg))) : 1);
     // On a globe, or across the antimeridian, a leg's measured length is not its drawn one: its line is
     // drawn whole and its head keeps its size. A track's head keeps its size too: its line runs on
     // through the fixes before.
     const fits = (leg: (typeof allLegs)[number]) => !globe && !leg.cut && !headed.get(leg)?.track;
     const tail = (points: readonly (readonly [number, number])[]) => points.map((point) => ({ type: 'Point', coordinates: point }));
-    const backOf = (leg: (typeof allLegs)[number]) => HEAD_GAP + headSize(widths.get(leg)!).length;
     const legData = (part: RoutePart) => allLegs.map((leg) => {
         const arrow = headed.get(leg);
         return {
@@ -361,10 +352,10 @@ export function addRouteLayers(
             [ROUTE_DATUM]: true,
             [ROUTE_PART]: part,
             [TAIL_FIELD]: tail(leg.tail),
-            [BACK]: backOf(leg),
+            [BACK]: headSize(widths.get(leg)!).length * shrinkOf(leg),
+            [RING]: ringOf(leg),
             [FIT]: fits(leg) ? 1 : 0,
             [JOIN]: arrow && fits(leg) ? 1 : 0,
-            ...ends(leg),
             ...(part === 'casing' ? { [CASING_WIDTH_FIELD]: widths.get(leg)! + CASING_GROWTH } : {}),
             properties: {},
             geometry: { type: 'LineString', coordinates: leg.path },
@@ -373,7 +364,7 @@ export function addRouteLayers(
     const opacity = routeOpacity(routes.length);
     const widthEncoding = size
         ? {
-            field: size, type: 'quantitative', scale: { domain: [0, maxValue || 1], range: [ROUTE_WIDTH.min, ROUTE_WIDTH.max] },
+            field: size, type: 'quantitative', scale: { domain: [0, maxValue || 1], range: [ROUTE_WIDTH.min, widest] },
             ...(resolved.strokeWidth.title !== undefined ? { title: resolved.strokeWidth.title } : {}),
             legend: resolved.strokeWidth.legend === null ? null : { ...(resolved.strokeWidth.legend ?? {}), symbolType: 'stroke' },
         }
@@ -390,7 +381,8 @@ export function addRouteLayers(
     const sharp = { strokeCap: 'butt', strokeJoin: 'miter' };
     const casing = {
         [MAP_ROLE]: 'routeCasing',
-        data: { values: legData('casing') },
+        // A thin leg takes no halo: round a hairline it outweighs the line and darkens the map under a crowd of them.
+        data: { values: legData('casing').filter((_, index) => widths.get(allLegs[index])! >= HALO_MIN_WIDTH) },
         // A long leg's great circle or bow can run past any frame, the world's too: drawn inside the plot only.
         mark: { type: 'geoshape', filled: false, ...sharp, strokeOpacity: Math.min(0.9, opacity + 0.05), clip: true },
         encoding: {
@@ -418,8 +410,8 @@ export function addRouteLayers(
     const haloes: any[] = [];
     if (arrows.length) {
         const values = arrows.map((arrow) => {
-            const { length, halfWidth } = headSize(widths.get(arrow.leg)!);
-            const back = HEAD_GAP + length;
+            const full = headSize(widths.get(arrow.leg)!);
+            const [length, halfWidth] = [full.length * shrinkOf(arrow.leg), full.halfWidth * shrinkOf(arrow.leg)];
             return {
                 ...rowFields(rows[arrow.from]),
                 [ROUTE_DATUM]: true,
@@ -427,16 +419,16 @@ export function addRouteLayers(
                 [TIP_LON]: arrow.tip[0],
                 [TIP_LAT]: arrow.tip[1],
                 [TAIL_FIELD]: tail(arrow.tail),
-                [BACK]: back,
+                [BACK]: length,
+                [RING]: ringOf(arrow.leg),
                 [FIT]: fits(arrow.leg) ? 1 : 0,
-                ...ends(arrow.leg),
-                // Pointing along +x, its tip the gap short of the stop, in px at full size.
-                [HEAD_SHAPE]: `M${-HEAD_GAP},0L${-back},${-halfWidth}L${-back},${halfWidth}Z`,
+                // Pointing along +x, its tip on the stop, in px at full size.
+                [HEAD_SHAPE]: `M0,0L${-length},${-halfWidth}L${-length},${halfWidth}Z`,
             };
         });
         const hidden: { test: string; value: number }[] = [
-            // A leg too short on screen for its head at 60% of its size keeps its line alone.
-            { test: `datum.${SCALE} < ${MIN_HEAD}`, value: 0 },
+            // A leg a few px long on screen keeps its line alone.
+            { test: `datum.${SCALE} * datum.${BACK} < ${MIN_HEAD_PX}`, value: 0 },
         ];
         // A head past a globe's horizon would show through it, mirrored: it fades out there.
         if (globe) hidden.unshift({ test: `!(${frontFacingExpr(`datum.${TIP_LON}`, `datum.${TIP_LAT}`, GEO_ROTATE_SIGNAL)})`, value: 0 });
@@ -450,12 +442,12 @@ export function addRouteLayers(
             opacity: { condition: hidden },
             tooltip: null,
         };
-        // The head's halo: its own shape in the halo's colour, a hairline wider, beneath the line, so the
-        // line runs into the head with no seam where the halo would cross it.
+        // The head's halo: its own shape in the halo's colour, a hairline wider, in the halo pass beneath
+        // the dots and lines, so neither is cut where it meets the head.
         haloes.push({
             [MAP_ROLE]: 'routeHeadCasing',
-            data: { values },
-            transform: headTransforms(stops),
+            data: { values: values.filter((_, index) => widths.get(arrows[index].leg)! >= HALO_MIN_WIDTH) },
+            transform: headTransforms(),
             mark: { type: 'point', filled: true, opacity: 1, strokeWidth: HEAD_HALO, strokeJoin: 'miter', fillOpacity: Math.min(0.9, opacity + 0.05), strokeOpacity: Math.min(0.9, opacity + 0.05), clip: true },
             encoding: placed,
         });
@@ -463,24 +455,29 @@ export function addRouteLayers(
             [MAP_ROLE]: 'routeArrow',
             [ROUTE_INK]: ink,
             data: { values },
-            transform: headTransforms(stops),
+            transform: headTransforms(),
             // No stroke: the halo beneath is the head's rim, and a dark map's ring for its dots passes it by.
             mark: { type: 'point', filled: true, opacity: 1, fillOpacity: opacity, stroke: null, strokeWidth: 0, clip: true },
             encoding: { ...placed, ...(colorEncoding ? { color: colorEncoding } : {}) },
         });
     }
-    // The lines beneath the points, which carry the data and its interaction; the heads over them.
-    const points = spec.layer.findIndex((layer: any) => (typeof layer?.mark === 'string' ? layer.mark : layer?.mark?.type) === 'circle');
-    spec.layer.splice(points < 0 ? spec.layer.length : points, 0, casing, ...haloes, line);
+    // Two passes, as a road map draws its casings: every halo, then every ink. A halo parts a route from
+    // the ground, never a route's parts from each other, so a line, its dot and the head arriving at it
+    // read as one shape. The dots' own rim is their halo, drawn over the casings and under the lines.
+    // The points carry the data and its interaction wherever they are drawn.
+    const isDots = (layer: any) => (typeof layer?.mark === 'string' ? layer.mark : layer?.mark?.type) === 'circle';
+    const points = spec.layer.findIndex(isDots);
+    if (points < 0) spec.layer.push(casing, ...haloes, line);
+    else spec.layer.splice(points, 1, casing, ...haloes, spec.layer[points], line);
     spec.layer.push(...heads);
-    const dots = spec.layer.find((layer: any) => (typeof layer?.mark === 'string' ? layer.mark : layer?.mark?.type) === 'circle');
+    const dots = spec.layer.find(isDots);
     if (!dots) return;
     // The colour scale is shared: the route's encodings keep the dots' order, else Vega-Lite merges
     // their domains sorted and the key loses the data's order.
     if (colorEncoding && dots.encoding?.color && 'sort' in dots.encoding.color) {
         for (const layer of [line, ...heads]) layer.encoding.color = { ...layer.encoding.color, sort: dots.encoding.color.sort };
     }
-    styleRouteStops(dots, sizing, dotted ? innerStopTest(rows, resolved, [...inner]) : undefined);
+    styleRouteStops(dots, stopSize, everywhere ? undefined : unshownTest(rows, resolved, routeStartRows(routes, rows.length)));
     if (dots.encoding?.color && dots.encoding.color.legend !== null) {
         dots.encoding.color = { ...dots.encoding.color, legend: { ...(dots.encoding.color.legend ?? {}), symbolOpacity: 1 } };
     }

@@ -102,7 +102,7 @@ function rowsOf(story: MapStory): Record<string, unknown>[] {
 /** The look a story is drawn in where the page sets none: an atlas, the Swiss house, the story's own colours. */
 const STORY_LOOK = (story: MapStory): StoryLook => ({
   mapStyle: 'atlas', legInks: story.legInks, theme: 'swiss', curve: 'auto', arrows: true, graticule: false,
-  borderWidth: 0.5, stops: 'ends', seaLabel: SEA_LABEL,
+  borderWidth: 0.5, seaLabel: SEA_LABEL,
 });
 
 /** The chart a story is told on, in a look: its stops as routes, before any chapter's notes. */
@@ -122,15 +122,12 @@ export function storySpec(story: MapStory, look: StoryLook = STORY_LOOK(story)):
         color: { field: story.legField, ...(look.legInks ? { scheme: [...look.legInks] } : {}), legend: { orient: 'bottom' } },
         ...(story.widthField ? { strokeWidth: { field: story.widthField, legend: { orient: 'bottom' } } } : {}),
       },
-      // By default a dot where each stretch starts and ends; the stops between are marked by their arrows.
       chartProperties: {
         mapStyle: look.mapStyle,
         ...(look.borderWidth !== undefined ? { borderWidth: look.borderWidth } : {}),
         ...(look.curve !== 'auto' ? { curve: look.curve } : {}),
         ...(look.arrows ? {} : { arrows: false }),
         ...(look.graticule ? { graticule: true } : {}),
-        ...(look.stops !== 'none' ? { stops: look.stops } : {}),
-        ...(look.stops !== 'none' && look.stopRadius !== undefined ? { stopRadius: look.stopRadius } : {}),
         ...(story.boundaries ? { boundaries: story.boundaries } : {}),
       },
       canvasSize: story.canvas,

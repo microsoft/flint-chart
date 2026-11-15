@@ -8,8 +8,10 @@
  * `planProjection`), and each label is placed beside its point — right, left, above or below,
  * whichever first clears every dot, every label placed before it and the plot's edge, and on a route
  * map its lines too where it can (a label crosses a line rather than go unplaced). A point whose label
- * fits nowhere keeps its dot unnamed. Labels are placed in priority: the largest dots first
- * where `size` sizes them, else the rows in order.
+ * fits nowhere keeps its dot unnamed. Labels are placed in priority — the largest dots first where
+ * `size` sizes them, else those at the ends of a quantity's colour scale, else the rows in order —
+ * one per `LABEL_ROOM` square px of the plot at most, each with a little room kept round it, so a
+ * dense map names its most salient places and leaves the rest to their tooltips.
  *
  * A placed label keeps its point and its offset from it in px: drawn at the point through the live
  * projection (as a route's heads are), it stays beside its point through a pan, a zoom or a globe's
@@ -18,13 +20,17 @@
 
 import { measureIn } from '../../core/backend-frame';
 import { frontFacingExpr, planProjection } from '../../chart-types/geo-frame';
-import { routeStopMode, stopRadii, type Route } from '../../chart-types/map-routes';
+import { stopRadii, type Route } from '../../chart-types/map-routes';
 import { GEO_ROTATE_SIGNAL } from '../interactions/geo-levels';
 import { MAP_ROLE } from './map-style';
 import { ROUTE_PROJECTION_TOKEN, rowFields } from './map-routes';
 
 /** The labels' type size in px. */
 export const LABEL_SIZE = 10;
+/** One label per this many square px of the plot, at most (and at least a dozen). */
+const LABEL_ROOM = 36000;
+/** Room kept round each label, in px, so a dense map's names do not run together. */
+const LABEL_PAD = { x: 6, y: 3 };
 /** The gap between a dot's edge and its label, in px. */
 const LABEL_GAP = 2;
 /** The width of the halo round a label's letters, in px. */
@@ -69,14 +75,11 @@ class BoxGrid {
 
 /**
  * Each row's dot radius in px as the map will draw it, near enough to keep labels off the dots: a
- * route's stops as `stopRadii` sizes them (a hair where they are not drawn), else a bubble's.
+ * route's stops as `stopRadii` sizes them (a label anchors a dot at every stop), else a bubble's.
  */
-function dotRadii(rows: readonly Record<string, any>[], resolved: Record<string, any>, chartProperties: Record<string, any> | undefined, routes: boolean): (row: number) => number {
+function dotRadii(rows: readonly Record<string, any>[], resolved: Record<string, any>, routes: boolean): (row: number) => number {
     const sizeField = resolved.size?.field;
-    if (routes) {
-        if (routeStopMode(chartProperties?.stops, Boolean(sizeField)) === 'none') return () => 1.5;
-        return stopRadii(chartProperties, sizeField, rows, []).radius;
-    }
+    if (routes) return stopRadii(sizeField, rows, []).radius;
     if (!sizeField) return () => Math.sqrt(DOT_AREA) / 2;
     const max = Math.max(0, ...rows.map((row) => Math.abs(Number(row?.[sizeField]))).filter(Number.isFinite)) || 1;
     return (row) => {
@@ -92,9 +95,9 @@ function dotRadii(rows: readonly Record<string, any>[], resolved: Record<string,
  */
 export function addPointLabels(
     spec: any,
-    options: { rows: readonly Record<string, any>[]; resolved: Record<string, any>; chartProperties?: Record<string, any>; routes: readonly Route[]; globe: boolean },
+    options: { rows: readonly Record<string, any>[]; resolved: Record<string, any>; routes: readonly Route[]; globe: boolean },
 ): { placed: number; dropped: number } | undefined {
-    const { rows, resolved, chartProperties, routes, globe } = options;
+    const { rows, resolved, routes, globe } = options;
     const textField = resolved.text?.field;
     const lonField = resolved.longitude?.field;
     const latField = resolved.latitude?.field;
@@ -108,7 +111,7 @@ export function addPointLabels(
     };
     const places = rows.map(at);
     const project = planProjection(spec.projection, [width, height], places.filter((place): place is [number, number] => place !== undefined));
-    const radius = dotRadii(rows, resolved, chartProperties, routes.length > 0);
+    const radius = dotRadii(rows, resolved, routes.length > 0);
     const measure = measureIn({ fontSize: LABEL_SIZE, fontWeight: 500 });
     const lineHeight = LABEL_SIZE * 1.2;
 
@@ -139,14 +142,26 @@ export function addPointLabels(
             }
         }
     }
-    // The largest dots are named first, where `size` sizes them; else the rows in their order.
+    // The largest dots are named first, where `size` sizes them; else the ends of a quantity's colour scale; else the rows in their order.
     const sizeField = resolved.size?.field;
+    const colorField = resolved.color?.type === 'quantitative' ? resolved.color.field : undefined;
     const order = points.filter((point): point is NonNullable<typeof point> => point !== undefined)
         .filter((point) => rows[point.index]?.[textField] != null && String(rows[point.index][textField]).trim() !== '');
     if (sizeField) order.sort((a, b) => (Math.abs(Number(rows[b.index][sizeField])) || 0) - (Math.abs(Number(rows[a.index][sizeField])) || 0));
+    else if (colorField) {
+        const valued = order.map((point) => Number(rows[point.index][colorField])).filter(Number.isFinite).sort((a, b) => a - b);
+        const rank = (value: number) => (valued.length > 1 ? Math.abs(valued.indexOf(value) / (valued.length - 1) - 0.5) : -1);
+        const extremity = (point: (typeof order)[number]) => {
+            const value = Number(rows[point.index][colorField]);
+            return Number.isFinite(value) ? rank(value) : -1;
+        };
+        order.sort((a, b) => extremity(b) - extremity(a));
+    }
+    const budget = Math.max(12, Math.round((width * height) / LABEL_ROOM));
 
     const values: Record<string, unknown>[] = [];
     for (const point of order) {
+        if (values.length >= budget) break;
         const text = String(rows[point.index][textField]);
         const w = measure(text);
         const reach = point.r + LABEL_GAP;
@@ -154,10 +169,11 @@ export function addPointLabels(
         const spots: [number, number][] = [[reach, 0], [-reach - w, 0], [-w / 2, -reach - lineHeight / 2], [-w / 2, reach + lineHeight / 2]];
         const boxes = spots.map(([dx, dy]) => ({ dx, dy, box: { x0: point.x + dx, x1: point.x + dx + w, y0: point.y + dy - lineHeight / 2, y1: point.y + dy + lineHeight / 2 } }))
             .filter(({ box }) => box.x0 >= 0 && box.y0 >= 0 && box.x1 <= width && box.y1 <= height && !grid.hits(box, point.dot));
+        const padded = (box: (typeof boxes)[number]['box']) => ({ x0: box.x0 - LABEL_PAD.x, x1: box.x1 + LABEL_PAD.x, y0: box.y0 - LABEL_PAD.y, y1: box.y1 + LABEL_PAD.y });
         // Clear of the lines first; else across one.
         const spot = boxes.find(({ box }) => !lines.hits(box)) ?? boxes[0];
         if (!spot) continue;
-        grid.add(spot.box);
+        grid.add(padded(spot.box));
         values.push({
             ...rowFields(rows[point.index]),
             [LABEL_AT]: { type: 'Point', coordinates: point.place },

@@ -19,10 +19,3 @@
 .dm-note { font-size: 11px; fill: #888; font-style: italic; }
 .dm-key { font-size: 10.5px; fill: #444; }
 
-.dm-notes { width: min(100%, 1180px); }
-.dm-notes h2 { font-size: 17px; margin: 0 0 6px; }
-.dm-notes h3 { font-size: 14px; margin: 16px 0 6px; }
-.dm-notes ol, .dm-notes ul { margin: 0; padding-left: 22px; font-size: 14px; line-height: 1.55; color: #333; max-width: 960px; }
-.dm-notes li { margin-bottom: 6px; }
-.dm-notes code { font-size: 12.5px; background: #f3f3f3; padding: 1px 4px; border-radius: 3px; }
-.dm-note-text { font-size: 14px; line-height: 1.55; color: #444; max-width: 960px; }

@@ -16,7 +16,7 @@ import { validateChart } from '../src/validate';
 import { geoOverlayChannels, overlayChannels } from '../src/vegalite/interactions/presentation/overlay-channels';
 import { lonLatBox } from '../src/vegalite/interactions/presentation/data-overlay';
 import { geoArea } from 'd3-geo';
-import { bearing, buildRoutes, headSize, legPoint, legWidths, routeArrows, routeCurve, ROUTE_WIDTH, STOP_LEGS_MAX } from '../src/chart-types/map-routes';
+import { bearing, buildRoutes, headSize, legPoint, legWidths, widestLeg, routeArrows, routeCurve, ROUTE_WIDTH, STOP_LEGS_MAX } from '../src/chart-types/map-routes';
 import { addVegaLiteInteractions, injectVegaInteractionStore, vegaGeoFocusSource } from '../src/vegalite/interactions/compile';
 import { oneMarkHits, sceneItems } from '../src/vegalite/interactions/hit-adapter';
 import { INTERACTION_KEY } from '../src/vegalite/interactions/stores';
@@ -113,13 +113,13 @@ describe('Map routes in Vega-Lite', () => {
         expect(routeLayers(routeMap(STOPS, {}))).toHaveLength(0);
     });
 
-    it('draws a casing and a line beneath the points and the heads over them', () => {
+    it('draws every halo, then the points, the line and the heads', () => {
         const spec = routeMap(STOPS, { order: 'Stop' });
         const types = spec.layer.map((layer: any) => (layer?.data?.values?.[0]?.[ROUTE_DATUM] ? `route:${markType(layer)}` : markType(layer)));
         const circle = types.indexOf('circle');
-        // The casing, the heads' halo, the line, then the stops, and the heads over them.
-        expect(types.slice(circle - 3, circle)).toEqual(['route:geoshape', 'route:point', 'route:geoshape']);
-        expect(types.lastIndexOf('route:point')).toBeGreaterThan(circle);
+        // The casing and the heads' halo, the stops, the line, then the heads over all.
+        expect(types.slice(circle - 2, circle + 2)).toEqual(['route:geoshape', 'route:point', 'circle', 'route:geoshape']);
+        expect(types.lastIndexOf('route:point')).toBeGreaterThan(circle + 1);
         const [casing, line, , halo] = routeLayers(spec);
         // The halo is white on a light map, round the line and its head alike, a hairline each side.
         expect(casing.mark.stroke).toBe('#ffffff');
@@ -211,9 +211,11 @@ describe('Map routes in Plotly', () => {
         chart_spec: { chartType: 'Map', encodings: { longitude: 'longitude', latitude: 'latitude', order: 'Stop' }, chartProperties },
     } as any);
 
-    it('draws the casing and line beneath the points and the heads over them, turned to each leg', () => {
+    it('draws the casing beneath the points, and the line and heads over them, turned to each leg', () => {
         const traces = plotlyMap().data;
-        expect(traces.map((trace: any) => trace.mode)).toEqual(['lines', 'lines', 'markers', 'markers']);
+        expect(traces.map((trace: any) => trace.mode)).toEqual(['lines', 'markers', 'lines', 'markers']);
+        expect(traces[0].line.color).toBe('#ffffff');
+        expect(traces[2].line.color).not.toBe('#ffffff');
         const heads = traces[3];
         expect(heads.marker.angleref).toBe('up');
         // Both legs run east; mid-arc the bow turns them a little south of it.
@@ -236,7 +238,7 @@ describe('Map routes in Plotly', () => {
     });
 
     it('leaves the heads off when arrows is false', () => {
-        expect(plotlyMap({ arrows: false }).data.map((trace: any) => trace.mode)).toEqual(['lines', 'lines', 'markers']);
+        expect(plotlyMap({ arrows: false }).data.map((trace: any) => trace.mode)).toEqual(['lines', 'markers', 'lines']);
     });
 
     it('reads a compass bearing clockwise from north', () => {
@@ -382,11 +384,69 @@ describe('route widths and joined heads', () => {
     it('widens a leg by the value of the row it leaves, from zero, and sizes its head to it', () => {
         expect(legWidths([600, 300, 0, null])).toEqual([ROUTE_WIDTH.max, (ROUTE_WIDTH.min + ROUTE_WIDTH.max) / 2 + 0, ROUTE_WIDTH.min, ROUTE_WIDTH.min]
             .map((width, index) => (index === 1 ? ROUTE_WIDTH.min + (ROUTE_WIDTH.max - ROUTE_WIDTH.min) / 2 : width)));
-        expect(headSize(1)).toEqual({ length: 9, halfWidth: 9 * 0.45 });
-        expect(headSize(8).length).toBe(20);
+        // A hairline's head is slim and small; a broad line's broad.
+        expect(headSize(1).length).toBeCloseTo(6.6, 6);
+        expect(headSize(1).halfWidth).toBeCloseTo(2.1, 6);
+        expect(headSize(8)).toEqual({ length: 22, halfWidth: 9.8 });
+        expect(headSize(0.5).length / headSize(0.5).halfWidth).toBeGreaterThan(headSize(8).length / headSize(8).halfWidth);
     });
 
-    it('reads strokeWidth as the route’s width, with a key of its own, and leaves the stops undrawn', () => {
+    it('keeps a small head on a short leg, no longer than the leg, on screen', async () => {
+        const rows = [{ Stop: 1, longitude: 0, latitude: 0 }, { Stop: 2, longitude: 0.4, latitude: 0 }, { Stop: 3, longitude: 30, latitude: 10 }];
+        const view = new View(parse(compile(strip(routeMap(rows, { order: 'Stop' }, { curve: 'straight' }))).spec as any), { renderer: 'none', loader: withBundledBoundaries(loader()) } as any);
+        await view.runAsync();
+        const heads: any[] = [];
+        const visit = (node: any) => {
+            if (node?.marktype === 'symbol' && node.items?.[0]?.datum?.[ROUTE_PART] === 'head' && node.items[0].strokeWidth === 0) heads.push(...node.items);
+            for (const item of node?.items ?? []) visit(item);
+        };
+        visit((view.scenegraph() as any).root);
+        const short = heads.find((head) => head.datum.Stop === 1);
+        // Shown, at no less than 3 px and no longer than its leg.
+        expect(short.opacity).not.toBe(0);
+        expect(short.datum.flintScale * short.datum.flintBack).toBeGreaterThanOrEqual(3);
+        expect(short.datum.flintScale * short.datum.flintBack).toBeLessThanOrEqual(short.datum.flintDist[short.datum.flintDist.length - 1]);
+    });
+
+    it('rings and shrinks the heads of many legs arriving at one stop, and keeps the widest twelve', () => {
+        const rows = Array.from({ length: 16 }, (_, i) => [
+            { Trip: i, Stop: 1, Crew: i + 1, longitude: 30 * Math.cos(i), latitude: 20 * Math.sin(i) },
+            { Trip: i, Stop: 2, Crew: i + 1, longitude: 0, latitude: 0 },
+        ]).flat();
+        const [, line, heads] = routeLayers(routeMap(rows, { order: 'Stop', detail: 'Trip', strokeWidth: 'Crew' } as any));
+        expect(heads.data.values).toHaveLength(12);
+        expect(heads.data.values.every((head: any) => head.flintRing > 0)).toBe(true);
+        // The four narrowest legs keep no head, and run whole to the stop.
+        const headless = line.data.values.filter((leg: any) => leg.flintJoin === 0).map((leg: any) => leg.Crew).sort((a: number, b: number) => a - b);
+        expect(headless).toEqual([1, 2, 3, 4]);
+        // Shrunk: shorter than a head of the same width alone.
+        const widest = heads.data.values.find((head: any) => head.Crew === 16);
+        const alone = routeLayers(routeMap(rows.filter((row) => row.Trip === 15), { order: 'Stop', detail: 'Trip', strokeWidth: 'Crew' } as any))[2].data.values[0];
+        expect(widest.flintBack).toBeLessThan(alone.flintBack);
+        expect(alone.flintRing).toBe(0);
+    });
+
+    it('draws no halo round a leg, or its head, thinner than 1.5 px', () => {
+        const rows = [{ Stop: 1, Crew: 600, longitude: 0, latitude: 10 }, { Stop: 2, Crew: 0, longitude: 10, latitude: 10 }, { Stop: 3, Crew: 0, longitude: 20, latitude: 10 }];
+        const [casing, line, , halo] = routeLayers(routeMap(rows, { order: 'Stop', strokeWidth: 'Crew' } as any));
+        expect(line.data.values).toHaveLength(2);
+        // The 8 px leg keeps its halo; the 1 px leg takes none.
+        expect(casing.data.values.map((leg: any) => leg.Stop)).toEqual([1]);
+        expect(halo.data.values.map((head: any) => head.Stop)).toEqual([1]);
+    });
+
+    it('thins the widest leg as long, widened legs crowd the plot, down to 40% of its width', () => {
+        const legsOf = (rows: { o: number; s: number; lon: number; lat: number }[]) => buildRoutes(rows, { longitude: 'lon', latitude: 'lat', order: 'o', series: 's' }).flatMap((route) => route.legs);
+        const few = legsOf([{ s: 1, o: 1, lon: 0, lat: 0 }, { s: 1, o: 2, lon: 20, lat: 5 }, { s: 1, o: 3, lon: 40, lat: 0 }]);
+        expect(widestLeg(few, [5, 5], 480)).toBe(ROUTE_WIDTH.max);
+        const many = legsOf(Array.from({ length: 80 }, (_, i) => [{ s: i, o: 1, lon: -60, lat: i % 20 }, { s: i, o: 2, lon: 60, lat: (i * 7) % 20 }]).flat());
+        const crowded = widestLeg(many, many.map(() => 10), 480);
+        expect(crowded).toBeLessThan(ROUTE_WIDTH.max);
+        expect(crowded).toBeGreaterThanOrEqual(0.4 * ROUTE_WIDTH.max);
+        expect(legWidths([10, 5], 10, crowded)[0]).toBe(crowded);
+    });
+
+    it('reads strokeWidth as the route’s width, with a key of its own, and draws only the route’s start', () => {
         const spec = routeMap(crew, { order: 'Stop', strokeWidth: 'Crew' } as any);
         const [casing, line, heads] = routeLayers(spec);
         expect(line.encoding.strokeWidth).toMatchObject({ field: 'Crew', scale: { domain: [0, 600], range: [ROUTE_WIDTH.min, ROUTE_WIDTH.max] }, legend: { symbolType: 'stroke' } });
@@ -394,8 +454,8 @@ describe('route widths and joined heads', () => {
         expect(spec.resolve.scale.strokeWidth).toBe('independent');
         const dots = spec.layer.find((layer: any) => markType(layer) === 'circle');
         expect(dots.encoding.size).toBeUndefined();
-        // Not drawn: the arrows are the route; the stops stay where the pointer finds their rows.
-        expect(dots.mark.opacity).toBe(0);
+        // The arrows mark every stop but the first: the rest stay undrawn, where the pointer finds their rows.
+        expect(dots.encoding.opacity.condition[0]).toMatchObject({ value: 0 });
         // The wider leg's head is the longer.
         const reach = (shape: string) => Math.abs(Number(shape.match(/L(-[\d.]+),/)![1]));
         expect(reach(heads.data.values[0].flintHeadShape)).toBeGreaterThan(reach(heads.data.values[1].flintHeadShape));
@@ -409,57 +469,47 @@ describe('route widths and joined heads', () => {
         expect(leg).toMatchObject({ flintJoin: 1, flintFit: 1 });
         expect(casing.encoding.strokeDash).toEqual(line.encoding.strokeDash);
         expect(line.encoding.strokeDash.value.expr).toContain('datum.flintJoin');
-        // A head below 60% of its size is dropped; the scale is computed on the head's own data.
-        expect(heads.encoding.opacity.condition[0].test).toBe('datum.flintScale < 0.6');
+        // Only a head a few px long is dropped; the scale is computed on the head's own data.
+        expect(heads.encoding.opacity.condition[0].test).toBe('datum.flintScale * datum.flintBack < 3');
         expect(heads.transform.map((step: any) => step.as)).toEqual(['flintPts', 'flintDist', 'flintScale', 'flintX', 'flintY', 'flintBaseX', 'flintBaseY', 'flintAngle', 'flintSize']);
         expect(heads.mark).toMatchObject({ fillOpacity: line.mark.strokeOpacity });
         const plain = routeLayers(routeMap(crew, { order: 'Stop' }, { arrows: false }))[1];
         expect(plain.data.values.every((each: any) => each.flintJoin === 0)).toBe(true);
     });
 
-    it('draws stops as dots of one size when asked, sized apart from the arrows, and leaves them undrawn otherwise', () => {
-        const spec = routeMap(crew, { order: 'Stop', strokeWidth: 'Crew' } as any, { stops: true });
+    it('draws every stop where a label anchors it, else only each route’s start; the routes read nothing of the dots', () => {
+        const spec = routeMap(crew, { order: 'Stop', strokeWidth: 'Crew', text: 'Stop' } as any);
         const dots = spec.layer.find((layer: any) => markType(layer) === 'circle');
         expect(dots.mark).toMatchObject({ opacity: 1, fillOpacity: 1, stroke: '#ffffff', strokeWidth: 1 });
+        expect(dots.encoding.opacity?.condition?.[0]?.value).not.toBe(0);
         // Uniform: half the median leg width (8 and 4.5 px legs: 4.5) and a pixel, kept within 2.5–4 px.
         expect(dots.mark.size).toBeCloseTo((2 * 3.25) ** 2, 6);
         expect(dots.encoding.size).toBeUndefined();
-        // The arrows read only each end's clearance: the dot's radius and half its halo.
+        // Every dot or only the start, the routes are the same.
+        const plain = routeMap(crew, { order: 'Stop', strokeWidth: 'Crew' } as any);
         const [, line, heads] = routeLayers(spec);
-        expect(line.data.values.map((leg: any) => [leg.flintStartClear, leg.flintEndClear])).toEqual([[3.75, 3.75], [3.75, 3.75]]);
-        expect(heads.data.values.map((head: any) => head.flintEndClear)).toEqual([3.75, 3.75]);
-        // A stated radius is every dot's.
-        const fixed = routeMap(crew, { order: 'Stop' }, { stops: true, stopRadius: 3 });
-        expect(fixed.layer.find((layer: any) => markType(layer) === 'circle').mark.size).toBe(36);
-        expect(routeLayers(fixed)[1].data.values[0].flintEndClear).toBe(3.5);
-        // Undrawn without stops, and the arrows keep nothing for them.
-        const plain = routeMap(crew, { order: 'Stop' });
-        expect(plain.layer.find((layer: any) => markType(layer) === 'circle').mark.opacity).toBe(0);
-        expect(routeLayers(plain)[1].data.values[0].flintEndClear).toBe(0);
+        const [, plainLine, plainHeads] = routeLayers(plain);
+        const unlabelled = (values: any[]) => values.map(({ flintRoutePart, flintTail, flintBack, flintFit, flintJoin }) => ({ flintRoutePart, flintTail, flintBack, flintFit, flintJoin }));
+        expect(unlabelled(line.data.values)).toEqual(unlabelled(plainLine.data.values));
+        expect(unlabelled(heads.data.values)).toEqual(unlabelled(plainHeads.data.values));
+        expect(plain.layer.find((layer: any) => markType(layer) === 'circle').encoding.opacity.condition[0].value).toBe(0);
     });
 
     it('sizes stops by size, zero-based by area, drawn without asking, beside legs widened by strokeWidth', () => {
         const rows = crew.map((row, index) => ({ ...row, Days: [10, 0, 40][index] }));
         const spec = routeMap(rows, { order: 'Stop', size: 'Days', strokeWidth: 'Crew' } as any);
         const dots = spec.layer.find((layer: any) => markType(layer) === 'circle');
-        // `size` sets the stops to all where `stops` is unset.
+        // `size` draws every stop.
         expect(dots.mark.opacity).toBe(1);
+        expect(dots.encoding.opacity?.condition?.[0]?.value).not.toBe(0);
         expect(dots.encoding.size).toMatchObject({ field: 'Days', scale: { domain: [0, 40], range: [25, 196] } });
         expect(dots.encoding.strokeWidth).toBeUndefined();
         expect(routeLayers(spec)[1].encoding.strokeWidth).toMatchObject({ field: 'Crew', legend: { symbolType: 'stroke' } });
         // Its key is the dots' own, not merged away with the heads' sizes.
         const vega: any = compile(strip(spec)).spec;
         expect((vega.legends ?? []).some((legend: any) => legend.size && legend.title === 'Days')).toBe(true);
-        const [, line] = routeLayers(spec);
-        const radius = (days: number) => Math.sqrt(25 + (196 - 25) * (days / 40)) / 2;
-        expect(line.data.values[0].flintStartClear).toBeCloseTo(radius(10) + 0.5, 6);
-        expect(line.data.values[1].flintEndClear).toBeCloseTo(radius(40) + 0.5, 6);
         // Its keys are two: the dots' sizes and the legs' widths.
         expect((vega.legends ?? []).some((legend: any) => legend.strokeWidth && legend.title === 'Crew')).toBe(true);
-        // An explicit 'none' keeps them undrawn, and says the size went unused.
-        const none = routeMap(rows, { order: 'Stop', size: 'Days' } as any, { stops: 'none' });
-        expect(none.layer.find((layer: any) => markType(layer) === 'circle').mark.opacity).toBe(0);
-        expect(none._warnings.map((warning: any) => warning.code)).toContain('map-size-without-stops');
         // On a map without routes, size is the bubbles' own, and strokeWidth, with no legs to widen, is left out.
         const points = routeMap(rows, { size: 'Days', strokeWidth: 'Crew' } as any);
         const bubbles = points.layer.find((layer: any) => markType(layer) === 'circle');
@@ -468,33 +518,28 @@ describe('route widths and joined heads', () => {
         expect(points._warnings.map((warning: any) => warning.code)).toContain('map-width-without-routes');
     });
 
-    it('draws a dot only where each run of one colour starts and ends under stops: ends', async () => {
-        const rows = [1, 2, 3, 4, 5].map((Stop) => ({ Stop, Trip: 'x', Ship: Stop <= 2 ? 'A' : 'B', longitude: Stop * 8, latitude: Stop % 2 ? 0 : 6 }));
-        const spec = routeMap(rows, { order: 'Stop', detail: 'Trip', color: 'Ship' } as any, { stops: 'ends', stopRadius: 3 });
-        // Legs 1→2 and 2→3 are A's, 3→4 and 4→5 B's: stops 2 and 4 lie within a run.
-        const [, line, heads] = routeLayers(spec);
-        expect(line.data.values.map((leg: any) => [leg.Stop, leg.flintStartClear, leg.flintEndClear])).toEqual([[1, 3.5, 0], [2, 0, 3.5], [3, 3.5, 0], [4, 0, 3.5]]);
-        // Every leg keeps its head.
-        expect(heads.data.values).toHaveLength(4);
-        const view = new View(parse(compile(strip(spec)).spec as any), { renderer: 'none', loader: withBundledBoundaries(loader()) } as any);
-        await view.runAsync();
-        const dots: any[] = [];
-        const visit = (node: any) => {
-            if (node?.marktype === 'symbol' && !node.items?.[0]?.datum?.[ROUTE_PART] && node.items?.[0]?.datum?.Stop !== undefined) dots.push(...node.items);
-            for (const item of node?.items ?? []) visit(item);
+    it('draws only each route’s start where the routes carry the colour, and every stop where the dots do', async () => {
+        const rows = [1, 2, 3, 4, 5].map((Stop) => ({ Stop, Trip: 'x', Ship: Stop <= 2 ? 'A' : 'B', Speed: Stop * 3, longitude: Stop * 8, latitude: Stop % 2 ? 0 : 6 }));
+        const drawn = async (encodings: Record<string, string>) => {
+            const spec = routeMap(rows, { order: 'Stop', detail: 'Trip', ...encodings } as any);
+            const view = new View(parse(compile(strip(spec)).spec as any), { renderer: 'none', loader: withBundledBoundaries(loader()) } as any);
+            await view.runAsync();
+            const dots: any[] = [];
+            const visit = (node: any) => {
+                if (node?.marktype === 'symbol' && !node.items?.[0]?.datum?.[ROUTE_PART] && node.items?.[0]?.datum?.Stop !== undefined) dots.push(...node.items);
+                for (const item of node?.items ?? []) visit(item);
+            };
+            visit((view.scenegraph() as any).root);
+            return dots.filter((dot) => dot.opacity !== 0).map((dot) => dot.datum.Stop).sort();
         };
-        visit((view.scenegraph() as any).root);
-        expect(dots.filter((dot) => dot.opacity !== 0).map((dot) => dot.datum.Stop).sort()).toEqual([1, 3, 5]);
-        // Without a colour, the route's ends only; `true` is every stop.
-        const plain = routeLayers(routeMap(rows, { order: 'Stop', detail: 'Trip' } as any, { stops: 'ends', stopRadius: 3 }))[1];
-        expect(plain.data.values.map((leg: any) => leg.flintEndClear)).toEqual([0, 0, 0, 3.5]);
-        const all = routeLayers(routeMap(rows, { order: 'Stop', detail: 'Trip', color: 'Ship' } as any, { stops: true, stopRadius: 3 }))[1];
-        expect(all.data.values.map((leg: any) => leg.flintEndClear)).toEqual([3.5, 3.5, 3.5, 3.5]);
+        // A colour naming stretches of the route is the lines': the heads mark every stop but the first.
+        expect(await drawn({ color: 'Ship' })).toEqual([1]);
+        // A quantity's colour is the dots'.
+        expect(await drawn({ color: 'Speed' })).toEqual([1, 2, 3, 4, 5]);
     });
 
-    it('points each head at the next drawn stop’s edge on screen', async () => {
-        const radius = 5;
-        const spec = routeMap(crew, { order: 'Stop' }, { stops: true, stopRadius: radius, curve: 'straight' });
+    it('sets each head’s tip on its stop and draws each line from its first', async () => {
+        const spec = routeMap(crew, { order: 'Stop', text: 'Stop' } as any, { curve: 'straight' });
         const view = new View(parse(compile(strip(spec)).spec as any), { renderer: 'none', loader: withBundledBoundaries(loader()) } as any);
         await view.runAsync();
         const legs: any[] = [];
@@ -509,17 +554,14 @@ describe('route widths and joined heads', () => {
         };
         visit((view.scenegraph() as any).root);
         expect(legs).toHaveLength(2);
-        // Drawn from its first stop's dot's edge (a gap first, the dot's clearance) to its head.
-        for (const leg of legs) {
-            expect(leg.strokeDash).toHaveLength(4);
-            expect(leg.strokeDash.slice(0, 2)).toEqual([0, radius + 0.5]);
-        }
+        // Drawn from its first stop, through the dot, to its head.
+        for (const leg of legs) expect(leg.strokeDash).toHaveLength(2);
         const at = (stop: number) => stops.find((item) => item.datum.Stop === stop);
-        // The head's tip stands at the outer edge of the dot's halo: its radius and half the halo from the stop's middle.
+        // The head's tip stands on the next stop's middle, its dot beneath.
         expect(heads).toHaveLength(2);
         for (const head of heads) {
             const next = at(head.datum.Stop + 1);
-            expect(Math.hypot(head.x - next.x, head.y - next.y)).toBeCloseTo(radius + 0.5, 1);
+            expect(Math.hypot(head.x - next.x, head.y - next.y)).toBeCloseTo(0, 1);
         }
     });
 
@@ -558,16 +600,14 @@ describe('route widths and joined heads', () => {
         const lines = traces.filter((trace: any) => trace.mode === 'lines' && trace.line.color !== '#ffffff');
         expect(lines.map((trace: any) => trace.line.width)).toEqual([ROUTE_WIDTH.max, ROUTE_WIDTH.min + (ROUTE_WIDTH.max - ROUTE_WIDTH.min) / 2]);
         const dots = (encodings: Record<string, string>, chartProperties?: Record<string, unknown>) =>
-            plotly(encodings, chartProperties).find((trace: any) => trace.mode === 'markers' && !trace.hoverinfo).marker;
-        // Undrawn by default, but still hovered.
-        expect(dots({ strokeWidth: 'Crew' }).opacity).toBe(0);
-        // Every stop one size (8 and 4.5 px legs: radius 3.25), or by size, zero-based by area (2.5 to 7 px).
-        expect(dots({ strokeWidth: 'Crew' }, { stops: true }).size).toEqual([6.5, 6.5, 6.5]);
+            plotly(encodings, chartProperties).find((trace: any) => trace.mode.startsWith('markers') && !trace.hoverinfo).marker;
+        // Only the route's start by default; the rest undrawn, but still hovered.
+        expect(dots({ strokeWidth: 'Crew' }).opacity).toEqual([1, 0, 0]);
+        // Every stop where a label anchors it, one size (8 and 4.5 px legs: radius 3.25), or by size, zero-based by area (2.5 to 7 px).
+        expect(dots({ strokeWidth: 'Crew', text: 'Stop' }).size).toEqual([6.5, 6.5, 6.5]);
         const sized = dots({ size: 'Days' });
-        expect(sized.opacity).toEqual([1, 1, 1]);
+        expect(sized.opacity).toBe(1);
         expect(sized.size.map((d: number) => Number(d.toFixed(3)))).toEqual([Math.sqrt(25 + 171 / 4), 5, 14].map((d) => Number(d.toFixed(3))));
-        // `ends` leaves the stop within a run undrawn.
-        expect(dots({ size: 'Days' }, { stops: 'ends' }).opacity).toEqual([1, 0, 1]);
     });
 });
 
@@ -634,7 +674,8 @@ describe('route ink, stops and track heads', () => {
         const track = Array.from({ length: STOP_LEGS_MAX + 6 }, (_, i) => ({ Stop: i, longitude: i * 0.3, latitude: Math.sin(i / 4) }));
         const spec = routeMap(track, { order: 'Stop' });
         const dots = spec.layer.find((layer: any) => markType(layer) === 'circle');
-        expect(dots.mark.opacity).toBe(0);
+        // A dot at its start; its fixes undrawn.
+        expect(dots.encoding.opacity.condition[0]).toMatchObject({ value: 0 });
         const [, , heads] = routeLayers(spec);
         expect(heads.data.values).toHaveLength(1);
         expect(heads.data.values[0].flintFit).toBe(0);

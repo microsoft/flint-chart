@@ -26,6 +26,7 @@ import type {
     SemanticResult,
 } from '../core/types';
 import { resolveChannelSemantics, convertTemporalData } from '../core/resolve-semantics';
+import { resolvePivotAggregate } from '../core/field-semantics';
 import { detectBandedAxisFromSemantics } from '../core/axis-detection';
 import { computeChannelBudgets, deriveStretchCaps, resolveBaseSize } from '../core/compute-layout';
 import { filterOverflow } from '../core/filter-overflow';
@@ -447,8 +448,8 @@ export function assembleExcel(input: ChartAssemblyInput): ExcelChartSpec {
             }));
         }
 
-        // aggregate duplicates per (category × series) using the measure's default
-        const agg = sem[measCh!]?.aggregationDefault ?? 'sum';
+        // aggregate duplicates per (category × series): the encoding's own aggregate, else the measure's default
+        const agg = resolvePivotAggregate(encodings[measCh!]?.aggregate, sem[measCh!]?.aggregationDefault);
         const acc = new Map<string, { sum: number; count: number }>();
         for (const r of convertedData) {
             const cv = r[catField];
@@ -466,7 +467,7 @@ export function assembleExcel(input: ChartAssemblyInput): ExcelChartSpec {
         const valueAt = (cv: Cell, sv: Cell): Cell => {
             const e = acc.get(`${String(cv)}\u0000${String(sv)}`);
             if (!e) return null;
-            return agg === 'average' ? e.sum / e.count : e.sum;
+            return agg === 'average' ? e.sum / e.count : agg === 'count' ? e.count : e.sum;
         };
 
         let seriesValues = seriesDescriptors.map((descriptor) => categories.map((category) => valueAt(category, descriptor.key)));

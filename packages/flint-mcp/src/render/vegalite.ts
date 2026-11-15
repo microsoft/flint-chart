@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { injectCanvasFurnitureSVG, readCanvasFurniture } from 'flint-chart';
+import { injectCanvasFurnitureSVG, readCanvasFurniture, withBundledBoundaries } from 'flint-chart';
 import { CHART_FONT_FAMILY, installVegaTextMetrics } from './fonts.js';
 import { svgToResult } from './svg.js';
 import type { RenderResult, RenderFormat } from './types.js';
@@ -50,7 +50,8 @@ export async function renderVegaLite(
 
   const compiled = vegaLite.compile(vlSpec as any).spec;
   const runtime = vega.parse(compiled as any, { background: args.background } as any);
-  const view = new vega.View(runtime, { renderer: 'none' });
+  // A map's boundaries come from the package's own copies, as the live card's do: nothing is fetched.
+  const view = new vega.View(runtime, { renderer: 'none', loader: withBundledBoundaries(vega.loader()) } as any);
   view.logLevel(vega.Error);
   await view.runAsync();
   // A house may anchor branding to the graphic frame rather than the plot —

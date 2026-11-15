@@ -16,7 +16,7 @@
  * legs follow great circles unbowed, and it carries one arrowhead, at its end.
  */
 
-import { geoDistance, geoInterpolate } from 'd3-geo';
+import { geoBounds, geoDistance, geoInterpolate } from 'd3-geo';
 import type { ChartPropertyDef } from '../core/types';
 
 export const ROUTE_CURVES = ['auto', 'arc', 'great-circle', 'straight'] as const;
@@ -191,14 +191,21 @@ export function buildRoutes(rows: readonly Record<string, unknown>[], options: R
     return routes;
 }
 
-export const ROUTE_STOPS = ['none', 'all', 'ends'] as const;
-export type RouteStopMode = typeof ROUTE_STOPS[number];
+/**
+ * Whether a route map draws a dot at every stop: where its points carry something its routes do not —
+ * a `size`, a `shape`, a `text` label (the dot its anchor), or a colour the lines do not take (a
+ * quantity's). Otherwise the routes say it all, and only each route's first stop takes a dot, where
+ * no arrowhead marks it. Any other dot is the author's to draw, as an update layer of its own.
+ */
+export function routeDotsEverywhere(carried: { size?: boolean; shape?: boolean; text?: boolean; pointColor?: boolean }): boolean {
+    return Boolean(carried.size || carried.shape || carried.text || carried.pointColor);
+}
 
-/** The `stops` property read: `true` is `all`, `false` none; unset, `all` where `size` sizes the dots (`sized`), else none. */
-export function routeStopMode(value: unknown, sized = false): RouteStopMode {
-    if (value === true || value === 'all') return 'all';
-    if (value === 'ends' || value === 'none') return value;
-    return value === undefined && sized ? 'all' : 'none';
+/** The rows that take a dot where the routes say it all: each route's first stop, and every point no route passes through. */
+export function routeStartRows(routes: readonly Route[], rowCount: number): number[] {
+    const routed = new Set(routes.flatMap((route) => route.legs.flatMap((leg) => [leg.from, leg.to])));
+    const starts = routes.map((route) => route.legs[0].from);
+    return [...starts, ...Array.from({ length: rowCount }, (_, row) => row).filter((row) => !routed.has(row))];
 }
 
 /** A stop's dot radius in px: one for every stop by default, kept between these. */
@@ -209,17 +216,14 @@ export const STOP_RADIUS_BY_VALUE = { min: 2.5, max: 7 } as const;
 /**
  * Each stop's dot radius in px, for every backend alike. Stops are places, not values: by default
  * every dot is one size, from the routes' median width (`widths`, px) — half of it and a pixel, kept
- * between 2.5 and 4 px. `stopRadius` states one size. A `size` field sizes each dot by its row's
- * value, zero-based by area from 2.5 to 7 px (`byValue`: the largest value, the scale's top).
+ * between 2.5 and 4 px. A `size` field sizes each dot by its row's value, zero-based by area from 2.5
+ * to 7 px (`byValue`: the largest value, the scale's top).
  */
 export function stopRadii(
-    chartProperties: Record<string, any> | undefined,
     sizeField: string | undefined,
     rows: readonly Record<string, unknown>[],
     widths: readonly number[],
 ): { radius(row: number): number; byValue?: { max: number } } {
-    const stated = chartProperties?.stopRadius;
-    if (typeof stated === 'number' && Number.isFinite(stated) && stated >= 0) return { radius: () => stated };
     if (sizeField) {
         const max = largestMagnitude(rows.map((row) => row[sizeField])) || 1;
         const [low, high] = [(2 * STOP_RADIUS_BY_VALUE.min) ** 2, (2 * STOP_RADIUS_BY_VALUE.max) ** 2];
@@ -238,20 +242,10 @@ export function stopRadii(
 }
 
 /**
- * The stops inside a route's runs of one colour: those a leg arrives at and the next leg, of the same
- * colour (`colorKey`, the row each leaves), leaves from. Without a colour, every stop but the route's
- * first and last.
- */
-export function innerStops(route: Route, colorKey?: (row: number) => unknown): number[] {
-    return route.legs.slice(0, -1)
-        .filter((leg, i) => Object.is(colorKey?.(leg.from), colorKey?.(route.legs[i + 1].from)))
-        .map((leg) => leg.to);
-}
-
-/**
  * Where a route's arrowheads stand: on every leg of a route of stops, on the last leg of a track
- * only — at the leg's end, or at its middle (`at: 'middle'`) for a renderer that cannot hold a head
- * back off the stop's dot. A leg that returns to where it began has no heading and takes none.
+ * only — its tip at the leg's end, or at its middle (`at: 'middle'`) for a renderer whose head is a
+ * marker centred on its point, which cannot set its tip on the stop. A leg that returns to where it
+ * began has no heading and takes none.
  */
 export function routeArrows(routes: readonly Route[], curve: unknown, globe: boolean, at: 'end' | 'middle' = 'end'): RouteArrow[] {
     const arrows: RouteArrow[] = [];
@@ -291,13 +285,43 @@ export const ROUTE_WIDTH = { min: 1, max: 8, plain: 1.75 } as const;
 
 /**
  * Each leg's width in px from the value its row gives: zero-based, linear, `max` (by default the
- * largest value given) the widest.
+ * largest value given) the widest, at `widest` px.
  */
-export function legWidths(values: readonly unknown[], max = largestMagnitude(values)): number[] {
+export function legWidths(values: readonly unknown[], max = largestMagnitude(values), widest: number = ROUTE_WIDTH.max): number[] {
     const numbers = values.map((value) => (value === null || value === '' ? NaN : Number(value)));
     return numbers.map((value) => (Number.isFinite(value) && max > 0
-        ? ROUTE_WIDTH.min + (ROUTE_WIDTH.max - ROUTE_WIDTH.min) * Math.min(1, Math.abs(value) / max)
+        ? ROUTE_WIDTH.min + (widest - ROUTE_WIDTH.min) * Math.min(1, Math.abs(value) / max)
         : ROUTE_WIDTH.min));
+}
+
+/** The share of the plot a map's widened legs may cover: their lengths on screen times their widths. */
+const LEG_COVERAGE = 0.06;
+/** The widest leg never thins below this share of `ROUTE_WIDTH.max`, or widths stop reading. */
+const LEG_FLOOR = 0.4;
+
+/**
+ * The widest leg's width in px, as Data Formulator fits its flows: the legs' lengths on screen times
+ * their widths cover about 6% of the plot (`plotSide`, the side of a square of its area), so a map
+ * crowded with long legs draws thinner ones than a map of a few — never wider than `ROUTE_WIDTH.max`
+ * nor below 40% of it. A leg's length on screen is read as its length over the extent of every leg's
+ * ends, which the map is fitted to.
+ */
+export function widestLeg(legs: readonly RouteLeg[], values: readonly unknown[], plotSide: number): number {
+    const max = largestMagnitude(values);
+    const all = legs.flatMap((leg) => [leg.path[0], leg.path[leg.path.length - 1]]);
+    if (!max || !(plotSide > 0) || all.length < 2) return ROUTE_WIDTH.max;
+    const extent = geoDistance(...(geoBounds({ type: 'MultiPoint', coordinates: all } as any) as [LonLat, LonLat]));
+    if (!(extent > 0)) return ROUTE_WIDTH.max;
+    let ink = 0;
+    legs.forEach((leg, index) => {
+        const value = Math.abs(Number(values[index]));
+        if (!Number.isFinite(value)) return;
+        let length = 0;
+        for (let k = 1; k < leg.path.length; k++) length += geoDistance(leg.path[k - 1], leg.path[k]);
+        ink += (value / max) * Math.min(1.5, length / extent);
+    });
+    if (!ink) return ROUTE_WIDTH.max;
+    return Math.max(LEG_FLOOR * ROUTE_WIDTH.max, Math.min(ROUTE_WIDTH.max, (LEG_COVERAGE * plotSide) / ink));
 }
 
 /** The largest magnitude among values that are numbers; 0 where none is. */
@@ -306,12 +330,13 @@ export function largestMagnitude(values: readonly unknown[]): number {
 }
 
 /**
- * An arrowhead fitted to its line, as Data Formulator draws one: its length grows with the line's
- * width (9 to 20 px), its half-width 0.45 of its length.
+ * An arrowhead fitted to its line, as Data Formulator draws one: its length and half-width each grow
+ * with the line's width, so a hairline takes a slim small head and a broad line a broad one (to 22 px
+ * long) — not one fixed shape.
  */
 export function headSize(width: number): { length: number; halfWidth: number } {
-    const length = Math.min(20, Math.max(9, width * 2.4 + 6));
-    return { length, halfWidth: length * 0.45 };
+    const w = Math.max(0, width);
+    return { length: Math.min(22, 4 + 2.6 * w), halfWidth: Math.min(12, 1 + 1.1 * w) };
 }
 
 /** How opaque routes are drawn: nearly solid, fading only once a map carries many (Data Formulator's flow maps). */
@@ -337,23 +362,5 @@ export const routeProperties: ChartPropertyDef[] = [
         ] satisfies { value: typeof ROUTE_CURVES[number]; label: string }[],
         defaultValue: 'auto',
         check: (ctx) => ({ applicable: Boolean(ctx.encodings?.order?.field) }),
-    },
-    {
-        key: 'stops',
-        label: 'Stops',
-        type: 'discrete',
-        options: [
-            { value: 'none', label: 'None: the arrows mark them' },
-            { value: 'all', label: 'A dot at every stop' },
-            { value: 'ends', label: 'A dot where each run of one colour starts and ends' },
-        ] satisfies { value: RouteStopMode; label: string }[],
-        defaultValue: 'none',
-        accepts: (value) => typeof value === 'boolean',
-        acceptsLabel: 'true (all) or false (none)',
-        check: (ctx) => ({ applicable: Boolean(ctx.encodings?.order?.field) }),
-    },
-    {
-        key: 'stopRadius', label: 'Stop radius', type: 'continuous', min: 0, max: 12, step: 0.5,
-        check: (ctx) => ({ applicable: Boolean(ctx.encodings?.order?.field) && routeStopMode(ctx.chartProperties?.stops, Boolean(ctx.encodings?.size?.field)) !== 'none' }),
     },
 ];

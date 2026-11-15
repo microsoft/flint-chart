@@ -20,7 +20,7 @@
 import { ChartTemplateDef, ChartPropertyDef, OptionEvalContext } from '../../core/types';
 import { inferBubbleScope, pickMapScope } from '../../chart-types/geo';
 import { getPlotlyPalette, getSeriesColor, groupBy } from './utils';
-import { ROUTE_WIDTH, bearing, buildRoutes, headSize, largestMagnitude, legWidths, innerStops, routeArrows, routeOpacity, routeProperties, routeStopMode, stopRadii } from '../../chart-types/map-routes';
+import { ROUTE_WIDTH, bearing, buildRoutes, headSize, largestMagnitude, legWidths, routeArrows, widestLeg, routeDotsEverywhere, routeOpacity, routeProperties, routeStartRows, stopRadii } from '../../chart-types/map-routes';
 
 // ---------------------------------------------------------------------------
 // Projection mapping (Vega-Lite d3 projection name → Plotly geo projection type)
@@ -306,13 +306,13 @@ export const plMapDef: ChartTemplateDef = {
         }
 
         const routes = routeTraces(ctx, rows, lonField, latField, isContinuousColor ? undefined : colorField);
-        // A route's stops are drawn as on the Vega-Lite map: `stops` says which (every one, by default
-        // where `size` sizes them; each run's ends; none), each a dot of `stopRadii`'s size, haloed. A stop
-        // not drawn keeps its hover.
+        // A route's stops are drawn as on the Vega-Lite map: a dot at every one where the points carry
+        // what the routes do not (`size`, `shape`, `text`, a quantity's colour), else at each route's
+        // start; each of `stopRadii`'s size, haloed, beneath the lines. A stop not drawn keeps its hover.
         if (routes.lines.length > 0) {
-            const mode = routeStopMode(chartProperties?.stops, Boolean(sizeField));
-            const radii = stopRadii(chartProperties, sizeField, rows, routes.widths);
-            const inner = mode === 'ends' ? new Set(routes.inner.map((row) => rows[row])) : new Set();
+            const everywhere = routeDotsEverywhere({ size: Boolean(sizeField), shape: Boolean(shapeField), text: Boolean(textField), pointColor: isContinuousColor });
+            const radii = stopRadii(sizeField, rows, routes.widths);
+            const shown = new Set(routes.starts.map((row) => rows[row]));
             const indexOf = new Map(rows.map((row: any, index: number) => [row, index]));
             for (const trace of traces) {
                 const own = traceRows.get(trace);
@@ -321,13 +321,14 @@ export const plMapDef: ChartTemplateDef = {
                     ...trace.marker,
                     symbol: trace.marker?.symbol ?? 'circle',
                     size: own.map((row) => 2 * radii.radius(indexOf.get(row) ?? 0)),
-                    opacity: mode === 'none' ? 0 : own.map((row) => (inner.has(row) ? 0 : 1)),
+                    opacity: everywhere ? 1 : own.map((row) => (shown.has(row) ? 1 : 0)),
                     line: { color: '#ffffff', width: 1 },
                 };
             }
         }
-        traces.unshift(...routes.lines);
-        traces.push(...routes.heads);
+        // The casing beneath the dots, the lines and heads over them, as on the Vega-Lite map.
+        traces.unshift(...routes.casings);
+        traces.push(...routes.lines, ...routes.heads);
 
         const width = scope === 'us' ? 520 : 620;
         const height = scope === 'us' ? 320 : 360;
@@ -352,14 +353,14 @@ export const plMapDef: ChartTemplateDef = {
 const ROUTE_INK = '#4a5058';
 
 /**
- * The routes an `order` field joins the points into (`chart-types/map-routes`), beneath the points:
- * a white casing and the line — which Plotly draws along great circles between vertices — beneath
- * the points, and, unless `arrows` is false, a head over them. Plotly cannot hold a head back off a
- * stop's dot by pixels, so it stands mid-leg, turned to the leg's compass bearing there
+ * The routes an `order` field joins the points into (`chart-types/map-routes`): a white casing
+ * beneath the points, the line — which Plotly draws along great circles between vertices — and,
+ * unless `arrows` is false, a head over them. A Plotly marker is centred on its point and cannot set
+ * its tip on the stop, so the head stands mid-leg, turned to the leg's compass bearing there
  * (`angleref: 'north'`). Structure: no hover, no legend entry.
  */
-function routeTraces(ctx: any, rows: any[], lonField: string, latField: string, colorField: string | undefined): { lines: any[]; heads: any[]; widths: number[]; inner: number[] } {
-    const none = { lines: [], heads: [], widths: [], inner: [] };
+function routeTraces(ctx: any, rows: any[], lonField: string, latField: string, colorField: string | undefined): { casings: any[]; lines: any[]; heads: any[]; widths: number[]; starts: number[] } {
+    const none = { casings: [], lines: [], heads: [], widths: [], starts: [] };
     const orderField = ctx.channelSemantics.order?.field;
     if (!orderField) return none;
     const series = ctx.channelSemantics.detail?.field ?? colorField;
@@ -385,7 +386,8 @@ function routeTraces(ctx: any, rows: any[], lonField: string, latField: string, 
     const sizeField = ctx.channelSemantics.strokeWidth?.field;
     const legs = routes.flatMap((route) => route.legs.map((leg) => ({ route, leg })));
     const widths = sizeField
-        ? legWidths(legs.map(({ leg }) => rows[leg.from]?.[sizeField]), largestMagnitude(rows.map((row) => row[sizeField])))
+        ? legWidths(legs.map(({ leg }) => rows[leg.from]?.[sizeField]), largestMagnitude(rows.map((row) => row[sizeField])),
+            widestLeg(legs.map(({ leg }) => leg), legs.map(({ leg }) => rows[leg.from]?.[sizeField]), Math.sqrt(620 * 360)))
         : legs.map(() => ROUTE_WIDTH.plain);
     const widthOf = new Map(legs.map(({ leg }, index) => [leg, widths[index]]));
     const line = (path: readonly [number, number][], color: string, width: number, alpha: number) => ({
@@ -393,15 +395,13 @@ function routeTraces(ctx: any, rows: any[], lonField: string, latField: string, 
         line: { color, width }, opacity: alpha,
     });
     const legInk = (series: unknown, from: number) => (byRow ? ink(rows[from]?.[colorField!]) : ink(series));
-    const lines = sizeField || byRow
-        ? [
-            ...legs.map(({ leg }) => line(leg.path, '#ffffff', widthOf.get(leg)! + 2, Math.min(0.9, opacity + 0.05))),
-            ...legs.map(({ route, leg }) => line(leg.path, legInk(route.series, leg.from), widthOf.get(leg)!, opacity)),
-        ]
-        : [
-            ...routes.map((route) => line(route.path, '#ffffff', ROUTE_WIDTH.plain + 2, Math.min(0.9, opacity + 0.05))),
-            ...routes.map((route) => line(route.path, ink(route.series), ROUTE_WIDTH.plain, opacity)),
-        ];
+    const perLeg = Boolean(sizeField || byRow);
+    const casings = perLeg
+        ? legs.map(({ leg }) => line(leg.path, '#ffffff', widthOf.get(leg)! + 2, Math.min(0.9, opacity + 0.05)))
+        : routes.map((route) => line(route.path, '#ffffff', ROUTE_WIDTH.plain + 2, Math.min(0.9, opacity + 0.05)));
+    const lines = perLeg
+        ? legs.map(({ route, leg }) => line(leg.path, legInk(route.series, leg.from), widthOf.get(leg)!, opacity))
+        : routes.map((route) => line(route.path, ink(route.series), ROUTE_WIDTH.plain, opacity));
     const heads: any[] = [];
     if (ctx.chartProperties?.arrows !== false) {
         const arrows = routeArrows(routes, ctx.chartProperties?.curve, globe, 'middle');
@@ -419,7 +419,5 @@ function routeTraces(ctx: any, rows: any[], lonField: string, latField: string, 
             });
         }
     }
-    // The stops within a run of one colour, which `stops: 'ends'` leaves undrawn.
-    const inner = routes.flatMap((route) => innerStops(route, byRow ? (row: number) => rows[row]?.[colorField!] : undefined));
-    return { lines, heads, widths, inner };
+    return { casings, lines, heads, widths, starts: routeStartRows(routes, rows.length) };
 }

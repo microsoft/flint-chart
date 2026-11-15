@@ -28,6 +28,7 @@
 
 import type { ChartAssemblyInput, ChartEncoding, SemanticResult } from '../core/types';
 import { resolveChannelSemantics, convertTemporalData } from '../core/resolve-semantics';
+import { resolvePivotAggregate } from '../core/field-semantics';
 import { detectBandedAxisFromSemantics } from '../core/axis-detection';
 import { computeChannelBudgets, deriveStretchCaps, resolveBaseSize } from '../core/compute-layout';
 import { filterOverflow } from '../core/filter-overflow';
@@ -146,7 +147,7 @@ function pivotValues(
     seriesField: string | undefined,
     categories: Cell[],
     seriesKeys: Cell[],
-    aggregate: 'sum' | 'average',
+    aggregate: 'sum' | 'average' | 'count',
 ): (number | null)[][] {
     const SINGLE = '__single__';
     const acc = new Map<string, { sum: number; count: number }>();
@@ -163,7 +164,7 @@ function pivotValues(
     const valueAt = (cv: Cell, sv: Cell): number | null => {
         const e = acc.get(pairKey(cv, seriesField ? sv : SINGLE));
         if (!e) return null;
-        return aggregate === 'average' ? e.sum / e.count : e.sum;
+        return aggregate === 'average' ? e.sum / e.count : aggregate === 'count' ? e.count : e.sum;
     };
     return seriesKeys.map((sv) => categories.map((cv) => valueAt(cv, sv)));
 }
@@ -236,14 +237,15 @@ export function assembleImageCharts(input: ChartAssemblyInput): ImageChartsArtif
         input.chart_spec.baseSize?.height ?? DEFAULT_SIZE.height,
     );
 
+    const aggregateOf = (ch: string) => encodings[ch]?.aggregate;
     if (mapping.noAxes) {
-        buildPartToWhole(params, mapping.cht, sem, table, fieldOf);
+        buildPartToWhole(params, mapping.cht, sem, table, fieldOf, aggregateOf);
     } else if (mapping.xy) {
         buildScatter(params, table, fieldOf, isMeasure, seriesField, flintType);
     } else {
         buildAxes(
             params, mapping, flintType, sem, table,
-            fieldOf, typeOf, isMeasure, seriesField, keptCategoryOrder,
+            fieldOf, aggregateOf, typeOf, isMeasure, seriesField, keptCategoryOrder,
         );
     }
 
@@ -261,6 +263,7 @@ function buildPartToWhole(
     sem: SemanticResult,
     table: any[],
     fieldOf: (ch: string) => string | undefined,
+    aggregateOf: (ch: string) => string | undefined,
 ): void {
     const catField = fieldOf('color') ?? fieldOf('x');
     const measField = fieldOf('size') ?? fieldOf('theta') ?? fieldOf('y');
@@ -269,7 +272,7 @@ function buildPartToWhole(
     }
     const slices = distinct(table, catField);
     const measCh = fieldOf('size') === measField ? 'size' : fieldOf('theta') === measField ? 'theta' : 'y';
-    const aggregate = sem[measCh]?.aggregationDefault ?? 'sum';
+    const aggregate = resolvePivotAggregate(aggregateOf(measCh), sem[measCh]?.aggregationDefault);
     const [values] = pivotValues(table, catField, measField, undefined, slices, ['__single__'], aggregate);
 
     params.push(`cht=${cht}`);
@@ -324,6 +327,7 @@ function buildAxes(
     sem: SemanticResult,
     table: any[],
     fieldOf: (ch: string) => string | undefined,
+    aggregateOf: (ch: string) => string | undefined,
     typeOf: (ch: string) => string | undefined,
     isMeasure: (ch: string) => boolean,
     seriesField: string | undefined,
@@ -350,7 +354,7 @@ function buildAxes(
     }
 
     const seriesKeys = seriesField ? distinct(table, seriesField) : [measField];
-    const aggregate = sem[measCh]?.aggregationDefault ?? 'sum';
+    const aggregate = resolvePivotAggregate(aggregateOf(measCh), sem[measCh]?.aggregationDefault);
     const seriesValues = pivotValues(table, catField, measField, seriesField, categories, seriesKeys, aggregate);
 
     const cht = horizontal ? (mapping.horizontal as string) : mapping.cht;

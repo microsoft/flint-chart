@@ -116,7 +116,7 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 ### ![](chart-icon-column.svg) Bar Chart
 
-**Encoding channels:** `x`, `y`, `color`, `opacity`, `column`, `row`
+**Encoding channels:** `x`, `y`, `color`, `detail`, `opacity`, `column`, `row`
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
@@ -128,7 +128,7 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 ### ![](chart-icon-column-grouped.svg) Grouped Bar Chart
 
-**Encoding channels:** `x`, `y`, `group`, `color`, `column`, `row`
+**Encoding channels:** `x`, `y`, `group`, `color`, `detail`, `column`, `row`
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
@@ -138,7 +138,7 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 ### ![](chart-icon-column-stacked.svg) Stacked Bar Chart
 
-**Encoding channels:** `x`, `y`, `color`, `column`, `row`
+**Encoding channels:** `x`, `y`, `color`, `detail`, `column`, `row`
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
@@ -501,8 +501,6 @@ _No template-specific parameters._
 | `borderWidth` | number | 0 – 2 (step 0.1) | — | always | Border width |
 | `arrows` | toggle | on / off | `true` | conditional | Arrows |
 | `curve` | choice | `auto` (Auto: arcs between stops, great circles on a globe or along a track), `arc` (Arcs, bowed left of travel), `great-circle` (Great circles), `straight` (Straight (constant bearing)) | `auto` | conditional | Route curve |
-| `stops` | choice | `none` (None: the arrows mark them), `all` (A dot at every stop), `ends` (A dot where each run of one colour starts and ends), or true (all) or false (none) | `none` | conditional | Stops |
-| `stopRadius` | number | 0 – 12 (step 0.5) | — | conditional | Stop radius |
 
 ### ![](chart-icon-us-map.svg) Choropleth
 

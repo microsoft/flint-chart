@@ -77,7 +77,7 @@ import { ecFitFrame } from './frame';
 import { ecApplyLayoutToSpec, ecApplyTooltips } from './instantiate-spec';
 import { ecCombineFacetPanels } from './facet';
 import { DEFAULT_COLORS } from './templates/utils';
-import { inferVisCategory, computeZeroDecision } from '../core/semantic-types';
+import { inferVisCategory, computeZeroDecision, zeroMarkType } from '../core/semantic-types';
 import { decideColorMaps } from '../core/color-decisions';
 import { getPaletteForScheme } from './colormap';
 import { normalizeStaticSeries } from '../core/static-series';
@@ -210,7 +210,7 @@ export function assembleECharts(input: ChartAssemblyInput): any {
     );
 
     // Finalize zero-baseline (requires template mark knowledge)
-    const effectiveMarkType = templateMarkType || 'point';
+    const effectiveMarkType = zeroMarkType(chartTemplate.chart, templateMarkType);
     for (const [channel, cs] of Object.entries(channelSemantics)) {
         if ((channel === 'x' || channel === 'y') && cs.type === 'quantitative') {
             const numericValues = data

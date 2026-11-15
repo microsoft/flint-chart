@@ -109,6 +109,7 @@ describe('MCP server', () => {
       ['theme', 'flint://theme-skill'],
       ['interaction', 'flint://interaction-skill'],
       ['board', 'flint://board-skill'],
+      ['app', 'flint://app-skill'],
     ]) {
       const res: any = await client.callTool({ name: 'get_flint_skill', arguments: { skill } });
       const resource: any = await client.readResource({ uri });
@@ -124,8 +125,15 @@ describe('MCP server', () => {
     });
     const text: string = res.content[0].text;
     expect(text.startsWith('## Update the chart\n')).toBe(true);
-    expect(text).toContain('### Step 2 — choose ops');
-    expect(text).not.toContain('## Use Flint in an application');
+    expect(text).toContain('### Ops');
+    expect(text).not.toContain('## Worked examples');
+
+    const sub: any = await client.callTool({
+      name: 'get_flint_skill',
+      arguments: { skill: 'interaction', section: 'muted annotations' },
+    });
+    expect(sub.content[0].text.startsWith('### Muted annotations\n')).toBe(true);
+    expect(sub.content[0].text).not.toContain('### The state');
 
     const bad: any = await client.callTool({
       name: 'get_flint_skill',
@@ -142,6 +150,7 @@ describe('MCP server', () => {
     expect(() => skillSection(text, 'Update')).toThrow('No section "Update"');
     expect(() => skillSection(text, 'Upd')).toThrow('No section "Upd"');
     expect(skillSection(text, 'Update the board')).toBe('## Update the board\nD\n');
+    expect(skillSection(text, 'write spec')).toBe('## Step 4 — write the spec\nA\n');
   });
 
   it('render_chart returns inline PNG image content', async () => {
@@ -180,6 +189,15 @@ describe('MCP server', () => {
     expect(Array.isArray(payload.warnings)).toBe(true);
   });
 
+  it('checks the arguments of a tool that refers to show\'s schema against the full schema', async () => {
+    const { tools } = await client.listTools();
+    const compile = tools.find((t) => t.name === 'compile_chart') as any;
+    expect(compile.inputSchema.properties.chart_spec).toEqual({ description: 'As `chart.chart_spec` on the show tool.' });
+    const res: any = await client.callTool({ name: 'compile_chart', arguments: { backend: 'vegalite', data: { values: [] }, chart_spec: { encodings: {} } } });
+    expect(res.isError).toBe(true);
+    expect(res.content[0].text).toContain('Invalid arguments: chart_spec.chartType: Required.');
+  });
+
   it('validate_chart flags an unknown chart type as invalid', async () => {
     const res: any = await client.callTool({
       name: 'validate_chart',
@@ -190,7 +208,7 @@ describe('MCP server', () => {
       },
     });
     expect(res.content).toHaveLength(1);
-    expect(res.content[0].text).toMatch(/^Nothing is on screen: fix what this report lists, then call show with the same spec\.\n- ✗ .*Not A Real Chart/);
+    expect(res.content[0].text).toMatch(/^Nothing is on screen: fix what this report lists, then call show with the whole spec\.\nFix before it draws:\n- ✗ .*Not A Real Chart/);
   });
 
   it('validate_chart accepts a valid spec, and keeps the JSON result for other backends', async () => {
@@ -254,13 +272,22 @@ describe('MCP server', () => {
     expect(payload[0].count).toBeGreaterThan(10);
     expect(payload[0].chartTypes[0]).toHaveProperty('chartType');
     expect(payload[0].chartTypes[0]).toHaveProperty('channels');
-    expect(payload[0].chartTypes[0]).toHaveProperty('interactions');
-    const bar = payload[0].chartTypes.find((entry: any) => entry.chartType === 'Bar Chart');
+    expect(payload[0].chartTypes[0]).toHaveProperty('note');
+    expect(payload[0].chartTypes[0]).not.toHaveProperty('interactions');
+    // Every Vega-Lite type carries its guide: a type without one leaves the agent no properties.
+    expect(payload[0].chartTypes.filter((entry: any) => !entry.note).map((entry: any) => entry.chartType)).toEqual([]);
+
+    const detail = async (chartType: string) => JSON.parse((await client.callTool({
+      name: 'list_chart_types',
+      arguments: { backend: 'vegalite', chartType },
+    }) as any).content[0].text);
+    const bar = await detail('Bar Chart');
     expect(bar.interactions).toContain('click-highlight');
     expect(bar.interactions).toContain('drag-reorder');
     expect(bar.interactions).not.toContain('brush-angle');
-    const kpi = payload[0].chartTypes.find((entry: any) => entry.chartType === 'KPI Card');
-    expect(kpi.interactions).not.toContain('legend-toggle');
+    expect(bar.channels).toContain('detail');
+    expect((await detail('KPI Card')).interactions).not.toContain('legend-toggle');
+    expect((await detail('choropleth map')).chartType).toBe('Choropleth');
   });
 
   it('validate_chart reports the interaction_spec entries the chart would drop', async () => {
@@ -427,7 +454,7 @@ describe('MCP server', () => {
     const read = await client.readResource({ uri: 'flint://agent-skill' });
     expect(read.contents[0].mimeType).toBe('text/markdown');
     const skillText = resourceText(read.contents[0]);
-    expect(skillText).toContain('# flint-chart: authoring and using a chart spec');
+    expect(skillText).toContain('# flint-chart: authoring a chart spec');
     expect(skillText).toContain('validate_chart');
   });
 
@@ -452,7 +479,7 @@ describe('MCP server', () => {
     const read = await client.readResource({ uri: 'flint://interaction-skill' });
     const skillText = resourceText(read.contents[0]);
     expect(skillText).toContain('# flint-chart: interactions and updates on a chart');
-    expect(skillText).toContain('Return the bare object');
+    expect(skillText).toContain('Fix or drop what it warns about.');
   });
 
   it('opens a card only from show, linked to the one UI resource', async () => {

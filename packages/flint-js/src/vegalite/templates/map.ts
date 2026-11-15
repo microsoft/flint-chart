@@ -1052,7 +1052,7 @@ export const mapDef: ChartTemplateDef = {
         }
         // `text` names the points, beside each, where it has room; the dots never draw it themselves.
         delete pointLayer(spec)?.encoding?.text;
-        const labels = addPointLabels(spec, { rows, resolved: ctx.resolvedEncodings, chartProperties: ctx.chartProperties, routes, globe: frame.globe });
+        const labels = addPointLabels(spec, { rows, resolved: ctx.resolvedEncodings, routes, globe: frame.globe });
         if (labels?.dropped) {
             spec._warnings = [...(spec._warnings ?? []), {
                 severity: 'info', code: 'map-labels-dropped', channel: 'text', field: ctx.resolvedEncodings.text.field,

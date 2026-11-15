@@ -15,7 +15,7 @@ import { compile } from 'vega-lite';
 import { parse, View } from 'vega';
 import type { ChartAssemblyInput } from 'flint-chart';
 import { THEME_PRESETS } from 'flint-chart';
-import { assemblePreviewSpec, APP_PREVIEW_CANVAS_SIZE, usesAutoPreviewSize, withAppPreviewDefaults } from '../ui/src/render.js';
+import { assemblePreviewSpec, APP_PREVIEW_CANVAS_SIZE, withAppPreviewDefaults } from '../ui/src/render.js';
 
 /** A titled, decked, banded bar chart — the shape a real tool call produces. */
 function bars(themeId?: string): ChartAssemblyInput {
@@ -77,9 +77,10 @@ describe('the preview renders into the room it is given', () => {
   });
 
   it('lets a sparse band chart spend the frame in the layout, not after it', async () => {
+    // The room is wider than the chart may grow, so the bands spend the 1.5x ceiling.
     const sparse = await renderedSize(assemblePreviewSpec(bars(), { width: 584 }));
-    expect(sparse.width).toBeGreaterThan(584 * 0.75);
-    expect(sparse.width).toBeLessThanOrEqual(584 * 1.08);
+    expect(sparse.width).toBeGreaterThan(450 * 0.75);
+    expect(sparse.width).toBeLessThanOrEqual(450 * 1.08);
     // The bands are wide enough for the labels, so the layout lays them flat.
     const spec = assemblePreviewSpec(bars(), { width: 584 }) as any;
     expect(spec.encoding?.x?.axis?.labelAngle ?? 0).toBe(0);
@@ -92,38 +93,61 @@ describe('the preview renders into the room it is given', () => {
     expect(collapsed).toEqual(absent);
   });
 
-  it('still lets a caller state its own size', async () => {
-    // A stated size opts out of the preview's sizing entirely, so the measured
-    // frame must make no difference at all.
+  it('keeps a stated canvasSize where it fits, and lays it out again where it does not', async () => {
     const stated = () => {
       const input = bars('swiss');
-      input.chart_spec.baseSize = { width: 700, height: 300 };
-      input.chart_spec.canvasSize = { width: 700, height: 300 };
+      input.chart_spec.baseSize = { width: 400, height: 300 };
+      input.chart_spec.canvasSize = { width: 400, height: 300 };
       return input;
     };
-    const narrowFrame = await renderedSize(assemblePreviewSpec(stated(), { width: 320 }));
     const wideFrame = await renderedSize(assemblePreviewSpec(stated(), { width: 584 }));
     const noFrame = await renderedSize(assemblePreviewSpec(stated()));
-    expect(narrowFrame).toEqual(wideFrame);
-    expect(narrowFrame).toEqual(noFrame);
+    expect(wideFrame).toEqual(noFrame);
+    // A host narrower than the stated size is the safeguard: the chart is laid out for it, not shrunk.
+    const narrowFrame = await renderedSize(assemblePreviewSpec(stated(), { width: 320 }));
+    expect(narrowFrame.width).toBeLessThanOrEqual(320 * 1.08);
   });
 
   it('fits sparse bands to the room unless the caller chose otherwise', () => {
     expect(withAppPreviewDefaults(bars()).options?.bandStepFit).toBe(1);
     const chosen = { ...bars(), options: { bandStepFit: 0 } };
     expect(withAppPreviewDefaults(chosen).options?.bandStepFit).toBe(0);
-    const stated = bars();
-    stated.chart_spec.baseSize = { width: 700, height: 300 };
-    expect(withAppPreviewDefaults(stated)).toBe(stated);
   });
 
-  it('lays the live chart out for the frame only when the preview picks the size', () => {
-    // The live chart relays out to the frame under the same rule the export uses.
-    expect(usesAutoPreviewSize(bars())).toBe(true);
+  it('grows a chart up to 1.5x its footprint, and never past the room', () => {
+    const plain = withAppPreviewDefaults(bars(), { width: 900 });
+    expect(plain.chart_spec.baseSize).toEqual({ width: 300, height: 300 });
+    expect(plain.chart_spec.canvasSize).toEqual({ width: 450, height: 450 });
+    // The agent knows where it is shown: its footprint leads, under the same rule.
     const stated = bars();
-    stated.chart_spec.canvasSize = { width: 700, height: 300 };
-    expect(usesAutoPreviewSize(stated)).toBe(false);
+    stated.chart_spec.baseSize = { width: 760, height: 480 };
+    const fitted = withAppPreviewDefaults(stated, { width: 640 });
+    expect(fitted.chart_spec.baseSize).toEqual({ width: 640, height: 468 });
+    expect(fitted.chart_spec.canvasSize).toEqual({ width: 640, height: 468 });
   });
+
+  it('keeps a stated baseSize inside the room, so dense data does not shrink the type', async () => {
+    // Weekly closes over a decade: left uncapped, the layout stretches well past the frame.
+    const values = [];
+    for (let week = 0; week < 520; week += 1) {
+      for (const symbol of ['A', 'B', 'C']) {
+        values.push({ symbol, date: new Date(Date.UTC(2013, 0, 4 + week * 7)).toISOString().slice(0, 10), close: 100 + week + symbol.charCodeAt(0) });
+      }
+    }
+    const input: ChartAssemblyInput = {
+      data: { values },
+      semantic_types: { symbol: 'Category', date: 'Date', close: 'Price' },
+      chart_spec: {
+        chartType: 'Line Chart',
+        encodings: { x: { field: 'date' }, y: { field: 'close' }, color: { field: 'symbol' } },
+        title: 'Closes',
+        baseSize: { width: 760, height: 480 },
+      },
+    };
+    const size = await renderedSize(assemblePreviewSpec(input, { width: 640 }));
+    expect(size.width).toBeLessThanOrEqual(640 * 1.08);
+  });
+
 
   it('leaves the house in charge of the type', async () => {
     // The frame decides how much room there is, not how big the type is: the

@@ -48,7 +48,7 @@ Tools:
 
 Resources:
   flint://agent-skill, flint://theme-skill, flint://interaction-skill,
-  flint://board-skill, flint://chart-types, ui://flint-chart/view.html
+  flint://board-skill, flint://app-skill, flint://chart-types, ui://flint-chart/view.html
 
 Prompts:
   author_flint_chart, author_flint_theme, author_flint_interaction

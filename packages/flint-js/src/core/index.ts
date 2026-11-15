@@ -192,6 +192,8 @@ export {
     fullValueFormat,
     resolveDefaultVisType,
     resolveAggregationDefault,
+    resolveDisplayAggregate,
+    resolvePivotAggregate,
     resolveZeroClassFromAnnotation,
     resolveScaleType,
     resolveDomainConstraint,

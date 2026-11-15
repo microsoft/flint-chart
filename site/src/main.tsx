@@ -22,21 +22,16 @@ import { McpStories } from './playground/McpStories';
 import { Labs } from './playground/Labs';
 import { DemoWall } from './playground/DemoWall';
 import { ThemeLab } from './playground/ThemeLab';
-import { ThemeLabR2 } from './playground/ThemeLabR2';
-import { ThemeLabReal } from './playground/ThemeLabReal';
 import { NewThemeTest } from './playground/new-theme-test/NewThemeTest';
 import { ThemeImprovement } from './playground/theme-improvement/ThemeImprovement';
-import { LabelAngles } from './playground/label-angles/LabelAngles';
 import { CanvasSqueeze } from './playground/canvas-squeeze/CanvasSqueeze';
 import { MapsLab } from './playground/MapsLab';
 import { ColorLab } from './playground/ColorLab';
 import { ColorRangeLab } from './playground/ColorRangeLab';
 import { TalkDeckRoute, TalkIndex } from './talk/TalkDeck';
 import { DevDesign } from './routes/DevDesign';
-import { InteractionEval } from './playground/InteractionEval';
 import { BandStretchingLab } from './playground/BandStretchingLab';
 import { TitleBalanceLab } from './playground/TitleBalanceLab';
-import { LabelExperimentLab } from './playground/LabelExperimentLab';
 import { AxisLabelLab } from './playground/AxisLabelLab';
 import { TitleWrapLab } from './playground/TitleWrapLab';
 import { CalendarAxisLab } from './playground/CalendarAxisLab';
@@ -60,10 +55,8 @@ import { InteractionDashboardLab } from './playground/InteractionDashboardLab';
 import { ExternalToChartLab } from './playground/ExternalToChartLab';
 import { ChartToExternalLab } from './playground/ChartToExternalLab';
 import { InteractiveDataReportLab } from './playground/InteractiveDataReportLab';
-import { StyleReferences } from './playground/StyleReferences';
 import { FullTestCases } from './playground/FullTestCases';
 import { DebugGym } from './playground/DebugGym';
-import { AgentComparison } from './playground/AgentComparison';
 import { DenseMarks } from './playground/DenseMarks';
 import { DensityLab } from './playground/DensityLab';
 import { LegendLab } from './playground/LegendLab';
@@ -74,7 +67,10 @@ import { BaselineLab } from './playground/BaselineLab';
 import { TooltipCompare } from './playground/TooltipCompare';
 import { BaselineSweep } from './playground/BaselineSweep';
 import { BackendLayoutLab } from './playground/backend-layout/BackendLayoutLab';
-import { EChartsFixesLab } from './playground/backend-layout/EChartsFixesLab';
+import { EvalPage } from './routes/eval/Eval';
+import { TabbedLab } from './playground/TabbedLab';
+import { InteractionResults } from './routes/eval/InteractionResults';
+import { McpResults } from './routes/eval/McpResults';
 import { LocaleProvider, useLocale } from './i18n/LocaleContext';
 import type { Locale } from './i18n/locales';
 import { localePath } from './i18n/paths';
@@ -119,7 +115,8 @@ function AppRoutes({ locale }: { locale: Locale }) {
         {/* Playground is public — poke around and play with the widgets. */}
         <Route path="dev-playground" element={<Navigate to={localePath('/playground/illustrations', locale)} replace />} />
         <Route path="dev/design" element={<DevDesign />} />
-        <Route path="dev/interaction-eval" element={<InteractionEval />} />
+        <Route path="dev/interaction-eval" element={<Navigate to={localePath('/playground/eval/interactions', locale)} replace />} />
+        <Route path="dev/eval/*" element={<Navigate to={localePath('/playground/eval', locale)} replace />} />
         <Route path="dev/*" element={<Navigate to={localePath('/playground', locale)} replace />} />
         <Route path="playground" element={<PlaygroundShell />}>
           <Route index element={<Navigate to="illustrations" replace />} />
@@ -133,22 +130,37 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="theme-wall" element={<Navigate to={localePath('/themes', locale)} replace />} />
           <Route path="theme-labs" element={<ThemeLab />} />
           <Route path="row-names" element={<RowNamesDemo />} />
-          <Route path="theme-lab-r2" element={<ThemeLabR2 />} />
-          <Route path="theme-lab-real" element={<ThemeLabReal />} />
+          <Route path="theme-lab-r2" element={<Navigate to="../theme-labs?data=generated" replace />} />
+          <Route path="theme-lab-real" element={<Navigate to="../theme-labs" replace />} />
           <Route path="new-theme-test" element={<NewThemeTest />} />
           <Route path="theme-improvement" element={<ThemeImprovement />} />
-          <Route path="label-angles" element={<LabelAngles />} />
-          <Route path="canvas-squeeze" element={<CanvasSqueeze />} />
+          <Route path="canvas-fit" element={<TabbedLab tabs={[
+            { id: 'squeeze', label: 'Canvas squeeze', element: <CanvasSqueeze /> },
+            { id: 'bands', label: 'Band stretching', element: <BandStretchingLab /> },
+          ]} />} />
+          <Route path="canvas-squeeze" element={<Navigate to="../canvas-fit" replace />} />
           <Route path="maps" element={<MapsLab />} />
-          <Route path="color" element={<ColorLab />} />
-          <Route path="color-range" element={<ColorRangeLab />} />
-          <Route path="band-stretching" element={<BandStretchingLab />} />
-          <Route path="label-experiment" element={<LabelExperimentLab />} />
+          <Route path="colour" element={<TabbedLab tabs={[
+            { id: 'options', label: 'Colour options', element: <ColorLab /> },
+            { id: 'range', label: 'Colour range', element: <ColorRangeLab /> },
+            { id: 'binned', label: 'Binned colour', element: <BinningLab /> },
+          ]} />} />
+          <Route path="color" element={<Navigate to="../colour" replace />} />
+          <Route path="color-range" element={<Navigate to="../colour?tab=range" replace />} />
+          <Route path="band-stretching" element={<Navigate to="../canvas-fit?tab=bands" replace />} />
           <Route path="axis-label" element={<AxisLabelLab />} />
-          <Route path="title-wrap" element={<TitleWrapLab />} />
-          <Route path="title-balance" element={<TitleBalanceLab />} />
-          <Route path="calendar-axis" element={<CalendarAxisLab />} />
-          <Route path="categorical-temporal" element={<CategoricalTemporalLab />} />
+          <Route path="titles" element={<TabbedLab tabs={[
+            { id: 'wrap', label: 'Title wrap', element: <TitleWrapLab /> },
+            { id: 'balance', label: 'Title balance', element: <TitleBalanceLab /> },
+          ]} />} />
+          <Route path="title-wrap" element={<Navigate to="../titles" replace />} />
+          <Route path="title-balance" element={<Navigate to="../titles?tab=balance" replace />} />
+          <Route path="time-axes" element={<TabbedLab tabs={[
+            { id: 'calendar', label: 'Calendar axes', element: <CalendarAxisLab /> },
+            { id: 'categorical', label: 'Categorical temporal', element: <CategoricalTemporalLab /> },
+          ]} />} />
+          <Route path="calendar-axis" element={<Navigate to="../time-axes" replace />} />
+          <Route path="categorical-temporal" element={<Navigate to="../time-axes?tab=categorical" replace />} />
           <Route path="release-examples">
             <Route index element={<Navigate to="1.0.2" replace />} />
             <Route path="1.0.2" element={<ReleaseExamples102 />} />
@@ -162,9 +174,14 @@ function AppRoutes({ locale }: { locale: Locale }) {
               <Route key={story} path={story} element={<Navigate to="../greek" replace />} />
             ))}
           </Route>
-          <Route path="overflow-viewport" element={<OverflowViewportLab />} />
-          <Route path="zoom-clipping" element={<ZoomClippingLab />} />
-          <Route path="overlay-containment" element={<OverlayContainmentLab />} />
+          <Route path="viewport" element={<TabbedLab tabs={[
+            { id: 'overflow', label: 'Overflow viewport', element: <OverflowViewportLab /> },
+            { id: 'zoom', label: 'Zoom clipping', element: <ZoomClippingLab /> },
+            { id: 'overlay', label: 'Overlay containment', element: <OverlayContainmentLab /> },
+          ]} />} />
+          <Route path="overflow-viewport" element={<Navigate to="../viewport" replace />} />
+          <Route path="zoom-clipping" element={<Navigate to="../viewport?tab=zoom" replace />} />
+          <Route path="overlay-containment" element={<Navigate to="../viewport?tab=overlay" replace />} />
           <Route path="layout-inspector" element={<LayoutInspector />} />
           <Route path="layout-plan" element={<LayoutPlanLab />} />
           <Route path="interaction-test-cases" element={<ClickFocusLab />} />
@@ -179,26 +196,32 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="chart-to-external" element={<ChartToExternalLab />} />
           <Route path="bespoke-interaction" element={<Navigate to={localePath('/interactions/advanced', locale)} replace />} />
           <Route path="interactive-data-report" element={<InteractiveDataReportLab />} />
-          <Route path="style-references/:house?" element={<StyleReferences />} />
           <Route path="debug-gym" element={<DebugGym />} />
-          <Route path="agent-comparison" element={<AgentComparison />} />
-          <Route path="dense-marks" element={<DenseMarks />} />
-          <Route path="density" element={<DensityLab />} />
+          <Route path="dense-marks" element={<Navigate to="../density?tab=d3" replace />} />
+          <Route path="density" element={<TabbedLab tabs={[
+            { id: 'rules', label: 'Density rules', element: <DensityLab /> },
+            { id: 'd3', label: 'D3 vs Flint', element: <DenseMarks /> },
+          ]} />} />
           <Route path="legend" element={<LegendLab />} />
-          <Route path="binning" element={<BinningLab />} />
+          <Route path="binning" element={<Navigate to="../colour?tab=binned" replace />} />
           <Route path="annotation-captions" element={<AnnotationCaptionLab />} />
           <Route path="muted-annotations" element={<MutedAnnotations />} />
           <Route path="baseline" element={<BaselineLab />} />
           <Route path="tooltip-compare" element={<TooltipCompare />} />
           <Route path="baseline-sweep" element={<BaselineSweep />} />
+          <Route path="mcp-eval" element={<Navigate to="../eval/mcp" replace />} />
+          {import.meta.env.DEV && (
+            <Route path="eval" element={<EvalPage />}>
+              <Route index element={<Navigate to="interactions" replace />} />
+              <Route path="interactions" element={<InteractionResults />} />
+              <Route path="mcp" element={<McpResults />} />
+            </Route>
+          )}
           <Route path="backend-layout" element={<Navigate to="echarts" replace />} />
-          <Route path="backend-layout-echarts-fixes" element={<EChartsFixesLab />} />
           <Route path="backend-layout/:backend" element={<BackendLayoutLab />} />
           <Route path="year-legend" element={<Navigate to="../debug-gym" replace />} />
           {/* The Swiss and cartoon labs were the same page twice; keep the
               links they were reached by working. */}
-          <Route path="swiss-lab" element={<Navigate to="../style-references/swiss" replace />} />
-          <Route path="cartoon-lab" element={<Navigate to="../style-references/cartoon" replace />} />
           <Route path="full-test-cases" element={<FullTestCases />} />
         </Route>
         {/* Tutorials merged into Documentation as the "Quick start" group. */}

@@ -9,6 +9,7 @@ from .semantic_types import (
     get_zero_class,
     infer_ordinal_sort_order,
     infer_vis_category,
+    is_measure_type,
 )
 from .type_registry import get_registry_entry, is_registered
 
@@ -217,6 +218,20 @@ def resolve_aggregation_default(semantic_type: str) -> Optional[str]:
     if role == "intensive":
         return "average"
     return None
+
+
+def resolve_display_aggregate(cs: Optional[dict], aggregate: Optional[str] = None) -> Optional[str]:
+    """Port of resolveDisplayAggregate: how a chart combines a measure's rows per category.
+
+    Types with a default keep it; a measure with none (``Number``) takes the
+    encoding's own aggregate, else the mean.
+    """
+    if not cs or cs.get("aggregationDefault"):
+        return (cs or {}).get("aggregationDefault")
+    semantic_type = (cs.get("semanticAnnotation") or {}).get("semanticType")
+    if not semantic_type or not is_measure_type(semantic_type):
+        return None
+    return "sum" if aggregate in ("sum", "count") else "average"
 
 
 # ---------------------------------------------------------------------------

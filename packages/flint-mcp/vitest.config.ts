@@ -10,6 +10,7 @@ export default defineConfig({
         find: /^flint-chart\/(react|interactive)\/(vegalite|echarts|chartjs|plotly)$/,
         replacement: fileURLToPath(new URL('../flint-js/src/', import.meta.url)) + '$1/$2.ts',
       },
+      { find: /^flint-chart\/geo\/lazy\/([\w-]+)$/, replacement: fileURLToPath(new URL('../flint-js/src/geo/lazy/', import.meta.url)) + '$1.js' },
       { find: 'flint-chart/interactive', replacement: fileURLToPath(new URL('../flint-js/src/interactive/index.ts', import.meta.url)) },
       { find: 'flint-chart', replacement: fileURLToPath(new URL('../flint-js/src/index.ts', import.meta.url)) },
     ],

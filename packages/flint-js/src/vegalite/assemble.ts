@@ -79,7 +79,7 @@ import { normalizeChartProperties } from '../core/normalize-properties';
 import { resolveChartDefaults, resolveCompileDefaults, resolveGeometry, resolveValueLabelChoice } from '../core/theme/ground';
 import { resolveThemeSpec } from '../core/theme/presets';
 import { chartChrome, withChrome } from '../core/theme/chrome';
-import { alignBandOrders, applyHeaderFurniture, applySourceLine, realizeThemeVegaLite, realizeValueLabelsVegaLite, vegaLiteBuiltFacts } from './theme';
+import { alignBandOrders, applyHeaderFurniture, applySourceLine, realizeThemeVegaLite, realizeValueLabelsVegaLite, sealDetailSegments, vegaLiteBuiltFacts } from './theme';
 import { applyChartValueColors } from './value-colors';
 import { vlCaseKeyLabels, vlWriteKeyLayout } from './key-layout';
 import { vlReserveEnclosureRoom, vlReserveNoteRoom } from './note-room';
@@ -622,6 +622,7 @@ function emitVegaLite(input: ChartAssemblyInput, prepared: VegaLitePreparation, 
             vgObj.background = plan.options.background;
         }
     }
+    sealDetailSegments(vgObj);
     // Value labels and row names share the bars' band: a sort by value is stated once for every layer.
     alignBandOrders(vgObj, values);
     // The header — a figure label, a rule on the canvas edge, a logo beside the headline — is the

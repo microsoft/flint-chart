@@ -305,8 +305,8 @@ const CASES: MapCase[] = [
   {
     id: 'route-stops', group: 'Routes', title: 'A route of stops: the Odyssey (order: Stop)',
     check: [
-      'One line through the 14 stops in order, each leg bowed to the left of travel; a head at each leg’s end, short of the dot',
-      'White casing under the line; the line in neutral ink, the points their own colour', 'Frame takes in the bowed legs',
+      'One line through the 14 stops in order, each leg bowed to the left of travel; a head at each leg’s end, its tip on the stop',
+      'A dot at Troy only, where the route starts; the heads mark every other stop', 'White casing under the line', 'Frame takes in the bowed legs',
     ],
     input: route(ODYSSEY),
   },
@@ -350,7 +350,7 @@ const CASES: MapCase[] = [
   {
     id: 'route-width', group: 'Routes', title: 'Width by a measure (strokeWidth: Crew)',
     check: [
-      'Each leg as wide as the crew that sailed it, from zero (1 to 8 px); a key reads the widths; the stops plain dots',
+      'Each leg as wide as the crew that sailed it, from zero (1 to 8 px); a key reads the widths; a dot at the start only',
       'Each head sized to its line and joined to it: the line ends inside the head, no rim',
       'A leg too short on screen for its head keeps its line alone; zoom in and the head returns',
     ],
@@ -365,7 +365,7 @@ const CASES: MapCase[] = [
     check: [
       'Each stop a dot sized by the days spent there, from zero by area (2.5 to 7 px), with a key of its own; Ogygia the largest',
       'Each leg as wide as its crew, with its own line-width key: the two keys do not merge',
-      'Stops are drawn without asking (size sets them to all); each head stops at the edge of the next dot',
+      'Size draws every stop as a dot, beneath the routes; each head’s tip sits on the next dot, halo and all merged',
     ],
     input: {
       data: { values: ODYSSEY.map((row) => ({ ...row, Crew: CREW[row.Stop - 1], Days: DAYS[row.Stop - 1] })) },
@@ -406,11 +406,11 @@ const CASES: MapCase[] = [
   },
   {
     id: 'route-labels', group: 'Labels and shapes', title: 'A route’s stops named (text: Place)',
-    check: ['Each stop named beside it, clear of the others; labels follow a pan or zoom'],
+    check: ['Each stop named beside it, clear of the others; labels follow a pan or zoom', 'A label anchors a dot at every stop'],
     input: {
       data: { values: ODYSSEY },
       semantic_types: { Stop: 'Rank', Place: 'Name', longitude: 'Longitude', latitude: 'Latitude' },
-      chart_spec: { chartType: 'Map', encodings: { longitude: 'longitude', latitude: 'latitude', order: 'Stop', text: 'Place' }, chartProperties: { stops: 'all' } },
+      chart_spec: { chartType: 'Map', encodings: { longitude: 'longitude', latitude: 'latitude', order: 'Stop', text: 'Place' }, chartProperties: {} },
     },
   },
   {

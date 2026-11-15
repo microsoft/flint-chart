@@ -86,7 +86,7 @@ const TILES: Record<string, MapTile> = {
       { chartType: 'Choropleth', title: 'Unemployment, 2009', encodings: { id: 'FIPS', color: 'Rate', detail: 'Place' }, chartProperties: { region: 'us', level: 'auto' } }),
   },
   odyssey: {
-    id: 'odyssey', caption: 'Leg widths, stops and notes · strokeWidth, stops, updates', box: ODYSSEY_BOX, drawAt: { width: 520, height: 525 },
+    id: 'odyssey', caption: 'Leg widths and notes · strokeWidth, updates', box: ODYSSEY_BOX, drawAt: { width: 520, height: 525 },
     input: {
       ...ODYSSEY, chart_spec: { ...ODYSSEY.chart_spec, canvasSize: { width: 520, height: 525 } }, interaction_spec: undefined, updates: odysseyOpeningUpdates(ODYSSEY_LOOK),
     } as ChartAssemblyInput,
@@ -132,8 +132,9 @@ const NOTES = `## Flint 1.0.2
 - **Choropleth classes:** five quantile classes by default; \`classes\` takes \`equal\`, \`jenks\` or \`continuous\`.
 - **Map styles:** \`mapStyle\` names a ground (\`atlas\`, \`dark\`, \`muted\`, …) or restates its colours (\`{ sea, land, coast, border }\`).
 - **US counties:** \`level: "auto"\` draws states, then counties as you zoom in.
-- **Routes:** \`order\` joins points into routes, each leg bowed with an arrowhead; \`strokeWidth\` sets each leg's width and \`stops\` draws the stops.
-- **Labels:** \`text\` names a map's points beside them and a choropleth's regions at their middles.
+- **Routes:** \`order\` joins points into routes, each leg bowed with an arrowhead whose tip sits on its stop; \`strokeWidth\` sets each leg's width. A route draws a dot at its start; every stop takes a dot where \`size\`, \`shape\`, \`text\` or a quantity's \`color\` asks for one, laid beneath the lines.
+- **Route density:** arrowheads are sized to their lines, and a map crowded with long legs draws them thinner. Short legs keep a small head; where many legs arrive at one stop, their heads fan round it and only the widest twelve keep one.
+- **Labels:** \`text\` names a map's points beside them and a choropleth's regions at their middles. A crowded map names its most salient points first (the largest, or the ends of the colour scale), leaving the rest to their tooltips.
 - **Updates on maps:** overlays and region notes are placed by longitude and latitude, and follow a pan, a zoom or a turning globe.
 
 ### Layout
@@ -146,11 +147,39 @@ const NOTES = `## Flint 1.0.2
 - \`set-annotation\` is deprecated: write \`annotate-text\`.
 
 ### Fixes
-- A \`Percentage\` stored as fractions prints as percentages (16.4%, not 0.164).
-- Bars sorted by value stay in value order under every house.
-- Dates that arrive as ISO timestamps are read as dates.
-- A chart with no theme draws on the host's background.
-- A theme that \`extends\` a house and recolours its text or page takes the house's type with it.
+
+**Reading data**
+- **ISO timestamps are read as dates.** Dates that arrive as timestamps (\`"2005-05-01T00:00:00.000"\`, \`"…Z"\`, \`"2005-05-01 00:00:00"\`, as a database \`DATE\` column often serialises) are read as dates under \`Year\`, \`YearMonth\`, \`Date\` and the other calendar types. A midnight timestamp becomes its date, so the axis prints short labels (\`Jun · Jul · Aug\`) instead of full timestamps. A timestamp without a zone is read in UTC, so marks sit on their date in every time zone (a Pacific machine used to draw them 7 hours late).
+- **Percentages stored as fractions print as percentages.** A \`Percentage\` field holding 0.164 prints \`16.4%\`, not \`0.164\`, without needing an \`intrinsicDomain\`.
+- **A percentage's scale can be stated.** The new \`percentScale\` annotation (\`"fraction"\` or \`"percent"\`) settles how a percentage is stored instead of guessing from the values. Before, a growth rate stored as 2.4 (for 240%) printed as "2.4%", and the same column could be formatted two ways depending on which rows a query returned. Axes, tooltips, domains and KPI cards all follow it (#154).
+
+**Layout and sizing**
+- **A chart stays inside its \`canvasSize\`.** A Vega-Lite chart that read well only when drawn larger than its box (a key beside a full-width plot, a title over a full-height one) used to overflow and get cut off by hosts that draw the SVG at its own size. It is now laid out again for the smaller room: the plot gives up space so keys, labels and title fit. The plot keeps at least half of each side, and no value is cut or label turned to make room. \`canvasFit: 'off'\` keeps the old drawing.
+- **No more few-pixel overrun.** The canvas fit reserved 8 px of padding where Vega-Lite pads by 5, so a chart sized to its box ran slightly over it.
+- **Value labels past horizontal bars extend the axis.** The room kept for labels at bar ends now runs the axis, ticks and gridlines on to the plot's edge, instead of leaving an empty stretch with no scale. Bars keep their lengths.
+- **Stepped colour keys fit beside short plots.** A binned colour key next to the plot no longer runs past it: Vega-Lite drew the ramp at its 200 px default, twice the height of a short heatmap.
+- **Bars sorted by value stay sorted under every house.** With \`sortBy: "x"\`, the NYT, Economist, Power BI, Pop and De Stijl houses drew bars in name order, because their value labels and row names sit on the same band and Vega-Lite drops a sort the layers don't share. Datawrapper's names-above-bars layout failed to compile in 1.0.1. Every layer now states the same order.
+- **A chart with no theme draws on the host's background.** \`options.background\` and the \`background\` taken by the React view, the interactive renderer and \`renderSvg\` now reach the chart, where Vega-Lite's default white used to win. A theme with its own canvas keeps it.
+
+**Keys and labels**
+- **Size keys print the values they list.** A size key for 0.5, 1 and 2.5 used to read "1, 1, 3". Each key now carries a format precise enough for its values, and its width is measured from those labels. Plotly and ECharts size keys no longer round small values to 0.
+
+**Interactions and updates**
+- **Filters work on aggregated charts.** \`filterControls\` on a chart with an \`aggregate\` encoding (average, count, sum) or several y fields used to empty the plot, because filtered rows were swapped in raw. They are now shaped the way the chart's own rows were.
+- **No internal sort index in tooltips.** A tooltip on a filtered stacked chart no longer lists Vega-Lite's \`_<field>_sort_index\`.
+- **Updates that validated now draw.** Four kinds of update that \`validateChart\` accepted were silently dropped when drawn: a numeric key on a field drawn as categories (\`{ Year: 2016 }\` on a banded year), a single-row series on a line chart (now drawn as a point a note can point at), a region caption asked to sit where it doesn't fit (now placed where it fits), and overlays with \`strokeDash: 'dash'\` or \`'dot'\`. An overlay the renderer can't read no longer stops the chart's other updates.
+- **Notes attach to points on a line.** A note keyed to an interior point of a line drawn with points matched both the point and the segment starting there, and reported "matched nothing".
+
+**Annotations**
+- **Captions keep off the chart's furniture.** A note's, region's or enclosure's caption no longer lands on the source line, a map's credit, or a house's header and rules; and on a map it no longer treats land and water as marks to avoid.
+- **Enclosures at the plot's edge are drawn whole.** Where an enclosed dot sits within 12 px of a continuous axis's end, the axis is padded so the outline isn't cut.
+- **Enclosures take the cluster's colour.** An outline round a cluster of dots uses the dots' fill, not the outline a house draws round every dot (every cluster came out black under \`pop\`).
+
+**Themes**
+- **Extended houses keep readable type.** A theme that \`extends\` a house and recolours its text or page takes the house's typography with it, and colours that would no longer read on the new page are adjusted. A dark page extending \`nyt\` no longer sets its title in near-black.
+
+**Installing**
+- **\`npm install flint-chart\` is the whole install** (#155). An app no longer fails to build for want of a backend it doesn't use: \`flint-chart\` now depends on every backend it draws with. For single-file bundles, new \`flint-chart/react/<backend>\` and \`flint-chart/interactive/<backend>\` entries carry just one library.
 
 ### Breaking (MCP)
 - The server keeps nothing between calls: \`show\` takes the spec itself, and \`validate_chart\` and the new \`validate_board\` check a spec without drawing it.

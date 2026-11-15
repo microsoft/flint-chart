@@ -43,7 +43,7 @@ import { applyAggregation, resolveImplicitAggregation } from '../core/aggregate'
 import { applyPivot, applyTransform, type PivotSurface, type TransformSurface } from '../core/pivot';
 import { plGetTemplateDef } from './templates';
 import { resolveChannelSemantics, convertTemporalData, repairEncodingSorts } from '../core/resolve-semantics';
-import { computeZeroDecision } from '../core/semantic-types';
+import { computeZeroDecision, zeroMarkType } from '../core/semantic-types';
 import { filterOverflow } from '../core/filter-overflow';
 import { computeLayout, computeChannelBudgets, deriveStretchCaps, planBandLabels, resolveBaseSize, resolveFacetColumnsOption } from '../core/compute-layout';
 import { decideColorMaps } from '../core/color-decisions';
@@ -202,7 +202,7 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
     );
 
     // Finalize zero-baseline (requires template mark knowledge)
-    const effectiveMarkType = templateMarkType || 'point';
+    const effectiveMarkType = zeroMarkType(chartTemplate.chart, templateMarkType);
     for (const [channel, cs] of Object.entries(channelSemantics)) {
         if ((channel === 'x' || channel === 'y') && cs.type === 'quantitative') {
             const numericValues = data

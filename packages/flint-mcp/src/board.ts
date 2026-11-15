@@ -4,7 +4,7 @@
 import { randomBytes } from 'node:crypto';
 import { z } from 'zod';
 import type { ChartAssemblyInput, ChartLink, ChartUpdate, LinkSpec, ValidateResult } from 'flint-chart';
-import { drawsAsTable, validateLinks } from 'flint-chart';
+import { drawsAsTable, isMeasureType, validateLinks } from 'flint-chart';
 
 import { ROW_UNITS, boardColumns, boardRows, gridItemFor, gridProblem, isKpi, type ChartLayout, type GridItem } from './board-layout.js';
 
@@ -36,6 +36,8 @@ export interface Board {
   source?: string;
   /** The theme of every chart that does not set its own. */
   theme_spec?: ChartAssemblyInput['theme_spec'];
+  /** Colours bound to values, per field, on every chart that colours by the field; a chart's own win. */
+  colors?: Record<string, Record<string, string>>;
   /** Board columns; two once the board holds two charts that are not KPI tiles. */
   columns?: number;
   /** Where each chart sits, as the reader arranged it on a card; the rows of `columns` and `layout` without it. */
@@ -51,7 +53,7 @@ export interface Board {
 export type BoardChartArgs = AssemblyInputArgs & { id: string; updates?: ChartUpdate[]; layout?: ChartLayout; view?: ChartView };
 
 /** The board fields a board spec sets around its charts. */
-export type BoardFields = Pick<Board, 'title' | 'subtitle' | 'source' | 'theme_spec' | 'columns'>;
+export type BoardFields = Pick<Board, 'title' | 'subtitle' | 'source' | 'theme_spec' | 'colors' | 'columns'>;
 
 export const layoutShape = z
   .object({
@@ -66,6 +68,10 @@ export function boardFieldsShape(themeShape: z.ZodTypeAny) {
     subtitle: z.string().optional().describe('The deck: the data, its scope and period, e.g. "Monthly revenue by region and product, Jan–Sep 2025, $m".'),
     source: z.string().optional().describe('The footer: where the data comes from and when, e.g. "Source: company ledger, as of 30 Sep 2025".'),
     theme_spec: themeShape.describe('The theme of every chart that does not set its own; the card takes its fonts and colours. Prefer setting it here, once, over per chart.'),
+    colors: z
+      .record(z.string(), z.record(z.string(), z.string()))
+      .optional()
+      .describe('Colours bound to values, per field: { "Category": { "Jewelry": "#c0392b" } }. Every chart that colours by the field takes them (its own colors win); values left out take the palette. For one colour per value across the board, and across later turns: pass the same map again.'),
     columns: z.number().int().min(1).max(4).optional().describe('Board columns. Default: 2 once the board holds two charts that are not KPI tiles, else 1.'),
   };
 }
@@ -123,13 +129,34 @@ export function withBoardTheme(input: ChartAssemblyInput, board: Pick<Board, 'th
   return input.theme_spec !== undefined || board.theme_spec === undefined ? input : { ...input, theme_spec: board.theme_spec };
 }
 
+/**
+ * The chart input with the board's colours bound to its fields' values, under any the chart binds
+ * itself: the board's map goes into each field's semantic annotation, which every colour channel reads.
+ */
+export function withBoardColors(input: ChartAssemblyInput, board: Pick<Board, 'colors'>): ChartAssemblyInput {
+  if (!board.colors) return input;
+  const types = { ...(input.semantic_types ?? {}) } as Record<string, unknown>;
+  let changed = false;
+  const encoded = new Set(Object.values(input.chart_spec.encodings ?? {}).flatMap((value) => [value].flat())
+    .map((value) => (typeof value === 'string' ? value : (value as { field?: string } | undefined)?.field)));
+  for (const [field, colors] of Object.entries(board.colors)) {
+    if (!encoded.has(field)) continue;
+    const current = types[field];
+    const annotation: Record<string, unknown> = typeof current === 'string' ? { semanticType: current } : { ...((current as Record<string, unknown>) ?? {}) };
+    annotation.colors = { ...colors, ...((annotation.colors as Record<string, string> | undefined) ?? {}) };
+    types[field] = annotation;
+    changed = true;
+  }
+  return changed ? { ...input, semantic_types: types as ChartAssemblyInput['semantic_types'] } : input;
+}
+
 export async function prepareChart(
   args: BoardChartArgs,
   validate: Validate,
-  board: Pick<Board, 'theme_spec'>,
+  board: Pick<Board, 'theme_spec' | 'colors'>,
 ): Promise<{ chart?: BoardChart; outcome: ChartOutcome; errors?: string }> {
   const { id, updates, layout, view, fromFile: keptFromFile, ...rest } = args as BoardChartArgs & { fromFile?: true };
-  const own = toAssemblyInput(rest as AssemblyInputArgs);
+  const own = withBoardColors(toAssemblyInput(rest as AssemblyInputArgs), board);
   // An update that leaves the data alone rebuilds from rows already read, so the file origin carries over.
   const fromFile = typeof own.data?.url === 'string' || keptFromFile === true;
   const { result, input } = await validate(withBoardTheme(own, board), updates);
@@ -197,9 +224,22 @@ function stackedRepeats(input: ChartAssemblyInput): string | undefined {
   const aggregated = Object.values(encodings).some((value) => typeof value === 'object' && value !== null && 'aggregate' in (value as object));
   if (aggregated) return undefined;
   const rows = (input.data.values ?? []) as Record<string, unknown>[];
-  const fields = Object.values(encodings).map(fieldOf).filter((field): field is string => !!field);
-  const categories = fields.filter((field) => rows.some((row) => typeof row?.[field] === 'string'));
-  const measure = fields.find((field) => !categories.includes(field) && rows.some((row) => typeof row?.[field] === 'number'));
+  const fields = [...new Set(Object.values(encodings).map(fieldOf).filter((field): field is string => !!field))];
+  // The measure is the one field typed as one; every other encoded field splits the marks, numbers
+  // included (a year, an edition). Untyped, text fields are the categories and a number the measure.
+  const typeOf = (field: string) => {
+    const annotation = input.semantic_types?.[field];
+    return typeof annotation === 'string' ? annotation : annotation?.semanticType;
+  };
+  // A heatmap's measure is its colour, whatever the colour field is typed as (match points, a score).
+  const heatColor = chartType === 'Heatmap' ? fieldOf(encodings.color) : undefined;
+  const typed = heatColor ? [heatColor] : fields.filter((field) => isMeasureType(typeOf(field) ?? ''));
+  const categories = typed.length === 1
+    ? fields.filter((field) => field !== typed[0])
+    : fields.filter((field) => rows.some((row) => typeof row?.[field] === 'string'));
+  const measure = typed.length === 1
+    ? typed[0]
+    : fields.find((field) => !categories.includes(field) && rows.some((row) => typeof row?.[field] === 'number'));
   if (categories.length === 0 || !measure) return undefined;
   const keys = new Set(rows.map((row) => JSON.stringify(categories.map((field) => row?.[field]))));
   if (keys.size === rows.length) return undefined;
@@ -207,14 +247,22 @@ function stackedRepeats(input: ChartAssemblyInput): string | undefined {
   return `draws ${rows.length} rows as ${keys.size} ${categories.join(' × ')} groups, so each mark is a stack of slices, one per row: sum the rows first, or set encodings.${channel}.aggregate to "sum".`;
 }
 
-/** What the board should still fix to read well; each note says the fix. */
-export function boardReview(board: Board): string[] {
+/**
+ * What the board should still change to read well, each note with its fix. `fix` holds what a board
+ * must not be drawn with (repeated rows drawn as slices); `noted` what the agent may change next time or
+ * tell the user, which the card draws with.
+ */
+export function boardReview(board: Board): { fix: string[]; noted: string[] } {
+  const fix: string[] = [];
   const notes: string[] = [];
   if (!board.title) notes.push('No board title: set title to what the board shows or is for, in words.');
   if (board.title && board.title.length > 90) notes.push('The board title is long; keep it to one line and move the detail to subtitle.');
-  if (!board.subtitle && board.charts.length > 0) notes.push('No subtitle: say the data, its scope, period and units.');
+  const kpis = board.charts.filter((chart) => isKpi(chart.input.chart_spec.chartType)).length;
+  // Two charts side by side read from the board's title alone; a dashboard needs its deck and chart headings.
+  const dashboard = kpis > 0 || board.charts.length >= 3;
+  if (dashboard && !board.subtitle) notes.push('No subtitle: say the data, its scope, period and units.');
   const untitled = board.charts.filter((chart) => !isKpi(chart.input.chart_spec.chartType) && !chart.input.chart_spec.title).map((chart) => chart.id);
-  if (untitled.length > 0) notes.push(`No title on ${untitled.join(', ')}: each chart draws its title as its heading; name what the chart shows.`);
+  if (dashboard && untitled.length > 0) notes.push(`No title on ${untitled.join(', ')}: each chart draws its title as its heading; name what the chart shows.`);
   const charts = layoutCharts(board);
   const units = new Map(boardRows(charts, boardColumns(charts, board.columns)).flatMap((row) => row.charts.map((cell) => [cell.id, cell.units] as const)));
   const long = board.charts.flatMap((chart) => {
@@ -225,16 +273,17 @@ export function boardReview(board: Board): string[] {
   if (long.length > 0) notes.push(`Chart titles that wrap at their width: ${long.join(', ')}; shorten each to one line and move detail to its subtitle.`);
   for (const chart of board.charts) {
     const stacked = stackedRepeats(chart.input);
-    if (stacked) notes.push(`${chart.id} ${stacked}`);
+    if (stacked) fix.push(`${chart.id} ${stacked}`);
   }
-  const kpis = board.charts.filter((chart) => isKpi(chart.input.chart_spec.chartType)).length;
-  if (kpis > 6) notes.push(`${kpis} KPI tiles: keep the three to five numbers the reader acts on.`);
-  if (board.charts.length - kpis > 8) notes.push(`${board.charts.length - kpis} charts: a board reads best with up to six; split it or remove the least used.`);
+  const sized = board.charts.filter((chart) => chart.input.chart_spec.baseSize || chart.input.chart_spec.canvasSize).map((chart) => chart.id);
+  if (sized.length > 0) notes.push(`${sized.join(', ')} set baseSize or canvasSize: on a board each chart takes its cell's size, set by layout.span and layout.height, so these are not used.`);
+  if (kpis > 5) notes.push(`${kpis} KPI tiles: unless the user asked for them, keep the three to five numbers the reader acts on.`);
+  if (board.charts.length - kpis > 6) notes.push(`${board.charts.length - kpis} charts: unless the user asked for them, a board reads best with up to six.`);
   const themes = new Set(board.charts.map((chart) => JSON.stringify(chart.input.theme_spec ?? null)).filter((theme) => theme !== 'null'));
   if (themes.size > 1 || (themes.size === 1 && board.theme_spec !== undefined)) {
     notes.push('Charts set their own themes; set theme_spec once on the board and drop it from the charts so the board reads as one piece.');
   }
-  return notes;
+  return { fix, noted: notes };
 }
 
 /** A theme as the model reads it: its preset id, a custom theme's label, or Flint's default. */
@@ -290,6 +339,7 @@ export async function assembleBoard(
     ...(spec.subtitle !== undefined ? { subtitle: spec.subtitle } : {}),
     ...(spec.source !== undefined ? { source: spec.source } : {}),
     ...(spec.theme_spec !== undefined ? { theme_spec: spec.theme_spec } : {}),
+    ...(spec.colors !== undefined ? { colors: spec.colors } : {}),
     ...(spec.columns !== undefined ? { columns: spec.columns } : {}),
     ...(spec.grid ? { grid: spec.grid } : {}),
     charts: [],

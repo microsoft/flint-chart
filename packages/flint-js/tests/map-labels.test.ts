@@ -175,3 +175,21 @@ describe('labels on a choropleth', () => {
         expect(text.text).toEqual(['CA', 'TX', 'MT', 'RI', 'DE']);
     });
 });
+
+describe('a dense point map’s labels', () => {
+    // 60 places spread over the world, valued 0–59.
+    const places = Array.from({ length: 60 }, (_, i) => ({ City: `P${i}`, longitude: -170 + (i % 12) * 30, latitude: -50 + Math.floor(i / 12) * 25, Pop: i }));
+    const labels = (spec: any) => spec.layer.find((layer: any) => markType(layer) === 'text' && layer.encoding?.text?.field === 'City')?.data.values ?? [];
+
+    it('names at most one place per 36,000 px² of the plot', () => {
+        const spec = pointMap(places, { text: 'City' });
+        expect(labels(spec).length).toBeLessThanOrEqual(Math.max(12, Math.round((spec.width * spec.height) / 36000)));
+        expect(labels(spec).length).toBeGreaterThan(0);
+    });
+
+    it('names the ends of a quantity’s colour scale first', () => {
+        const named = labels(pointMap(places, { text: 'City', color: 'Pop' })).map((row: any) => row.City);
+        expect(named).toContain('P0');
+        expect(named).toContain('P59');
+    });
+});

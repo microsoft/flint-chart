@@ -561,6 +561,8 @@ export interface LayoutTrace {
  */
 /** What a template reads to size its plot in the plan. */
 export type PlotPlanContext = Pick<InstantiateContext, 'layout' | 'canvasSize' | 'assembleOptions' | 'channelSemantics' | 'table' | 'fullTable' | 'semanticTypes' | 'chartProperties' | 'measureText'> & {
+    /** Original user-level encodings, where the plan has them. */
+    encodings?: Record<string, ChartEncoding>;
     /** The room the title, keys and axes take round the plot, where the plan measured it (a template that `fillsCanvas`). */
     reserve?: { width: number; height: number };
 };

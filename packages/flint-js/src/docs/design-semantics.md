@@ -347,7 +347,7 @@ interface TypeRegistryEntry {
 
     // Orthogonal dimensions (these drive viz properties directly)
     visEncodings: VisCategory[];         // preference-ordered, e.g., ['quantitative', 'ordinal']
-    aggRole: AggRole;                    // 'additive' | 'intensive' | 'signed-additive' | 'dimension' | 'identifier'
+    aggRole: AggRole;                    // 'additive' | 'intensive' | 'signed-additive' | 'measure' | 'dimension' | 'identifier'
     domainShape: DomainShape;            // 'open' | 'bounded' | 'fixed' | 'cyclic'
     diverging: DivergingClass;           // 'none' | 'conditional' | 'inherent'
     formatClass: FormatClass;            // 'currency' | 'percent' | 'signed-percent' | 'unit-suffix' | 'date' | 'time' | 'integer' | 'plain'
@@ -1195,6 +1195,7 @@ The compiler may provide built-in parsing utilities internally, but that's an im
 | **Additive measures** | Count, Amount, Revenue, Cost, Quantity, Duration | `sum` | These represent totals — summing is natural |
 | **Intensive measures** | Percentage, PercentageChange, Temperature, Score, Rating, Price, Correlation, Sentiment | `average` | These represent rates/conditions — averaging is natural |
 | **Signed additive** | Profit | `sum` | Additive but can be negative; summing preserves sign semantics |
+| **Generic measure** | Number | — (none) | A measure whose values should not be added up (or whose additivity is unknown); totals are Count, Amount, Quantity or Profit. A chart that must combine its rows uses the encoding's `aggregate`, else the mean |
 | **Discrete numeric** | Rank, Index, ID | — (none) | Aggregation is meaningless |
 | **Temporal** | DateTime, Date, Year, etc. | — (none) | Not aggregable |
 | **Categorical** | Name, Status, Category, etc. | — (none) | Not aggregable |
@@ -1278,6 +1279,7 @@ Tick constraints combine type-intrinsic rules with annotation-provided domain:
 | Count, Amount, Revenue, Cost, Quantity | `'sum'` | Additive | Parts sum to whole |
 | Percentage | `'normalize'` | Normalize | Show proportion breakdown |
 | Temperature, Score, Rating, PercentageChange, Correlation, Sentiment | `false` | — | Stacking rates/conditions is meaningless |
+| Number | `false` | — | Additivity unknown |
 | Rank, Index | `false` | — | Not aggregable |
 | Duration, Profit | `'sum'` | Additive | Duration is additive; Profit sums to net |
 
