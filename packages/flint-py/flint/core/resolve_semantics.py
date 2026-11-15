@@ -246,19 +246,18 @@ def convert_temporal_data(
         return data
 
     keys = list(data[0].keys())
-    field_values = {key: [row.get(key) for row in data] for key in keys}
-    effective_semantic_types = {
-        key: to_type_string(semantic_types.get(key))
-        or infer_implicit_semantic_type(key, field_values[key])
-        for key in keys
-    }
+    effective_semantic_types: dict[str, str] = {}
     temporal_keys: list[str] = []
     for k in keys:
-        st = effective_semantic_types[k]
-        vc = infer_vis_category(field_values[k])
+        field_values = [row.get(k) for row in data]
+        st = to_type_string(semantic_types.get(k)) or infer_implicit_semantic_type(k, field_values)
+        effective_semantic_types[k] = st
+        vc = infer_vis_category(field_values)
         st_category = get_vis_category(st) if st else None
         if vc == "temporal" or st_category == "temporal" or st == "Decade":
             temporal_keys.append(k)
+    if keys:
+        del field_values
 
     if not temporal_keys:
         return data

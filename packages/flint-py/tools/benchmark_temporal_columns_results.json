@@ -1,0 +1,156 @@
+{
+  "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+  "platform": "Linux-6.12.8+-x86_64-with-glibc2.39",
+  "baseline_ref": "a794557384adcc3293a77043f6b9aff1c33d152c",
+  "baseline_sha256": "d21f1746fc86ee3afcd6526e6f6e9e4b3ac6237f7e9e413c726183cb3a28d4df",
+  "changed_sha256": "ec018a93faeb2e449ab59c6903822c5316851985aece7ccca552ee9d07ecaf7f",
+  "fixtures": {
+    "wide_numeric": {
+      "rows": 10000,
+      "first_row_keys": [
+        "column_0",
+        "column_1",
+        "column_2",
+        "column_3",
+        "column_4",
+        "column_5",
+        "column_6",
+        "column_7",
+        "column_8",
+        "column_9",
+        "column_10",
+        "column_11",
+        "column_12",
+        "column_13",
+        "column_14",
+        "column_15",
+        "column_16",
+        "column_17",
+        "column_18",
+        "column_19"
+      ],
+      "json_sha256": "9a03d7278e5533b2c463d9a332f8bd391cad8b4c0496d7b96237f27fe0683144",
+      "semantics": {},
+      "aliases": "none"
+    },
+    "mixed_temporal": {
+      "rows": 10000,
+      "first_row_keys": [
+        "column_0",
+        "column_1",
+        "column_2",
+        "column_3",
+        "column_4",
+        "column_5",
+        "column_6",
+        "column_7",
+        "column_8",
+        "column_9",
+        "column_10",
+        "column_11",
+        "column_12",
+        "column_13",
+        "column_14",
+        "column_15",
+        "calendar_year",
+        "decade",
+        "timestamp",
+        "date",
+        "nested",
+        "alias"
+      ],
+      "json_sha256": "49bc689ee1380e010087655bfb7238a6232e9c20bfb496e0a4518a638b3b0344",
+      "semantics": {
+        "decade": "Decade",
+        "timestamp": "Timestamp"
+      },
+      "aliases": "last row is first; nested and alias share one object across rows"
+    }
+  },
+  "rounds": [
+    {
+      "round": 1,
+      "fixture": "wide_numeric",
+      "implementation": "baseline",
+      "elapsed_ns": 36070706,
+      "peak_bytes": 1790600
+    },
+    {
+      "round": 1,
+      "fixture": "wide_numeric",
+      "implementation": "changed",
+      "elapsed_ns": 41859326,
+      "peak_bytes": 171848
+    },
+    {
+      "round": 1,
+      "fixture": "mixed_temporal",
+      "implementation": "baseline",
+      "elapsed_ns": 171318668,
+      "peak_bytes": 11832067
+    },
+    {
+      "round": 1,
+      "fixture": "mixed_temporal",
+      "implementation": "changed",
+      "elapsed_ns": 159743996,
+      "peak_bytes": 9957363
+    },
+    {
+      "round": 2,
+      "fixture": "wide_numeric",
+      "implementation": "changed",
+      "elapsed_ns": 37443339,
+      "peak_bytes": 171848
+    },
+    {
+      "round": 2,
+      "fixture": "wide_numeric",
+      "implementation": "baseline",
+      "elapsed_ns": 36666653,
+      "peak_bytes": 1790600
+    },
+    {
+      "round": 2,
+      "fixture": "mixed_temporal",
+      "implementation": "changed",
+      "elapsed_ns": 161131322,
+      "peak_bytes": 9957363
+    },
+    {
+      "round": 2,
+      "fixture": "mixed_temporal",
+      "implementation": "baseline",
+      "elapsed_ns": 163921888,
+      "peak_bytes": 11832067
+    },
+    {
+      "round": 3,
+      "fixture": "wide_numeric",
+      "implementation": "baseline",
+      "elapsed_ns": 35840693,
+      "peak_bytes": 1790600
+    },
+    {
+      "round": 3,
+      "fixture": "wide_numeric",
+      "implementation": "changed",
+      "elapsed_ns": 37628696,
+      "peak_bytes": 171848
+    },
+    {
+      "round": 3,
+      "fixture": "mixed_temporal",
+      "implementation": "baseline",
+      "elapsed_ns": 165861116,
+      "peak_bytes": 11832067
+    },
+    {
+      "round": 3,
+      "fixture": "mixed_temporal",
+      "implementation": "changed",
+      "elapsed_ns": 176003028,
+      "peak_bytes": 9957363
+    }
+  ]
+}
