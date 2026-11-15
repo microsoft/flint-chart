@@ -11,93 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-
-- Every `annotate-text` note is a caption after Blabber's `text`: plain words in the chart's label
-  face, haloed in the page, with a leader only where the caption is not plainly beside what it
-  names. The card (a bordered, shadowed box) that notes on a stretch of a line or area, a pie
-  slice, a whole shape, a map region or a bullet's two parts still drew is gone; a host that wants
-  a callout box draws one with `set-overlay` or `set-freeform-overlay`. Each note is placed by the
-  same lightweight search, from places that suit what it names: a stretch at its middle or a
-  quarter along (an area's caption off the side away from its fill), a slice from inside its wedge
-  out past the pie, a violin at the ellipse its box holds, a region at its middle with the other
-  regions as ground. `highlight` now marks these too: a stretch is drawn again in its ink, a slice
-  or a shape faintly outlined. A bullet's note names its actual bar, with one leader.
-- `AnnotationSpec` is what an update writes: `text`, `anchor` and `highlight`. The `candidates` and
-  `subject` a template's presenter adds are on the internal `PresentedAnnotationSpec`.
-  `AnnotationCandidate`'s `anglePreference`, `textAlign`, `maxDistance`, `priority` and
-  `connectorAnchors` are ignored and deprecated.
-- Annotations take their colours from the house and read on its page and on its marks. A note is set
-  a step heavier than the chart's labels (semibold over regular ones) in the primary text ink, so it
-  is not taken for a label beside it; a house's `type.annotation` role sets it otherwise. Leaders
-  are Blabber's neutral grey. A region's wash is the house's `ink.accent` where that stands apart
-  from the page and every mark (in most houses it is the data's own ink), else the hue of the
-  house's categorical palette furthest from them (never a grey), else a callout hue. Halos are the
-  plot's own surface, and a caption standing on a wash has none. A cue drawn on a mark (an area's
-  edge, a dot on its fill) is in the note's ink or the page's colour, whichever reads on the mark.
-  A stretch of an area is cued in that ink, not its own fill; one too short to read is cued as a dot.
-- A note's leader leaves its mark square to the side it names and is never drawn along the mark's
-  own edge. From a bar's value end it runs out along the bar first (at least ~0.7 of a font size)
-  and turns square toward a caption that is not straight ahead: down into one below the end, or
-  along and in to one beside it. A leader that would graze a cell's or a bar's side runs out from
-  it the same way.
-
-### Added
-
-- A spec carries its own `updates` (`ChartAssemblyInput.updates`): the notes, overlays, emphasis and
-  viewport the chart applies once it is drawn, the same layers a host passes to `mountChart` or
-  `<FlintChart updates>`, so a copied spec keeps them. The spec's are applied first; a host update
-  with the same id replaces the spec's; `validateChart` checks both. The interactive runtime applies
-  them; a static output (`assembleVegaLite`, `renderSvg`, the other backends) draws the chart without
-  them, with an `info` warning (`updates-not-compiled`).
-- A `Map`'s `text` names its points beside them, as an atlas names its places: each label is placed
-  at compile time, through the projection the map will draw, right of its dot, else left, above or
-  below — clear of every dot, every label placed before it, the plot's edge and, where it can, a
-  route's lines. The largest dots are named first where `size` sizes them; a point whose label has no
-  room is left unnamed, with an `info` warning (`map-labels-dropped`). A label keeps its point and its
-  offset in px, so it stays beside its point through a pan, a zoom or a globe's turn.
-- A `Choropleth`'s `text` names its regions at their middles, through the live projection, each
-  shown only while its region is wider and taller on screen than its label: a small region's name
-  appears as a zoom brings it close. Each label is white or a dark ink, whichever reads better on its
-  region's fill (its colour scale's own value, so classes and schemes are followed), haloed in that
-  fill: unseen inside the region, readable where the label runs past a coast.
-- A `Map`'s `shape` tells its points apart by symbol (filled, with a key), as a scatter's does.
-- Plotly draws a map's `text` beside its points and a choropleth's at its regions, and a map's
-  `shape` as its markers' symbols.
-- `mapStyle` takes a style of the caller's own besides the named ones: `{ base?, sea?, land?,
-  coast?, border?, noData?, graticule?, disputed? }`, a named style (`auto` when unset) with any of
-  its colours restated. A stated `sea` fills a flat map's plot as well as a globe's water. A
-  property's other accepted values (a `boundaries` file, this style) are now listed in the chart
-  reference.
-- An overlay's `style.fontStyle` (`'italic'`) sets its text in italic, as a map's sea names are.
-- A route map's `stops` property draws its stops as dots: `'all'` (or `true`) at every stop, `'ends'`
-  only where each run of legs in one colour starts and ends (a chapter of a voyage), the stops between
-  marked by their arrows alone. Dots are one size (from the routes' typical width, 2.5–4 px), sized by `size`
-  (zero-based by area, 2.5–7 px, with its own key; `size` draws them at every stop unless `stops`
-  says otherwise), or all at `stopRadius`. Plotly draws them alike. A leg leaves from
-  the edge of its dot's halo and its head's tip stops at the next one's.
-
-### Fixed
-
-- A map's overlay labels and points are cut at the plot's edge, as its land and lines are: a label
-  whose place sits by the edge no longer runs out over the frame.
-- A theme that `extends` a house and recolours its text ink or page takes the house's type with it:
-  a role the house set in one of its text inks (the NYT's headline, its deck) follows that ink, and
-  on a recoloured page a role colour that would no longer read is moved until it does. A dark page
-  extending `nyt` no longer sets its title in near-black. A colour the extension states is kept.
-- A size key keys the data's least value where that is round and its smallest value lands just
-  off it: a crew that dwindles to one man keys 1, not 2.
-- A route's line ends at its arrowhead's base (a hair past it, so no seam shows) instead of running
-  well into the head: a faded route no longer shows the line's end through its translucent head.
-
-### Deprecated
-
-- The `set-annotation` op. Write `annotate-text`, which it means. It is still read in 1.x, but no
-  longer listed in `CHART_UPDATE_OPS` (it is in `DEPRECATED_UPDATE_OPS`); `validateChart` reports
-  it as a `deprecated_op` warning, the runtime warns once on the console, and the MCP schema marks
-  it deprecated. It will be removed in 2.0.
-
-## [1.0.2] - 2026-11-06
+## [1.0.2] - 2026-11-15
 
 Released together for `flint-chart`, `flint-chart-mcp`, and the Copilot Canvas plugin.
 
@@ -269,6 +183,50 @@ Released together for `flint-chart`, `flint-chart-mcp`, and the Copilot Canvas p
 - ECharts binned colour scales break at round values (`roundBinEdges`), labelled as ranges; a
   continuous size or colour ramp beside the plot stands from the plot's top with its title
   centred over the bar.
+- A spec carries its own `updates` (`ChartAssemblyInput.updates`): the notes, overlays, emphasis and
+  viewport the chart applies once it is drawn, the same layers a host passes to `mountChart` or
+  `<FlintChart updates>`, so a copied spec keeps them. The spec's are applied first; a host update
+  with the same id replaces the spec's; `validateChart` checks both. The interactive runtime applies
+  them; a static output (`assembleVegaLite`, `renderSvg`, the other backends) draws the chart without
+  them, with an `info` warning (`updates-not-compiled`).
+- A `Map`'s `text` names its points beside them, as an atlas names its places: each label is placed
+  at compile time, through the projection the map will draw, right of its dot, else left, above or
+  below — clear of every dot, every label placed before it, the plot's edge and, where it can, a
+  route's lines. The largest dots are named first where `size` sizes them; a point whose label has no
+  room is left unnamed, with an `info` warning (`map-labels-dropped`). A label keeps its point and its
+  offset in px, so it stays beside its point through a pan, a zoom or a globe's turn.
+- A `Choropleth`'s `text` names its regions at their middles, through the live projection, each
+  shown only while its region is wider and taller on screen than its label: a small region's name
+  appears as a zoom brings it close. Each label is white or a dark ink, whichever reads better on its
+  region's fill (its colour scale's own value, so classes and schemes are followed), haloed in that
+  fill: unseen inside the region, readable where the label runs past a coast.
+- A `Map`'s `shape` tells its points apart by symbol (filled, with a key), as a scatter's does.
+- Plotly draws a map's `text` beside its points and a choropleth's at its regions, and a map's
+  `shape` as its markers' symbols.
+- `mapStyle` takes a style of the caller's own besides the named ones: `{ base?, sea?, land?,
+  coast?, border?, noData?, graticule?, disputed? }`, a named style (`auto` when unset) with any of
+  its colours restated. A stated `sea` fills a flat map's plot as well as a globe's water. A
+  property's other accepted values (a `boundaries` file, this style) are now listed in the chart
+  reference.
+- An overlay's `style.fontStyle` (`'italic'`) sets its text in italic, as a map's sea names are.
+- A route map's `stops` property draws its stops as dots: `'all'` (or `true`) at every stop, `'ends'`
+  only where each run of legs in one colour starts and ends (a chapter of a voyage), the stops between
+  marked by their arrows alone. Dots are one size (from the routes' typical width, 2.5–4 px), sized by `size`
+  (zero-based by area, 2.5–7 px, with its own key; `size` draws them at every stop unless `stops`
+  says otherwise), or all at `stopRadius`. Plotly draws them alike. A leg leaves from
+  the edge of its dot's halo and its head's tip stops at the next one's.
+- `list_chart_types` with `chartType` returns that one type in full: what it is for and how its
+  channels read, the guidance that applies whenever it is used, its `chartProperties` (values,
+  default and effect) and its interaction presets. A near name (`"scatter"`, `"choropleth map"`)
+  resolves when it points at one type.
+- The MCP server serves a fifth skill, `app` (`flint-app-author`, also the resource
+  `flint://app-skill`): writing code that uses `flint-chart` in an app, a React component, a
+  notebook or a script, mounting a chart with interactions, reading selections and applying updates.
+- A board's `colors` binds colours to values, per field (`{ "Category": { "Jewelry": "#c0392b" } }`):
+  every chart on the board that colours by the field takes them, under any colours the chart binds
+  itself, so a value keeps one colour across the board and across turns.
+- `resolveDisplayAggregate` and `resolvePivotAggregate`: how a chart combines a measure's rows for a
+  label or share, and how an exporter that pivots raw rows reduces several rows on one cell.
 
 ### Changed
 
@@ -369,6 +327,72 @@ Released together for `flint-chart`, `flint-chart-mcp`, and the Copilot Canvas p
   Vega-Lite draws a threshold scale whose key prints each break in full; ECharts' author bins break
   at the pivot too. Grounding reports a diverging ramp whose arms differ by more than 3 L* at
   mirrored points (`diverging-ramp-unbalanced`): pop, de-stijl, swiss and cartoon do today.
+- Every `annotate-text` note is a caption after Blabber's `text`: plain words in the chart's label
+  face, haloed in the page, with a leader only where the caption is not plainly beside what it
+  names. The card (a bordered, shadowed box) that notes on a stretch of a line or area, a pie
+  slice, a whole shape, a map region or a bullet's two parts still drew is gone; a host that wants
+  a callout box draws one with `set-overlay` or `set-freeform-overlay`. Each note is placed by the
+  same lightweight search, from places that suit what it names: a stretch at its middle or a
+  quarter along (an area's caption off the side away from its fill), a slice from inside its wedge
+  out past the pie, a violin at the ellipse its box holds, a region at its middle with the other
+  regions as ground. `highlight` now marks these too: a stretch is drawn again in its ink, a slice
+  or a shape faintly outlined. A bullet's note names its actual bar, with one leader.
+- `AnnotationSpec` is what an update writes: `text`, `anchor` and `highlight`. The `candidates` and
+  `subject` a template's presenter adds are on the internal `PresentedAnnotationSpec`.
+  `AnnotationCandidate`'s `anglePreference`, `textAlign`, `maxDistance`, `priority` and
+  `connectorAnchors` are ignored and deprecated.
+- Annotations take their colours from the house and read on its page and on its marks. A note is set
+  a step heavier than the chart's labels (semibold over regular ones) in the primary text ink, so it
+  is not taken for a label beside it; a house's `type.annotation` role sets it otherwise. Leaders
+  are Blabber's neutral grey. A region's wash is the house's `ink.accent` where that stands apart
+  from the page and every mark (in most houses it is the data's own ink), else the hue of the
+  house's categorical palette furthest from them (never a grey), else a callout hue. Halos are the
+  plot's own surface, and a caption standing on a wash has none. A cue drawn on a mark (an area's
+  edge, a dot on its fill) is in the note's ink or the page's colour, whichever reads on the mark.
+  A stretch of an area is cued in that ink, not its own fill; one too short to read is cued as a dot.
+- A note's leader leaves its mark square to the side it names and is never drawn along the mark's
+  own edge. From a bar's value end it runs out along the bar first (at least ~0.7 of a font size)
+  and turns square toward a caption that is not straight ahead: down into one below the end, or
+  along and in to one beside it. A leader that would graze a cell's or a bar's side runs out from
+  it the same way.
+- `Number` is a measure whose additivity is unknown: it is no longer summed or stacked by default.
+  Where a chart combines its rows (a bar's label, a share of the total) it takes the encoding's own
+  `aggregate`, else the mean; exporters that pivot rows (Excel, Image-Charts) do the same. A total
+  should be typed `Count`, `Amount`, `Quantity` or `Profit`. An untyped numeric field still sums.
+- The value axis of a distribution (Boxplot, Violin Plot, Density Plot, Ridgeline Plot, ECDF Plot)
+  fits its data instead of reaching to zero: where values fall is the read, not a length.
+- A bar split only by `detail` reads as one bar: its segments stay for selection and links, but it
+  draws no seams between them, and its value label and layout use the bar's total.
+- A "% of total" label is offered only for a measure whose rows add up.
+- Tooltips are set in the house's label face, at its label size kept between 11 and 13 px.
+- Hovering a line shows its vertex as a dot a little wider than the line, in its colour; a hovered
+  point is redrawn a little larger, outline and all.
+- `swiss` sets its labels in the structural ink and its areas as flat fills under their own edge;
+  `pop` keeps solid areas parted by its black separator.
+- `show` reports what keeps a chart or board from drawing ("Fix before it draws") apart from what it
+  draws with ("Noted"); a board says a finding several charts share once, under all their ids.
+
+### Performance
+
+Contributed by Shayne Boyer (@spboyer, #160). Output is unchanged; each change ships with the
+script that measured it.
+
+- Trimming an overflowing category axis to an explicit order looks values up in a set instead of
+  scanning the order for each one, in JS and Python: at 10,000 categories, 118.6 ms → 6.3 ms (JS)
+  and 420.8 ms → 2.2 ms (Python). Duplicates, missing entries and descending order behave as before
+  (#167).
+- Sort repair skips enumerating rows and fields when no sort needs a raw-field lookup (100k rows ×
+  10 fields: ~21 ms → ~0.001 ms) and otherwise collects the fields once, without a rows × fields
+  intermediate (~21 ms → 6.5 ms, ~44 MB → ~16 MB allocated per call) (#168).
+- Python: temporal columns are inferred one at a time instead of holding every first-row column
+  vector, cutting peak memory by 90% on a 10k × 20 numeric table and 16% on a mixed temporal one;
+  timing is unchanged (#169).
+- Python: only preliminary encoding types are resolved before overrides are composed, with the
+  final full resolution still authoritative: a 10k-row scatter assembles in ~121 ms instead of
+  ~152 ms (20.6%); all 705 fixture outputs are identical (#170).
+- `npm run benchmark:render` (`scripts/render-baselines.mjs`) records deterministic cold and warm
+  compiler and MCP render baselines per backend: timing, memory and artifact checks in bounded
+  workers. It is opt-in and sets no CI threshold (#171).
 
 ### Fixed
 
@@ -469,6 +493,33 @@ Released together for `flint-chart`, `flint-chart-mcp`, and the Copilot Canvas p
   rate stored as fractions mostly past 1 (2.4 for 240%) was printed as "2.4%", and the same column
   was formatted two ways depending on which rows a query returned. Axes, tooltips, value domains
   and KPI cards all read the stated scale (#154).
+- A map's overlay labels and points are cut at the plot's edge, as its land and lines are: a label
+  whose place sits by the edge no longer runs out over the frame.
+- A theme that `extends` a house and recolours its text ink or page takes the house's type with it:
+  a role the house set in one of its text inks (the NYT's headline, its deck) follows that ink, and
+  on a recoloured page a role colour that would no longer read is moved until it does. A dark page
+  extending `nyt` no longer sets its title in near-black. A colour the extension states is kept.
+- A size key keys the data's least value where that is round and its smallest value lands just
+  off it: a crew that dwindles to one man keys 1, not 2.
+- A route's line ends at its arrowhead's base (a hair past it, so no seam shows) instead of running
+  well into the head: a faded route no longer shows the line's end through its translucent head.
+- A one-letter unit keeps its case: `M` is millions, not metres.
+- An area's edge takes the area's ink: a single series inked on the mark alone drew Vega-Lite's
+  default blue edge.
+- In the live view, a line chart's dots are drawn once under a house that sets its own vertex dots
+  (`cartoon`, `pop`): moving the dots into their own layer for interactions let the house's
+  `config.line.point` draw a second, full-size set beneath them.
+- In the live view, an unsorted colour (`sort: null`) keeps its legend in the rows' order instead
+  of alphabetical, so each series keeps the colour the static chart gives it; a faint ink's darker
+  edge (`ink.series.minContrast`) follows the same order instead of edging each mark in another
+  series' colour.
+
+### Deprecated
+
+- The `set-annotation` op. Write `annotate-text`, which it means. It is still read in 1.x, but no
+  longer listed in `CHART_UPDATE_OPS` (it is in `DEPRECATED_UPDATE_OPS`); `validateChart` reports
+  it as a `deprecated_op` warning, the runtime warns once on the console, and the MCP schema marks
+  it deprecated. It will be removed in 2.0.
 
 ## [1.0.1] - 2026-10-21
 
@@ -967,11 +1018,11 @@ Released together for `flint-chart`, `flint-chart-mcp`, and the Copilot Canvas p
   anchors in Vega-Lite; other values now remain floating deltas colored by sign.
 
 [Unreleased]: https://github.com/microsoft/flint-chart/compare/1.0.2...HEAD
-[1.0.2]: https://github.com/microsoft/flint-chart/compare/1.0.1...1.0.2
-[1.0.1]: https://github.com/microsoft/flint-chart/compare/1.0.0...1.0.1
-[1.0.0]: https://github.com/microsoft/flint-chart/compare/0.5.1...1.0.0
+[1.0.2]: https://github.com/microsoft/flint-chart/compare/f098e497...1.0.2
+[1.0.1]: https://github.com/microsoft/flint-chart/compare/1.0...f098e497
+[1.0.0]: https://github.com/microsoft/flint-chart/compare/0.5.1...1.0
 [0.5.1]: https://github.com/microsoft/flint-chart/compare/0.5...0.5.1
-[0.5.0]: https://github.com/microsoft/flint-chart/compare/0.4.0...0.5.0
+[0.5.0]: https://github.com/microsoft/flint-chart/compare/0.4.0...0.5
 [0.4.1]: https://github.com/microsoft/flint-chart/compare/0.4.0...0.4.1
 [0.4.0]: https://github.com/microsoft/flint-chart/compare/0.3.0...0.4.0
 [0.3.0]: https://github.com/microsoft/flint-chart/compare/88fbeb5ebf07f18a1cf661ebef71cc570b7425d6...0.3.0

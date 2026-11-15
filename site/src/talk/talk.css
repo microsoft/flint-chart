@@ -329,7 +329,8 @@
 
 /* The talks, at #/talk. */
 .talk-index { max-width: 880px; margin: 0 auto; padding: 48px 24px 72px; }
-.talk-index h1 { margin: 0 0 20px; font-size: 28px; }
+.talk-index h1 { margin: 0 0 6px; font-size: 28px; }
+.talk-index-note { margin: 0 0 20px; font-size: 14px; color: #8a949b; }
 .talk-index ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
 .talk-index a { display: grid; gap: 4px; padding: 16px 18px; border: 1px solid rgba(0, 0, 0, 0.12); border-radius: 10px; color: inherit; text-decoration: none; background: #fff; }
 .talk-index a:hover { border-color: #2f6db5; box-shadow: 0 1px 6px rgba(47, 109, 181, 0.12); }

@@ -118,7 +118,6 @@ import {
     STYLE_SIGNAL,
     DIM_SIGNAL,
     DIM_RELATIVE_SIGNAL,
-    INTERACTION_ROLE,
 } from './stores';
 
 const EMPTY_SEMANTIC_SELECTION_KEY = '__flint_empty_semantic_selection';

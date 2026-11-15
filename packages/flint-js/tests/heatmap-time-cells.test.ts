@@ -39,12 +39,12 @@ async function drawn(spec: any) {
         if (node.role === 'mark' && (node.marktype === 'rect' || node.marktype === 'text')) marks.push(node);
         for (const item of node.items ?? []) walk(item);
     };
-    walk(view.scenegraph().root);
+    walk((view.scenegraph() as any).root);
     const largest = (type: string) => marks.filter((m) => m.marktype === type).sort((a, b) => b.items.length - a.items.length)[0]?.items ?? [];
     const cells = largest('rect');
     const top = Math.min(...cells.map((c: any) => c.y));
     const row = cells.filter((c: any) => Math.abs(c.y - top) < 0.01).sort((a: any, b: any) => a.x - b.x);
-    const rows = [...new Set(cells.map((c: any) => Math.round(c.y * 100) / 100))].sort((a: number, b: number) => a - b);
+    const rows = [...new Set<number>(cells.map((c: any) => Math.round(c.y * 100) / 100))].sort((a: number, b: number) => a - b);
     return { cells, row, rows, labels: largest('text'), width: view.signal('width') as number };
 }
 

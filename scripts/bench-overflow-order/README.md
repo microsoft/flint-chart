@@ -31,13 +31,15 @@ Python takes 7. Output is written to the git-ignored `experiments/bench-overflow
   creation" (Node ≥ 24; V8 14.6 in Node 26). It is a cumulative counter, not
   sampling and not a used-heap delta. It is **approximate**: it is updated at
   allocation-buffer granularity, excludes ArrayBuffer backing stores, and shows
-  ~0.3–0.6 MB of offset on a no-op after `gc()` (`results/alloc-probe.txt`).
+  ~0.3–0.6 MB of offset on a no-op after `gc()` (see `alloc-probe.mjs`).
   Compare only the baseline/change difference.
 - `tracemallocPeakBytes` (Python): `tracemalloc` peak traced allocation above the
   starting point during one call, from a separate untimed call.
 - `maxRssKiB`: process peak RSS from `getrusage`; this includes runtime startup.
 
-## Recorded results (`results/`)
+## Results
 
-Node v26.12.1, Python 3.12.3, esbuild 0.28.1, Linux x86_64, 2 vCPU, 3 interleaved
-rounds. See `results/summary.txt` and the raw rows in `results/results.jsonl`.
+A run writes `env.txt`, the raw rows in `results.jsonl` and `summary.txt` to
+`experiments/bench-overflow-order/`; nothing is committed. The figures measured
+for the change (Node v26.12.1, Python 3.12.3, Linux x86_64, 2 vCPU, 3 rounds) are
+in [#167](https://github.com/microsoft/flint-chart/pull/167).

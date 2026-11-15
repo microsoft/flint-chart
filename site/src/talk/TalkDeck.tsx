@@ -54,6 +54,7 @@ export function TalkIndex() {
   return (
     <main className="talk-index">
       <h1>Talks</h1>
+      <p className="talk-index-note">Are you supposed to be here?</p>
       <ul>
         {DECKS.map((deck) => (
           <li key={deck.id}>

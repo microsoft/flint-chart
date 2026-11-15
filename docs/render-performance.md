@@ -58,16 +58,6 @@ the same Node version, hardware, fixture, and command. Do not compare unlike
 machines as if they were controlled measurements, infer allocation volume
 from snapshot deltas, or treat this informational baseline as a CI gate.
 
-`artifacts/perf/render-baseline-node26-local.json` is a checked-in example
-record, not a hosted-CI result. It was captured on the local Node 26 / two-CPU
-host. The normal full build hit a V8 heap OOM during the JavaScript package's
-declaration build on that host; runtime bundles were built without declaration
-generation to exercise the runner. CI uses Node 20/22, and this local result
-does not establish a hosted build issue. Reproduce the full build behavior on
-the supported CI Node versions before drawing conclusions about CI.
-
-An earlier, unbounded runner attempt was reported as holding the shared
-measurement lock for over 325 seconds; its timing output was discarded. When
-checked, that worker PID had already exited and a nonblocking lock probe
-succeeded. The checked-in sample was then rerun with the 15-second per-case
-worker limit; no worker timed out.
+Records are written under `artifacts/`, which is git-ignored: no baseline is
+committed, since one machine's record is no reference for another. The sample
+measured when the runner was added (Node 26, two CPUs) is described in [#171](https://github.com/microsoft/flint-chart/pull/171).

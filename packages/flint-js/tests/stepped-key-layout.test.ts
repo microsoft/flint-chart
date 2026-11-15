@@ -49,7 +49,7 @@ async function drawn(spec: any) {
         if (node.marktype === 'rect' && node.role === 'mark') rects.push(node);
         for (const item of node.items ?? []) walk(item);
     };
-    walk(view.scenegraph().root);
+    walk((view.scenegraph() as any).root);
     const cells = rects.sort((a, b) => b.items.length - a.items.length)[0].items;
     const top = Math.min(...cells.map((cell: any) => cell.y));
     return { legend: { height: legend.y2 - legend.y1 }, plotHeight: Math.max(...cells.map((cell: any) => cell.y + cell.height)) - top };
