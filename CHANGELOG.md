@@ -24,7 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   without a bundler: from a CDN such as jsDelivr, from the package's files served as they are, in
   Deno, or in Node. The lazy imports named the renderer without its extension, which only a bundler
   (or unpkg's redirect) resolved, so the chart never drew there. ES modules now load `.js` files and
-  CommonJS loads `.cjs` files.
+  CommonJS loads `.cjs` files. The boundaries a map loads on its first draw are imported by paths
+  from the file at hand, so an import map or a CDN loads them from the package with no entry for
+  them, instead of falling back to Flint's site.
 
 ## [1.1.0] - 2026-11-15
 
