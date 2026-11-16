@@ -454,7 +454,7 @@
       "agentIcon": "智能体和它生成的图表",
       "untangle": "传统上，好看的图表依赖大量<strong>底层细节</strong>，视觉、样式和交互逻辑纠缠在一起。Flint 把这些难题交给编译器，让规范保持简洁。",
       "untangleIcon": "一团乱线被理成三条",
-      "many": "Flint 在 <strong>{{backends}} 种渲染后端</strong>上支持 <strong>{{chartTypes}} 种图表类型</strong>，并提供 <strong>{{themes}} 套主题</strong>和 <strong>{{presets}} 种交互预设</strong>。<themeLab>自定义</themeLab>也很容易！",
+      "many": "Flint 在 <strong>{{backends}} 种渲染后端</strong>上支持 <strong>{{chartTypes}} 种图表类型</strong>，并提供 <strong>{{themes}} 套主题</strong>和 <strong>{{presets}} 种交互预设</strong>。<customize>自定义</customize>也很容易！",
       "manyIcon": "多种风格的多种图表"
     },
     "leadAvailability": "你可以把它作为 <mcp>MCP 服务器</mcp>配合智能体使用，也可以作为 <npm>npm 库</npm>用在你的应用中。",

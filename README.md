@@ -42,6 +42,11 @@ https://github.com/user-attachments/assets/c1cda0fa-3ea7-41af-b3fd-a127bc83d641
 
 ## Updates
 
+- **November 15, 2026** — Flint 1.1 brings maps and layout: maps with
+  customizable boundaries, globes, routes and labelled points, framed to
+  their data; charts that fit their canvas on every backend; and
+  annotations as captions beside what they name.
+  ([release notes](https://github.com/microsoft/flint-chart/releases/tag/1.1), [changelog](CHANGELOG.md))
 - **October 19, 2026** — Flint 1.0 introduces
   [Flint Interactive](https://microsoft.github.io/flint-chart/#/interactions):
   interaction presets, semantic events, and an interaction API that connects

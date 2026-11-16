@@ -96,7 +96,7 @@ export function Landing() {
                         }}
                         components={{
                           strong: <strong style={leadHighlightStyle} />,
-                          themeLab: <LocaleLink className="site-text-link" style={contributorLinkStyle} to="/theme-lab" />,
+                          customize: <LocaleLink className="site-text-link" style={contributorLinkStyle} to="/interactions/advanced" />,
                         }}
                       />
                     </span>
@@ -1944,6 +1944,7 @@ const availabilityStyle: CSSProperties = {
   lineHeight: 1.65,
 };
 
+
 const wiringFigureStyle: CSSProperties = {
   margin: '8px 0 28px',
 };
@@ -1978,6 +1979,7 @@ const pointIconStyle: CSSProperties = {
 };
 
 const landingInteractiveStyles = `
+
   .landing-hero-cta:focus-visible {
     outline: 2px solid ${siteTheme.accent};
     outline-offset: 2px;

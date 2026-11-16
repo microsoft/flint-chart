@@ -126,7 +126,7 @@ function Tile({ tile }: { tile: MapTile }) {
 const NOTES = `## Flint 1.1: Layouts and Maps
 
 ### Maps
-- **Boundaries:** world maps draw World Bank Official Boundaries, and map boundaries can be customized (\`chartProperties.boundaries\`).
+- **Boundaries:** maps draw customizable boundaries (\`chartProperties.boundaries\`): a named set, or a file of your own.
 - **Framing:** a map frames the country, region or continent its rows cover (\`fit\`), in a projection centred on it.
 - **Globes:** \`projection: "orthographic"\` turns to face the data and hides the far side; drag to turn it.
 - **Choropleth classes:** five quantile classes by default; \`classes\` takes \`equal\`, \`jenks\` or \`continuous\`.
@@ -182,6 +182,13 @@ Faster compiles on large data, from Shayne Boyer (@spboyer, #160). Each change k
 **Keys and labels**
 - **Compact numbers roll over.** A value that rounds up to the next unit prints in it: 999,600 is \`1M\`, not \`1000k\` (#172).
 - **Size keys print the values they list.** A size key for 0.5, 1 and 2.5 used to read "1, 1, 3". Each key now carries a format precise enough for its values, and its width is measured from those labels. Plotly and ECharts size keys no longer round small values to 0.
+- **Colour keys beside short plots keep round labels.** A continuous colour key shortened to fit a short plot printed only its two raw ends (\`−53,901\`, \`43,635\`); it now prints round values.
+
+**Heatmaps**
+- **Cells along a time axis tile.** Each date covers the period it repeats at, read from the values (dates, timestamps or epoch milliseconds): its month, quarter or year whatever day it falls on (month ends, the 5th, quarter ends); a day, week or hour where the step is exact; or until the next date where the dates are about one step apart (13 or 14 days). Dates 13 or 14 days apart, or at month ends, used to draw as one-day slivers. A missing period stays an empty gap.
+- **A whole run of months is a time scale too,** with time-axis labels, instead of one band per month.
+- **No internal field in the axis title.** A heatmap on a time axis titled it \`Date, __cell_x_end\`.
+- **Dates on a bar chart about 45 days apart** now read as a run of time and stand on a time scale; eight or fewer dates are still one band each.
 
 **Interactions and updates**
 - **Filters work on aggregated charts.** \`filterControls\` on a chart with an \`aggregate\` encoding (average, count, sum) or several y fields used to empty the plot, because filtered rows were swapped in raw. They are now shaped the way the chart's own rows were.

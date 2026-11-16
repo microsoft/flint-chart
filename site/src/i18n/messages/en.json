@@ -454,7 +454,7 @@
       "agentIcon": "An agent beside the chart it made",
       "untangle": "Traditionally, good-looking charts rely on verbose <strong>low-level details</strong> that entangle visual, style and interaction logic. Flint pushes these challenges to the compiler so that the spec stays simple.",
       "untangleIcon": "Tangled threads straightened into three",
-      "many": "Flint supports <strong>{{chartTypes}} chart types</strong> across <strong>{{backends}} rendering backends</strong>, <strong>{{themes}} themes</strong> and <strong>{{presets}} interaction presets</strong>. It's easy to <themeLab>customize</themeLab>, too!",
+      "many": "Flint supports <strong>{{chartTypes}} chart types</strong> across <strong>{{backends}} rendering backends</strong>, <strong>{{themes}} themes</strong> and <strong>{{presets}} interaction presets</strong>. It's easy to <customize>customize</customize>, too!",
       "manyIcon": "Many charts in many looks"
     },
     "leadAvailability": "Use it as an <mcp>MCP server</mcp> with your agent, or as an <npm>npm library</npm> in your app.",
