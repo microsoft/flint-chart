@@ -18,6 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   could not serve 1.1.0. Nothing a chart draws changes; a stack trace into Flint now points into
   its bundles, which are not minified, instead of its TypeScript sources.
 
+### Fixed
+
+- A live chart (`mountChart`, or a `flint-chart/react` component) loads its backend's renderer
+  without a bundler: from a CDN such as jsDelivr, from the package's files served as they are, in
+  Deno, or in Node. The lazy imports named the renderer without its extension, which only a bundler
+  (or unpkg's redirect) resolved, so the chart never drew there. ES modules now load `.js` files and
+  CommonJS loads `.cjs` files.
+
 ## [1.1.0] - 2026-11-15
 
 Released together for `flint-chart`, `flint-chart-mcp`, and the Copilot Canvas plugin.
