@@ -16,9 +16,7 @@ import { BOUNDARY_URLS } from '../chart-types/boundaries';
 type Importer = () => Promise<{ default: unknown }>;
 
 // Imported by the package's own name: each is an entry of the published package, which a host's
-// bundler resolves and splits off, wherever this module is bundled from. The package's build
-// writes each as a path from the file it lands in (tsup.config.ts), so the published files need
-// no resolver at all.
+// bundler resolves and splits off, wherever this module is bundled from.
 const worldBankCoarse: Importer = () => import('flint-chart/geo/lazy/world-bank-coarse');
 const worldBankMedium: Importer = () => import('flint-chart/geo/lazy/world-bank-medium');
 const world110m: Importer = () => import('flint-chart/geo/lazy/world-110m');

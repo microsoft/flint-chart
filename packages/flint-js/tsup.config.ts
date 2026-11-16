@@ -1,4 +1,3 @@
-import { dirname, relative, resolve } from 'node:path';
 import { defineConfig, type Options } from 'tsup';
 
 /** The boundaries the renderers import on a map's first draw: one ES module each, split off by the host's bundler. */
@@ -6,23 +5,17 @@ const LAZY_TOPOLOGIES = ['world-bank-coarse', 'world-bank-medium', 'world-110m',
 
 /** The entries the live-chart and React entries load on demand, each kept a file of its own. */
 const LAZY_IMPORT = /import\((['"])(\.\.\/(?:(?:vegalite|echarts|chartjs|plotly)\/interactive|validate\/links))\1\)/g;
-/** The boundaries, which the source imports by the package's own name (src/vegalite/boundary-loader.ts). */
-const BOUNDARY_IMPORT = /import\((['"])flint-chart\/geo\/lazy\/([\w-]+)\1\)/g;
 
 // Node, Deno and a browser reading the files as published resolve no import without its extension,
 // so each format names its own sibling: `.js` from the ES modules, `.cjs` from the CommonJS ones.
-// The boundaries become paths from the file at hand, so an import map or a CDN needs no entry for
-// them. (A tsup plugin, not an esbuild one: with treeshake on, esbuild writes every format as ES modules.)
+// (A tsup plugin, not an esbuild one: with treeshake on, esbuild writes every format as ES modules.)
+// The boundaries keep the package's own name (src/vegalite/boundary-loader.ts): a host aliases it to
+// leave them out of its bundle, as flint-mcp's one-file view does.
 const lazyEntries: NonNullable<Options['plugins']>[number] = {
   name: 'lazy-entries',
-  renderChunk(code, chunk) {
+  renderChunk(code) {
     const extension = this.format === 'cjs' ? '.cjs' : '.js';
-    const boundaries = relative(dirname(chunk.path), resolve(this.options.outDir ?? 'dist', 'geo/lazy')).replace(/\\/g, '/');
-    return {
-      code: code
-        .replace(LAZY_IMPORT, (_, quote, path) => `import(${quote}${path}${extension}${quote})`)
-        .replace(BOUNDARY_IMPORT, (_, quote, name) => `import(${quote}${boundaries.startsWith('.') ? '' : './'}${boundaries}/${name}.js${quote})`),
-    };
+    return { code: code.replace(LAZY_IMPORT, (_, quote, path) => `import(${quote}${path}${extension}${quote})`) };
   },
 };
 
