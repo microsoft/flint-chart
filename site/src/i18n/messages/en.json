@@ -410,6 +410,11 @@
       "title": "Updates",
       "video": "Video",
       "watchVideo": "Watch the Flint 1.0 demo video on YouTube",
+      "release110": {
+        "date": "November 16, 2026",
+        "dateTime": "2026-11-16",
+        "text": "Flint 1.1 brings maps (custom boundaries, globes, routes and labels) and sturdier layouts across every backend."
+      },
       "release100": {
         "date": "October 19, 2026",
         "dateTime": "2026-10-19",
