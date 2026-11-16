@@ -680,6 +680,25 @@ export function plSizeKey(figure: any, title: string | undefined): void {
 }
 
 /**
+ * Text as Plotly measures it, its markup tags (`<br>`, `<b>`) dropped: a `<` through the next `>`, in
+ * one pass. Only measured, never written out as markup.
+ */
+function stripTags(text: string): string {
+    let out = '';
+    let from = 0;
+    for (let open = text.indexOf('<'); open >= 0; open = text.indexOf('<', from)) {
+        const close = text.indexOf('>', open + 1);
+        if (close < 0) break;
+        if (close === open + 1) {
+            // `<>` is no tag: kept, and the scan moves past it.
+            out += text.slice(from, close + 1);
+        } else out += text.slice(from, open);
+        from = close + 1;
+    }
+    return out + text.slice(from);
+}
+
+/**
  * How far the x axis's last label runs past the plot's right edge, in px: half its width, where the
  * axis labels its end (a range rounded to its ticks, or Plotly's own ticks over the data); 0 where
  * the axis prints no labels or ends on a band.
@@ -697,7 +716,7 @@ export function plXEndOverhang(figure: any): number {
         for (const t of figure.data ?? []) for (const v of t?.x ?? []) { const n = Number(v); if (Number.isFinite(n)) hi = Math.max(hi, n); }
         if (Number.isFinite(hi)) last = valueTickLabels([0, hi], 5).slice(-1)[0];
     }
-    return last ? Math.ceil(widthOf(last.replace(/<[^>]+>/g, '')) / 2) : 0;
+    return last ? Math.ceil(widthOf(stripTags(last)) / 2) : 0;
 }
 
 /**
@@ -730,8 +749,6 @@ export function plDrawLargestFirst(figure: any): void {
     const rest = traces.filter((t) => !sized.includes(t));
     figure.data = [...[...sized].sort((a, b) => largest(b) - largest(a)), ...rest];
 }
-
-const stripTags = (text: string) => text.replace(/<[^>]+>/g, '');
 
 /**
  * The key's box as Plotly will draw it ({@link keyBlock} with {@link PLOTLY_PROFILE}): its entries as
