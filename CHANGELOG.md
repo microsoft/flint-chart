@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.0.2] - 2026-11-15
+## [1.1.0] - 2026-11-15
 
 Released together for `flint-chart`, `flint-chart-mcp`, and the Copilot Canvas plugin.
 
@@ -296,22 +296,20 @@ Released together for `flint-chart`, `flint-chart-mcp`, and the Copilot Canvas p
 - `validateChart` now gives an info `note_repeats_chart` when a note repeats a value the
   chart already prints on its mark, such as "Online leads: 61" over a bar labelled 61. A
   note should say what the chart does not. The interaction skill now says so too.
-- A heatmap side over a whole run of months or quarters (every period from the first to the last,
-  up to 50) is drawn as equal cells named by the calendar (`Jan` over `2025`, `Feb`, …) in
-  Vega-Lite too, as ECharts and Plotly draw it. On a time scale its cells, one width each, stood
-  at their months' starts, 28 to 31 days apart, with uneven gaps. The time scale stays one
-  `xAxisType` / `yAxisType` choice away; a run with a gap, or of days, weeks or years, keeps it.
-- **Breaking (MCP):** the server keeps nothing between calls, so it runs
-  stateless. `show` takes the spec itself, as `chart` or `board`, and draws it;
-  `validate_chart` and the new `validate_board` check a spec and return the
-  same report without drawing. `create_chart`, `create_board`, `add_chart`,
-  `update_chart`, `remove_chart`, `update_board` and the card-only
-  `restore_board`, `set_board_theme` and `set_board_layout` are removed. To
-  change what is on screen, the agent changes the spec and calls `show` again.
-  The reader's theme, arrangement and panel edits stay on the card, and its
-  context gives the fields (`theme_spec`, `grid`, `chart_spec`) that keep them in
-  the next `show`. A card the host draws again without its result calls `show`
-  with the spec it was given.
+- A heatmap's cells along a time axis now tile. Each date stands for the period it repeats at,
+  read from the values, whatever the field's type or form (dates, timestamps, epoch
+  milliseconds): its month, quarter or year where the dates step by months, whatever day each
+  falls on (month ends, the 5th, quarter ends); a day, a week or an hour where they keep an
+  exact step; until the next date where they keep about one (13 or 14 days, the 1st and 15th).
+  Before, a cell took the smallest gap in days, so month ends and dates 13 or 14 days apart drew
+  one-day slivers; a whole run of months is no longer turned into named bands. A missing period
+  stays an empty gap, and dates that keep no step are still named one band each. The axis title
+  no longer reads `Date, __cell_x_end`. The same reading decides whether dates on a bar chart
+  are a run of time: dates about 45 days apart, which read as sparse snapshots in days, now
+  stand on a time scale; eight or fewer are still named one band each.
+- A continuous colour key shortened to stand beside a short plot keeps round labels (−40,000 …
+  40,000). Vega-Lite labelled a ramp given a length under 200 px at its two raw ends only
+  (−53,901 and 43,635).
 - A stepped colour scale — a house that bins its ramp (`consumption: 'quantize'`: pop, swiss,
   cartoon, de-stijl) or an author's `bins` — is cut at round values (`roundColorClasses`). The
   step is round (1, 2, 2.5 or 5 of a power of ten), chosen by Talbot, Lin & Hanrahan's extended
@@ -410,10 +408,10 @@ script that measured it.
   as a database `DATE` column serialised to JSON often is) are read as dates under `Year`,
   `YearMonth`, `Date` and the other calendar types: a midnight timestamp becomes its date, so the
   axis shortens its labels (`Jun · Jul · Aug`) as it does for `"2005-05-01"` instead of printing the
-  full timestamp. A `Date` object at local midnight reads the same way. A timestamp without a zone
-  is read in UTC, so marks sit on their date whatever the machine's time zone (before, a Pacific
-  machine drew them 7 h late). A timestamp with a time of day keeps it (one with a zone offset is
-  kept as written).
+  full timestamp. A `Date` object at local midnight reads the same way, so marks sit on their date
+  whatever the machine's time zone (before, a Pacific machine drew them 7 h late). A timestamp with
+  a time of day and no zone stays a wall-clock time, labelled at the hour it says in every time zone
+  (a space before the time is read as `T`); one with a zone offset is kept as written.
 - An enclosure round dots at the edge of the plot is drawn whole: where a dot it encloses sits
   within 12 px of a continuous axis's end, that axis is padded by 12 px (`AssembleOptions.enclosures`,
   set from the chart's first updates), instead of the outline being cut at the plot's edge.
@@ -524,6 +522,20 @@ script that measured it.
 ## [1.0.1] - 2026-10-21
 
 Released together for `flint-chart`, `flint-chart-mcp`, and the Copilot Canvas plugin.
+
+### Changed
+
+- **Breaking (MCP):** the server keeps nothing between calls, so it runs
+  stateless. `show` takes the spec itself, as `chart` or `board`, and draws it;
+  `validate_chart` and the new `validate_board` check a spec and return the
+  same report without drawing. `create_chart`, `create_board`, `add_chart`,
+  `update_chart`, `remove_chart`, `update_board` and the card-only
+  `restore_board`, `set_board_theme` and `set_board_layout` are removed. To
+  change what is on screen, the agent changes the spec and calls `show` again.
+  The reader's theme, arrangement and panel edits stay on the card, and its
+  context gives the fields (`theme_spec`, `grid`, `chart_spec`) that keep them in
+  the next `show`. A card the host draws again without its result calls `show`
+  with the spec it was given.
 
 ### Fixed
 
@@ -1017,8 +1029,8 @@ Released together for `flint-chart`, `flint-chart-mcp`, and the Copilot Canvas p
 - Treated only lowercase `start` and `end` Waterfall Type values as total
   anchors in Vega-Lite; other values now remain floating deltas colored by sign.
 
-[Unreleased]: https://github.com/microsoft/flint-chart/compare/1.0.2...HEAD
-[1.0.2]: https://github.com/microsoft/flint-chart/compare/f098e497...1.0.2
+[Unreleased]: https://github.com/microsoft/flint-chart/compare/1.1...HEAD
+[1.1.0]: https://github.com/microsoft/flint-chart/compare/f098e497...1.1
 [1.0.1]: https://github.com/microsoft/flint-chart/compare/1.0...f098e497
 [1.0.0]: https://github.com/microsoft/flint-chart/compare/0.5.1...1.0
 [0.5.1]: https://github.com/microsoft/flint-chart/compare/0.5...0.5.1

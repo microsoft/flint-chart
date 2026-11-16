@@ -163,6 +163,12 @@ export function vlWriteKeyLayout(
             const keyLayout = index >= 0 ? layout.keys[index] : undefined;
             if (!key || !keyLayout) continue;
             encoding.legend = keyLegend(encoding.legend, keyLayout, key.entries, layout.offsets?.[keyLayout.orient as 'top']);
+            // Vega-Lite labels a continuous ramp given a length under 200 px at its two raw ends
+            // (−53,901 and 43,635); a ramp shortened to the plot keeps round values, one per 40 px.
+            if (keyLayout.gradientLength !== undefined && !BINNED_SCALES.has(encoding.scale?.type)
+                && encoding.legend.values === undefined && encoding.legend.tickCount === undefined) {
+                encoding.legend = { ...encoding.legend, tickCount: Math.max(2, Math.round(keyLayout.gradientLength / 40)) };
+            }
             // A key to values lists the round values the plan sampled, with or without a theme.
             if (key.samples && encoding.legend.values === undefined) {
                 encoding.legend = { ...encoding.legend, values: key.samples, ...exactLegendLabels(encoding.legend, key.samples) };

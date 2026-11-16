@@ -161,7 +161,7 @@ describe('heatmap color defaults', () => {
     expect(spec.layer[0].encoding.y).toMatchObject({ field: 'month', type: 'temporal' });
     // Each cell spans its month on the transposed axis; its value label stands at the month's middle,
     // and both take the data's own extent rather than a stated domain.
-    expect(spec.layer[0].encoding.y2).toEqual({ field: '__cell_y_end' });
+    expect(spec.layer[0].encoding.y2).toEqual({ field: '__cell_y_end', title: 'month' });
     expect(spec.layer[1].encoding.y).toMatchObject({ field: '__cell_y_mid', type: 'temporal' });
     expect(spec.layer[0].encoding.y.scale.domain).toBeUndefined();
     expect(spec.layer[1].encoding.y.scale.domain).toBeUndefined();
@@ -263,8 +263,8 @@ describe('heatmap color defaults', () => {
     expect(spec.encoding.y.type).toBe('temporal');
     expect(spec.mark).toMatchObject({ type: 'rect' });
     // Dates 27 days apart: each cell spans its 27 days on both axes, so the cells tile.
-    expect(spec.encoding.x2).toEqual({ field: '__cell_x_end' });
-    expect(spec.encoding.y2).toEqual({ field: '__cell_y_end' });
+    expect(spec.encoding.x2).toEqual({ field: '__cell_x_end', title: 'xDate' });
+    expect(spec.encoding.y2).toEqual({ field: '__cell_y_end', title: 'yDate' });
     expect(spec.transform).toEqual(expect.arrayContaining([
       { calculate: `utcOffset('day', datum["xDate"], 27)`, as: '__cell_x_end' },
       { calculate: `utcOffset('day', datum["yDate"], 27)`, as: '__cell_y_end' },

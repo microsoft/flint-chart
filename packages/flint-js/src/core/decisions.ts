@@ -118,24 +118,90 @@ export function chronologicalOrder(values: readonly unknown[]): string[] | undef
     return [...seen.entries()].sort((a, b) => a[1] - b[1]).map(([key]) => key);
 }
 
+/** The mean length of a month in days, and how far a date may sit off it and still step by months. */
+const MONTH_DAYS = 365.2425 / 12;
+const MONTH_SLACK_DAYS = 4;
+/** Gaps within this share of the usual one keep about one step (13 or 14 days; the 1st and the 15th). */
+const CADENCE_SLACK = 0.25;
+
 /**
- * How fully dates on the calendar grid fill the periods between the first and the last at their
- * finest regular step (months where every date is a first of the month, days otherwise): the
- * dates counted and the periods spanned. Undefined for dates off the grid (times of day) or fewer
- * than two.
+ * The period each date stands for, read from the dates themselves (a field may hold timestamps
+ * whatever its type says):
+ *
+ * - `months`: one date per calendar period, each a whole number of months after the last whatever
+ *   its day or time (quarter ends, the 5th of each month, years); a date stands for its month,
+ *   quarter or year.
+ * - `ms`, `exact`: every gap a whole number of the step (days, weeks, hours); a date stands for
+ *   the step from it.
+ * - `ms`, not `exact`: the gaps keep about one step (13 or 14 days); a date stands until the next.
+ *
+ * With the dates counted and the periods spanned at that step. Undefined for fewer than two dates,
+ * or times of day that keep no step.
+ */
+export interface DateCadence { months?: number; ms?: number; exact: boolean; count: number; periods: number }
+
+export function dateCadence(times: readonly number[]): DateCadence | undefined {
+    if (times.length < 2) return undefined;
+    const count = times.length;
+    const span = times[count - 1] - times[0];
+    const gaps = times.slice(1).map((time, i) => time - times[i]);
+    const month = times.map((time) => { const d = new Date(time); return d.getUTCFullYear() * 12 + d.getUTCMonth(); });
+    const monthGaps = month.slice(1).map((value, i) => value - month[i]);
+    if (monthGaps.every((g, i) => g > 0 && Math.abs(gaps[i] / DAY_MS - g * MONTH_DAYS) <= MONTH_SLACK_DAYS)) {
+        const step = monthGaps.reduce((g, value) => gcd(g, value), 0);
+        return { months: step, exact: true, count, periods: (month[count - 1] - month[0]) / step + 1 };
+    }
+    const least = Math.min(...gaps);
+    const common = gaps.reduce((g, value) => gcd(g, value), 0);
+    if (!(least > 0) || !(common > 0)) return undefined;
+    if (common === least) return { ms: least, exact: true, count, periods: Math.round(span / least) + 1 };
+    const usual = [...gaps].sort((a, b) => a - b)[Math.floor(gaps.length / 2)];
+    const keeps = gaps.every((g) => Math.abs(g - Math.max(1, Math.round(g / usual)) * usual) <= CADENCE_SLACK * usual);
+    if (keeps) return { ms: usual, exact: false, count, periods: Math.round(span / usual) + 1 };
+    // No step: whole days where the dates are days, at their finest common step; times of day keep none.
+    const midnight = times.every((time) => time % DAY_MS === 0);
+    return midnight ? { ms: common, exact: true, count, periods: span / common + 1 } : undefined;
+}
+
+/**
+ * Where each date's cell runs along a time axis, from {@link dateCadence}: the start and end of the
+ * period it stands for, by date. Undefined where the dates keep no step.
+ */
+export function dateCells(values: readonly unknown[]): { cadence: DateCadence; cells: Map<number, [number, number]> } | undefined {
+    const times = distinctTimes(values);
+    const cadence = dateCadence(times);
+    if (!cadence) return undefined;
+    const cells = new Map<number, [number, number]>();
+    times.forEach((time, i) => {
+        if (cadence.months) {
+            const d = new Date(time);
+            const step = cadence.months;
+            // Quarters, halves and years keep to the calendar's; other steps start at each date's month.
+            const from = 12 % step === 0 ? Math.floor(d.getUTCMonth() / step) * step : d.getUTCMonth();
+            cells.set(time, [Date.UTC(d.getUTCFullYear(), from, 1), Date.UTC(d.getUTCFullYear(), from + step, 1)]);
+        } else if (cadence.exact || i === times.length - 1) {
+            cells.set(time, [time, time + cadence.ms!]);
+        } else {
+            // About one step: a date stands until the next, unless a date is missing between them.
+            const next = times[i + 1];
+            cells.set(time, [time, next - time <= (1 + CADENCE_SLACK) * cadence.ms! ? next : time + cadence.ms!]);
+        }
+    });
+    return { cadence, cells };
+}
+
+/**
+ * How fully dates fill the periods between the first and the last at their step
+ * ({@link dateCadence}): the dates counted and the periods spanned, and whether the step is in
+ * months. Undefined where the dates keep no step.
  */
 function calendarCoverage(times: readonly number[]): { count: number; periods: number; monthly: boolean; step: number } | undefined {
-    if (times.length < 2) return undefined;
-    const dates = times.map((time) => new Date(time));
-    const midnight = dates.every((d) => d.getUTCHours() === 0 && d.getUTCMinutes() === 0 && d.getUTCSeconds() === 0 && d.getUTCMilliseconds() === 0);
-    if (!midnight) return undefined;
-    const monthly = dates.every((d) => d.getUTCDate() === 1);
-    const index = monthly
-        ? dates.map((d) => d.getUTCFullYear() * 12 + d.getUTCMonth())
-        : times.map((time) => Math.round(time / DAY_MS));
-    const step = index.slice(1).reduce((g, value, i) => gcd(g, value - index[i]), 0);
-    if (!(step > 0)) return undefined;
-    return { count: index.length, periods: (index[index.length - 1] - index[0]) / step + 1, monthly, step };
+    const cadence = dateCadence(times);
+    if (!cadence) return undefined;
+    return {
+        count: cadence.count, periods: cadence.periods, monthly: cadence.months !== undefined,
+        step: cadence.months ?? Math.round(cadence.ms! / DAY_MS),
+    };
 }
 
 const distinctTimes = (values: readonly unknown[]): number[] =>
@@ -156,31 +222,16 @@ export function readsAsSnapshots(values: readonly unknown[]): boolean {
     return !!coverage && coverage.count / coverage.periods < SNAPSHOT_MAX_COVERAGE;
 }
 
-/** Charts whose cells tile a grid: a date run along a side is a row of equal cells. */
-export const GRID_CHART_TYPES: ReadonlySet<string> = new Set(['Heatmap']);
-
 /**
- * Whether dates read as a whole calendar run of months or quarters: every period between the
- * first and the last at their regular step present (each month of 2025), and few enough to draw
- * one band each ({@link SNAPSHOT_MAX_BANDS}). On a time scale such cells would take the lengths of
- * their months — 28 to 31 days — and stand unevenly; as bands they tile. Runs of days or weeks,
- * and of years (a day in 365), are even on a time scale already and stay there.
- */
-export function readsAsCalendarRun(values: readonly unknown[]): boolean {
-    const times = distinctTimes(values);
-    if (times.length < 2 || times.length > SNAPSHOT_MAX_BANDS) return false;
-    const coverage = calendarCoverage(times);
-    return !!coverage && coverage.monthly && coverage.step < 12 && coverage.count === coverage.periods;
-}
-
-/**
- * The regular step dates keep on the calendar: whole months (every date a first of the month) or
- * whole days, at their finest common step (3 months for quarters, 7 days for weeks). Undefined for
- * dates off the calendar grid (times of day) or fewer than two.
+ * The regular step dates keep on the calendar: whole months (one date per month, quarter or year,
+ * whatever its day) or whole days, at their finest common step (3 months for quarters, 7 days for
+ * weeks). Undefined for dates that keep no exact step in whole days (times of day, 13 or 14 days).
  */
 export function calendarStep(values: readonly unknown[]): { unit: 'month' | 'day'; step: number } | undefined {
-    const coverage = calendarCoverage(distinctTimes(values));
-    return coverage ? { unit: coverage.monthly ? 'month' : 'day', step: coverage.step } : undefined;
+    const cadence = dateCadence(distinctTimes(values));
+    if (cadence?.months) return { unit: 'month', step: cadence.months };
+    if (!cadence?.exact || cadence.ms! % DAY_MS !== 0) return undefined;
+    return { unit: 'day', step: cadence.ms! / DAY_MS };
 }
 
 // ---------------------------------------------------------------------------
@@ -292,11 +343,6 @@ function resolveTemporalEncoding(
     if ((channel === 'x' || channel === 'y') && context.chartType && BANDED_CHART_TYPES.has(context.chartType)
         && readsAsSnapshots(fieldValues)) {
         return { vlType: 'ordinal', visCategory, channelOverride: true, cardinalityGuard: true, snapshots: true };
-    }
-    // A whole calendar run along a grid's side is a row of equal cells, named by the calendar.
-    if ((channel === 'x' || channel === 'y') && context.chartType && GRID_CHART_TYPES.has(context.chartType)
-        && readsAsCalendarRun(fieldValues)) {
-        return { vlType: 'ordinal', visCategory, channelOverride: true, cardinalityGuard: true };
     }
     return { vlType: 'temporal', visCategory, channelOverride: false, cardinalityGuard: false };
 }

@@ -26,6 +26,7 @@ import { NewThemeTest } from './playground/new-theme-test/NewThemeTest';
 import { ThemeImprovement } from './playground/theme-improvement/ThemeImprovement';
 import { CanvasSqueeze } from './playground/canvas-squeeze/CanvasSqueeze';
 import { MapsLab } from './playground/MapsLab';
+import { HeatmapLab } from './playground/HeatmapLab';
 import { ColorLab } from './playground/ColorLab';
 import { ColorRangeLab } from './playground/ColorRangeLab';
 import { TalkDeckRoute, TalkIndex } from './talk/TalkDeck';
@@ -37,7 +38,7 @@ import { TitleWrapLab } from './playground/TitleWrapLab';
 import { CalendarAxisLab } from './playground/CalendarAxisLab';
 import { CategoricalTemporalLab } from './playground/CategoricalTemporalLab';
 import { ReleaseExamples100 } from './playground/release-examples/1.0.0';
-import { ReleaseExamples102 } from './playground/release-examples/1.0.2';
+import { ReleaseExamples11 } from './playground/release-examples/1.1';
 import { GreekStories } from './playground/fun/GreekStories';
 import { OverflowViewportLab } from './playground/OverflowViewportLab';
 import { ZoomClippingLab } from './playground/ZoomClippingLab';
@@ -140,6 +141,7 @@ function AppRoutes({ locale }: { locale: Locale }) {
           ]} />} />
           <Route path="canvas-squeeze" element={<Navigate to="../canvas-fit" replace />} />
           <Route path="maps" element={<MapsLab />} />
+          <Route path="heatmaps" element={<HeatmapLab />} />
           <Route path="colour" element={<TabbedLab tabs={[
             { id: 'options', label: 'Colour options', element: <ColorLab /> },
             { id: 'range', label: 'Colour range', element: <ColorRangeLab /> },
@@ -162,8 +164,8 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="calendar-axis" element={<Navigate to="../time-axes" replace />} />
           <Route path="categorical-temporal" element={<Navigate to="../time-axes?tab=categorical" replace />} />
           <Route path="release-examples">
-            <Route index element={<Navigate to="1.0.2" replace />} />
-            <Route path="1.0.2" element={<ReleaseExamples102 />} />
+            <Route index element={<Navigate to="1.1" replace />} />
+            <Route path="1.1" element={<ReleaseExamples11 />} />
             <Route path="1.0.0" element={<ReleaseExamples100 />} />
             <Route path="application-demos" element={<Navigate to={localePath('/interactions/advanced', locale)} replace />} />
           </Route>

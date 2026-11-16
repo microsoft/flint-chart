@@ -8,7 +8,7 @@
 
 import type { ChannelSemantics, InstantiateContext } from '../../core/types';
 import { resolveDiscreteType } from '../../core/axis-detection';
-import { calendarStep } from '../../core/decisions';
+import { dateCells } from '../../core/decisions';
 
 // ---------------------------------------------------------------------------
 // Discrete-dimension helpers
@@ -313,9 +313,11 @@ export function spansCalendarCells(spec: any, axis: 'x' | 'y'): boolean {
 }
 
 /**
- * Cells along a time axis span their period. Where the dates keep a regular step on the calendar
- * (whole months, quarters, years, days or weeks), each cell runs from its date to the next step, so
- * neighbours meet whatever a month's length and a missing period stays an empty gap. The fixed pixel
+ * Cells along a time axis span the period each date stands for ({@link dateCells}): its month,
+ * quarter or year where the dates step by months whatever their day (a quarter's end covers the
+ * quarter); the step from it where they keep an exact one (days, weeks, hours); until the next
+ * date where they keep about one (13 or 14 days). Neighbours meet whatever a month's length, and a
+ * missing period stays an empty gap. The fixed pixel
  * width {@link adjustRectTiling} cuts can only fit the shortest month, leaving the rest of every
  * other step open. The scale runs from the first date to the last cell's end, the data's own
  * extent; value labels stand at each cell's middle.
@@ -332,14 +334,32 @@ export function spanCalendarCells(spec: any, ctx: InstantiateContext): void {
         const enc = cells[0].encoding?.[axis] ?? shared[axis];
         if (enc?.type !== 'temporal' || !enc.field || enc.bin || enc.timeUnit || enc.aggregate) continue;
         const values = ctx.table.map((row: any) => row[enc.field]);
-        const calendar = calendarStep(values);
-        if (!calendar) continue;
+        const read = dateCells(values);
+        if (!read) continue;
+        const { cadence, cells: periods } = read;
         const value = `datum[${JSON.stringify(enc.field)}]`;
-        const endExpr = `utcOffset('${calendar.unit}', ${value}, ${calendar.step})`;
+        // A date off its period's start (a quarter's end, the 5th of a month) moves to the start, so
+        // its cell covers the period it stands for.
+        const moved = [...periods].some(([time, [start]]) => start !== time);
+        const months = cadence.months;
+        const startExpr = months && 12 % months === 0 ? `utc(utcyear(${value}), floor(utcmonth(${value}) / ${months}) * ${months}, 1)`
+            : `utc(utcyear(${value}), utcmonth(${value}), 1)`;
+        let endExpr: string;
+        if (months) endExpr = `utcOffset('month', ${value}, ${months})`;
+        else if (cadence.exact) {
+            const days = cadence.ms! / 86_400_000;
+            endExpr = Number.isInteger(days) ? `utcOffset('day', ${value}, ${days})` : `time(${value}) + ${cadence.ms}`;
+        }
+        else {
+            // About one step: each date's cell runs to the next, looked up by the date.
+            const index = `indexof(${JSON.stringify([...periods.keys()])}, time(${value}))`;
+            endExpr = `${index} < 0 ? time(${value}) + ${cadence.ms} : ${JSON.stringify([...periods.values()].map(([, to]) => to))}[${index}]`;
+        }
         const end = cellEndField(axis), mid = `__cell_${axis}_mid`;
         const sizeKey = axis === 'x' ? 'width' : 'height';
         const labelled = units.some((unit) => unit.encoding?.[axis] && markOf(unit) !== 'rect');
         spec.transform = [
+            ...(months && moved ? [{ calculate: startExpr, as: enc.field }] : []),
             { calculate: endExpr, as: end },
             ...(labelled ? [{ calculate: `(time(${value}) + time(${endExpr})) / 2`, as: mid }] : []),
             ...(spec.transform ?? []),
@@ -355,7 +375,9 @@ export function spanCalendarCells(spec: any, ctx: InstantiateContext): void {
             if (markOf(unit) === 'rect') {
                 if (own) unit.encoding[axis] = spanned(own);
                 else shared[axis] = spanned(shared[axis]);
-                unit.encoding = { ...(unit.encoding ?? {}), [`${axis}2`]: { field: end } };
+                // Vega-Lite joins the end field's name into the axis title; this one is a working column.
+                const position = own ?? shared[axis];
+                unit.encoding = { ...(unit.encoding ?? {}), [`${axis}2`]: { field: end, title: 'title' in position ? position.title : position.field } };
                 if (unit.mark && typeof unit.mark === 'object') {
                     const { [sizeKey]: _cut, ...mark } = unit.mark;
                     unit.mark = mark;

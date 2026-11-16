@@ -34,6 +34,7 @@ const pages: NavEntry[] = [
       { to: 'titles', label: 'Titles' },
       { heading: 'Marks, colour and maps' },
       { to: 'density', label: 'Density' },
+      { to: 'heatmaps', label: 'Heatmaps' },
       { to: 'legend', label: 'Legend' },
       { to: 'colour', label: 'Colour' },
       { to: 'maps', label: 'Maps' },
@@ -78,7 +79,7 @@ const pages: NavEntry[] = [
   {
     group: 'Release examples',
     children: [
-      { to: 'release-examples/1.0.2', label: '1.0.2' },
+      { to: 'release-examples/1.1', label: '1.1' },
       { to: 'release-examples/1.0.0', label: '1.0.0' },
       { to: 'fun/greek', label: 'Greek myths on maps' },
     ],

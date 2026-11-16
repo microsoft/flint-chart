@@ -76,12 +76,10 @@ describe('aggregated titles', () => {
 });
 
 describe('calendar dates read as UTC', () => {
-  it('draws a whole run of months as equal cells named by the calendar', () => {
+  it('draws a whole run of months on a time scale, each cell spanning its month', () => {
     const vl = assembleVegaLite(heatmap()) as any;
-    expect(vl.encoding.x.type).toBe('ordinal');
-    expect(vl.encoding.x.sort).toEqual([...new Set(ROWS.map((r) => r.period))].sort());
-    expect(vl.config.axisX.labelExpr).toContain('"Jan"');
-    expect(vl._options.find((o: any) => o.key === 'xAxisType')).toMatchObject({ applicable: true, value: 'nominal' });
+    expect(vl.encoding.x.type).toBe('temporal');
+    expect(vl.encoding.x2).toMatchObject({ field: '__cell_x_end' });
   });
 
   it('describes each cell on its own month, west of UTC too', () => {

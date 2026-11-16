@@ -5,7 +5,7 @@ import { describe, it, expect } from 'vitest';
 import { parse, View } from 'vega';
 import { compile } from 'vega-lite';
 import { assembleVegaLite } from '../src/vegalite/assemble';
-import { calendarStep } from '../src/core/decisions';
+import { calendarStep, dateCadence } from '../src/core/decisions';
 
 /**
  * A heatmap's cells tile, however many months run along its side. Past the count a row of
@@ -117,11 +117,71 @@ describe('a heatmap along a long run of months', () => {
     });
 });
 
+const DAY = 86_400_000;
+/** Dates as the rows hold them, read as Date whatever their form (a field may hold timestamps). */
+const dated = (values: (string | number)[], type = 'Date') => assembleVegaLite({
+    data: { values: values.flatMap((when, m) => ['Alpha', 'Beta', 'Gamma'].map((game, g) => ({ when, game, net: ((m * 7 + g * 5) % 19) - 9 }))) },
+    semantic_types: { when: type, game: 'Category', net: 'Profit' },
+    chart_spec: { chartType: 'Heatmap', encodings: { x: 'when', y: 'game', color: { field: 'net', aggregate: 'sum' } } },
+} as any);
+const tiles = (row: any[]) => row.slice(1).every((cell: any, i: number) => Math.abs(cell.x - (row[i].x + row[i].width)) < 1e-6);
+const monthEnds = (count: number) => Array.from({ length: count }, (_, i) => new Date(Date.UTC(2020, i + 1, 0)).toISOString().slice(0, 10));
+const fortnightly = Array.from({ length: 80 }, (_, i) => new Date(Date.UTC(2016, 0, 1) + Math.floor(i * (365 * 3 / 80)) * DAY).toISOString().slice(0, 10));
+
+describe('the period each date on a heatmap stands for', () => {
+    const times = (values: string[]) => values.map((v) => Date.parse(v));
+
+    it('reads months whatever the day: month ends, the 5th, quarter ends', () => {
+        expect(dateCadence(times(monthEnds(24)))).toMatchObject({ months: 1, count: 24, periods: 24 });
+        expect(dateCadence(times(Array.from({ length: 12 }, (_, i) => `2024-${String(i + 1).padStart(2, '0')}-05`)))).toMatchObject({ months: 1 });
+        expect(dateCadence(times(['2023-03-31', '2023-06-30', '2023-09-30', '2023-12-31']))).toMatchObject({ months: 3 });
+        // Days a month apart only across a month's turn are days, not months.
+        expect(dateCadence(times(['2024-01-31', '2024-02-01', '2024-03-02']))?.months).toBeUndefined();
+    });
+
+    it('reads an exact step in days or hours, and about one where the days drift', () => {
+        expect(dateCadence(times(['2024-01-01', '2024-01-02', '2024-01-05']))).toMatchObject({ ms: DAY, exact: true });
+        expect(dateCadence(times(['2024-03-01T00:00:00Z', '2024-03-01T01:00:00Z', '2024-03-01T03:00:00Z']))).toMatchObject({ ms: 3_600_000, exact: true });
+        expect(dateCadence(times(fortnightly))).toMatchObject({ ms: 14 * DAY, exact: false });
+        const twiceAMonth = Array.from({ length: 6 }, (_, i) => [`2024-0${i + 1}-01`, `2024-0${i + 1}-15`]).flat();
+        expect(dateCadence(times(twiceAMonth))).toMatchObject({ exact: false });
+    });
+
+    it('tiles month ends as months: each moves to its month\'s start and spans it', async () => {
+        const spec: any = dated(monthEnds(60));
+        expect(spec.encoding.x.type).toBe('temporal');
+        expect(spec.transform).toEqual(expect.arrayContaining([expect.objectContaining({ as: 'when' })]));
+        const { row } = await drawn(spec);
+        expect(row).toHaveLength(60);
+        expect(tiles(row)).toBe(true);
+    });
+
+    it('tiles dates 13 or 14 days apart: each cell runs to the next date', async () => {
+        const { row } = await drawn(dated(fortnightly));
+        expect(row).toHaveLength(80);
+        expect(tiles(row)).toBe(true);
+        expect(Math.min(...row.map((c: any) => c.width))).toBeGreaterThan(1);
+    });
+
+    it('tiles timestamps a day apart at a time of day', async () => {
+        const stamps = Array.from({ length: 60 }, (_, i) => new Date(Date.UTC(2024, 0, 1) + i * DAY + 9.5 * 3_600_000).toISOString());
+        const { row } = await drawn(dated(stamps, 'DateTime'));
+        expect(row).toHaveLength(60);
+        expect(tiles(row)).toBe(true);
+    });
+
+    it('names the cells\' end column after the axis, not as a working column', () => {
+        const spec: any = dated(monthEnds(60));
+        expect(spec.encoding.x2.title).toBe('when');
+    });
+});
+
 describe('calendar steps', () => {
     it('reads months, quarters and days, and nothing off the calendar', () => {
         expect(calendarStep(months(6))).toEqual({ unit: 'month', step: 1 });
         expect(calendarStep(['2024-01', '2024-04', '2024-07', '2024-10'])).toEqual({ unit: 'month', step: 3 });
         expect(calendarStep(['2024-01-01', '2024-01-02', '2024-01-04'])).toEqual({ unit: 'day', step: 1 });
         expect(calendarStep(['2024-01-01T10:30:00Z', '2024-01-01T11:30:00Z'])).toBeUndefined();
+        expect(calendarStep(['2024-01-31', '2024-02-29', '2024-03-31'])).toEqual({ unit: 'month', step: 1 });
     });
 });

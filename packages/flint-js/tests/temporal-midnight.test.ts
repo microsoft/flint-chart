@@ -52,16 +52,17 @@ async function drawn(chartType: string, semanticType: string, value: (month: str
 }
 
 describe('a midnight timestamp under a date type', () => {
-    it('reads as its date, and a zoneless timestamp with a time as UTC', () => {
+    it('reads as its date, and keeps a zoneless time of day as a wall-clock time', () => {
         expect(readIsoTimestamp('2005-05-01T00:00:00.000', true)).toBe('2005-05-01');
         expect(readIsoTimestamp('2005-05-01T00:00:00Z', true)).toBe('2005-05-01');
         expect(readIsoTimestamp('2005-05-01 00:00', true)).toBe('2005-05-01');
-        expect(readIsoTimestamp('2005-05-01T00:00:00.000', false)).toBe('2005-05-01T00:00:00.000Z');
-        expect(readIsoTimestamp('2005-05-01T13:30:00', true)).toBe('2005-05-01T13:30:00Z');
+        expect(readIsoTimestamp('2005-05-01T00:00:00.000', false)).toBe('2005-05-01T00:00:00.000');
+        expect(readIsoTimestamp('2005-05-01T13:30:00', true)).toBe('2005-05-01T13:30:00');
+        expect(readIsoTimestamp('2005-05-01 13:30', false)).toBe('2005-05-01T13:30:00');
         expect(readIsoTimestamp('2005-05-01T13:30:00+02:00', true)).toBeNull();
         expect(readIsoTimestamp('2005-05-01', true)).toBeNull();
         expect(convertTemporalData([{ m: '2005-05-01T00:00:00.000' }], { m: 'YearMonth' })[0].m).toBe('2005-05-01');
-        expect(convertTemporalData([{ m: '2005-05-01T09:15:00' }], { m: 'DateTime' })[0].m).toBe('2005-05-01T09:15:00Z');
+        expect(convertTemporalData([{ m: '2005-05-01T09:15:00' }], { m: 'DateTime' })[0].m).toBe('2005-05-01T09:15:00');
     });
 
     for (const tz of ['UTC', 'America/Los_Angeles']) {
@@ -75,6 +76,35 @@ describe('a midnight timestamp under a date type', () => {
                     expect(other.xs, `${chartType} ${width} ${name}`).toEqual(base.xs);
                 }
             }
+        });
+    }
+});
+
+describe('a time of day with no zone', () => {
+    for (const tz of ['UTC', 'America/Los_Angeles']) {
+        it(`is labelled at the hour it says, in ${tz}`, async () => {
+            process.env.TZ = tz;
+            const spec: any = assembleVegaLite({
+                data: { values: Array.from({ length: 24 }, (_, h) => ({ t: `2020-01-15T${String(h).padStart(2, '0')}:00:00`, v: 100 + h })) },
+                semantic_types: { t: 'DateTime', v: 'Quantity' },
+                chart_spec: { chartType: 'Bar Chart', encodings: { x: { field: 't' }, y: { field: 'v' } }, canvasSize: { width: 600, height: 300 } },
+            } as any);
+            const clean = JSON.parse(JSON.stringify(spec, (key, v) => (key.startsWith('_') ? undefined : v)));
+            const view = new View(parse(compile(clean).spec), { renderer: 'none' });
+            await view.runAsync();
+            const labels: string[] = [];
+            const visit = (node: any): void => {
+                if (!node) return;
+                if (node.marktype === 'text' && node.role === 'axis-label') labels.push(...node.items.map((item: any) => String(item.text)));
+                (node.items ?? []).forEach(visit);
+            };
+            visit((view.scenegraph() as any).root);
+            view.finalize();
+            const hours = labels.filter((text) => /AM|PM|Jan/.test(text));
+            // The day starts at midnight on the 15th: no label falls on the 14th.
+            expect(hours[0]).toMatch(/^Jan 15/);
+            expect(hours.join(' ')).not.toMatch(/Jan 14/);
+            expect(hours).toContain('6 AM');
         });
     }
 });

@@ -10,6 +10,7 @@ import { ScaleToFit } from '../components/ScaleToFit';
 import { FlintView } from '../components/FlintView';
 import { testCaseToAssemblyInput, withHouse } from '../shared/test-case-utils';
 import { siteTheme } from '../shared/theme';
+import { ReleaseBlockers } from './ReleaseBlockers';
 
 const rows = [
   ['惠普', 2025, 49933.56], ['惠普', 2026, 30973.54],
@@ -847,6 +848,7 @@ export function DebugGym() {
           <code> 年度</code> remains quantitative.
         </p>
       </header>
+      <ReleaseBlockers />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 420px), 1fr))', gap: 12, width: 'min(100%, 1080px)' }}>
         <CasePanel typed />
         <CasePanel typed={false} />

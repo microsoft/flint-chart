@@ -29,6 +29,8 @@ const input = (games: number, months: number) => {
             chartType: 'Heatmap', title: 'Net new users by game', subtitle: 'Monthly net change in active users',
             encodings: { x: 'period', y: 'game', color: { field: 'newUsers', aggregate: 'sum' } },
             baseSize: { width: 480, height: 330 }, canvasSize: { width: 700, height: 500 },
+            // Months as bands: the layout a short plot moves its key beside.
+            chartProperties: { xAxisType: 'nominal' },
         },
         theme_spec: 'economist',
     } as any;

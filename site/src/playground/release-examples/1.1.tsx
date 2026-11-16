@@ -7,7 +7,7 @@ import { odysseyLookInHouse, odysseyOpeningUpdates, odysseySpec } from '../Odyss
 import '../axis-label-lab.css';
 
 /**
- * Release 1.0.2 at a glance: one board of the new maps, sized to be taken in a single screenshot,
+ * Flint 1.1 at a glance: one board of the new maps, sized to be taken in a single screenshot,
  * and the release notes in Markdown, to paste.
  */
 
@@ -123,7 +123,7 @@ function Tile({ tile }: { tile: MapTile }) {
   );
 }
 
-const NOTES = `## Flint 1.0.2
+const NOTES = `## Flint 1.1: Layouts and Maps
 
 ### Maps
 - **Boundaries:** world maps draw World Bank Official Boundaries, and map boundaries can be customized (\`chartProperties.boundaries\`).
@@ -165,7 +165,7 @@ Faster compiles on large data, from Shayne Boyer (@spboyer, #160). Each change k
 ### Fixes
 
 **Reading data**
-- **ISO timestamps are read as dates.** Dates that arrive as timestamps (\`"2005-05-01T00:00:00.000"\`, \`"…Z"\`, \`"2005-05-01 00:00:00"\`, as a database \`DATE\` column often serialises) are read as dates under \`Year\`, \`YearMonth\`, \`Date\` and the other calendar types. A midnight timestamp becomes its date, so the axis prints short labels (\`Jun · Jul · Aug\`) instead of full timestamps. A timestamp without a zone is read in UTC, so marks sit on their date in every time zone (a Pacific machine used to draw them 7 hours late).
+- **ISO timestamps are read as dates.** Dates that arrive as timestamps (\`"2005-05-01T00:00:00.000"\`, \`"…Z"\`, \`"2005-05-01 00:00:00"\`, as a database \`DATE\` column often serialises) are read as dates under \`Year\`, \`YearMonth\`, \`Date\` and the other calendar types. A midnight timestamp becomes its date, so the axis prints short labels (\`Jun · Jul · Aug\`) instead of full timestamps. Marks sit on their date in every time zone (a Pacific machine used to draw them 7 hours late), and a time of day without a zone is labelled at the hour it says.
 - **Percentages stored as fractions print as percentages.** A \`Percentage\` field holding 0.164 prints \`16.4%\`, not \`0.164\`, without needing an \`intrinsicDomain\`.
 - **\`Number\` is not added up.** A field typed \`Number\` has unknown additivity, so it is no longer summed or stacked by default: a bar's label or share takes the encoding's \`aggregate\`, else the mean. Type totals as \`Count\`, \`Amount\`, \`Quantity\` or \`Profit\`; an untyped numeric field still sums.
 - **One-letter units keep their case.** A unit of \`M\` is millions, not metres.
@@ -203,9 +203,6 @@ Faster compiles on large data, from Shayne Boyer (@spboyer, #160). Each change k
 
 **Installing**
 - **\`npm install flint-chart\` is the whole install** (#155). An app no longer fails to build for want of a backend it doesn't use: \`flint-chart\` now depends on every backend it draws with. For single-file bundles, new \`flint-chart/react/<backend>\` and \`flint-chart/interactive/<backend>\` entries carry just one library.
-
-### Breaking (MCP)
-- The server keeps nothing between calls: \`show\` takes the spec itself, and \`validate_chart\` and the new \`validate_board\` check a spec without drawing it.
 `;
 
 function MarkdownBlock({ text }: { text: string }) {
@@ -228,15 +225,15 @@ const board: CSSProperties = {
   width: 'max-content', padding: '16px 18px 14px', border: `1px solid ${siteTheme.border}`, borderRadius: 10, background: '#fff',
 };
 
-export function ReleaseExamples102() {
+export function ReleaseExamples11() {
   return <section className="axis-label-lab release-examples" style={{ maxWidth: 1240 }}>
     <header className="axis-label-heading">
-      <h1>Release 1.0.2</h1>
+      <h1>Flint 1.1: Layouts and Maps</h1>
     </header>
 
     <section id="maps" aria-label="New in maps" style={{ display: 'grid', gap: 10, marginTop: 8 }}>
       <div style={board}>
-        <h2 style={{ gridColumn: '1 / -1', margin: '0 0 8px', fontSize: 18 }}>New in Flint 1.0.2: maps</h2>
+        <h2 style={{ gridColumn: '1 / -1', margin: '0 0 8px', fontSize: 18 }}>New in Flint 1.1: maps</h2>
         {COLUMNS.map((column) => (
           <div key={column[0]} style={{ display: 'grid', gap: 10 }}>
             {column.map((id) => <Tile key={id} tile={TILES[id]} />)}
