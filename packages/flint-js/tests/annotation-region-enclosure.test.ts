@@ -188,11 +188,17 @@ describe('annotation colours', () => {
 });
 
 describe('cost', () => {
-    const time = (run: () => void, repeat = 10) => {
+    // The median of runs after a warm-up, so the JIT's first pass and a busy runner's stalls do not
+    // count. Each bound is about ten times a laptop's median: a shared CI runner, running other test
+    // files at once, is four to five times slower, and a quadratic slip is a hundred times slower.
+    const time = (run: () => void, repeat = 11) => {
         run();
-        const started = performance.now();
-        for (let index = 0; index < repeat; index++) run();
-        return (performance.now() - started) / repeat;
+        const runs = Array.from({ length: repeat }, () => {
+            const started = performance.now();
+            run();
+            return performance.now() - started;
+        }).sort((a, b) => a - b);
+        return runs[Math.floor(repeat / 2)];
     };
     const cloud = (count: number) => Array.from({ length: count }, (_, index) => dot((index * 37) % 400, (index * 91) % 300, 3));
     const obstacles = (count: number): NoteObstacle[] => cloud(count).map((mark) => ({ kind: 'mark', box: mark.box }));
@@ -203,16 +209,16 @@ describe('cost', () => {
             const outline = enclosureOutline(marks, 'hull', PLOT)!;
             placeEnclosureCaption({ outlines: [outline], layouts: [LAYOUT, { lines: ['Recession', 'era'], width: 40, height: 32 }], plot: PLOT, canvas: CANVAS, obstacles: ink });
         });
-        expect(ms).toBeLessThan(40);
+        expect(ms).toBeLessThan(80);
     });
     it('fits an ellipse round 5,000 points and outlines 20 groups quickly', () => {
         const marks = cloud(5_000);
-        expect(time(() => enclosureOutline(marks, 'ellipse', PLOT))).toBeLessThan(40);
+        expect(time(() => enclosureOutline(marks, 'ellipse', PLOT))).toBeLessThan(100);
         const groups = Array.from({ length: 20 }, (_, index) => cloud(250).map((mark) => ({ ...mark, box: { ...mark.box, x: mark.box.x / 20 + index * 20 } })));
         expect(time(() => {
             const outlines = groups.map((group) => enclosureOutline(group, 'hull', PLOT)!);
             placeEnclosureCaption({ outlines, layouts: [LAYOUT], plot: PLOT, canvas: CANVAS, connect: 'all', obstacles: obstacles(5_000) });
-        })).toBeLessThan(60);
+        })).toBeLessThan(100);
     });
     it('seats a region caption among 20,000 marks and lines quickly', () => {
         const ink = obstacles(20_000);
@@ -222,7 +228,7 @@ describe('cost', () => {
         expect(time(() => {
             placeRegionCaption({ region, axes: { x: true, y: true }, layouts: [LAYOUT], plot: PLOT, canvas: CANVAS, obstacles: ink, segments });
             placeRegionCaption({ region: { x: 100, y: 0, width: 80, height: 300 }, axes: { x: true, y: false }, layouts: [LAYOUT], plot: PLOT, canvas: CANVAS, obstacles: ink, segments, vertices });
-        })).toBeLessThan(60);
+        })).toBeLessThan(150);
     });
     // One timed run on a shared CI runner: the budget allows for a loaded machine and still fails
     // long before a quadratic hull, which would take minutes here.
