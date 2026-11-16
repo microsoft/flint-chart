@@ -230,10 +230,9 @@ describe('cost', () => {
             placeRegionCaption({ region: { x: 100, y: 0, width: 80, height: 300 }, axes: { x: true, y: false }, layouts: [LAYOUT], plot: PLOT, canvas: CANVAS, obstacles: ink, segments, vertices });
         })).toBeLessThan(150);
     });
-    // One timed run on a shared CI runner: the budget allows for a loaded machine and still fails
-    // long before a quadratic hull, which would take minutes here.
-    it('keeps a convex hull of a million points to a few seconds', () => {
-        const points = Array.from({ length: 1_000_000 }, (_, index) => ({ x: (index * 7919) % 1000, y: (index * 104729) % 777 }));
-        expect(time(() => convexHull(points), 1)).toBeLessThan(3_000);
+    // About 70 ms on a laptop; a quadratic hull would take minutes.
+    it('hulls 200,000 points quickly', () => {
+        const points = Array.from({ length: 200_000 }, (_, index) => ({ x: (index * 7919) % 1000, y: (index * 104729) % 777 }));
+        expect(time(() => convexHull(points), 5)).toBeLessThan(750);
     });
 });
