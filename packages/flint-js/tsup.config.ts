@@ -36,7 +36,9 @@ const library: Options = {
   },
   format: ['esm', 'cjs'],
   dts: true,
-  sourcemap: true,
+  // No source maps: they made up three quarters of the package (157 of 220 MB) and put it past
+  // jsDelivr's 150 MB limit. The bundles are not minified, so a stack trace into them still reads.
+  sourcemap: false,
   clean: true,
   splitting: false,
   treeshake: true,

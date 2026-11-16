@@ -11,6 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `flint-chart` no longer ships source maps. The package downloads at 15.6 MB instead of 48.6 MB
+  (64 MB unpacked instead of 220 MB), which brings it back under jsDelivr's 150 MB limit: jsDelivr
+  could not serve 1.1.0. Nothing a chart draws changes; a stack trace into Flint now points into
+  its bundles, which are not minified, instead of its TypeScript sources.
+
 ## [1.1.0] - 2026-11-15
 
 Released together for `flint-chart`, `flint-chart-mcp`, and the Copilot Canvas plugin.
