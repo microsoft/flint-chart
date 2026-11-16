@@ -1,9 +1,9 @@
-import { defineConfig } from 'tsup';
+import { defineConfig, type Options } from 'tsup';
 
 /** The boundaries the renderers import on a map's first draw: one ES module each, split off by the host's bundler. */
 const LAZY_TOPOLOGIES = ['world-bank-coarse', 'world-bank-medium', 'world-110m', 'states-10m', 'counties-albers-10m'];
 
-export default defineConfig([{
+const library: Options = {
   entry: {
     index: 'src/index.ts',
     'core/index': 'src/core/index.ts',
@@ -48,7 +48,9 @@ export default defineConfig([{
     // The bundled boundaries, imported by the package's own name (see src/vegalite/boundary-loader.ts).
     /^flint-chart\/geo\/lazy\//,
   ],
-}, {
+};
+
+const lazyGeo: Options = {
   entry: Object.fromEntries(LAZY_TOPOLOGIES.map((name) => [`geo/lazy/${name}`, `src/geo/lazy/${name}.js`])),
   format: ['esm'],
   dts: false,
@@ -56,4 +58,12 @@ export default defineConfig([{
   clean: false,
   splitting: false,
   target: 'es2020',
-}]);
+};
+
+// tsup runs the ESM, CJS and declaration builds at once, and together they outgrow an 8 GB build
+// agent. `npm run build` runs the bundles first, then `tsup --dts-only` for the declarations.
+export default defineConfig((cli) => {
+  if (cli.watch) return [library, lazyGeo];
+  if (typeof cli.dts === 'object' && cli.dts.only) return { ...library, clean: false };
+  return [{ ...library, dts: false }, lazyGeo];
+});

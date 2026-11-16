@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { changeset, parse, View, type GroupMark } from 'vega';
 import { expressionInterpreter } from 'vega-interpreter';
 import { compile } from 'vega-lite';
@@ -1202,6 +1202,14 @@ describe('Vega-Lite semantic interactions', () => {
             factor: 4, anchor: { x: 0.25, y: 0.5 },
         }, guard)!;
 
+        // The tween's frames run on a fake clock, so how many it draws does not hang on the machine's load.
+        vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'performance'] });
+        onTestFinished(() => { vi.useRealTimers(); });
+        const settle = async () => {
+            const done = controller.settled!();
+            await vi.advanceTimersByTimeAsync(1_000);
+            await done;
+        };
         // The tween starts on the domain on screen; nothing lands before the first frame.
         const phases: string[] = [];
         expect(controller.apply(zoom, { transition: { duration: 60, onFrame: (phase) => phases.push(phase) } })).toBe(true);
@@ -1212,7 +1220,7 @@ describe('Vega-Lite semantic interactions', () => {
         expect(controller.apply(zoom)).toBe(true);
         await view.runAsync();
         expect(view.scale('x').domain().map(Number)).toEqual(initial);
-        await controller.settled!();
+        await settle();
         const landed: number[] = view.scale('x').domain().map(Number);
         const target = zoom.value.x!.map(Number);
         landed.forEach((value, index) => expect(value).toBeCloseTo(target[index], 6));
@@ -1233,7 +1241,7 @@ describe('Vega-Lite semantic interactions', () => {
                 },
             },
         });
-        await controller.settled!();
+        await settle();
         expect(new Set(operations)).toEqual(new Set(['reset']));
         expect(view.scale('x').domain().map(Number)).toEqual(initial);
         expect(spans.some((span) => span > target[1] - target[0] && span < initial[1] - initial[0])).toBe(true);
@@ -1242,7 +1250,7 @@ describe('Vega-Lite semantic interactions', () => {
         const cancelled: string[] = [];
         controller.apply(zoom, { transition: { duration: 500, onFrame: (phase) => cancelled.push(phase) } });
         controller.apply({ op: 'set-viewport', axes: 'x', value: {} });
-        await controller.settled!();
+        await settle();
         await view.runAsync();
         expect(view.scale('x').domain().map(Number)).toEqual(initial);
         expect(cancelled).not.toContain('commit');
