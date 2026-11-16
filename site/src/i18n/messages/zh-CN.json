@@ -411,8 +411,8 @@
       "video": "视频",
       "watchVideo": "在 YouTube 观看 Flint 1.0 演示视频",
       "release110": {
-        "date": "2026 年 11 月 16 日",
-        "dateTime": "2026-11-16",
+        "date": "2026 年 11 月 15 日",
+        "dateTime": "2026-11-15",
         "text": "Flint 1.1 带来地图（自定义边界、地球仪、路线与标签），并让各后端的布局更稳健。"
       },
       "release100": {
