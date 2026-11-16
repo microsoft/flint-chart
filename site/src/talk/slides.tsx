@@ -13,7 +13,7 @@ import { YouDrawItStage } from '../playground/YouDrawItStage';
 import { ArticleSection } from '../playground/InteractiveDataReportLab';
 import { TIME_USE } from '../playground/interactive-data-report-content';
 import {
-  FLINT_BASE, LONG_ROWS, TYPES_FLINT, typesCompiled, CARS, flintInput, flintShown, linkedYears, PICKED_GAME, PICKED_ROWS, STEPS, VL, foodLines, gameBars, heatmap, lineByType,
+  FLINT_BASE, LONG_ROWS, TYPES_FLINT, typesCompiled, INTRO, flintInput, flintShown, linkedYears, PICKED_GAME, PICKED_ROWS, STEPS, VL, foodLines, gameBars, heatmap, lineByType,
   penguins, picked, withData, type FlintState,
 } from './data';
 import {
@@ -22,7 +22,11 @@ import {
 } from './parts';
 import glue from './specs/vl-final-glue.txt?raw';
 
-export interface SlideDef { id: string; kind?: 'title' | 'section' | 'statement'; render: () => ReactNode }
+export interface SlideDef {
+  id: string; kind?: 'title' | 'section' | 'statement' | 'full'; section?: string; render: () => ReactNode;
+  /** A divider (backup slides, say): it shows no page number, and the slides after it are numbered from 1 again. */
+  restartCount?: boolean;
+}
 
 const UPDATE_PROMPTS: Record<string, string> = {
   dense: 'Show all 24 games.',
@@ -32,7 +36,7 @@ const UPDATE_PROMPTS: Record<string, string> = {
 };
 
 const fmt = (n: number) => n.toLocaleString('en-US', { signDisplay: 'always' });
-const Cell = ({ caption, children, framed }: { caption?: string; children: ReactNode; framed?: boolean }) => (
+export const Cell = ({ caption, children, framed }: { caption?: string; children: ReactNode; framed?: boolean }) => (
   <div className="talk-cell">
     <div className={framed ? 'talk-fit talk-framed' : 'talk-fit'} style={{ display: 'flex' }}>{children}</div>
     {caption && <p className="talk-caption">{caption}</p>}
@@ -40,24 +44,28 @@ const Cell = ({ caption, children, framed }: { caption?: string; children: React
 );
 
 /** One step of the traditional way: the code and chart before, then the code and chart after. */
-const Step = ({ before, beforeSpec, after, afterSpec, note, flaws }: { before: CodeSource; beforeSpec: unknown; after: CodeSource; afterSpec: unknown; note?: ReactNode; flaws?: Flaw[] }) => (<>
+export const Step = ({ before, beforeSpec, beforeChart, after, afterSpec, afterChart, note, flaws }: {
+  before: CodeSource; beforeSpec: unknown; beforeChart?: ReactNode;
+  after: CodeSource; afterSpec: unknown; afterChart?: ReactNode;
+  note?: ReactNode; flaws?: Flaw[];
+}) => (<>
   <div className="talk-body talk-step">
-    <div className="talk-col"><Code rows={before} tone="vl" />{flaws ? <FlawedVegaLite spec={beforeSpec} flaws={flaws} /> : <VegaLite spec={beforeSpec} />}</div>
+    <div className="talk-col"><Code rows={before} tone="vl" />{beforeChart ?? (flaws ? <FlawedVegaLite spec={beforeSpec} flaws={flaws} /> : <VegaLite spec={beforeSpec} />)}</div>
     <div className="talk-arrow">→</div>
-    <div className="talk-col"><Code rows={after} tone="vl" /><VegaLite spec={afterSpec} /></div>
+    <div className="talk-col"><Code rows={after} tone="vl" />{afterChart ?? <VegaLite spec={afterSpec} />}</div>
   </div>
   {note && <p className="talk-note">{note}</p>}
 </>);
 
-// Each step's code: the new spec with what changed in red. The next slide starts from it, in black.
-const ROWS = {
+// Each step's code: the new spec with what changed highlighted. The next slide starts from it, in black.
+export const ROWS = {
   raw: stepLayout(STEPS.raw),
   parse: stepLayout(STEPS.parse, STEPS.raw),
   layout: stepLayout(STEPS.layout, STEPS.parse),
   theme: stepLayout(STEPS.theme, STEPS.layout),
   final: stepLayout(STEPS.final, STEPS.theme),
 };
-const DIFF = {
+export const DIFF = {
   parse: lineDiff(STEPS.raw, STEPS.parse),
   layout: lineDiff(STEPS.parse, STEPS.layout),
   theme: lineDiff(STEPS.layout, STEPS.theme, 72),
@@ -121,7 +129,7 @@ const FLINT_W = 52;
  * The type tree: the drawn boxes and connectors from the sketch, with the branch text set over them in
  * the deck's own type. Both sit on the same 1000 × 720 frame, so the text stays on its line at any size.
  */
-const TypeTree = () => (
+export const TypeTree = () => (
   <div className="talk-fit">
     <div className="talk-frame" style={{ aspectRatio: '1000 / 720' }}>
       <Sketch name="typesTree" />
@@ -143,7 +151,7 @@ const USE_CASES = [
 ];
 
 /** The three specs, labelled under the sketch's three panels, each in its section color. */
-const SPECS = [
+export const SPECS = [
   { title: 'The chart spec', short: 'What the data means.', long: 'Semantic types and a layout engine take care of what the data means.', color: '#2f6db5' },
   { title: 'The theme spec', short: 'How it looks.', long: 'A formal specification of style, written once for every chart.', color: '#e8954a' },
   { title: 'The interaction spec', short: 'How it behaves.', long: 'Semantic events and update operators describe how a chart behaves.', color: '#d9534f' },
@@ -153,7 +161,7 @@ const SPECS = [
  * A three-panel sketch with readable labels under its panels. With `focus`, the sketch circles that
  * panel, its label is spelled out, and the other two fade back.
  */
-const Trio = ({ sketch, items, focus }: {
+export const Trio = ({ sketch, items, focus }: {
   sketch: string; items: { title: string; short: string; long: string; color?: string }[]; focus?: number;
 }) => (
   <div className="talk-body column" style={{ gap: 8 }}>
@@ -171,7 +179,7 @@ const Trio = ({ sketch, items, focus }: {
 const UseCases = ({ focus }: { focus?: number }) => <Trio sketch="useCase" items={USE_CASES} focus={focus} />;
 
 /** The "draw your guess" demo's interaction, condensed: a trigger, and a handler that answers with an update. */
-const BESPOKE_ROWS: CodeRow[] = [
+export const BESPOKE_ROWS: CodeRow[] = [
   { text: 'const draw: CanvasInteractionDef = {', hot: true },
   { text: '  id: "draw-guess",' },
   { text: '  eventSource: lassoTrigger("contain"),', hot: true },
@@ -248,19 +256,21 @@ const INTERACTION_ROWS: CodeRow[] = [
   { text: '{ "ops": [' },
   { text: '  { "op": "set-style", "targets": [target],', hot: true },
   { text: '    "value": { "state": "emphasized" } },', hot: true },
-  { text: '  { "op": "set-annotation", "target": target,', hot: true },
+  { text: '  { "op": "annotate-text", "target": target,', hot: true },
   { text: '    "value": { "text": "Launch month" } }', hot: true },
   { text: '] }' },
 ];
-const TYPES_COMPILED = typesCompiled();
-const UPDATES: { id: string; title: string; prompt: string; change: Partial<FlintState> }[] = [
+export const TYPES_COMPILED = typesCompiled();
+export interface FlintUpdate { id: string; title: string; prompt: string; change: Partial<FlintState> }
+export const UPDATES: FlintUpdate[] = [
   { id: 'u-theme', title: 'Another theme is a one-line change', prompt: 'Use the Datawrapper style instead.', change: { theme: 'datawrapper' } },
   { id: 'u-swap', title: 'Swapping the axes swaps two names', prompt: 'Put the games across and the months down.', change: { swap: true } },
   { id: 'u-facet', title: 'One panel per region is one more encoding', prompt: 'Split it into a panel for each region.', change: { facet: true } },
   { id: 'u-brush', title: 'Brushing instead of clicking is one line', prompt: 'Let me brush a range of months instead of clicking a game.', change: { brush: true } },
   { id: 'u-pop', title: 'And a pop look is still one line', prompt: 'Now make it pop: bold colors and playful type.', change: { theme: 'pop' } },
 ];
-const UPDATE_SLIDES: SlideDef[] = UPDATES.reduce<{ state: FlintState; slides: SlideDef[] }>(({ state, slides }, u) => {
+/** One slide per request, each starting where the last one left off. */
+export const updateSlides = (updates: FlintUpdate[]): SlideDef[] => updates.reduce<{ state: FlintState; slides: SlideDef[] }>(({ state, slides }, u) => {
   const next = { ...state, ...u.change };
   const prev = flintShown(state), shown = flintShown(next);
   const { plus } = lineDiff(prev, shown, FLINT_W);
@@ -274,18 +284,19 @@ const UPDATE_SLIDES: SlideDef[] = UPDATES.reduce<{ state: FlintState; slides: Sl
         </div>
         <div className="talk-col" style={{ flex: '1.2 1 0' }}>
           <Chart spec={flintInput(next)} />
-          <p className="talk-caption">{plus === 1 ? 'One line changed' : `${plus} lines changed`}, in red. Nothing else in the spec moved.</p>
+          <p className="talk-caption">{plus === 1 ? 'One line changed' : `${plus} lines changed`}, highlighted. Nothing else in the spec moved.</p>
         </div>
       </div>
     </>),
   });
   return { state: next, slides };
 }, { state: FLINT_BASE, slides: [] }).slides;
+const UPDATE_SLIDES = updateSlides(UPDATES);
 
 export const SLIDES: SlideDef[] = [
   // ======================================================== Act 0
   {
-    id: 'title', kind: 'title', render: () => (<>
+    id: 'title', section: 'Opening', kind: 'title', render: () => (<>
       <h1>Flint: a visualization language for the AI era</h1>
       <p className="talk-lead"><a href="https://microsoft.github.io/flint-chart">microsoft.github.io/flint-chart</a></p>
       <div className="talk-grid" style={{ gridTemplateColumns: 'minmax(0, 1.45fr) minmax(0, 1fr) minmax(0, 0.7fr)', marginTop: 20 }}>
@@ -320,12 +331,12 @@ export const SLIDES: SlideDef[] = [
 
   // ======================================================== Act 1
   {
-    id: 'ideal', render: () => (<>
+    id: 'ideal', section: 'Authoring with Vega-Lite', render: () => (<>
       <h2 className="is-act">Authoring with Vega-Lite</h2>
       <p className="talk-callout">Ideally, a chart is a few lines that are easy to change.</p>
       <div className="talk-body">
-        <div className="talk-col"><Code rows={stepLayout(CARS.cars)} max={26} tone="vl" /></div>
-        <div className="talk-col"><VegaLite spec={VL.cars} /></div>
+        <div className="talk-col"><Code rows={stepLayout(INTRO.heatmap)} max={26} tone="vl" /></div>
+        <div className="talk-col"><VegaLite spec={VL.heatmap} /></div>
       </div>
     </>),
   },
@@ -333,8 +344,8 @@ export const SLIDES: SlideDef[] = [
     id: 'ideal-bar', render: () => (<>
       <h2>Switching to a bar chart is one small edit</h2>
       <div className="talk-body">
-        <div className="talk-col"><Code rows={fullLayout(CARS.carsBar, CARS.cars)} max={26} tone="vl" /></div>
-        <div className="talk-col"><VegaLite spec={VL.carsBar} /></div>
+        <div className="talk-col"><Code rows={fullLayout(INTRO.bar, INTRO.heatmap)} max={26} tone="vl" /></div>
+        <div className="talk-col"><VegaLite spec={VL.bar} /></div>
       </div>
     </>),
   },
@@ -458,7 +469,7 @@ export const SLIDES: SlideDef[] = [
 
   // ======================================================== Act 3
   {
-    id: 'lifting', render: () => (<>
+    id: 'lifting', section: 'Flint', render: () => (<>
       <h2 className="is-act">Flint is a language for AI agents that disentangles visual and interaction logic</h2>
       <div className="talk-body column">
         <div className="talk-fit"><Sketch name="lifting" /></div>
@@ -481,7 +492,7 @@ export const SLIDES: SlideDef[] = [
 
   // Section A
   {
-    id: 'sec-a', render: () => (<>
+    id: 'sec-a', section: 'The chart spec', render: () => (<>
       <h2>1. The chart spec</h2>
       <Trio sketch="spec" items={SPECS} focus={0} />
     </>),
@@ -492,7 +503,7 @@ export const SLIDES: SlideDef[] = [
       <h2>What each type decides for this chart</h2>
       <div className="talk-body">
         <div className="talk-col" style={{ flex: '0.75 1 0', gap: 22 }}>
-          <Code rows={specLayout(TYPES_FLINT, /YearMonth|Category|Profit|semantic_types/)} />
+          <Code rows={specLayout(TYPES_FLINT, /YearMonth|Category|Delta|semantic_types/)} />
           <p className="talk-callout talk-callout-inline">Semantic types decide data processing, axes, and colors, so the compiler can infer the low-level configuration reliably, without heuristics.</p>
         </div>
         <div className="talk-col" style={{ flex: '1.25 1 0' }}><TypeTree /></div>
@@ -504,7 +515,7 @@ export const SLIDES: SlideDef[] = [
       <h2>And this is what the compiler wrote in Vega-Lite</h2>
       <div className="talk-body talk-step">
         <div className="talk-col" style={{ flex: '0.85 1 0' }}>
-          <Code rows={specLayout(TYPES_FLINT, /YearMonth|Category|Profit|semantic_types/)} />
+          <Code rows={specLayout(TYPES_FLINT, /YearMonth|Category|Delta|semantic_types/)} />
         </div>
         <div className="talk-arrow">→</div>
         <div className="talk-col" style={{ flex: '1.15 1 0' }}>
@@ -569,7 +580,7 @@ export const SLIDES: SlideDef[] = [
 
   // Section B
   {
-    id: 'sec-b', render: () => (<>
+    id: 'sec-b', section: 'The theme spec', render: () => (<>
       <h2>2. The theme spec</h2>
       <Trio sketch="spec" items={SPECS} focus={1} />
     </>),
@@ -594,7 +605,7 @@ export const SLIDES: SlideDef[] = [
   },
   // Section C
   {
-    id: 'sec-c', render: () => (<>
+    id: 'sec-c', section: 'The interaction spec', render: () => (<>
       <h2>3. The interaction spec</h2>
       <Trio sketch="spec" items={SPECS} focus={2} />
     </>),
@@ -637,7 +648,7 @@ export const SLIDES: SlideDef[] = [
   // Summary
   // ======================================================== Act 4
   {
-    id: 'act4', render: () => (<>
+    id: 'act4', section: 'Applications', render: () => (<>
       <h2 className="is-act">Applications: what can you build with Flint?</h2>
       <UseCases />
     </>),
@@ -657,7 +668,7 @@ export const SLIDES: SlideDef[] = [
   {
     id: 'chat-board', render: () => (<>
       <h2>Ask for a dashboard, and its charts work together</h2>
-      <div className="talk-body column"><Stable width={900} height={820}><McpChatTurn kind="board" /></Stable></div>
+      <div className="talk-body column"><Stable width={900} height={820}><McpChatTurn kind="board" height={820} /></Stable></div>
     </>),
   },
   {
@@ -740,7 +751,7 @@ export const SLIDES: SlideDef[] = [
 
   // ======================================================== Act 5
   {
-    id: 'recap', render: () => (<>
+    id: 'recap', section: 'Close', render: () => (<>
       <h2 className="is-act">Flint: a visualization language for AI agents</h2>
       <div className="talk-body column" style={{ gap: 20 }}>
         <div className="talk-fit"><Sketch name="lifting" /></div>

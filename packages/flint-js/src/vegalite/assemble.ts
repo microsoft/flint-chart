@@ -44,7 +44,8 @@
  * This module has NO React, Redux, or UI framework dependencies.
  */
 
-import { authoredColorScale, schemeName, withEncodingColorAnnotations } from '../core/color-controls';
+import { noteSpecUpdates } from '../core/spec-updates';
+import { authoredColorScale, schemeName, withEncodingColorAnnotations, colorNeutralBand } from '../core/color-controls';
 import { applyAuthoredColorScaleVL, restoreColorScales, snapshotColorScales } from './color-controls';
 import {
     ChartEncoding,
@@ -77,10 +78,11 @@ import { templateStatesAxisLabels, vlApplyLayoutToSpec, vlApplyTooltips, vlFinal
 import { normalizeChartProperties } from '../core/normalize-properties';
 import { resolveChartDefaults, resolveCompileDefaults, resolveGeometry, resolveValueLabelChoice } from '../core/theme/ground';
 import { resolveThemeSpec } from '../core/theme/presets';
-import { withChrome } from '../core/theme/chrome';
-import { applyHeaderFurniture, applySourceLine, realizeThemeVegaLite, realizeValueLabelsVegaLite, vegaLiteBuiltFacts } from './theme';
+import { chartChrome, withChrome } from '../core/theme/chrome';
+import { alignBandOrders, applyHeaderFurniture, applySourceLine, realizeThemeVegaLite, realizeValueLabelsVegaLite, sealDetailSegments, vegaLiteBuiltFacts } from './theme';
 import { applyChartValueColors } from './value-colors';
 import { vlCaseKeyLabels, vlWriteKeyLayout } from './key-layout';
+import { vlReserveEnclosureRoom, vlReserveNoteRoom } from './note-room';
 import { familyMeasure, rendererTextMeasurer } from '../core/text-width';
 import { themeBodyFamily } from '../core/theme/ground';
 import { chartDisplayNames, encodingTitle, TIGHT_X_MARKS, titleText, type BuiltFacts, type ChartStructure } from '../core/structure';
@@ -267,7 +269,7 @@ function prepareVegaLite(input: ChartAssemblyInput): VegaLitePreparation {
     const semanticTypes = withEncodingColorAnnotations(input.semantic_types ?? {}, input.chart_spec.encodings as Record<string, unknown>);
     // `theme_spec` may name a house Flint ships rather than spell one out.
     // A chart may turn off part of its house's chrome (a logo, the header, the footer).
-    const themeSpec = withChrome(resolveThemeSpec(input.theme_spec), input.chart_spec.chrome);
+    const themeSpec = withChrome(resolveThemeSpec(input.theme_spec), chartChrome(input.chart_spec.chartType, input.chart_spec.chrome));
     // A house may prefer a size, a stretch budget, a facet gap. Those settle
     // before anything is measured, and in a fixed order: the chart spec first,
     // the theme's presets under it, flint's own defaults under that.
@@ -583,7 +585,9 @@ function emitVegaLite(input: ChartAssemblyInput, prepared: VegaLitePreparation, 
     // fits, so it must see the finished spec. Only realization is gated on a
     // named house, so an untheme'd chart gets its numbers without also getting
     // a house's ink, type and furniture.
-    const plannedPlotSize = plotSizeFields(vgObj, plan.title, plan.rules?.room, (plan.header ? plan.header.edge + plan.header.line : 0) + (plan.source?.room ?? 0));
+    // A source line the plot was sized round takes nothing from it.
+    const sourceTakes = plan.source && !plan.source.reserved ? plan.source.room : 0;
+    const plannedPlotSize = plotSizeFields(vgObj, plan.title, plan.rules?.room, (plan.header ? plan.header.edge + plan.header.line : 0) + sourceTakes);
     // Some templates write their own text on the marks. Where they do, the
     // label layer stands down (it will not print a second number beside the
     // template's), so the toggle would be a control that changes nothing.
@@ -596,7 +600,7 @@ function emitVegaLite(input: ChartAssemblyInput, prepared: VegaLitePreparation, 
     const authoredColor = authoredColorScale(input.chart_spec.encodings as Record<string, unknown>);
     if (themeSpec) {
         const authoredScales = authoredColor ? snapshotColorScales(vgObj, authoredColor) : undefined;
-        const realizeReport = realizeThemeVegaLite(vgObj, design, values, plan);
+        const realizeReport = realizeThemeVegaLite(vgObj, design, values, plan, colorNeutralBand(channelSemantics));
         // A scheme the author named outranks the theme's ramp.
         if (authoredScales) restoreColorScales(authoredScales);
         themeDecisions = {
@@ -613,7 +617,14 @@ function emitVegaLite(input: ChartAssemblyInput, prepared: VegaLitePreparation, 
         if (plan.lineWidth !== undefined) {
             vgObj.config = { ...vgObj.config, line: { ...vgObj.config?.line, strokeWidth: plan.lineWidth } };
         }
+        // With no house to set a canvas, the chart draws on the host's: Vega-Lite would state white.
+        if (typeof plan.options.background === 'string' && vgObj.background === undefined) {
+            vgObj.background = plan.options.background;
+        }
     }
+    sealDetailSegments(vgObj);
+    // Value labels and row names share the bars' band: a sort by value is stated once for every layer.
+    alignBandOrders(vgObj, values);
     // The header — a figure label, a rule on the canvas edge, a logo beside the headline — is the
     // chart's as much as the theme's: drawn with or without one.
     applyHeaderFurniture(vgObj, plan.header);
@@ -643,12 +654,14 @@ function emitVegaLite(input: ChartAssemblyInput, prepared: VegaLitePreparation, 
     }
     chartTemplate.postProcess?.(vgObj, instantiateContext);
     // The author's colour controls win over every default and the theme's ramp.
-    if (authoredColor) applyAuthoredColorScaleVL(vgObj, authoredColor, values);
+    if (authoredColor) applyAuthoredColorScaleVL(vgObj, authoredColor, values, colorNeutralBand(channelSemantics, authoredColor.field));
     vlFinalizeTemporalAxes(vgObj, instantiateContext);
     vlWriteKeyLayout(vgObj, plan.legend, plan.plot, plan.layout, VEGA_LITE_LAYOUT.measureText!);
     vlWriteAxisTitles(vgObj, plan.axisTitleFit);
     vlCaseKeyLabels(vgObj, plan.legend);
     vlListTooltipFields(vgObj);
+    vlReserveNoteRoom(vgObj, { notes: plan.options.notes, regions: plan.options.regions, references: plan.options.references }, values, plan.plot, plan.axisLabels, VEGA_LITE_LAYOUT.measureText!);
+    vlReserveEnclosureRoom(vgObj, plan.options.enclosures, values, plan.plot, input.semantic_types);
     const plotAsPlanned = plotSizeFields(vgObj) === plannedPlotSize;
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -781,6 +794,7 @@ function emitVegaLite(input: ChartAssemblyInput, prepared: VegaLitePreparation, 
         reorderAxes,
         selectionBoundary: design.interaction.selectionBoundary,
         continuousColorFocus: design.interaction.continuousColorFocus,
+        annotationDesign: design.interaction.annotation,
         neutralizeContinuousColor: chartTemplate.chart === 'Map' || chartTemplate.chart === 'Choropleth',
     };
     result._width = plan.plot.width;
@@ -841,9 +855,9 @@ function emitVegaLite(input: ChartAssemblyInput, prepared: VegaLitePreparation, 
             : ev ? ev.applicable : true;
         const recommended = layoutCoupledRecommendation[def.key] ?? ev?.recommendedValue;
         const value = chartProperties?.[def.key] ?? recommended ?? def.defaultValue;
-        // Strip the `check` rule — a ChartOption is the resolved, serializable
-        // answer (`applicable`/`value`), not the predicate that produced it.
-        const { check, ...rest } = def;
+        // Strip the rules — a ChartOption is the resolved, serializable
+        // answer (`applicable`/`value`), not the predicates that produced it.
+        const { check, accepts, ...rest } = def;
         return { ...rest, applicable, value };
     });
     // Layout-level facet-wrap control: offered whenever a column facet has
@@ -932,7 +946,7 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
     const prepared = prepareVegaLite(input);
     const analysis = analyzeChart(input, prepared.template, prepared.chartProperties, vlGetTemplateDef);
     const plan = planLayout(analysis, vegaLitePlanContext(input, prepared, analysis));
-    return emitVegaLite(input, prepared, analysis, plan).spec;
+    return noteSpecUpdates(emitVegaLite(input, prepared, analysis, plan).spec, input);
 }
 
 /** The rows a re-plan lays out: a subset of the analysis rows, the rows a window on x shows, or rows the host supplies. */
@@ -972,6 +986,11 @@ export interface VegaLiteSession {
      * the new room, title and furniture room included, and later changes of rows plan into that.
      */
     replan(change: ReplanChange): Replanned;
+    /**
+     * Rows brought into the form the compiled data holds them: static series folded, aggregated as
+     * the encodings ask, temporal values converted. A change of rows swaps these into the chart.
+     */
+    shapeRows(rows: readonly Record<string, unknown>[]): Record<string, unknown>[];
 }
 
 /**
@@ -1094,6 +1113,7 @@ export function openVegaLiteSession(
             }
             return planRows(change);
         },
+        shapeRows: (rows) => analysis.shapeRows(rows),
     };
 }
 

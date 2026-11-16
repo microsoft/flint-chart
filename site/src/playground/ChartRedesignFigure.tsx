@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { ChartAssemblyInput } from 'flint-chart';
 import { ChartView, shownChart } from '../../../packages/flint-mcp/ui/src/ChartView';
+import { useHostPage } from '../components/mcp-embed';
 import foodPrices from '../data/cpi-food-prices.json';
 import './chart-redesign-figure.css';
 
@@ -161,6 +162,7 @@ function McpView({
   transformed: boolean;
   showInteraction?: boolean;
 }) {
+  useHostPage();
   const rootRef = useRef<HTMLDivElement>(null);
   const menuOpenRequestedRef = useRef(false);
 

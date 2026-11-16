@@ -76,7 +76,7 @@ describe('validateChart: where targets', () => {
     });
 
     it('takes a set only where an op acts on many marks', () => {
-        const note = check({ op: 'set-annotation', target: where({ region: { in: ['Asia'] } }), value: { text: 'x' } } as ChartUpdateOp);
+        const note = check({ op: 'annotate-text', target: where({ region: { in: ['Asia'] } }), value: { text: 'x' } } as ChartUpdateOp);
         expect(note.valid).toBe(false);
         expect(note.errors[0].message).toContain('this op acts on one mark, so it takes a key, not a where');
         const both = check(style({ select: { key: { region: 'Asia' }, where: { region: { in: ['Asia'] } } } }));

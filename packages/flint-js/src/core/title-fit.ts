@@ -1,4 +1,4 @@
-// A title fitted to the block it sits over: set down a size, or broken over even lines with the
+// A title fitted to the block it sits over: set down a size, or broken over full lines with the
 // height taken out of the plot. Shared by the plan and by theme realization.
 
 /** Roughly how wide a glyph runs, as a fraction of the font size. */
@@ -20,38 +20,51 @@ export function textPx(s: string, fontSize: number): number {
 }
 
 /**
- * Break the headline into `count` lines of even length.
- *
- * Filling each line to the brim and letting the remainder fall through is what
- * leaves a headline ending in a single orphaned word. Aiming at the average
- * line instead spreads the text over the lines it needs.
+ * Break a title into `count` lines as full as the words allow: none wider than `block`, and the last
+ * no shorter than `shortest`. Every line but the last is charged its squared room left on the block,
+ * so the room a short last line needs is taken across the lines above it, not from one of them.
+ * Undefined where no such breaks exist.
  */
-export function balancedLines(text: string, count: number, fontSize: number, measure: TitleMeasure): string[] {
+export function fullestLines(
+    text: string, count: number, block: number, shortest: number, fontSize: number, measure: TitleMeasure,
+): string[] | undefined {
     const words = text.split(/\s+/).filter(Boolean);
-    if (words.length <= 1) return [text];
-    const target = measure(text, fontSize) / count;
-    const lines: string[] = [];
-    let line = '';
-    for (const word of words) {
-        const candidate = line ? `${line} ${word}` : word;
-        // Break once the line is closer to the target with this word left off.
-        if (line && lines.length < count - 1
-            && measure(candidate, fontSize) - target > target - measure(line, fontSize)) {
-            lines.push(line);
-            line = word;
-        } else {
-            line = candidate;
+    const n = words.length;
+    if (count < 1 || count > n) return undefined;
+    const widths = new Map<string, number>();
+    const widthOf = (from: number, to: number): number => {
+        const key = `${from}:${to}`;
+        let width = widths.get(key);
+        if (width === undefined) widths.set(key, width = measure(words.slice(from, to).join(' '), fontSize));
+        return width;
+    };
+    // cost[k][j]: the least room left by the first j words over k lines; from[k][j]: where the k-th line starts.
+    const cost = Array.from({ length: count + 1 }, () => new Array<number>(n + 1).fill(Infinity));
+    const from = Array.from({ length: count + 1 }, () => new Array<number>(n + 1).fill(-1));
+    cost[0][0] = 0;
+    for (let k = 1; k <= count; k++) {
+        const last = k === count;
+        for (let j = last ? n : k; j <= n - (count - k); j++) {
+            for (let i = k - 1; i < j; i++) {
+                if (cost[k - 1][i] === Infinity) continue;
+                const width = widthOf(i, j);
+                if (width > block || (last && width < shortest)) continue;
+                const c = cost[k - 1][i] + (last ? 0 : (block - width) ** 2);
+                if (c < cost[k][j]) { cost[k][j] = c; from[k][j] = i; }
+            }
         }
     }
-    if (line) lines.push(line);
-    return lines;
+    if (cost[count][n] === Infinity) return undefined;
+    const out: string[] = [];
+    for (let k = count, j = n; k > 0; j = from[k][j], k--) out.unshift(words.slice(from[k][j], j).join(' '));
+    return out;
 }
 
 /**
  * Break a title to its block: each line filled to the block, as a headline is set, the words that
- * do not fit falling to the next. Only where that leaves a widow — a last line under a third of the
- * block — are the last two lines evened out, so no line stands alone. Even lines everywhere leave a
- * headline narrower than its block, with a ragged edge where none was needed.
+ * do not fit falling to the next. Where that leaves a widow — a last line under a third of the
+ * block — the same number of lines is broken again as full as they can be with no widow, so the
+ * block keeps its full measure and only the lines near the end give up room.
  */
 export function filledLines(text: string, block: number, fontSize: number, measure: TitleMeasure): string[] {
     const words = text.split(/\s+/).filter(Boolean);
@@ -68,14 +81,14 @@ export function filledLines(text: string, block: number, fontSize: number, measu
         }
     }
     if (line) lines.push(line);
-    if (lines.length >= 2 && measure(lines[lines.length - 1], fontSize) < block * WIDOW_SHARE) {
-        const tail = balancedLines(`${lines[lines.length - 2]} ${lines[lines.length - 1]}`, 2, fontSize, measure);
-        lines.splice(lines.length - 2, 2, ...tail);
+    const shortest = block * WIDOW_SHARE;
+    if (lines.length >= 2 && measure(lines[lines.length - 1], fontSize) < shortest) {
+        return fullestLines(text, lines.length, block, shortest, fontSize, measure) ?? lines;
     }
     return lines;
 }
 
-/** A last line shorter than this share of the block is a widow, and the last two lines are evened out. */
+/** A last line shorter than this share of the block is a widow. */
 const WIDOW_SHARE = 1 / 3;
 
 /** The width inside the canvas the caller asked for, once the theme's padding is kept on both sides. */
@@ -93,7 +106,7 @@ export function plotHeightAfter(height: number, px: number): number {
 
 /**
  * Fit a headline that runs wider than its block: set down a size where that brings it onto one line;
- * else broken, each line filled to the block (a widow evened out), at its own size — shrinking it and
+ * else broken, each line filled to the block (no widow), at its own size — shrinking it and
  * breaking it too pays twice — unless a size down saves a line. The extra lines' height comes out of
  * the plot. Undefined leaves it.
  */
@@ -113,7 +126,7 @@ export function fitHeadlineText(
 }
 
 /**
- * Break a deck that runs wider than its block, each line filled to the block (a widow evened out);
+ * Break a deck that runs wider than its block, each line filled to the block (no widow);
  * it is never set smaller. The extra lines' height comes out of the plot. Undefined leaves it.
  */
 export function fitDeckText(

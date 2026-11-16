@@ -55,6 +55,7 @@ describe('value label precision', () => {
     it('reaches for a k/M suffix once the numbers get long', () => {
       expect(inferValueLabelFormat([1234567, 2345678], undefined)).toBe('.3~s');
       expect(formatValueApprox(1234567, '.3~s')).toBe('1.23M');
+      expect(formatValueApprox(999600, '.3~s')).toBe('1M');
     });
 
     it('never uses an SI suffix on values below one', () => {

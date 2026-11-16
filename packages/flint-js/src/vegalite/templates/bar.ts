@@ -31,7 +31,7 @@ import {
     detectBandedAxisFromSemantics, detectBandedAxisForceDiscrete,
 } from '../../core/axis-detection';
 import {
-    defaultBuildEncodings, setMarkProp, adjustBarMarks, adjustRectTiling,
+    defaultBuildEncodings, setMarkProp, adjustBarMarks, adjustRectTiling, spanCalendarCells,
     resolveAsDiscrete, alignStackOrderToColorOrder,
 } from './utils';
 
@@ -173,7 +173,7 @@ function getSafeHeatmapIntrinsicDomain(ctx: any, colorField: string | undefined)
 export const barChartDef: ChartTemplateDef = {
     chart: "Bar Chart",
     template: { mark: "bar", encoding: {} },
-    channels: ["x", "y", "color", "opacity", "column", "row"],
+    channels: ["x", "y", "color", "detail", "opacity", "column", "row"],
     interactionSupport: {
         elements: true,
         region: ['cartesian'],
@@ -184,7 +184,7 @@ export const barChartDef: ChartTemplateDef = {
     },
     markCognitiveChannel: 'length',
     semanticInteractions: ({ resolvedEncodings }) => {
-        const fields = ['x', 'y', 'color']
+        const fields = ['x', 'y', 'color', 'detail']
             .map((channel) => resolvedEncodings[channel]?.field)
             .filter((field): field is string => !!field);
         const categoryField = discreteField(resolvedEncodings, ['x', 'y']);
@@ -434,7 +434,7 @@ export const pyramidChartDef: ChartTemplateDef = {
 export const groupedBarChartDef: ChartTemplateDef = {
     chart: "Grouped Bar Chart",
     template: { mark: "bar", encoding: {} },
-    channels: ["x", "y", "group", "color", "column", "row"],
+    channels: ["x", "y", "group", "color", "detail", "column", "row"],
     interactionSupport: {
         elements: true,
         region: ['cartesian'],
@@ -445,7 +445,7 @@ export const groupedBarChartDef: ChartTemplateDef = {
     },
     markCognitiveChannel: 'length',
     semanticInteractions: ({ resolvedEncodings }) => {
-        const fields = ['x', 'y', 'color']
+        const fields = ['x', 'y', 'color', 'detail']
             .map((channel) => resolvedEncodings[channel]?.field)
             .filter((field): field is string => !!field);
         const categoryField = discreteField(resolvedEncodings, ['x', 'y']);
@@ -568,7 +568,7 @@ export const groupedBarChartDef: ChartTemplateDef = {
 export const stackedBarChartDef: ChartTemplateDef = {
     chart: "Stacked Bar Chart",
     template: { mark: "bar", encoding: {} },
-    channels: ["x", "y", "color", "column", "row"],
+    channels: ["x", "y", "color", "detail", "column", "row"],
     structure: (ctx) => {
         // The stack mode the author picks stacks the series, side by side when layered.
         const structure = skeletonStructure(stackedBarChartDef.template, ctx);
@@ -586,7 +586,7 @@ export const stackedBarChartDef: ChartTemplateDef = {
     },
     markCognitiveChannel: 'length',
     semanticInteractions: ({ resolvedEncodings }) => {
-        const fields = ['x', 'y', 'color']
+        const fields = ['x', 'y', 'color', 'detail']
             .map((channel) => resolvedEncodings[channel]?.field)
             .filter((field): field is string => !!field);
         const categoryField = discreteField(resolvedEncodings, ['x', 'y']);
@@ -617,7 +617,7 @@ export const stackedBarChartDef: ChartTemplateDef = {
     },
     instantiate: (spec, ctx) => {
         defaultBuildEncodings(spec, ctx.resolvedEncodings);
-        spec.encoding.tooltip = tooltipForChannels(spec.encoding, ['x', 'y', 'color']);
+        spec.encoding.tooltip = tooltipForChannels(spec.encoding, ['x', 'y', 'color', 'detail']);
         // Apply stack mode
         const config = ctx.chartProperties;
         const hasStackSeries = !!ctx.channelSemantics.color?.field;
@@ -850,15 +850,18 @@ export const heatmapDef: ChartTemplateDef = {
         const config = ctx.chartProperties;
         const showTextLabels = !!config?.showTextLabels;
         const colorField = spec.encoding?.color?.field;
+        // The colour scale reads every row: a grid whose columns overflow its canvas scrolls through
+        // the rest, and they must not run past the legend's ends.
+        const colorRows = ctx.fullTable ?? ctx.table;
         const colorVals = colorField
-            ? ctx.table
+            ? colorRows
                 .map((r: any) => r[colorField])
                 .filter((v: any) => v != null && v !== '')
                 .map((v: any) => Number(v))
                 .filter((v: number) => Number.isFinite(v))
             : [];
         const hasMissingValues = colorField
-            ? ctx.table.some((r: any) => {
+            ? colorRows.some((r: any) => {
                 const value = r[colorField];
                 return value == null || value === '' || !Number.isFinite(Number(value));
             })
@@ -1036,6 +1039,7 @@ export const heatmapDef: ChartTemplateDef = {
                 else delete spec.encoding;
             }
         }
+        spanCalendarCells(spec, ctx);
     },
     properties: [
         { key: 'showValueLabels', label: 'Values', type: 'binary', defaultValue: false },

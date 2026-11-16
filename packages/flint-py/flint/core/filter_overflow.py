@@ -190,7 +190,16 @@ def _default_overflow_strategy(
                 sorted_list = json.loads(sort_by)
                 if isinstance(sorted_list, list):
                     ordered_values = list(reversed(sorted_list)) if sort_order == "descending" else sorted_list
-                    return [v for v in ordered_values if v in unique_values][:max_to_keep]
+                    present = set(unique_values)
+
+                    def is_present(v: Any) -> bool:
+                        try:
+                            return v in present
+                        except TypeError:
+                            # Unhashable JSON values keep list-membership semantics.
+                            return v in unique_values
+
+                    return [v for v in ordered_values if is_present(v)][:max_to_keep]
             except Exception:
                 pass
             is_descending = sort_order == "descending"

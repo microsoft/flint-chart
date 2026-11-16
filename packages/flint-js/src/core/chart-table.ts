@@ -10,7 +10,10 @@ import { format as formatNumber } from 'd3-format';
 import { utcFormat } from 'd3-time-format';
 import type { ChartAnalysis } from './analyze';
 import { fullValueFormat } from './field-semantics';
+import type { HeaderPlan } from './header-plan';
 import type { LayoutPlan } from './plan';
+import type { ClosingRule } from './rule-plan';
+import type { SourcePlan } from './source-plan';
 import { chartDisplayNames, encodingTitle, titleText, type ChartStructure } from './structure';
 import { applyTextCase } from './text-case';
 import { selectorRowTest, type RowComparison } from './target-selector';
@@ -77,6 +80,18 @@ export interface ChartTable {
     /** How the chart compares the cells' values, so a selection on the chart names the same rows. */
     comparison: RowComparison;
     style: ChartTableStyle;
+    /** The theme's furniture as the chart draws it; absent when the theme draws none. */
+    furniture?: ChartTableFurniture;
+}
+
+/** What the chart's theme draws around its title and at its foot, planned at the chart's width. */
+export interface ChartTableFurniture {
+    /** The pieces on the top edge, above and beside the title. */
+    header?: HeaderPlan;
+    /** The rules below the heading (`edge: 'top'`) and at the foot (`edge: 'bottom'`). */
+    rules: ClosingRule[];
+    /** The source line at the foot. */
+    source?: SourcePlan;
 }
 
 /** The smallest text a table sets, whatever size the theme fitted its axis labels to. */
@@ -235,8 +250,13 @@ export function chartTable(input: ChartAssemblyInput, analysis: ChartAnalysis, p
             subtitle: tableText(plan.design.title.deck, plan.design.font, plan.design.text.secondary),
         },
     } : undefined;
+    const rules = plan.rules?.rules ?? [];
+    const furniture = plan.header || rules.length > 0 || plan.source
+        ? { ...(plan.header ? { header: plan.header } : {}), rules, ...(plan.source ? { source: plan.source } : {}) }
+        : undefined;
     return {
         ...(heading ? { heading } : {}),
+        ...(furniture ? { furniture } : {}),
         columns: columns.map((column) => ({ ...column, title: applyTextCase(column.title, headerCase) })),
         rows,
         total: analysis.data.length,

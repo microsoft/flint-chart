@@ -50,7 +50,31 @@ export function drawTable(ctx: CanvasRenderingContext2D, table: HTMLElement, ori
     ctx.fillText(text, end ? left + rect.width - inset : left + inset, top + rect.height / 2);
   }
   ctx.globalAlpha = 1;
+  // The theme's furniture: the tab or band above the title and the rules, drawn as the blocks they are.
+  for (const piece of table.querySelectorAll<Element>('.flint-table-furniture rect, .flint-table-rule')) {
+    const rect = piece.getBoundingClientRect();
+    const fill = piece instanceof HTMLElement ? getComputedStyle(piece).backgroundColor : piece.getAttribute('fill');
+    if (!fill || rect.width === 0 || rect.height === 0) continue;
+    ctx.fillStyle = fill;
+    ctx.fillRect(rect.left - origin.left, rect.top - origin.top, rect.width, rect.height);
+  }
   ctx.textAlign = 'left';
+  for (const line of table.querySelectorAll<HTMLElement>('.flint-table-source-line')) {
+    const rect = line.getBoundingClientRect();
+    if (rect.bottom < view.top || rect.top > view.bottom) continue;
+    const lineStyle = getComputedStyle(line);
+    ctx.font = `${lineStyle.fontStyle} ${lineStyle.fontWeight} ${lineStyle.fontSize} ${lineStyle.fontFamily}`;
+    ctx.fillStyle = lineStyle.color;
+    ctx.textBaseline = 'middle';
+    const [start, end] = [...line.children] as HTMLElement[];
+    const middle = rect.top - origin.top + rect.height / 2;
+    if (start?.textContent?.trim()) ctx.fillText(start.textContent.trim(), rect.left - origin.left, middle);
+    if (end?.textContent?.trim()) {
+      ctx.textAlign = 'right';
+      ctx.fillText(end.textContent.trim(), rect.right - origin.left, middle);
+      ctx.textAlign = 'left';
+    }
+  }
   for (const line of table.querySelectorAll<HTMLElement>('.flint-table-title, .flint-table-subtitle, .flint-table-note')) {
     const text = line.textContent?.trim();
     if (!text) continue;

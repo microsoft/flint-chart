@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ChartAssemblyInput } from 'flint-chart';
 import { ChartView, shownChart } from '../../../packages/flint-mcp/ui/src/ChartView';
+import { useHostPage } from './mcp-embed';
 import { siteTheme } from '../shared/theme';
 
 type Example = {
@@ -206,6 +207,7 @@ const frameWidths = [320, 440, 560, 680, 820, 940] as const;
 
 function ExampleCard(props: { example: Example; frameWidth: number }) {
   const { example, frameWidth } = props;
+  useHostPage();
   const [copied, setCopied] = useState(false);
   const [context, setContext] = useState<string | null>(null);
   const [download, setDownload] = useState<string | null>(null);

@@ -50,6 +50,7 @@
  * This module has NO React, Redux, or UI framework dependencies.
  */
 
+import { noteSpecUpdates } from '../core/spec-updates';
 import { authoredColorScale, withEncodingColorAnnotations } from '../core/color-controls';
 import { applyAuthoredColorScaleEC } from './color-controls';
 import {
@@ -68,11 +69,15 @@ import { ecGetTemplateDef } from './templates';
 import { resolveChannelSemantics, convertTemporalData, repairEncodingSorts } from '../core/resolve-semantics';
 import { toTypeString, type SemanticAnnotation } from '../core/field-semantics';
 import { filterOverflow } from '../core/filter-overflow';
-import { computeLayout, computeChannelBudgets, deriveStretchCaps, resolveBaseSize, resolveFacetColumnsOption } from '../core/compute-layout';
+import { computeLayout, computeChannelBudgets, deriveStretchCaps, planBandLabels, resolveBaseSize, resolveFacetColumnsOption } from '../core/compute-layout';
+import { xLabelOverflow } from '../core/plan';
+import { tableTextMeasurer } from '../core/text-width';
+import { BACKEND_MIN_LABEL_SIZE, canvasFitSummary, fitBox, judgeBackendCanvas, refitCanvas, withTreatment } from '../core/backend-frame';
+import { ecFitFrame } from './frame';
 import { ecApplyLayoutToSpec, ecApplyTooltips } from './instantiate-spec';
 import { ecCombineFacetPanels } from './facet';
 import { DEFAULT_COLORS } from './templates/utils';
-import { inferVisCategory, computeZeroDecision } from '../core/semantic-types';
+import { inferVisCategory, computeZeroDecision, zeroMarkType } from '../core/semantic-types';
 import { decideColorMaps } from '../core/color-decisions';
 import { getPaletteForScheme } from './colormap';
 import { normalizeStaticSeries } from '../core/static-series';
@@ -205,7 +210,7 @@ export function assembleECharts(input: ChartAssemblyInput): any {
     );
 
     // Finalize zero-baseline (requires template mark knowledge)
-    const effectiveMarkType = templateMarkType || 'point';
+    const effectiveMarkType = zeroMarkType(chartTemplate.chart, templateMarkType);
     for (const [channel, cs] of Object.entries(channelSemantics)) {
         if ((channel === 'x' || channel === 'y') && cs.type === 'quantitative') {
             const numericValues = data
@@ -344,6 +349,19 @@ export function assembleECharts(input: ChartAssemblyInput): any {
         chartType,
         assembleOptions: effectiveOptions,
         colorDecisions,
+    };
+
+    // Names along a banded axis are wrapped, turned, thinned or cut as the layout decides them for
+    // every backend, measured in ECharts' type, before the template sizes its bands.
+    const labelsBefore = { x: JSON.stringify(layoutResult.xLabel), y: JSON.stringify(layoutResult.yLabel) };
+    planBandLabels(instantiateContext, {
+        measure: (fontSize) => tableTextMeasurer(fontSize, 'sans-serif', 'normal', 'normal'),
+        minFontSize: BACKEND_MIN_LABEL_SIZE,
+        ...xLabelOverflow(undefined, chartProperties, channelSemantics),
+    });
+    const plannedLabels = {
+        x: JSON.stringify(layoutResult.xLabel) !== labelsBefore.x,
+        y: JSON.stringify(layoutResult.yLabel) !== labelsBefore.y,
     };
 
     // --- Detect faceting (column / row channels) ---
@@ -545,7 +563,26 @@ export function assembleECharts(input: ChartAssemblyInput): any {
 
     // The author's colour controls win over every default.
     const authoredColor = authoredColorScale(input.chart_spec.encodings as Record<string, unknown>);
-    if (authoredColor) applyAuthoredColorScaleEC(ecOption, authoredColor);
+    if (authoredColor) {
+        // A diverging field's stepped classes break at its pivot, as the heatmap centres its ramp there.
+        const colorSemantics = Object.values(channelSemantics).find((cs) => cs?.field === authoredColor.field && cs.colorScheme);
+        const pivot = colorSemantics?.colorScheme?.type === 'diverging' ? colorSemantics.colorScheme.domainMid ?? 0 : undefined;
+        applyAuthoredColorScaleEC(ecOption, authoredColor, values, pivot, colorSemantics?.colorScheme?.neutral);
+    }
+
+    // Names are printed as the reader sees them before the frame measures them.
+    applyFieldDisplayNames(ecOption, input.field_display_names);
+
+    // The frame: title broken over its block, axis gutters and names measured, the key placed.
+    const frame = ecFitFrame(ecOption, instantiateContext, { title: input.chart_spec.title, subtitle: input.chart_spec.subtitle }, plannedLabels,
+        fitBox(baseSize, sizeCeiling, options.maxStretch).width);
+    // The canvas fit: where the host would shrink the drawing past legibility to enter its box, the
+    // plot is laid out smaller once instead, as the plan does for Vega-Lite.
+    const box = fitBox(baseSize, sizeCeiling, options.maxStretch);
+    const judged = judgeBackendCanvas({ plot: frame.plot, designed: frame.designed, parts: frame.parts, padding: 0, box, base: baseSize });
+    const refit = refitCanvas(judged, options, (treatment) => assembleECharts(withTreatment(input, treatment, box)));
+    if (refit) return refit;
+    ecOption._canvasFit = canvasFitSummary(judged.estimate, box, options.canvasTreatment);
 
     // Attach metadata
     if (warnings.length > 0) {
@@ -572,9 +609,7 @@ export function assembleECharts(input: ChartAssemblyInput): any {
     // Clean internal-only props
     delete ecOption._legendWidth;
 
-    applyFieldDisplayNames(ecOption, input.field_display_names);
-
-    return ecOption;
+    return noteSpecUpdates(ecOption, input);
 }
 
 /** Inspect the ECharts legacy (composed) view transformation surface for an input. */

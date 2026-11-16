@@ -400,6 +400,7 @@
     "ctaMcp": "使用 MCP 服务器",
     "ctaGithub": "访问 GitHub",
     "ctaDocs": "阅读文档",
+    "ctaTalk": "VIS 2026 报告",
     "tryIt": {
       "title": "立即试用",
       "body": "把这段提示词复制到你的 AI 智能体（如 GitHub Copilot、Claude Code、Cursor 或 Codex）。它会添加 Flint MCP 服务器，并画出你的第一张图表。",
@@ -448,17 +449,40 @@
     "howItWorks": "Flint 如何工作？",
     "howItWorksBody": "一份 Flint 规范由数据、语义类型、图表规范，以及可选的主题和交互规范组成。无需在使用方编写复杂逻辑把它们拼接起来，编译器会完成繁重的工作：它将各部分相互解析，组合出完整的后端原生规范（此处以 Vega-Lite 为例），补全必要的底层细节，并渲染出美观、可交互的图表。",
     "overviewAlt": "Flint 工作流：智能体从原始表格推断 dataSpec，编写简短的 chartSpec，Flint 将其编译为按地区展示的折线图；随后在编辑规范时依次得到分组柱状图、瀑布图、热力图与旭日图。",
-    "leadBefore": "Flint 是一种可视化中间语言，帮助",
-    "leadHighlight1": "AI 智能体从简洁、可人工编辑的规范出发，稳定生成表现力强、观感出色且可交互的图表",
-    "leadStop": "。",
-    "leadInsight": "其核心设计是把底层图表库中混在一起的视觉逻辑、样式逻辑和交互逻辑解耦：你或你的智能体分别用简短的语义规范描述它们，由编译器将它们组合起来。",
-    "leadAvailability": "你可以把它作为 <mcp>MCP 服务器</mcp>配合智能体使用，也可以作为 <npm>npm 库</npm>构建交互式应用。",
-    "leadHighlight2": "Flint 在 {{backends}} 种渲染后端上支持 {{chartTypes}} 种图表类型，并提供 {{themes}} 套主题和 {{presets}} 种交互预设",
-    "leadAfter": "如需定制可视化，可以在<themeLab>主题实验室</themeLab>中设计自己的主题，并用 Flint API 构建<advanced>高级交互</advanced>。",
-    "backendRosterLabel": "渲染后端",
-    "themeRosterLabel": "主题",
-    "interactionRosterLabel": "交互",
-    "themeRosterMore": "另有 {{count}} 种",
+    "points": {
+      "agent": "Flint 让 AI 智能体从简洁、可人工编辑的规范出发，<strong>稳定生成表现力强、观感出色且可交互的图表</strong>。",
+      "agentIcon": "智能体和它生成的图表",
+      "untangle": "传统上，好看的图表依赖大量<strong>底层细节</strong>，视觉、样式和交互逻辑纠缠在一起。Flint 把这些难题交给编译器，让规范保持简洁。",
+      "untangleIcon": "一团乱线被理成三条",
+      "many": "Flint 在 <strong>{{backends}} 种渲染后端</strong>上支持 <strong>{{chartTypes}} 种图表类型</strong>，并提供 <strong>{{themes}} 套主题</strong>和 <strong>{{presets}} 种交互预设</strong>。<customize>自定义</customize>也很容易！",
+      "manyIcon": "多种风格的多种图表"
+    },
+    "leadAvailability": "你可以把它作为 <mcp>MCP 服务器</mcp>配合智能体使用，也可以作为 <npm>npm 库</npm>用在你的应用中。",
+    "wiring": {
+      "alt": "Flint 规范 = 数据规范 + 图表规范 + 主题规范 + 交互规范。Flint 编译器把它们组合起来：落实语义类型、优化布局、解析主题并关联交互语义，再生成 Vega-Lite、ECharts、Chart.js 等渲染库规范。",
+      "spec": "Flint 规范 =",
+      "parts": {
+        "data": {
+          "name": "数据规范",
+          "note": "数据的含义"
+        },
+        "chart": {
+          "name": "图表规范",
+          "note": "要展示什么"
+        },
+        "theme": {
+          "name": "主题规范",
+          "note": "看起来如何"
+        },
+        "interaction": {
+          "name": "交互规范",
+          "note": "如何交互"
+        }
+      },
+      "compiler": "Flint 编译器",
+      "compilerNote": "把它们组合起来",
+      "backends": "渲染库规范"
+    },
     "flintSpec": "Flint 规范",
     "compiledChart": "编译结果",
     "backendAria": "渲染后端",
@@ -516,8 +540,8 @@
         "title": "鸡蛋大起大落，面包缓慢上涨",
         "subtitle": "美国平均价格（美元），一打鸡蛋与一磅白面包（BLS）"
       },
-      "drawIt": {
-        "label": "你来画"
+      "odyssey": {
+        "label": "奥德赛之旅"
       },
       "facetedLine": {
         "label": "分面折线",

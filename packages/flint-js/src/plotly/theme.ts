@@ -30,9 +30,17 @@
  * =============================================================================
  */
 
+import { cutToWidth, planTitleBlock } from '../core/backend-frame';
+import { alreadyNamed, tickUnitOf } from '../core/title-plan';
+import { PLOTLY_FONT, plAxisTitleRoom, plDateLabelRows, plDropEmptyTitles, plFitRowKey, plTickRun, plKeyBlock, plLabelDepth, plYTickTexts } from './frame';
+import { PLOTLY_PROFILE } from './profile';
+import type { KeyBlock } from '../core/backend-profile';
+import { plotHeightAfter } from '../core/title-fit';
 import { groupPadding } from '../core/group-gaps';
 import { applyTextCase } from '../core/text-case';
 import { chooseLabelStep, DEFAULT_LABEL_OVERFLOW, TURNED_LABEL_LIMIT } from '../core/axis-labels';
+import { fitTwoLineLabels } from '../core/decisions';
+import { tableTextMeasurer } from '../core/text-width';
 import type { LabelFitStep } from '../core/theme/types';
 import type {
     DesignDecisions,
@@ -202,6 +210,7 @@ function fontOf(t: ResolvedText | undefined, fallbackFamily?: string): any {
 }
 
 /** True when this text role asks for weight or slope Plotly cannot set as a property. */
+
 function needsMarkup(t: ResolvedText | undefined): { bold: boolean; italic: boolean } {
     const w = t?.fontWeight;
     const bold = w === 'bold' || (typeof w === 'number' && w >= 600);
@@ -329,15 +338,34 @@ export function realizeThemePlotly(figure: any, d: DesignDecisions, table: any[]
     applySurface(figure, d);
     applyGeoSurface(figure, d);
     applyFurnitureTraces(figure, d);
+    const footBefore = xFootDepth(figure, d);
     moveAxisTitlesToSubtitle(figure, d);
-    const titleH = applyTypography(figure, d);
+    // The axes first: the title, set from the chart's left, is broken to the width it has from there.
     applyAxes(figure, d, table, say);
+    plDropEmptyTitles(figure.layout);
+    if (figure._plot) {
+        // A figure the frame laid out takes the margins its axes need as the house draws them.
+        fitAxisMargins(figure, d);
+    } else {
+        refitFoot(figure.layout, xFootDepth(figure, d) - footBefore);
+    }
     applyMarks(figure, d, table, say);
     applySeriesInk(figure, d, table, say);
-    const legendH = applyLegend(figure, d, say);
+    applyLegend(figure, d, say);
+    // Where the key stands is settled: the value axis may take the right-hand side.
+    sideYAxis(figure.layout, d);
+    const titleH = applyTypography(figure, d);
     applyFacetChrome(figure, d);
     applyDataLabels(figure, d, table, say);
-    layoutTopChrome(figure, d, titleH, legendH);
+    alignToChartLeft(figure, d);
+    delete figure._facetTicked;
+    // The margins are settled: a key above the plot is measured as Plotly will wrap it there.
+    // A key in a row sets its names for the row, not for the column the frame planned beside the plot.
+    plFitRowKey(figure);
+    const key = figure.layout.showlegend !== false && figure.layout.legend?.y > 1 ? plKeyBlock(figure) : undefined;
+    layoutTopChrome(figure, d, titleH, key);
+    // A key in rows under the plot stands below the x labels and title, in room of its own.
+    layoutFootKey(figure);
 
     return report;
 }
@@ -411,6 +439,8 @@ function moveAxisTitlesToSubtitle(figure: any, decisions: DesignDecisions): void
     const layout = figure.layout;
     if (layout.title === null) return;
     const titles = new Map<string, Set<string>>();
+    const head = typeof layout.title === 'string' ? layout.title : layout.title?.text;
+    const said = (deckOnly: boolean) => [deckOnly ? undefined : head, layout.title?._deck].filter((t) => typeof t === 'string').join(' ');
     for (const channel of ['x', 'y'] as const) {
         const resolved = decisions.axes[channel]?.title;
         if (resolved?.placement !== 'subtitle') continue;
@@ -420,9 +450,12 @@ function moveAxisTitlesToSubtitle(figure: any, decisions: DesignDecisions): void
             if (typeof text !== 'string' || !text.trim()) continue;
             const label = resolved.unit && !text.includes(`(${resolved.unit})`)
                 ? `${text} (${resolved.unit})` : text;
+            axis.title = { ...(typeof axis.title === 'object' ? axis.title : {}), text: '' };
+            // A title the headline or deck already names is not said again (the house's `unlessNamed`).
+            const unlessNamed = resolved.unlessNamed;
+            if (unlessNamed && alreadyNamed(text, said(unlessNamed === 'deck'), tickUnitOf(decisions.axes[channel]))) continue;
             if (!titles.has(channel)) titles.set(channel, new Set());
             titles.get(channel)!.add(label);
-            axis.title = { ...(typeof axis.title === 'object' ? axis.title : {}), text: '' };
         }
     }
     if (!titles.size) return;
@@ -459,36 +492,53 @@ function applyTypography(figure: any, d: DesignDecisions): number {
     // of the title with its own inline type.
     const h = d.title.headline;
     const deck = d.title.deck;
-    const width = Number(layout.width) || 400;
+    let figureWidth = Number(layout.width) || 400;
+    // A title set from the start stands where the chart does (see {@link chartLeft}).
+    const left = d.title.anchor === 'start' ? chartLeft(figure, d) : 4;
+    // A narrow chart's title may run as wide as its box allows: broken to the chart's own width it
+    // stacks into many lines and makes the drawing tall and thin. The figure then widens to hold it.
+    const room = Math.max(figureWidth, titleRoomOf(figure));
+    const width = room - left + 4;
 
-    const headlineSize = h.fontSize ?? 16;
-    const headLines = headlineText ? wrapToWidth(
-        String(headlineText).replace(/<br>/g, ' '),
+    // Broken to full lines with no widow, as every backend breaks a title ({@link planTitleBlock}),
+    // measured in the case it is drawn in.
+    const block = planTitleBlock(
+        {
+            title: headlineText ? applyTextCase(String(headlineText).replace(/<br>/g, ' '), h.textCase) : undefined,
+            subtitle: deckText ? applyTextCase(deckText, deck.textCase) : undefined,
+        },
         width - 8,
-        headlineSize,
-        needsMarkup(h).bold,
-    ) : [];
+        {
+            headline: { fontSize: h.fontSize ?? 16, fontWeight: needsMarkup(h).bold ? 'bold' : 'normal', font: h.font ?? d.font ?? PLOTLY_FONT },
+            deck: { fontSize: deck.fontSize ?? 12, fontWeight: needsMarkup(deck).bold ? 'bold' : 'normal', font: deck.font ?? d.font ?? PLOTLY_FONT },
+            gap: d.title.deckPadding,
+        },
+    );
+    const headlineSize = block?.headline?.fontSize ?? h.fontSize ?? 16;
+    figureWidth = widenForTitle(layout, block ? (d.title.anchor === 'middle' ? 2 * Math.max(left, 4) : left + 4) + block.width : 0, figureWidth);
+    const headLines = block?.headline?.lines ?? [];
     const lines = headLines.length ? [styleText(headLines.join('<br>'), h)] : [];
 
-    let height = 8 + (headLines.length ? titleBlockHeight(headLines.length, headlineSize) + 6 : 0);
+    // Plotly sets headline and deck as one block of lines; the block is as tall as its lines.
+    let height = 8 + (headLines.length ? titleBlockHeight(headLines.length, headlineSize) : 0);
     if (deckText) {
         const size = deck.fontSize ?? 12;
         const color = deck.color ?? d.text.secondary;
-        const deckLines = wrapToWidth(deckText, width - 8, size, needsMarkup(deck).bold);
+        const deckLines = block?.deck?.lines ?? [deckText];
         const style = [
             `font-size:${size}px`,
             `color:${color}`,
             ...(deck.font ? [`font-family:${deck.font}`] : []),
         ].join(';');
         lines.push(`<span style="${style}">${styleText(deckLines.join('<br>'), deck)}</span>`);
-        height += titleBlockHeight(deckLines.length, size) + d.title.deckPadding;
+        height += titleBlockHeight(deckLines.length, size);
     }
 
     const anchor = d.title.anchor;
     layout.title = {
         text: lines.join('<br>'),
         font: { ...fontOf(h, d.font), size: headlineSize },
-        x: anchor === 'start' ? 0.005 : anchor === 'end' ? 0.995 : 0.5,
+        x: anchor === 'start' ? left / figureWidth : anchor === 'end' ? 0.995 : 0.5,
         xanchor: anchor === 'start' ? 'left' : anchor === 'end' ? 'right' : 'center',
         xref: 'container',
         y: titleY(layout, headLines.length + (deckText ? 1 : 0), headlineSize),
@@ -496,6 +546,23 @@ function applyTypography(figure: any, d: DesignDecisions): number {
         yref: 'container',
     };
     return height + d.title.offset;
+}
+
+/** The width the box gives a title, set by the assembler (`_titleRoom`); 0 where none is known. */
+function titleRoomOf(figure: any): number {
+    return Number(figure?._titleRoom) || 0;
+}
+
+/**
+ * Widen a figure to hold its title where the title runs past it: the margins are held in px, so
+ * the plot takes the width (Plotly fills a banded axis), and the drawing grows wider rather than
+ * taller. Returns the figure's width.
+ */
+function widenForTitle(layout: any, need: number, width: number): number {
+    const want = Math.ceil(need + 4);
+    if (!(want > width)) return width;
+    layout.width = want;
+    return want;
 }
 
 /**
@@ -551,25 +618,6 @@ function titleLineCount(title: any): number {
     return Math.max(1, String(text ?? '').split('<br>').length);
 }
 
-/** Break a line of text to a pixel width, at word boundaries where it can. */
-function wrapToWidth(text: string, width: number, fontSize: number, bold = false): string[] {
-    const perChar = fontSize * (bold ? 0.63 : 0.55);
-    const max = Math.max(8, Math.floor(width / perChar));
-    if (text.length <= max) return [text];
-    const words = text.split(/\s+/);
-    const lines: string[] = [];
-    let line = '';
-    for (const w of words) {
-        if (!line) line = w;
-        else if ((line + ' ' + w).length <= max) line += ' ' + w;
-        else {
-            lines.push(line);
-            line = w;
-        }
-    }
-    if (line) lines.push(line);
-    return lines;
-}
 
 /**
  * Give the title and any legend above the plot room of their own.
@@ -579,9 +627,45 @@ function wrapToWidth(text: string, width: number, fontSize: number, bold = false
  * rectangle. The chart was already sized to fit; the chrome the theme adds is
  * therefore paid for in figure height, not taken out of the plot.
  */
-function layoutTopChrome(figure: any, d: DesignDecisions, titleH: number, legendH: number): void {
+/**
+ * A key the house sets in rows under the plot: measured as Plotly will wrap it ({@link plKeyBlock}),
+ * hung a gap below what the x axis takes (its labels and title), with the figure grown by its height
+ * so the plot keeps its size. Without this Plotly's automargin pushes the foot out by the key and
+ * takes the room from the plot.
+ */
+function layoutFootKey(figure: any): void {
     const layout = figure.layout;
-    const need = titleH + legendH;
+    const legend = layout?.legend;
+    if (layout?.showlegend === false || !legend || legend.orientation !== 'h' || legend.yref === 'container') return;
+    if (!(typeof legend.y === 'number' && legend.y < 0)) return;
+    const key = plKeyBlock(figure);
+    const margin = layout.margin;
+    if (!key || !margin || !Number(layout.height)) return;
+    const before = margin.b ?? 0;
+    // What the x axis takes under the plot, without the edge the margin keeps past it.
+    const foot = Math.max(0, before - PLOTLY_PROFILE.axisPad);
+    margin.b = Math.ceil(foot + FOOT_KEY_GAP + key.height + PLOTLY_PROFILE.edge);
+    layout.height = Math.round(layout.height + margin.b - before);
+    const plotH = Math.max(1, layout.height - (margin.t ?? 0) - margin.b);
+    legend.yanchor = 'top';
+    legend.y = -(foot + FOOT_KEY_GAP) / plotH;
+}
+
+/** Px between the x axis's labels (or title) and a key in rows under them. */
+const FOOT_KEY_GAP = 12;
+
+/** Px kept between a title's estimated last line and a key hung under it. */
+const TITLE_KEY_SLACK = 4;
+
+function layoutTopChrome(figure: any, d: DesignDecisions, titleH: number, key: KeyBlock | undefined): void {
+    const layout = figure.layout;
+    const legendH = key?.height ?? 0;
+    // The canvas fit weighs a key above the plot apart from the title (see `assemblePlotly`).
+    if (legendH > 0) figure._topKey = legendH;
+    // Plotly pads a key's box inside its edge; the house's gaps are between what is drawn.
+    const inset = titleH > 0 && key ? key.inset : 0;
+    // A few px between the title's last line and the key: the title's drawn block is estimated.
+    const need = titleH + legendH - inset + (legendH > 0 ? TITLE_KEY_SLACK : 0);
     if (need <= 0) return;
     const margin = (layout.margin ??= { t: 24, r: 32, b: 56, l: 64 });
     const before = margin.t ?? 0;
@@ -603,9 +687,160 @@ function layoutTopChrome(figure: any, d: DesignDecisions, titleH: number, legend
     if (legendH > 0 && layout.legend && layout.legend.y > 1) {
         const plotH = Math.max(1, (Number(layout.height) || 300) - margin.t - (margin.b ?? 0));
         layout.legend.yanchor = 'top';
-        layout.legend.y = 1 + Math.max(8, margin.t - titleH) / plotH;
+        layout.legend.y = 1 + Math.max(8, margin.t - titleH - TITLE_KEY_SLACK + inset) / plotH;
     }
     void d;
+}
+
+/** How many lines the x axis's names stand on: the most `<br>` breaks a tick text holds, plus one. */
+function xLabelRows(layout: any): number {
+    const ax = layout?.xaxis;
+    if (!ax || Math.abs(Number(ax.tickangle) || 0) > 0) return 1;
+    const texts = Array.isArray(ax.ticktext) ? ax.ticktext : [];
+    return Math.max(1, ...texts.map((t: unknown) => String(t).split('<br>').length));
+}
+
+/** The x axis's names as Plotly prints them: its tick texts, its category order, or the traces' own names. */
+function xTickNames(figure: any): string[] {
+    const ax = figure.layout?.xaxis;
+    if (Array.isArray(ax?.ticktext)) return ax.ticktext.map(String);
+    if (Array.isArray(ax?.categoryarray)) return ax.categoryarray.map(String);
+    const names = new Set<string>();
+    for (const trace of figure.data ?? []) {
+        if ((trace?.xaxis ?? 'x') !== 'x' || trace?.orientation === 'h') continue;
+        for (const v of trace?.x ?? []) if (typeof v === 'string') names.add(v);
+    }
+    return [...names];
+}
+
+/**
+ * The room under the plot the x axis's names and title take as they stand: turned names by their
+ * measured reach, flat ones by their rows, and the title by its lines.
+ */
+function xFootDepth(figure: any, d: DesignDecisions): number {
+    const ax = figure.layout?.xaxis;
+    if (!ax || ax.visible === false) return 0;
+    const fontSize = Number(ax.tickfont?.size) || 12;
+    let labels = 0;
+    if (ax.showticklabels !== false) {
+        const angle = Math.abs(Number(ax.tickangle) || 0) * Math.PI / 180;
+        if (angle > 0) {
+            const widthOf = tableTextMeasurer(fontSize, ax.tickfont?.family ?? d.font ?? PLOTLY_FONT, 'normal', 'normal');
+            const widest = Math.max(0, ...xTickNames(figure).flatMap((t) => t.split('<br>')).map(widthOf));
+            labels = widest * Math.sin(angle) + fontSize * Math.cos(angle);
+        } else {
+            labels = plLabelDepth(Math.max(xLabelRows(figure.layout), plDateLabelRows(figure, 'x')), fontSize);
+        }
+        labels += plTickRun(ax);
+    }
+    // Measured as the frame reserves it (`reserveCartesianMargins`).
+    const titled = plAxisTitleRoom(ax);
+    return Math.ceil(labels + titled);
+}
+
+/**
+ * The foot follows what the house did to the x axis: names it wrapped onto more lines take their
+ * room below the plot rather than out of it, and room kept for names it laid flat, or for a title it
+ * moved into the deck, is given back. The figure grows or shrinks with it; the plot keeps its size.
+ */
+function refitFoot(layout: any, change: number): void {
+    const margin = layout?.margin;
+    if (!change || !margin) return;
+    const before = margin.b ?? 0;
+    margin.b = Math.max(Math.min(before, 24), before + change);
+    if (Number(layout.height)) layout.height = Math.round(layout.height + margin.b - before);
+}
+
+/**
+ * The room left of the plot the y axis takes as it stands: its widest label in its own font, the
+ * tick run before it, and its title.
+ */
+function yGutterWidth(figure: any, d: DesignDecisions): number {
+    const ax = figure.layout?.yaxis;
+    if (!ax || ax.visible === false || ax.side === 'right') return 0;
+    let width = 0;
+    if (ax.showticklabels !== false) {
+        const widthOf = tableTextMeasurer(Number(ax.tickfont?.size) || 12, ax.tickfont?.family ?? d.font ?? PLOTLY_FONT, 'normal', 'normal');
+        width = Math.max(0, ...plYTickTexts(figure).map(widthOf)) + plTickRun(ax);
+    }
+    width += plAxisTitleRoom(ax);
+    return Math.ceil(width);
+}
+
+/**
+ * The margins a frame-laid figure's axes take, as the house draws them: below the plot the x labels,
+ * their tick run and title, and a key at the foot; left of it the y gutter; the canvas's edge past
+ * both. The figure grows or shrinks with them; the plot keeps its size. Measured as the frame reserves
+ * them before the house (`reserveCartesianMargins`), so Plotly's automargin has nothing left to grow.
+ */
+function fitAxisMargins(figure: any, d: DesignDecisions): void {
+    const layout = figure.layout;
+    const margin = layout?.margin;
+    if (!margin) return;
+    const pad = PLOTLY_PROFILE.axisPad;
+    if (layout.xaxis) {
+        const before = margin.b ?? 0;
+        margin.b = pad + xFootDepth(figure, d) + (figure._legendRoom?.bottom ?? 0);
+        if (Number(layout.height)) layout.height = Math.round(layout.height + margin.b - before);
+    }
+    if (layout.yaxis && layout.yaxis.side !== 'right') {
+        const before = margin.l ?? 0;
+        margin.l = pad + yGutterWidth(figure, d);
+        if (Number(layout.width)) layout.width = Math.round(layout.width + margin.l - before);
+    }
+}
+
+
+/**
+ * A house that stands the value axis on the right (`axes.y.orient`) has it drawn there; the room its
+ * labels took on the left moves to the right with them, so the plot keeps its width. Not where a
+ * legend stands beside the plot on the right, which that side's room is kept for.
+ */
+function sideYAxis(layout: any, d: DesignDecisions): void {
+    const orient = (d.axes.y as { orient?: string } | undefined)?.orient;
+    const ax = layout?.yaxis;
+    if (orient !== 'right' || !ax || ax.side === 'right' || layout.yaxis2) return;
+    const legend = layout.legend;
+    if (layout.showlegend !== false && legend && legend.orientation !== 'h' && (legend.x ?? 1.02) >= 1) return;
+    ax.side = 'right';
+    const m = layout.margin;
+    if (!m) return;
+    const left = m.l ?? 64;
+    const right = m.r ?? 32;
+    m.r = Math.max(right, left);
+    m.l = Math.max(16, left + right - m.r);
+}
+
+
+/**
+ * Where the chart's left edge stands, in px from the figure's: the left of the y axis's labels, or
+ * the plot's left edge where the axis stands on the right. A title and key set from the start stand
+ * there, as Vega-Lite anchors them to the chart's group, rather than at the figure's edge.
+ */
+function chartLeft(figure: any, d: DesignDecisions): number {
+    const layout = figure.layout;
+    const ax = layout?.yaxis;
+    let left = layout?.margin?.l ?? 0;
+    if (ax && ax.side !== 'right' && ax.showticklabels !== false) {
+        const widthOf = tableTextMeasurer(ax.tickfont?.size ?? 12, ax.tickfont?.family ?? d.font ?? PLOTLY_FONT, 'normal', 'normal');
+        const labels = plYTickTexts(figure);
+        const run = labels.length ? Math.max(...labels.map(widthOf)) + (ax.ticklabelstandoff ?? 0) + (ax.ticklen ?? 0) : 0;
+        left -= run;
+    }
+    return Math.max(4, Math.round(left));
+}
+
+/** A key in a row above or below the plot, set from the start, stands where the title does. */
+function alignToChartLeft(figure: any, d: DesignDecisions): void {
+    const layout = figure.layout;
+    const width = Number(layout?.width);
+    if (!(width > 0) || !layout.margin || d.title.anchor !== 'start') return;
+    const legend = layout.legend;
+    if (legend && legend.orientation === 'h' && legend.xanchor === 'left' && legend.xref !== 'container') {
+        // In paper units, from the plot's left: a container-anchored row is wrapped by Plotly as a column.
+        const plotWidth = Math.max(1, width - (layout.margin.l ?? 0) - (layout.margin.r ?? 0));
+        legend.x = (chartLeft(figure, d) - (layout.margin.l ?? 0)) / plotWidth;
+    }
 }
 
 /**
@@ -679,15 +914,18 @@ function thinDenseCategoryTicks(figure: any, d: DesignDecisions, say: ReportDepa
         const ax = layout[key];
         const categories = Array.isArray(ax?.categoryarray) ? ax.categoryarray : [];
         if (ax?.type !== 'category' || categories.length < 2) continue;
+        // Names the house already set (wrapped, cut) were fitted to their band: none is dropped.
+        if (Array.isArray(ax.ticktext)) continue;
         const domain = Array.isArray(ax.domain) && ax.domain.length === 2
             ? Math.abs(Number(ax.domain[1]) - Number(ax.domain[0]))
             : 1;
         const band = plotWidth * (Number.isFinite(domain) ? domain : 1);
-        const chars = Math.min(18, Math.max(3, ...categories.map((c: any) => String(c).length)));
+        const widthOf = tableTextMeasurer(fontSize, d.axes.x?.label.font ?? d.font ?? PLOTLY_FONT, 'normal', 'normal');
+        const widest = Math.min(18 * fontSize * 0.58, Math.max(3 * fontSize * 0.58, ...categories.map((c: any) => widthOf(String(c)))));
         // A turned label takes its line height along the axis, not its length.
         const footprint = (degrees: number): number => degrees > 0
             ? fontSize * 1.2 / Math.sin(degrees * Math.PI / 180) + 2
-            : chars * fontSize * 0.58 + 8;
+            : widest + 8;
         const fitsAt = (degrees: number): number => Math.max(2, Math.floor(band / footprint(degrees)));
         let degrees = Math.abs(Number(ax.tickangle) || 0);
         if (categories.length <= fitsAt(degrees)) continue;
@@ -743,6 +981,46 @@ function dedupeBoundaryZeroLines(figure: any, say: ReportDeparture): void {
     }
 }
 
+/**
+ * The line along the index axis is a base only where the value scale starts at zero. Where the value
+ * scale floats (its floor is not zero) and the house rules its values with a grid rather than an axis
+ * line (`floating: 'omit'`, or unset with a gridded, unruled value axis), that line would claim a base
+ * the chart does not have: it is left off, and zero, where the data crosses it, carries the base — as
+ * Vega-Lite's realization decides. Run once the value axis's range is final.
+ */
+export function plFloatingFloor(figure: any, d: DesignDecisions): void {
+    const layout = figure?.layout;
+    if (!layout) return;
+    const index = (['x', 'y'] as const).find((channel) => d.axes[channel]?.indexing);
+    if (!index) return;
+    const valueAxis = d.axes[index === 'x' ? 'y' : 'x'];
+    const floating = d.floating ?? (valueAxis && !valueAxis.domain.show && valueAxis.grid.show ? 'omit' : 'keep');
+    if (floating !== 'omit') return;
+    const valueKey = index === 'x' ? 'yaxis' : 'xaxis';
+    const indexKey = `${index}axis`;
+    const ax = layout[valueKey];
+    const line = layout[indexKey];
+    if (!ax || !line?.showline || ax.type === 'category' || ax.type === 'log' || ax.type === 'date') return;
+    let floor: number | undefined;
+    if (Array.isArray(ax.range)) floor = Math.min(Number(ax.range[0]), Number(ax.range[1]));
+    else {
+        const channel = index === 'x' ? 'y' : 'x';
+        const values: number[] = [];
+        for (const trace of figure.data ?? []) {
+            if ((trace?.[`${channel}axis`] ?? channel) !== channel) continue;
+            for (const v of trace?.[channel] ?? []) { const n = Number(v); if (v != null && Number.isFinite(n)) values.push(n); }
+        }
+        if (!values.length) return;
+        const lo = Math.min(...values);
+        floor = ax.rangemode === 'tozero' && lo >= 0 ? 0 : lo;
+    }
+    // A floor at zero is the base, and a floor over the data's own positive values is not one the
+    // reader takes for a base: only a floor below zero, under a zero the data crosses, claims a base
+    // the chart does not have — there zero carries it.
+    if (floor === undefined || !Number.isFinite(floor) || floor >= 0) return;
+    line.showline = false;
+}
+
 /** A rank-like run: every integer between the ends is present. */
 function isContiguousIntegers(seen: Set<any>): boolean {
     const nums = [...seen].map(Number);
@@ -773,7 +1051,7 @@ function pinSparseTicks(figure: any, d: DesignDecisions): void {
         for (const key of axisKeys(layout, ch)) {
             const ax = layout[key];
             if (!ax || ax.type === 'category' || ax.type === 'log') continue;
-            if (ax.tickvals != null || !ax.showticklabels) continue;
+            if (ax.tickvals != null || !ax.showticklabels || ax.dtick != null || figure._facetTicked) continue;
             const want = key.replace('axis', '');
             const seen = new Set<any>();
             for (const trace of figure.data ?? []) {
@@ -1003,7 +1281,16 @@ function axisCategories(figure: any, ax: any, key: string, ch: 'x' | 'y'): any[]
  * Only answerable for a banded axis, where the band width is the width divided
  * by the number of names. Anything else is left to the house.
  */
-function labelsFitStraight(ax: any, key: string, a: ResolvedAxis, width: number, cats: any[]): boolean {
+/** How wide a tick label runs, measured in the face and size the house sets labels in. */
+function labelWidthOf(a: ResolvedAxis, d: DesignDecisions): (text: string) => number {
+    const label = a.label as ResolvedAxis['label'] & { fontWeight?: string | number };
+    return tableTextMeasurer(label.fontSize ?? 11, label.font ?? d.font ?? PLOTLY_FONT, label.fontWeight ?? 'normal', 'normal');
+}
+
+/** The air kept between neighbouring names, so 'JanFebMar' does not read as one word. */
+const NAME_GAP = 5;
+
+function labelsFitStraight(ax: any, key: string, a: ResolvedAxis, width: number, cats: any[], widthOf: (text: string) => number): boolean {
     if (!key.startsWith('x')) return true;
     if ((a.label.angle ?? 0) !== 0) return true;
     if (!Array.isArray(cats) || !cats.length) return true;
@@ -1013,9 +1300,7 @@ function labelsFitStraight(ax: any, key: string, a: ResolvedAxis, width: number,
     const band = (width * (Number.isFinite(span) ? span : 1)) / cats.length;
     // Wrapped names are as wide as their widest line.
     const printed = Array.isArray(ax.ticktext) ? ax.ticktext.flatMap((t: any) => String(t).split('<br>')) : cats;
-    const longest = Math.max(...printed.map((c: any) => String(c).length));
-    // Names need air between them, or 'JanFebMar' reads as one word.
-    return longest * (a.label.fontSize ?? 11) * 0.58 + 5 <= band;
+    return Math.max(...printed.map((c: any) => widthOf(String(c)))) + NAME_GAP <= band;
 }
 
 /**
@@ -1023,18 +1308,33 @@ function labelsFitStraight(ax: any, key: string, a: ResolvedAxis, width: number,
  * an ellipsis (`wrap`, which a panel cannot re-break), or on an ordered axis every nth label shown so
  * the rest stand clear (`skip`). Returns the step taken.
  */
-function fitOverflowingLabels(ax: any, a: ResolvedAxis, width: number, cats: any[]): LabelFitStep {
+function fitOverflowingLabels(ax: any, a: ResolvedAxis, width: number, cats: any[], widthOf: (text: string) => number): LabelFitStep {
     const span = Array.isArray(ax.domain) && ax.domain.length === 2
         ? Math.abs(Number(ax.domain[1]) - Number(ax.domain[0]))
         : 1;
     const band = (width * (Number.isFinite(span) ? span : 1)) / cats.length;
     const fontSize = a.label.fontSize ?? 11;
-    const em = fontSize * 0.58;
     const printed: string[] = Array.isArray(ax.ticktext) ? ax.ticktext.map(String) : cats.map(String);
-    const longest = Math.max(...printed.flatMap((t) => t.split('<br>')).map((t) => t.length));
+    const widest = Math.max(...printed.flatMap((t) => t.split('<br>')).map(widthOf));
     const named = ax.type === undefined || ax.type === 'category' || ax.type === '-';
-    const { step } = chooseLabelStep(a.label.overflow ?? DEFAULT_LABEL_OVERFLOW, {
-        band, widest: longest * em, fontSize,
+    const path = a.label.overflow ?? DEFAULT_LABEL_OVERFLOW;
+    // Names that break at a space onto two lines, each within its band, stand flat and whole there,
+    // as Vega-Lite sets them: the house's first step, before any cut or turn.
+    if (named && path[0] === 'wrap') {
+        const names = printed.map((t) => t.replace(/<br>/g, ' '));
+        const two = fitTwoLineLabels(names, fontSize, band - NAME_GAP, false, widthOf);
+        if (two && two.lines.every((lines) => lines.length <= 2)) {
+            if (!Array.isArray(ax.tickvals)) {
+                ax.tickmode = 'array';
+                ax.tickvals = cats;
+            }
+            ax.ticktext = two.lines.map((lines) => lines.join('<br>'));
+            ax.tickangle = 0;
+            return 'wrap';
+        }
+    }
+    const { step } = chooseLabelStep(path, {
+        band, widest, fontSize,
         turnLimit: a.label.limit === 0 ? Infinity : a.label.limit ?? TURNED_LABEL_LIMIT, noTrim: a.label.limit === 0 || !named,
         // Names left out can be read from their neighbours only on an ordered axis (dates, ranks).
         ordered: a.label.ordered === true || !named || ax.type === 'date',
@@ -1044,8 +1344,7 @@ function fitOverflowingLabels(ax: any, a: ResolvedAxis, width: number, cats: any
         return step;
     }
     if (step === 'wrap') {
-        const room = Math.floor((band - 5) / em);
-        const cut = (t: string) => t.split('<br>').map((line) => (line.length > room ? `${line.slice(0, Math.max(1, room - 1))}…` : line)).join('<br>');
+        const cut = (t: string) => t.split('<br>').map((line) => cutToWidth(line, band - NAME_GAP, widthOf)).join('<br>');
         if (!Array.isArray(ax.tickvals)) {
             ax.tickmode = 'array';
             ax.tickvals = cats;
@@ -1053,7 +1352,7 @@ function fitOverflowingLabels(ax: any, a: ResolvedAxis, width: number, cats: any
         ax.ticktext = printed.map(cut);
         return step;
     }
-    ax.ticklabelstep = Math.max(2, Math.ceil((longest * em + 5) / band));
+    ax.ticklabelstep = Math.max(2, Math.ceil((widest + NAME_GAP) / band));
     return 'skip';
 }
 
@@ -1136,9 +1435,10 @@ function applyAxis(
         // measured again against the panel.
         if (a.label.angle != null) {
             ax.tickangle = a.label.angle;
-            if (!labelsFitStraight(ax, key, a, width, cats)) {
+            const widthOf = labelWidthOf(a, d);
+            if (!labelsFitStraight(ax, key, a, width, cats, widthOf)) {
                 // Names too wide for the panel take the first workable step of the house's overflow.
-                const step = fitOverflowingLabels(ax, a, width, cats);
+                const step = fitOverflowingLabels(ax, a, width, cats, widthOf);
                 say('axes.label.overflow', 'labels-overflow', `\`${key}\`'s labels do not fit the panel straight — overflow step \`${step}\``);
             }
         }
@@ -1170,7 +1470,11 @@ function applyAxis(
     // last tick of one panel prints on top of the first tick of the next.
     // A log axis is ticked by decade. Asking it for a number of ticks makes
     // Plotly name every minor as well — 2, 3, 4 … 9 between each power.
-    if (a.tickCount != null && ax.type !== 'category' && ax.type !== 'log') {
+    // A facet grid's frame ticked its panels from their own size (`plLayoutFacetGrid`): the house's
+    // count, shared out over the panels, would leave each a tick or two.
+    const framed = ax._framedTicks === true;
+    delete ax._framedTicks;
+    if (!framed && a.tickCount != null && ax.type !== 'category' && ax.type !== 'log') {
         const dom = Array.isArray(ax.domain) && ax.domain.length === 2
             ? Math.abs(Number(ax.domain[1]) - Number(ax.domain[0]))
             : 1;
@@ -1188,7 +1492,7 @@ function applyAxis(
     // A budget in *numbers* is not a budget in *room*. Sixteen panels across
     // one page leave 50px each, which holds one year, not four — and Plotly
     // will print all four on top of each other rather than drop any.
-    if (key.startsWith('x') && ax.type !== 'category' && ax.type !== 'log' && ax.showticklabels) {
+    if (!framed && key.startsWith('x') && ax.type !== 'category' && ax.type !== 'log' && ax.showticklabels) {
         const dom = Array.isArray(ax.domain) && ax.domain.length === 2
             ? Math.abs(Number(ax.domain[1]) - Number(ax.domain[0]))
             : 1;
@@ -1642,6 +1946,12 @@ function applyMarks(figure: any, d: DesignDecisions, table: any[], say: ReportDe
                     ...(trace.marker ?? {}),
                     line: { color: m.point.haloColor, width: m.point.haloWidth },
                 };
+            } else if (m.outline && !isContextTrace(trace) && trace.type !== 'bar') {
+                // A house that outlines every filled shape outlines its dots too, as Vega-Lite does.
+                trace.marker = {
+                    ...(trace.marker ?? {}),
+                    line: { color: m.outline.color, width: m.outline.width },
+                };
             }
         }
 
@@ -1679,24 +1989,38 @@ function applyMarks(figure: any, d: DesignDecisions, table: any[], say: ReportDe
     // pixels as data and flatten the differences under its square root.
     if (m.sizeRange) {
         const [lo, hi] = m.sizeRange;
-        for (const trace of figure.data ?? []) {
-            const sizes = trace?.marker?.size;
-            if (!Array.isArray(sizes)) continue;
-            const areas = sizes.map((dm: any) => Math.PI * (Number(dm) / 2) ** 2);
-            const finite = areas.filter((a: number) => Number.isFinite(a) && a > 0);
-            if (!finite.length) continue;
-            const min = Math.min(...finite);
-            const max = Math.max(...finite);
-            const floor = m.minSize != null ? Math.max(lo, m.minSize) : lo;
-            // A bubble the house has scaled down to two pixels is a speck: it
-            // is neither a readable value nor visibly a mark. Four pixels is
-            // the floor at which a dot still reads as one.
-            const MIN_DIAMETER = 4;
-            trace.marker.size = areas.map((a: number) => {
-                if (!Number.isFinite(a)) return Math.max(MIN_DIAMETER, diameterOf(floor));
-                const t = max > min ? (a - min) / (max - min) : 1;
-                return Math.max(MIN_DIAMETER, diameterOf(floor + t * (hi - floor)));
-            });
+        const floor = m.minSize != null ? Math.max(lo, m.minSize) : lo;
+        // A bubble the house has scaled down to two pixels is a speck: it is neither a readable value
+        // nor visibly a mark. Four pixels is the floor at which a dot still reads as one.
+        const MIN_DIAMETER = 4;
+        const sized = (figure.data ?? []).filter((trace: any) => Array.isArray(trace?.marker?.size));
+        // One scale over every trace, as Vega-Lite's size scale is one scale over the field: from zero
+        // to the largest value, onto the house's areas. Scaled trace by trace, each series' largest
+        // value would draw at the largest area, whatever it is.
+        const raw = sized.every((trace: any) => Array.isArray(trace._sizeValues));
+        if (raw) {
+            const top = Math.max(0, ...sized.flatMap((trace: any) => trace._sizeValues.filter((v: number) => Number.isFinite(v))));
+            for (const trace of sized) {
+                trace.marker.size = trace._sizeValues.map((v: number) => {
+                    if (!Number.isFinite(v) || !(top > 0)) return Math.max(MIN_DIAMETER, diameterOf(floor));
+                    return Math.max(MIN_DIAMETER, diameterOf(floor + Math.max(0, v) / top * (hi - floor)));
+                });
+            }
+        } else {
+            const areaOf = (dm: any) => Math.PI * (Number(dm) / 2) ** 2;
+            const finite = sized.flatMap((trace: any) => trace.marker.size.map(areaOf)).filter((a: number) => Number.isFinite(a) && a > 0);
+            if (finite.length) {
+                const min = Math.min(...finite);
+                const max = Math.max(...finite);
+                for (const trace of sized) {
+                    trace.marker.size = trace.marker.size.map((dm: any) => {
+                        const a = areaOf(dm);
+                        if (!Number.isFinite(a)) return Math.max(MIN_DIAMETER, diameterOf(floor));
+                        const t = max > min ? (a - min) / (max - min) : 1;
+                        return Math.max(MIN_DIAMETER, diameterOf(floor + t * (hi - floor)));
+                    });
+                }
+            }
         }
     }
 
@@ -2109,7 +2433,7 @@ function addFactoredLineLegendProxies(figure: any, d: DesignDecisions): void {
     }
 }
 
-function applyLegend(figure: any, d: DesignDecisions, say: ReportDeparture): number {
+function applyLegend(figure: any, d: DesignDecisions, say: ReportDeparture): void {
     const layout = figure.layout;
     const l = d.legend;
 
@@ -2120,7 +2444,7 @@ function applyLegend(figure: any, d: DesignDecisions, say: ReportDeparture): num
             if (trace?.colorbar) trace.showscale = false;
             if (trace?.showscale) trace.showscale = false;
         }
-        return 0;
+        return;
     }
 
     // Plotly draws each entry from its trace's own marker or line; it has no symbol of its own to set.
@@ -2149,7 +2473,7 @@ function applyLegend(figure: any, d: DesignDecisions, say: ReportDeparture): num
             'legend.show', 'legend-not-drawn',
             'legend omitted — every pie slice is already named on the chart, so a second copy would compete with its callout',
         );
-        return 0;
+        return;
     }
 
     // `seriesEnd` names each series at the end of its own line. Realized as
@@ -2159,7 +2483,7 @@ function applyLegend(figure: any, d: DesignDecisions, say: ReportDeparture): num
     if (placement === 'seriesEnd') {
         if (labelSeriesEnds(figure, d)) {
             layout.showlegend = false;
-            return 0;
+            return;
         }
         placement = (l.fallbacks ?? []).find((p) => p !== 'seriesEnd') ?? 'right';
         say('legend.placement', 'legend-placement-fallback', `no series with an end to name — fell back to \`${placement}\``);
@@ -2199,77 +2523,40 @@ function applyLegend(figure: any, d: DesignDecisions, say: ReportDeparture): num
         });
     }
 
-    // A key above the plot is chrome the figure has to pay for, however it is
-    // stacked.
-    if (layout.legend.y > 1) {
-        if (layout.legend.orientation === 'h') {
-            return horizontalLegendHeight(figure, l.label.fontSize ?? 11, needsMarkup(l.label).bold);
-        }
-        const rows = legendEntries(figure).length;
-        return rows ? rows * ((l.label.fontSize ?? 11) + 12) + 8 : 0;
-    }
+    // A key above the plot is chrome the figure has to pay for, however it is stacked: it is measured
+    // once the margins it wraps in are settled (see {@link layoutTopChrome}).
+    if (layout.legend.y > 1) return;
     // A key beside the plot is paid for in width, for the same reason.
     if (layout.legend.orientation === 'v' && layout.legend.x >= 1) {
-        const entries = legendEntries(figure);
-        if (entries.length) {
-            const size = l.label.fontSize ?? 11;
-            const need = Math.ceil(Math.max(...entries.map((e) => e.length)) * size * 0.6) + 40;
+        const block = plKeyBlock(figure, 'vertical');
+        if (block) {
             const margin = (layout.margin ??= {});
+            const plotWidth = Math.max(1, (Number(layout.width) || 0) - (margin.l ?? 0) - (margin.r ?? 0) - (figure._legendRoom?.right ?? 0));
+            // The key hangs `x` past the plot's right edge, its box and a gap after its text, clear of the canvas edge.
+            const need = Math.ceil(plotWidth * (layout.legend.x - 1) + block.width + PLOTLY_PROFILE.key.gap + PLOTLY_PROFILE.edge);
             const before = margin.r ?? 0;
+            // The width already held the room the frame kept for the key; the margin now holds the key itself.
+            const held = figure._legendRoom?.right ?? 0;
             margin.r = Math.max(before, need);
-            const grew = margin.r - before;
-            if (grew > 0 && Number(layout.width)) layout.width = Math.round(layout.width + grew);
+            if (figure._legendRoom) figure._legendRoom = { ...figure._legendRoom, right: 0 };
+            if (Number(layout.width)) layout.width = Math.round(layout.width + margin.r - before - held);
         }
     }
 
     // A column of keys taller than the plot is simply cut off at the bottom,
     // so the figure grows to hold it.
     if (layout.legend.orientation !== 'h') {
-        const entries = legendEntries(figure);
-        const need = entries.length * ((l.label.fontSize ?? 11) + 14) + 20;
+        const block = plKeyBlock(figure, 'vertical');
+        const need = block ? block.height : 0;
         const have = (Number(layout.height) || 0) - (layout.margin?.t ?? 0) - (layout.margin?.b ?? 0);
-        if (entries.length && have > 0 && need > have) {
+        if (block && have > 0 && need > have) {
             layout.height = Math.round(Number(layout.height) + (need - have));
-            say('legend.placement', 'legend-figure-grown', `the figure grew ${Math.round(need - have)}px to hold a column of ${entries.length} keys`);
+            say('legend.placement', 'legend-figure-grown', `the figure grew ${Math.round(need - have)}px to hold a column of ${block.rows} keys`);
         }
     }
-    return 0;
 }
 
-/** The names a key will carry: one per trace, or one per slice of a pie. */
-function legendEntries(figure: any): string[] {
-    const out: string[] = [];
-    for (const t of figure.data ?? []) {
-        if (t?.showlegend === false) continue;
-        if (Array.isArray(t?.labels)) out.push(...t.labels.map(String));
-        else if (t?.name) out.push(String(t.name));
-    }
-    return out;
-}
 
-/** How tall a horizontal key stacks once its entries are packed into the width. */
-function horizontalLegendHeight(figure: any, fontSize: number, bold = false): number {
-    const entries = legendEntries(figure);
-    if (!entries.length) return 0;
-    // A key above the plot is laid out across the *plot area*, not the paper,
-    // so it wraps sooner than the figure width suggests.
-    const layout = figure.layout ?? {};
-    const width = Math.max(
-        120,
-        (Number(layout.width) || 400) - (layout.margin?.l ?? 0) - (layout.margin?.r ?? 0),
-    );
-    const rowHeight = fontSize + 14;
-    let rows = 1;
-    let used = 0;
-    for (const e of entries) {
-        const w = e.length * fontSize * (bold ? 0.72 : 0.62) + 46;
-        if (used > 0 && used + w > width) {
-            rows++;
-            used = w;
-        } else used += w;
-    }
-    return rows * rowHeight + 8;
-}
 
 /**
  * Where an annotation must sit to land on this value.
@@ -2725,29 +3012,47 @@ export function fitPlotlyTitle(figure: any): void {
     const layout = figure?.layout;
     const title = layout?.title;
     const text = typeof title === 'string' ? title : title?.text;
-    if (!text) return;
-    const size = title?.font?.size ?? 17;
-    const width = Number(layout.width) || 400;
-    const lines = wrapToWidth(String(text).replace(/<br>/g, ' '), width - 16, size);
     const deck = title?._deck as string | undefined;
-    const all = deck ? [...lines, ...wrapToWidth(deck, width - 16, size * 0.75)] : lines;
+    if (!text && !deck) return;
+    const size = title?.font?.size ?? 17;
+    const width = Math.max(Number(layout.width) || 400, titleRoomOf(figure));
+    // Plotly's own title: 17 px over the container's centre; the deck a second, smaller line.
+    const block = planTitleBlock({ title: text ? String(text).replace(/<br>/g, ' ') : undefined, subtitle: deck }, width - 16, {
+        headline: { fontSize: size, font: PLOTLY_FONT },
+        deck: { fontSize: Math.round(size * 0.75), font: PLOTLY_FONT },
+        gap: 0,
+    });
+    if (!block) return;
+    widenForTitle(layout, block.width + 16, Number(layout.width) || 400);
+    const headSize = block.headline?.fontSize ?? size;
+    const headLines = block.headline?.lines ?? [];
+    const deckLines = block.deck?.lines ?? [];
+    const all = headLines.length + deckLines.length;
+    const deckHtml = deckLines.length ? `<span style="font-size:${Math.round(size * 0.75)}px">${deckLines.join('<br>')}</span>` : '';
     layout.title = {
         ...(typeof title === 'object' ? title : {}),
-        text: deck
-            ? `${lines.join('<br>')}<br><span style="font-size:${Math.round(size * 0.75)}px">${deck}</span>`
-            : lines.join('<br>'),
+        text: [headLines.join('<br>'), deckHtml].filter(Boolean).join('<br>'),
+        ...(headSize !== size ? { font: { ...(title?.font ?? {}), size: headSize } } : {}),
         x: 0.5,
         xanchor: 'center',
         xref: 'container',
-        y: titleY(layout, all.length, size),
+        y: titleY(layout, all, headSize),
         yanchor: 'top',
         yref: 'container',
     };
-    const need = 8 + titleBlockHeight(all.length, size) + 14;
+    delete layout.title._deck;
+    const need = 8 + titleBlockHeight(all, headSize) + 14;
     const margin = (layout.margin ??= {});
     const before = margin.t ?? 0;
     margin.t = Math.max(before, need);
-    const grew = margin.t - before;
+    let grew = margin.t - before;
+    // The lines a broken title adds come out of a continuous plot, as they do in the plan; the
+    // canvas grows only by the one line each part takes.
+    const yaxis = layout.yaxis;
+    const plotHeight = Number(layout.height) - margin.t - (margin.b ?? 0);
+    if (grew > 0 && block.broken > 0 && yaxis && yaxis.type !== 'category' && plotHeight > 0) {
+        grew -= Math.min(block.broken, plotHeight + grew - plotHeightAfter(plotHeight + grew, block.broken));
+    }
     if (grew > 0 && Number(layout.height)) layout.height = Math.round(layout.height + grew);
-    layout.title.y = titleY(layout, all.length, size);
+    layout.title.y = titleY(layout, all, headSize);
 }

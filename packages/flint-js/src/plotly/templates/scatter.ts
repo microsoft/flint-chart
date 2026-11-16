@@ -27,7 +27,8 @@ function sizeScale(table: any[], field: string): (row: any) => number {
     const values = table
         .map((r: any) => Number(r[field]))
         .filter((v: number) => Number.isFinite(v));
-    const min = values.length ? Math.min(...values) : 0;
+    // From zero, as Vega-Lite's size scale is: a value twice another draws twice its area.
+    const min = values.length ? Math.min(0, ...values) : 0;
     const max = values.length ? Math.max(...values) : 1;
     const MIN_AREA = 40;
     const MAX_AREA = 900;
@@ -111,6 +112,7 @@ export const plScatterPlotDef: ChartTemplateDef = {
                         ...(sizeOf ? { size: rows.map((r: any) => sizeOf(r)) } : {}),
                         line: { color: '#ffffff', width: 0.5 },
                     },
+                    ...(sizeField ? { _sizeValues: rows.map((r: any) => Number(r[sizeField])), _sizeField: sizeField } : {}),
                     showlegend: !!shapeField,
                 });
             }
@@ -140,6 +142,7 @@ export const plScatterPlotDef: ChartTemplateDef = {
                     ...(sizeOf ? { size: rows.map(r => sizeOf(r)) } : {}),
                     line: { color: '#ffffff', width: 0.5 },
                 },
+                ...(sizeField ? { _sizeValues: rows.map((r: any) => Number(r[sizeField])), _sizeField: sizeField } : {}),
             });
 
             if (colorField || shapeField) {

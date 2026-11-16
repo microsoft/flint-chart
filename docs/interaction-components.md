@@ -128,7 +128,7 @@ The selector field must exist in the chart's semantic data. Host-owned updates a
 | Operator | Effect |
 |---|---|
 | `set-style` | Emphasize, mute, or hide marks the chart draws, a run of line segments included. |
-| `set-annotation` | Add or clear a note on one mark. |
+| `annotate-text` | Add or clear a note on one mark. |
 | `set-viewport` | Change visible continuous domains or a geographic viewport. |
 | `set-order` | Reorder categories. |
 | `set-overlay` | Draw new rows through the chart's scales: `line`, `point`, `text` rows carry `x` and `y`; `rule` and `rect` rows carry `x`, `y`, `x2`, `y2`. Overlay text is haloed in the chart's background so it reads over the data; `style.stroke: 'none'` turns the halo off. |

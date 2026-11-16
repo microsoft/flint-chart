@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import type { ChartAssemblyInput } from 'flint-chart';
 import { ChartView, shownChart } from '../../../../packages/flint-mcp/ui/src/ChartView';
-import { useMcpStyles, useMockApp } from '../../components/mcp-embed';
+import { useHostPage, useMcpStyles, useMockApp } from '../../components/mcp-embed';
 import { gapminderRows } from '../gapminder-dashboard-data';
 import { salesFixture } from '../interaction-demo-data';
 import { DemoColumns, EmptyPanel } from './application-demos-layout';
@@ -11,6 +11,7 @@ const SCOPE = 'app-demo-mcp';
 
 function McpView({ input, onContext }: { input: ChartAssemblyInput; onContext?: (text: string) => void }) {
   useMcpStyles(SCOPE);
+  useHostPage();
   const app = useMockApp(onContext);
   return <div className={`${SCOPE} app-demo-mcp-frame`}>
     <ChartView app={app as never} shown={shownChart(input)} />

@@ -61,6 +61,8 @@ export function normalizeChartProperties(
         // Already a valid accepted value — nothing to do. An array value (a map's centre) arrives
         // as a fresh array from JSON, so it is matched by its contents.
         if (def.options.some((o) => sameOptionValue(o.value, value))) continue;
+        // A value the property takes beside its options (a map's own boundary file).
+        if (def.accepts?.(value)) continue;
 
         // Known label (case-insensitive) → coerce to the canonical value.
         const byLabel =
@@ -86,12 +88,13 @@ export function normalizeChartProperties(
         const accepted = def.options
             .map((o) => (o.value == null ? '(default)' : `'${o.value}'`))
             .join(', ');
+        const shown = typeof value === 'object' ? JSON.stringify(value).slice(0, 80) : `'${value}'`;
         const copy = ensureCopy();
         delete copy[def.key];
         warnings.push({
             severity: 'warning',
             code: 'invalid-option-value',
-            message: `chartProperties.${def.key}: '${value}' is not a valid option (accepted: ${accepted}). Falling back to the default.`,
+            message: `chartProperties.${def.key}: ${shown} is not a valid option (accepted: ${accepted}${def.acceptsLabel ? `, or ${def.acceptsLabel}` : ''}). Falling back to the default.`,
         });
     }
 

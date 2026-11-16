@@ -14,7 +14,6 @@ import { SpecPipelineFigure } from '../components/SpecPipelineFigure';
 import { CodeBlock } from '../components/CodeBlock';
 import { PromptBlock } from '../components/PromptBlock';
 import { MCP_SETUP_PROMPT } from '../shared/mcp-setup';
-import { Zap } from 'lucide-react';
 import stringify from 'json-stringify-pretty-compact';
 import { testCaseToFlintSummary, testCaseToAssemblyInput, withHouse, withHouseId } from '../shared/test-case-utils';
 import { buildPanelModel, withoutEchoedOverrides } from '../shared/chart-options';
@@ -34,6 +33,9 @@ import {
 import { DISCORD_INVITE, GITHUB_REPO, LANDING_SCROLL_TO_KEY, WECHAT_SECTION_ID, siteTheme } from '../shared/theme';
 import { scrollToHeading } from '../shared/scroll-to-heading';
 import flintLogo from '../assets/flint-logo.svg';
+import { HOUSE_COUNT } from '../shared/house-themes';
+import { SketchIcon, type SketchIconKind } from './DevDesignIcons';
+import { CompilerWiring } from '../components/CompilerWiring';
 import wechatQr from '../../../docs/figs/QR-code.png';
 
 /**
@@ -79,27 +81,29 @@ export function Landing() {
 
           <div className="landing-lead-columns" style={leadColumnsStyle}>
             <div style={leadTextColStyle}>
-              <p style={leadStyle}>
-                {t('landing.leadBefore')}{' '}
-                <LeadHighlight>{t('landing.leadHighlight1')}</LeadHighlight>
-                {t('landing.leadStop')}
-                {t('landing.leadInsight')}
-              </p>
-              <p style={{ ...leadStyle, marginTop: 14 }}>
-                {t('landing.leadHighlight2', {
-                  chartTypes: CHART_FAMILY_COUNT,
-                  backends: BACKEND_ROSTER_LINKS.length,
-                  themes: Object.keys(THEME_PRESETS).length,
-                  presets: INTERACTION_PRESET_TYPES.length,
-                })}
-                {t('landing.leadStop')}
-                <Trans
-                  i18nKey="landing.leadAfter"
-                  components={{
-                    themeLab: <LocaleLink className="site-text-link" style={contributorLinkStyle} to="/theme-lab" />,
-                    advanced: <LocaleLink className="site-text-link" style={contributorLinkStyle} to="/interactions/advanced" />,
-                  }}
-                />
+              <ul className="landing-points" style={pointsStyle}>
+                {HERO_POINTS.map((kind) => (
+                  <li key={kind} style={pointStyle}>
+                    <span style={pointIconStyle}><SketchIcon kind={kind} label={t(`landing.points.${kind}Icon`)} /></span>
+                    <span>
+                      <Trans
+                        i18nKey={`landing.points.${kind}`}
+                        values={{
+                          chartTypes: CHART_FAMILY_COUNT,
+                          backends: BACKENDS.length,
+                          themes: THEME_COUNT,
+                          presets: INTERACTION_PRESET_TYPES.length,
+                        }}
+                        components={{
+                          strong: <strong style={leadHighlightStyle} />,
+                          customize: <LocaleLink className="site-text-link" style={contributorLinkStyle} to="/interactions/advanced" />,
+                        }}
+                      />
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <p style={availabilityStyle}>
                 <Trans
                   i18nKey="landing.leadAvailability"
                   components={{
@@ -108,68 +112,6 @@ export function Landing() {
                   }}
                 />
               </p>
-
-              <div style={rostersStyle}>
-                <div className="landing-backend-roster" style={backendRosterStyle} aria-label={t('landing.backendRosterLabel')}>
-                  <span className="landing-backend-roster-label" style={backendRosterLabelStyle}>
-                    {t('landing.backendRosterLabel')}
-                  </span>
-                  {BACKEND_ROSTER_LINKS.map((backend, index) => (
-                    <span key={backend.label} style={backendRosterItemStyle}>
-                      {index > 0 && <span aria-hidden="true" style={backendRosterSeparatorStyle} />}
-                      <LocaleLink className="landing-backend-link" to={backend.to} style={backendRosterLinkStyle}>
-                        {backend.label}
-                      </LocaleLink>
-                    </span>
-                  ))}
-                </div>
-                <div className="landing-backend-roster" style={backendRosterStyle} aria-label={t('landing.themeRosterLabel')}>
-                  <span className="landing-backend-roster-label" style={backendRosterLabelStyle}>
-                    {t('landing.themeRosterLabel')}
-                  </span>
-                  {THEME_ROSTER_PREVIEW.map((theme, index) => (
-                    <span key={theme.id} style={backendRosterItemStyle}>
-                      {index > 0 && <span aria-hidden="true" style={backendRosterSeparatorStyle} />}
-                      <LocaleLink
-                        className="landing-backend-link"
-                        to={`/themes?theme=${theme.id}`}
-                        style={backendRosterLinkStyle}
-                      >
-                        {theme.label}
-                      </LocaleLink>
-                    </span>
-                  ))}
-                  <span style={backendRosterItemStyle}>
-                    <span aria-hidden="true" style={backendRosterSeparatorStyle} />
-                    <LocaleLink className="landing-backend-link" to="/themes" style={backendRosterMoreLinkStyle}>
-                      {t('landing.themeRosterMore', { count: THEME_ROSTER_REMAINDER })}
-                    </LocaleLink>
-                  </span>
-                </div>
-                <div className="landing-backend-roster" style={backendRosterStyle} aria-label={t('landing.interactionRosterLabel')}>
-                  <span className="landing-backend-roster-label" style={backendRosterLabelStyle}>
-                    {t('landing.interactionRosterLabel')}
-                  </span>
-                  {INTERACTION_ROSTER_PREVIEW.map((preset, index) => (
-                    <span key={preset.mode} style={backendRosterItemStyle}>
-                      {index > 0 && <span aria-hidden="true" style={backendRosterSeparatorStyle} />}
-                      <LocaleLink
-                        className="landing-backend-link"
-                        to={`/interactions/gallery/${preset.mode}`}
-                        style={backendRosterLinkStyle}
-                      >
-                        {preset.label}
-                      </LocaleLink>
-                    </span>
-                  ))}
-                  <span style={backendRosterItemStyle}>
-                    <span aria-hidden="true" style={backendRosterSeparatorStyle} />
-                    <LocaleLink className="landing-backend-link" to="/interactions/gallery" style={backendRosterMoreLinkStyle}>
-                      {t('landing.themeRosterMore', { count: INTERACTION_PRESET_TYPES.length - INTERACTION_ROSTER_PREVIEW.length })}
-                    </LocaleLink>
-                  </span>
-                </div>
-              </div>
             </div>
             <div className="landing-hero-actions" style={leadButtonsColStyle}>
               <div style={actionBoxStyle}>
@@ -226,7 +168,9 @@ export function Landing() {
         <section className="landing-try-it" style={tryItSectionStyle} aria-labelledby="landing-try-it-title">
           <div style={tryItTextColStyle}>
             <h2 id="landing-try-it-title" style={tryItHeadingStyle}>
-              <Zap aria-hidden="true" size={20} strokeWidth={2} fill="currentColor" style={tryItIconStyle} />
+              <svg aria-hidden="true" width={20} height={20} viewBox="0 0 24 24" style={tryItIconStyle}>
+                <path d="M14 1.5 3.5 13.5H11L9.5 22.5 20.5 10H13z" fill="currentColor" />
+              </svg>
               {t('landing.tryIt.title')}
             </h2>
             <p style={tryItBodyStyle}>{t('landing.tryIt.body')}</p>
@@ -308,10 +252,19 @@ export function Landing() {
                     label={t('landing.ctaDocs')}
                     variant="secondary"
                   />
+                  <HeroCTA
+                    className="landing-docs-cta"
+                    to="/talk/vis-2026"
+                    label={t('landing.ctaTalk')}
+                    variant="secondary"
+                  />
                 </div>
               </div>
             </div>
           </div>
+          <figure className="landing-wiring" style={wiringFigureStyle}>
+            <CompilerWiring />
+          </figure>
           <PipelineDiagram />
           <div style={featureGridStyle}>
             {features.map((feature, i) => (
@@ -448,7 +401,7 @@ type ShowcaseExampleKey =
   | 'inspect'
   | 'globe'
   | 'climatePhase'
-  | 'drawIt'
+  | 'odyssey'
   | 'countryTable'
   | 'originTable'
   | 'companionTabs'
@@ -762,15 +715,21 @@ const SHOWCASE_EXAMPLES: ShowcaseExample[] = [
     },
   },
   {
-    id: 'draw-it',
-    exampleKey: 'drawIt',
+    id: 'odyssey',
+    exampleKey: 'odyssey',
     group: 'interactions',
     application: {
-      caseId: 'you-draw-it',
-      theme: 'datawrapper',
+      caseId: 'journey-of-odysseus',
       width: 680,
-      load: () => withApplicationStyles(import('../playground/YouDrawItStage')
-        .then((module) => ({ Demo: () => <module.YouDrawItStage />, spec: module.DRAW_IT_INPUT }))),
+      load: () => withApplicationStyles(import('../playground/OdysseyStoryStage')
+        .then((module) => ({
+          Demo: function OdysseyDemo({ themeId }: { themeId: string | null }) {
+            const look = useMemo(() => module.odysseyLookInHouse(themeId), [themeId]);
+            return <module.OdysseyStoryStage compact look={look} />;
+          },
+          // The house's palette is the chart's default, so the spec leaves the legs' colours to it.
+          spec: module.odysseySpec({ ...module.odysseyLookInHouse(null), legInks: undefined }),
+        }))),
     },
   },
   {
@@ -1374,9 +1333,7 @@ function PipelineDiagram() {
 /* plain so they can be reworded without touching JSX.                 */
 /* ------------------------------------------------------------------ */
 
-function LeadHighlight({ children }: { children: string }) {
-  return <span style={leadHighlightStyle}>{children}</span>;
-}
+const HERO_POINTS: readonly SketchIconKind[] = ['agent', 'untangle', 'many'];
 
 const CHART_FAMILY_COUNT = new Set(
   CHART_CATEGORIES.flatMap((category) =>
@@ -1384,26 +1341,9 @@ const CHART_FAMILY_COUNT = new Set(
   ),
 ).size;
 
-const BACKEND_ROSTER_LINKS = [
-  { label: 'Vega-Lite', to: '/documentation/reference-vegalite' },
-  { label: 'ECharts', to: '/documentation/reference-echarts' },
-  { label: 'Chart.js', to: '/documentation/reference-chartjs' },
-  { label: 'Plotly', to: '/documentation/reference-plotly' },
-  { label: 'Excel', to: '/gallery/excel' },
-] as const;
-const THEME_ROSTER_PREVIEW = [
-  ...Object.values(THEME_PRESETS).slice(0, 5),
-  THEME_PRESETS.pop,
-];
-const THEME_ROSTER_REMAINDER = Object.keys(THEME_PRESETS).length - THEME_ROSTER_PREVIEW.length;
-const INTERACTION_ROSTER_PREVIEW = [
-  { mode: 'click-highlight', label: 'Click highlight' },
-  { mode: 'brush-x', label: 'Brush' },
-  { mode: 'inspect-index', label: 'Hover readout' },
-  { mode: 'brush-zoom', label: 'Zoom' },
-  { mode: 'legend-toggle', label: 'Legend toggle' },
-  { mode: 'filter-controls', label: 'Filters' },
-] as const;
+const BACKENDS = ['Vega-Lite', 'ECharts', 'Chart.js', 'Plotly', 'Excel'];
+/** Presets plus the style-guide houses the themes page offers. */
+const THEME_COUNT = Object.keys(THEME_PRESETS).length + HOUSE_COUNT;
 
 // Lead paragraph shown in the hero (the single intro to Flint).
 interface Feature {
@@ -1817,8 +1757,8 @@ const tryItSectionStyle: CSSProperties = {
   gridTemplateColumns: 'minmax(0, 300px) minmax(0, 1fr)',
   gap: 32,
   alignItems: 'start',
-  paddingTop: 20,
-  paddingBottom: 28,
+  paddingTop: 44,
+  paddingBottom: 48,
 };
 
 const tryItTextColStyle: CSSProperties = {
@@ -1865,8 +1805,8 @@ const newsSectionStyle: CSSProperties = {
   display: 'grid',
   gridTemplateColumns: '110px minmax(0, 1fr)',
   gap: 24,
-  paddingTop: 16,
-  paddingBottom: 16,
+  paddingTop: 28,
+  paddingBottom: 28,
   borderTop: `1px solid ${HAIRLINE}`,
   borderBottom: `1px solid ${HAIRLINE}`,
 };
@@ -1997,12 +1937,16 @@ const actionBoxStyle: CSSProperties = {
   paddingTop: 2,
 };
 
-const leadStyle: CSSProperties = {
-  fontSize: 17,
+const availabilityStyle: CSSProperties = {
+  margin: 0,
+  fontSize: 15.5,
   color: siteTheme.text,
   lineHeight: 1.65,
-  margin: 0,
-  fontWeight: 400,
+};
+
+
+const wiringFigureStyle: CSSProperties = {
+  margin: '8px 0 28px',
 };
 
 const leadHighlightStyle: CSSProperties = {
@@ -2010,82 +1954,35 @@ const leadHighlightStyle: CSSProperties = {
   color: 'inherit',
 };
 
-const backendRosterStyle: CSSProperties = {
+const pointsStyle: CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: 'minmax(0, 1fr)',
+  gap: 18,
+  margin: '0 0 32px',
+  padding: 0,
+  listStyle: 'none',
+};
+
+const pointStyle: CSSProperties = {
   display: 'flex',
-  alignItems: 'baseline',
-  flexWrap: 'wrap',
-  gap: '5px 0',
-  color: siteTheme.textMuted,
-  minHeight: 18,
-  lineHeight: '18px',
-};
-
-const rostersStyle: CSSProperties = {
-  display: 'flex',
-  alignItems: 'baseline',
-  flexWrap: 'wrap',
-  gap: '5px 26px',
-  marginTop: 13,
-};
-
-const backendRosterLabelStyle: CSSProperties = {
-  marginRight: 10,
-  color: siteTheme.textMuted,
-  fontSize: 11,
-  fontWeight: 600,
-  letterSpacing: '0.05em',
-  lineHeight: '18px',
-  textTransform: 'uppercase',
-};
-
-const backendRosterItemStyle: CSSProperties = {
-  display: 'flex',
-  alignItems: 'baseline',
-  whiteSpace: 'nowrap',
-};
-
-const backendRosterLinkStyle: CSSProperties = {
+  alignItems: 'center',
+  gap: 22,
   color: siteTheme.text,
-  fontSize: 14,
-  fontWeight: 550,
-  lineHeight: '18px',
-  textDecorationLine: 'underline',
-  textDecorationColor: 'transparent',
-  textDecorationThickness: '1px',
-  textUnderlineOffset: '3px',
-  transition: 'color 120ms ease, text-decoration-color 120ms ease',
+  fontSize: 17,
+  lineHeight: 1.6,
 };
 
-const backendRosterMoreLinkStyle: CSSProperties = {
-  ...backendRosterLinkStyle,
-  color: siteTheme.textMuted,
-  fontWeight: 500,
-};
-
-const backendRosterSeparatorStyle: CSSProperties = {
-  alignSelf: 'center',
-  flex: '0 0 auto',
-  width: 1,
-  height: 13,
-  margin: '0 9px',
-  background: HAIRLINE,
+const pointIconStyle: CSSProperties = {
+  flex: 'none',
+  width: 96,
+  height: 72,
 };
 
 const landingInteractiveStyles = `
+
   .landing-hero-cta:focus-visible {
     outline: 2px solid ${siteTheme.accent};
     outline-offset: 2px;
-  }
-
-  .landing-backend-link:hover,
-  .landing-backend-link:focus-visible {
-    text-decoration-color: ${siteTheme.textMuted} !important;
-  }
-
-  .landing-backend-link:focus-visible {
-    outline: 2px solid ${siteTheme.accent};
-    outline-offset: 2px;
-    border-radius: 2px;
   }
 
   .landing-showcase-row {
@@ -2229,6 +2126,12 @@ const landingInteractiveStyles = `
     background: transparent;
   }
 
+  .landing-application [data-app='odyssey'] .ic-flint-dimpvis-mount {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
   .landing-application .climate-phase-hint {
     margin: 8px 4px 0;
     color: #57606a;
@@ -2324,9 +2227,8 @@ const landingInteractiveStyles = `
       gap: 14px !important;
     }
 
-    .landing-backend-roster-label {
-      flex-basis: 100%;
-      margin-right: 0 !important;
+    .landing-wiring {
+      display: none !important;
     }
 
     .landing-news {
@@ -2364,6 +2266,16 @@ const landingInteractiveStyles = `
       border-top: 1px solid ${HAIRLINE} !important;
       padding-left: 0 !important;
       padding-top: 18px !important;
+    }
+
+    .landing-points li {
+      gap: 14px !important;
+      font-size: 15.5px !important;
+    }
+
+    .landing-points li > span:first-child {
+      width: 64px !important;
+      height: 48px !important;
     }
 
     .landing-docs-actions {

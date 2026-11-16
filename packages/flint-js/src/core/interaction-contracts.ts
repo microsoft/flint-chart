@@ -91,6 +91,11 @@ export type SemanticTargetSelector =
 
 export type UpdateTarget = SemanticTargetRef | SemanticTargetSelector;
 
+/**
+ * Where on its mark a template's note may name it: the centre, a side, a bar's value end or side, the
+ * middle of a stretch of a line or area, a slice's middle or rim. A template offers these through
+ * {@link AnnotationCandidate}s; the caption is placed from the first one.
+ */
 export type AnnotationConnection =
     | 'center'
     | 'top'
@@ -103,26 +108,40 @@ export type AnnotationConnection =
     | 'radial-midpoint'
     | 'outer-radial';
 
+/** @deprecated Ignored: a note names one mark, and its caption draws one leader. */
 export interface AnnotationConnectorAnchor {
     role: string;
     connection: AnnotationConnection;
     valueAxis?: 'x' | 'y';
 }
 
+/** How a template's notes connect to its marks, set by its presenter rather than by an update. */
 export interface AnnotationCandidate {
     connection: AnnotationConnection;
     valueAxis?: 'x' | 'y';
     crossSide?: 'start' | 'end';
     valueInset?: number;
-    anglePreference?: 'normal' | 'oblique';
-    textAlign?: 'left' | 'center' | 'right';
+    /** `'none'` never draws a leader. */
     connector?: 'line' | 'none';
+    /** The width the caption wraps to, in px. */
     maxWidth?: number;
+    /** @deprecated Ignored since notes are set as captions: the placer weighs every side. */
+    anglePreference?: 'normal' | 'oblique';
+    /** @deprecated Ignored: a caption's lines align toward its mark. */
+    textAlign?: 'left' | 'center' | 'right';
+    /** @deprecated Ignored: the placer weighs how far a caption stands from its mark. */
     maxDistance?: number;
+    /** @deprecated Ignored: the caption is placed from the first candidate. */
     priority?: number;
+    /** @deprecated Ignored: a note names one mark, and its caption draws one leader. */
     connectorAnchors?: readonly AnnotationConnectorAnchor[];
 }
 
+/**
+ * A caption on one mark, after Blabber's `text`: words beside the mark, haloed in the page, with a
+ * leader only where the caption is not plainly beside it. A card, a callout box or any other
+ * styled note is a `set-overlay` or `set-freeform-overlay`.
+ */
 export interface AnnotationSpec {
     text?: string;
     /**
@@ -131,8 +150,96 @@ export interface AnnotationSpec {
      * starts no segment and is always marked at its point.
      */
     anchor?: 'segment' | 'point';
+    /**
+     * How a note marks what it names: `'none'` leaves it as drawn; `'light'` (the default) lifts a
+     * dot above its neighbours with a halo, draws a stretch of a line or area again in its ink, and
+     * faintly outlines a bar, a cell or a slice; `'strong'` adds a ring round a dot and a full
+     * outline; `'exclusive'` is strong and recedes every other mark, as `set-style` `emphasized` does.
+     */
+    highlight?: 'none' | 'light' | 'strong' | 'exclusive';
+    /**
+     * The caption's type, over the theme's: size in px, weight, ink. Omitted, a note takes the
+     * theme's `type.annotation` role, else the axis labels' face and weight a size up in the primary ink.
+     */
+    style?: NoteTextStyle;
+    /** The ring or outline's paint for this note, over the theme's `interaction.highlight`. */
+    highlightStyle?: HighlightStyle;
+}
+
+/** A ring's or an outline's paint where one update sets its own. */
+export interface HighlightStyle {
+    color?: string;
+    /** Stroke width in px of the strong ring or outline; the light one is drawn a little thinner. */
+    width?: number;
+}
+
+/** A caption's type where one note sets its own. */
+export interface NoteTextStyle {
+    fontSize?: number;
+    fontWeight?: number | 'normal' | 'bold';
+    color?: string;
+}
+
+/**
+ * A note as a template's presenter hands it to the renderer: the update's {@link AnnotationSpec},
+ * with where on the mark it may connect and what kind of mark it names. Not part of an update.
+ */
+export interface PresentedAnnotationSpec extends AnnotationSpec {
     candidates?: readonly AnnotationCandidate[];
     subject?: Partial<SemanticTarget['visual']>;
+}
+
+/**
+ * A shaded stretch of the plot, after Blabber's `region`. One axis shades a band across the plot,
+ * both a box. On a continuous axis a stretch is two bounds, either of which may be `null` (open: the
+ * plot's end on that side); on a banded axis it is the categories it covers, which must be next to
+ * each other. The caption is set on the stretch it names, inside where it fits clear of the data,
+ * else outside it with a leader.
+ */
+export interface RegionAnnotationSpec {
+    x?: readonly unknown[];
+    y?: readonly unknown[];
+    /**
+     * On a map, the region's box in degrees, `[west, east]` and `[south, north]`, in place of `x`
+     * and `y`: its edges follow the meridians and parallels as the map's projection draws them.
+     * Both are needed; a west edge east of the east edge runs across the antimeridian.
+     */
+    longitude?: readonly [number, number];
+    latitude?: readonly [number, number];
+    text?: string;
+    /** The wash's colour; by default a muted one distinct from the marks and the other regions. */
+    color?: string;
+    /** The wash's opacity; 0.16 by default, 0.18 over an area chart. */
+    opacity?: number;
+    /** `under` (the default) reads beneath the marks; `over` washes over them, as on an area chart. */
+    layer?: 'under' | 'over';
+    /**
+     * Where the caption stands: `top`, `bottom`, `left`, `right`, `center` within the region, `above`
+     * or `below` it, just past its edge (past the plot for a stretch of x, which spans the plot's
+     * height). A region too small for its caption where asked has it placed where it fits. Left out,
+     * the clearest place is chosen.
+     */
+    placement?: 'top' | 'bottom' | 'left' | 'right' | 'center' | 'above' | 'below';
+}
+
+/**
+ * An outline round sets of marks, after Blabber's `enclose`. Each target is one group, outlined on
+ * its own; all of them share the caption. Bars, cells and stacks default to a `rect`, other marks to
+ * a `hull`.
+ */
+export interface EnclosureAnnotationSpec {
+    targets: readonly UpdateTarget[];
+    text?: string;
+    shape?: 'hull' | 'rect' | 'ellipse' | 'circle';
+    /**
+     * Leaders from the shared caption to the outlines: `auto` (the default) draws one to each of two
+     * or three outlines and none for one or more than three; `all` and `none` say so outright.
+     */
+    connect?: 'auto' | 'all' | 'none';
+    /** The outline's, its caption's and its leaders' colour; by default the theme's `interaction.highlight`, else one that reads on the marks and the page. */
+    color?: string;
+    /** The outline's stroke width in px; by default the theme's, else 1.5. */
+    width?: number;
 }
 
 export interface StyleSpec {
@@ -142,12 +249,22 @@ export interface StyleSpec {
     stroke?: string;
     strokeWidth?: number;
     /**
-     * `emphasized` and `focused` recede everything else to `mutedOpacity`. `highlighted` gives the
-     * targets their mark's hover cue and leaves the rest as drawn.
+     * `emphasized` and `focused` recede everything else; `emphasis` says how far. `highlighted` gives
+     * the targets their mark's hover cue and leaves the rest as drawn.
      */
     state?: 'normal' | 'focused' | 'emphasized' | 'highlighted' | 'muted';
+    /**
+     * How far the rest recede when the targets are emphasized, as a note's `highlight`: `'light'`
+     * (the default; the rest keep 0.6 of their opacity and stay readable), `'strong'` (0.35) or
+     * `'exclusive'` (0.2, only the targets read). Their value labels stay legible: they recede less
+     * and take the page's ink. `mutedOpacity` states the receded opacity outright.
+     */
+    emphasis?: 'light' | 'strong' | 'exclusive';
     mutedOpacity?: number;
 }
+
+/** The opacity each emphasis level recedes the other marks to. */
+export const EMPHASIS_OPACITY = { light: 0.6, strong: 0.35, exclusive: 0.2 } as const;
 
 export interface OverlayStyleSpec {
     fill?: string;
@@ -155,11 +272,13 @@ export interface OverlayStyleSpec {
     /** On text, the halo behind the glyphs: the chart's background by default, `'none'` for no halo. */
     stroke?: string;
     strokeWidth?: number;
-    strokeDash?: readonly number[];
+    /** Dash and gap lengths in px, or a word: `'dash'` (`'dashed'`) or `'dot'` (`'dotted'`). */
+    strokeDash?: readonly number[] | 'dash' | 'dashed' | 'dot' | 'dotted';
     opacity?: number;
     pointRadius?: number;
     fontSize?: number;
     fontWeight?: number | 'normal' | 'bold';
+    fontStyle?: 'normal' | 'italic';
     textAlign?: 'start' | 'middle' | 'end';
     dx?: number;
     dy?: number;
@@ -175,6 +294,12 @@ export interface OverlayFieldEncoding {
  * A retained visual projected through an existing plot's scales. A rule with
  * only `x` or only `y`, and a rect with only `x`/`x2` or only `y`/`y2`, span
  * the plot along the other axis.
+ *
+ * On a map, `longitude` and `latitude` place it through the map's projection
+ * instead, as it is panned, zoomed or turned: a point or a text at a place, a
+ * line through places in order along great circles, a rule from one place
+ * (`longitude`, `latitude`) to another (`longitude2`, `latitude2`), a rect over
+ * the box between them, its edges along meridians and parallels.
  */
 export interface ChartOverlaySpec {
     mark: OverlayMark;
@@ -184,6 +309,10 @@ export interface ChartOverlaySpec {
         y?: OverlayFieldEncoding;
         x2?: OverlayFieldEncoding;
         y2?: OverlayFieldEncoding;
+        longitude?: OverlayFieldEncoding;
+        latitude?: OverlayFieldEncoding;
+        longitude2?: OverlayFieldEncoding;
+        latitude2?: OverlayFieldEncoding;
         order?: OverlayFieldEncoding;
         color?: OverlayFieldEncoding;
         text?: OverlayFieldEncoding;
@@ -192,6 +321,13 @@ export interface ChartOverlaySpec {
     interactive?: boolean;
     projectable?: boolean;
     style?: OverlayStyleSpec;
+    /**
+     * `over` (the default) draws the overlay above the chart's marks; `under` reads beneath them: a map
+     * line or rule is cut away wherever the chart draws a mark (a route, its heads, a stop) on it, so a
+     * reference — the direct way home beside the route taken — stays in the background. Under needs the
+     * SVG renderer; on canvas it is drawn over.
+     */
+    layer?: 'under' | 'over';
 }
 
 export interface FreeformOverlayTransform {
@@ -231,9 +367,31 @@ export type ChartUpdateOp =
         value: StyleSpec;
     }
     | {
+        /** A caption on one mark, after Blabber's `text`. */
+        op: 'annotate-text';
+        target: UpdateTarget;
+        value: AnnotationSpec | null;
+    }
+    | {
+        /**
+         * @deprecated Use `annotate-text`, which this older name means. Still read in 1.x, with a
+         * validation warning; removed in 2.0.
+         */
         op: 'set-annotation';
         target: UpdateTarget;
         value: AnnotationSpec | null;
+    }
+    | {
+        op: 'annotate-region';
+        /** Names the region, so several stand together and each clears on its own (`value: null`). */
+        name: string;
+        value: RegionAnnotationSpec | null;
+    }
+    | {
+        op: 'annotate-enclosure';
+        /** Names the enclosure, so several stand together and each clears on its own (`value: null`). */
+        name: string;
+        value: EnclosureAnnotationSpec | null;
     }
     | {
         op: 'set-viewport';
@@ -263,9 +421,12 @@ export type ChartUpdateOp =
         value: { rows: readonly Record<string, unknown>[] };
     };
 
+/** The ops a chart update may name. */
 export const CHART_UPDATE_OPS = [
     'set-style',
-    'set-annotation',
+    'annotate-text',
+    'annotate-region',
+    'annotate-enclosure',
     'set-viewport',
     'set-order',
     'set-overlay',
@@ -276,6 +437,41 @@ export const CHART_UPDATE_OPS = [
 export interface ChartUpdate {
     id: string;
     ops: readonly ChartUpdateOp[];
+}
+
+/**
+ * Older op names still read, each with the op it means. Each is accepted with a warning and will be
+ * removed in the next major version.
+ */
+export const DEPRECATED_UPDATE_OPS = {
+    'set-annotation': 'annotate-text',
+} as const satisfies Partial<Record<ChartUpdateOp['op'], ChartUpdateOp['op']>>;
+
+/** Whether an op name is one of {@link DEPRECATED_UPDATE_OPS}. */
+export function isDeprecatedUpdateOp(name: string): name is keyof typeof DEPRECATED_UPDATE_OPS {
+    return Object.prototype.hasOwnProperty.call(DEPRECATED_UPDATE_OPS, name);
+}
+
+export type TextAnnotationOp = Extract<ChartUpdateOp, { op: 'annotate-text' }>;
+
+let warnedDeprecatedOp = false;
+
+/**
+ * An op as the runtime reads it: `set-annotation` is `annotate-text` by its deprecated name. The
+ * first deprecated op a page reads is reported once on the console.
+ */
+export function canonicalUpdateOp(op: ChartUpdateOp): ChartUpdateOp {
+    if (op.op !== 'set-annotation') return op;
+    if (!warnedDeprecatedOp && typeof console !== 'undefined') {
+        warnedDeprecatedOp = true;
+        console.warn('[flint] The ChartUpdate op "set-annotation" is deprecated and will be removed in 2.0; write "annotate-text", which it means.');
+    }
+    return { ...op, op: 'annotate-text' };
+}
+
+/** Whether an op is a caption on one mark, by either name. */
+export function isTextAnnotationOp(op: ChartUpdateOp): op is Extract<ChartUpdateOp, { op: 'annotate-text' | 'set-annotation' }> {
+    return op.op === 'annotate-text' || op.op === 'set-annotation';
 }
 
 export interface NavigationDomainGuard {

@@ -1,4 +1,5 @@
 import type { CategoryViewport, ChartAssemblyInput, ChartWarning } from '../core/types';
+import { RAIL_ROW_GAP, RAIL_THICKNESS } from './viewport-rail';
 import type {
     InteractiveChartSurface,
     InteractiveChartSurfaceOptions,
@@ -20,9 +21,7 @@ function nextChartId(): string {
     return `flint-chart-${generatedChartId}`;
 }
 
-const RAIL_THICKNESS = 6;
 const RAIL_GAP = 9;
-const RAIL_ROW_GAP = 6;
 const RAIL_TRACK_COLOR = 'rgba(31, 41, 55, 0.035)';
 const RAIL_THUMB_COLOR = 'rgba(31, 41, 55, 0.16)';
 const RAIL_THUMB_ACTIVE_COLOR = 'rgba(31, 41, 55, 0.3)';
@@ -329,6 +328,14 @@ export function mountInteractiveChartSurface(
             state[viewport.channel] = 0;
             const rail = createViewportRail(viewport, 0, (start) => setViewport(viewport.channel, start));
             rails.set(viewport.channel, rail);
+            const railTop = viewport.channel === 'x' ? mounted.getViewportGeometry?.('x')?.railTop : undefined;
+            if (railTop !== undefined) {
+                // The chart keeps room for the rail under its axis, above the source line at its foot.
+                if (getComputedStyle(chart).position === 'static') chart.style.position = 'relative';
+                applyStyles(rail.element, { position: 'absolute', left: '0', top: `${railTop}px` });
+                chart.append(rail.element);
+                continue;
+            }
             if (viewport.channel === 'x') {
                 rail.element.style.gridColumn = '1';
                 rail.element.style.gridRow = '2';
@@ -346,6 +353,9 @@ export function mountInteractiveChartSurface(
             const xGeometry = renderer?.getViewportGeometry?.('x');
             const yGeometry = renderer?.getViewportGeometry?.('y');
             rails.get('x')?.setGeometry(xGeometry?.offset ?? 0, xGeometry?.extent ?? extent.width);
+            if (xGeometry?.railTop !== undefined && rails.get('x')?.element.parentElement === chart) {
+                rails.get('x')!.element.style.top = `${xGeometry.railTop}px`;
+            }
             rails.get('y')?.setGeometry(yGeometry?.offset ?? 0, yGeometry?.extent ?? extent.height);
             // Sizing to content keeps the surface honest when the chart is wider than its host.
             root.style.width = 'max-content';

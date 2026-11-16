@@ -146,7 +146,7 @@ before it moved into the plan; a fix corrects its inputs (§13).
 ## §4.3 Title
 
 `planTitle` (`core/title-plan.ts`) fits a single-view chart's headline and deck to its block: set
-down a size, or broken over even lines whose extra height comes out of the plot. The deck is the
+down a size, or broken over lines filled to the block, with no widow at the end, whose extra height comes out of the plot. The deck is the
 author's plus the axis titles a theme moves there. A title is measured with the width table in its
 own font and weight, in every environment, since it is drawn with real glyphs even where a chart is
 compiled without a canvas; a title that runs past its block at all is fitted. A template whose

@@ -24,6 +24,30 @@ const BAR_CORNER_RADIUS: ChartPropertyDef = {
     min: 0, max: 15, step: 1, defaultValue: 0,
 };
 
+/**
+ * The axis a bar chart's bands stand on. Times the layout keeps continuous (a temporal field, banded)
+ * stand on Plotly's date axis, which spaces them in time and picks round calendar ticks it can set
+ * flat; names, numbers and times sorted by their values stand as categories in their order.
+ */
+function bandAxisSpec(semantics: any, categories: unknown[], isHorizontal: boolean, title: string, sorted: boolean): any {
+    const dated = semantics?.type === 'temporal' && !sorted && categories.length > 1
+        && categories.every((value) => typeof value === 'string' && /^\d{4}-\d{2}(-\d{2})?([T ].*)?$/.test(value));
+    if (dated) {
+        return {
+            type: 'date' as const,
+            ...(isHorizontal ? { autorange: 'reversed' as const } : {}),
+            title: { text: title },
+        };
+    }
+    return {
+        type: 'category' as const,
+        categoryorder: 'array' as const,
+        categoryarray: categories,
+        ...(isHorizontal ? { autorange: 'reversed' as const } : {}),
+        title: { text: title },
+    };
+}
+
 function continuousColorValue(value: unknown, temporal: boolean): number | null {
     if (value == null || value === '') return null;
     const dateLike = temporal || (
@@ -130,13 +154,7 @@ export const plBarChartDef: ChartTemplateDef = {
         const palette = getPlotlyPalette(ctx);
         const cornerRadius = Number(chartProperties?.cornerRadius ?? 0);
 
-        const catAxisSpec = {
-            type: 'category' as const,
-            categoryorder: 'array' as const,
-            categoryarray: categories,
-            ...(isHorizontal ? { autorange: 'reversed' as const } : {}),
-            title: { text: catField },
-        };
+        const catAxisSpec = bandAxisSpec(channelSemantics[categoryAxis], categories, isHorizontal, catField, !!catEnc?.sortBy);
         const valCS = channelSemantics[valueAxis];
         // Bars encode length — include zero unless the semantic decision says otherwise.
         const includeZero = valCS?.zero ? valCS.zero.zero !== false : true;
@@ -291,13 +309,7 @@ export const plStackedBarChartDef: ChartTemplateDef = {
             });
         }
 
-        const catAxisSpec = {
-            type: 'category' as const,
-            categoryorder: 'array' as const,
-            categoryarray: categories,
-            ...(isHorizontal ? { autorange: 'reversed' as const } : {}),
-            title: { text: catField },
-        };
+        const catAxisSpec = bandAxisSpec(channelSemantics[categoryAxis], categories, isHorizontal, catField, !!catEnc?.sortBy);
         const valCS = channelSemantics[valueAxis];
         const includeZero = valCS?.zero ? valCS.zero.zero !== false : true;
         const valAxisSpec = { title: { text: valField }, rangemode: (includeZero ? 'tozero' : 'normal') as 'tozero' | 'normal' };
@@ -442,13 +454,7 @@ export const plGroupedBarChartDef: ChartTemplateDef = {
             });
         }
 
-        const catAxisSpec = {
-            type: 'category' as const,
-            categoryorder: 'array' as const,
-            categoryarray: categories,
-            ...(isHorizontal ? { autorange: 'reversed' as const } : {}),
-            title: { text: catField },
-        };
+        const catAxisSpec = bandAxisSpec(channelSemantics[categoryAxis], categories, isHorizontal, catField, !!catEnc?.sortBy);
         const valCS = channelSemantics[valueAxis];
         const includeZero = valCS?.zero ? valCS.zero.zero !== false : true;
         const valAxisSpec = { title: { text: valField }, rangemode: (includeZero ? 'tozero' : 'normal') as 'tozero' | 'normal' };

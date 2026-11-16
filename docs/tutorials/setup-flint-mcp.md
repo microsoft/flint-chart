@@ -219,8 +219,9 @@ npx -y flint-chart-mcp --backends vegalite,echarts
 FLINT_MCP_BACKENDS=vegalite,echarts npx -y flint-chart-mcp
 ```
 
-Use `validate_chart` then `show` when the user wants to see and iterate on a
-chart in a host with MCP App support. Use `render_chart` for a static artifact. Use
+Use `show` when the user wants to see and iterate on a chart in a host with MCP
+App support; for several views read together, check a board with
+`validate_board`, then `show` it. Use `render_chart` for a static artifact. Use
 `compile_chart` when the user needs backend-native JSON for another renderer or
 editor.
 

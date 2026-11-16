@@ -295,7 +295,7 @@ export const violinPlotDef: ChartTemplateDef = {
             renderHoverStyles: { area: { opacity: 'spotlight' } },
             resolve: (event, context) => resolveSeriesTarget(event, context, seriesField),
             presentUpdate: presentAnnotationUpdate(
-                () => ({ connection: 'segment-midpoint', maxDistance: 120, maxWidth: 120 }),
+                () => ({ connection: 'segment-midpoint', maxWidth: 120 }),
                 categoryValueAnnotationText(categoryField, measureField),
             ),
         };
@@ -329,7 +329,13 @@ export const violinPlotDef: ChartTemplateDef = {
         return {
             marks: ['area', ...extras],
             x: { type: 'quantitative', fields: [y.field], derived: 'density', rounded: true, ...(band ? { baseline: 'data' } : {}) },
-            y: { type: 'quantitative', fields: [y.field], ...(config?.showPoints === true || config?.showMedian === true ? { baseline: 'data' } : {}) },
+            // The value axis follows the measure's zero decision (a distribution fits its data); drawn
+            // points or a median fit it to the data whatever the decision.
+            y: {
+                type: 'quantitative', fields: [y.field],
+                ...(config?.showPoints === true || config?.showMedian === true ? { baseline: 'data' as const }
+                    : y.zero ? { baseline: y.zero.zero ? 'zero' as const : 'data' as const } : {}),
+            },
             series: color?.field ? { field: color.field, type: color.type }
                 : { field: x.field, type: xType === 'nominal' || xType === 'ordinal' ? xType : 'nominal' },
             // Panel headers name the categories, and a grid's row headers its sub-groups; only a
@@ -356,6 +362,13 @@ export const violinPlotDef: ChartTemplateDef = {
         if (colorField && colorField !== catField && colorField !== rowField) groupby.push(colorField);
         spec.transform[0].density = measureField;
         spec.transform[0].groupby = groupby;
+
+        // The value axis is the measure's, renamed by the density transform: it takes the measure's
+        // zero decision (a distribution reads its values as positions, so it fits the data).
+        // Drawn points or a median keep their own data-fitted axis (see structure).
+        const zero = ctx.channelSemantics?.y?.zero;
+        const evidence = ctx.chartProperties?.showPoints === true || ctx.chartProperties?.showMedian === true;
+        if (zero && !evidence && spec.encoding?.y) spec.encoding.y = { ...spec.encoding.y, scale: { ...(spec.encoding.y.scale ?? {}), zero: zero.zero } };
 
         // --- Bandwidth (mirrors density.ts) ---
         // `bandwidth` is a *relative* smoothing multiplier (1 ≈ the data-derived

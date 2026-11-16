@@ -60,7 +60,8 @@ TYPE_REGISTRY: dict[str, dict[str, Any]] = {
 
     # --- Measure: GenericMeasure ---
     "Count":       {"t0": "Measure", "t1": "GenericMeasure", "visEncodings": ["quantitative"],     "aggRole": "additive",   "domainShape": "open",    "diverging": "none",        "formatClass": "integer", "zeroBaseline": "meaningful", "zeroPad": 0},
-    "Number":      {"t0": "Measure", "t1": "GenericMeasure", "visEncodings": ["quantitative"],     "aggRole": "additive",   "domainShape": "open",    "diverging": "none",        "formatClass": "decimal", "zeroBaseline": "meaningful", "zeroPad": 0},
+    # A measure whose values should not be added up (or whose additivity is unknown); use Count, Amount, Quantity or Profit for totals.
+    "Number":      {"t0": "Measure", "t1": "GenericMeasure", "visEncodings": ["quantitative"],     "aggRole": "measure",    "domainShape": "open",    "diverging": "none",        "formatClass": "decimal", "zeroBaseline": "meaningful", "zeroPad": 0},
 
     # --- Discrete ---
     "Rank":        {"t0": "Discrete", "t1": "Rank",  "visEncodings": ["ordinal"],                  "aggRole": "dimension",  "domainShape": "open",    "diverging": "none",        "formatClass": "integer", "zeroBaseline": "arbitrary",  "zeroPad": 0.08},

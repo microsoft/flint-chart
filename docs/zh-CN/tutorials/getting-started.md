@@ -14,10 +14,13 @@ Flint 的思路很简单：先描述**数据代表什么**，再说明**你想�
 npm install flint-chart
 ```
 
-若要在浏览器中渲染 Vega-Lite 图表，还需安装渲染栈：
+`flint-chart` 自带其绘制所用的全部后端（Vega-Lite、ECharts、Chart.js、Plotly），
+因此 `flint-chart/react` 的 `<FlintChart>`（需 React）与 `flint-chart/interactive`
+的 `mountChart` 安装后即可在任一后端上使用。若要用自己的代码嵌入编译出的 Vega-Lite
+规范，再添加 `vega-embed`：
 
 ```bash
-npm install vega vega-lite vega-embed
+npm install vega-embed
 ```
 
 ### Python 规划中

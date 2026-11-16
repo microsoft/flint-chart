@@ -95,13 +95,12 @@ const echartsOption = assembleECharts(input);
 const chartjsConfig = assembleChartjs(input);
 ```
 
-Install only the renderer dependencies your product needs:
+`flint-chart` comes with every backend's library (Vega-Lite, ECharts, Chart.js,
+Plotly), so one install renders with any of them:
 
 ```bash
 npm install flint-chart
-npm install vega vega-lite vega-embed  # browser Vega-Lite rendering
-npm install echarts                    # ECharts rendering
-npm install chart.js                   # Chart.js rendering
+npm install vega-embed   # only to embed a compiled Vega-Lite spec yourself
 ```
 
 Python support will use the same input shape, but it is planned for a later

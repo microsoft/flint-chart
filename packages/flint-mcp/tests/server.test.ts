@@ -77,7 +77,7 @@ describe('MCP server with client roots', () => {
           chart_spec: { chartType: 'Bar Chart', encodings: { x: 'region', y: 'revenue' } },
         },
       });
-      expect(JSON.parse(result.content[0].text).valid).toBe(true);
+      expect(result.content[0].text).toBe('Nothing to fix: call show with this spec.');
     } finally {
       await rootsClient.close();
       await rootsServer.close();
@@ -109,6 +109,7 @@ describe('MCP server', () => {
       ['theme', 'flint://theme-skill'],
       ['interaction', 'flint://interaction-skill'],
       ['board', 'flint://board-skill'],
+      ['app', 'flint://app-skill'],
     ]) {
       const res: any = await client.callTool({ name: 'get_flint_skill', arguments: { skill } });
       const resource: any = await client.readResource({ uri });
@@ -124,8 +125,15 @@ describe('MCP server', () => {
     });
     const text: string = res.content[0].text;
     expect(text.startsWith('## Update the chart\n')).toBe(true);
-    expect(text).toContain('### Step 2 — choose ops');
-    expect(text).not.toContain('## Use Flint in an application');
+    expect(text).toContain('### Ops');
+    expect(text).not.toContain('## Worked examples');
+
+    const sub: any = await client.callTool({
+      name: 'get_flint_skill',
+      arguments: { skill: 'interaction', section: 'muted annotations' },
+    });
+    expect(sub.content[0].text.startsWith('### Muted annotations\n')).toBe(true);
+    expect(sub.content[0].text).not.toContain('### The state');
 
     const bad: any = await client.callTool({
       name: 'get_flint_skill',
@@ -142,6 +150,7 @@ describe('MCP server', () => {
     expect(() => skillSection(text, 'Update')).toThrow('No section "Update"');
     expect(() => skillSection(text, 'Upd')).toThrow('No section "Upd"');
     expect(skillSection(text, 'Update the board')).toBe('## Update the board\nD\n');
+    expect(skillSection(text, 'write spec')).toBe('## Step 4 — write the spec\nA\n');
   });
 
   it('render_chart returns inline PNG image content', async () => {
@@ -180,6 +189,15 @@ describe('MCP server', () => {
     expect(Array.isArray(payload.warnings)).toBe(true);
   });
 
+  it('checks the arguments of a tool that refers to show\'s schema against the full schema', async () => {
+    const { tools } = await client.listTools();
+    const compile = tools.find((t) => t.name === 'compile_chart') as any;
+    expect(compile.inputSchema.properties.chart_spec).toEqual({ description: 'As `chart.chart_spec` on the show tool.' });
+    const res: any = await client.callTool({ name: 'compile_chart', arguments: { backend: 'vegalite', data: { values: [] }, chart_spec: { encodings: {} } } });
+    expect(res.isError).toBe(true);
+    expect(res.content[0].text).toContain('Invalid arguments: chart_spec.chartType: Required.');
+  });
+
   it('validate_chart flags an unknown chart type as invalid', async () => {
     const res: any = await client.callTool({
       name: 'validate_chart',
@@ -189,18 +207,19 @@ describe('MCP server', () => {
         backend: 'vegalite',
       },
     });
-    const payload = JSON.parse(res.content[0].text);
-    expect(payload.valid).toBe(false);
-    expect(payload.errors.length).toBeGreaterThan(0);
+    expect(res.content).toHaveLength(1);
+    expect(res.content[0].text).toMatch(/^Nothing is on screen: fix what this report lists, then call show with the whole spec\.\nFix before it draws:\n- ✗ .*Not A Real Chart/);
   });
 
-  it('validate_chart accepts a valid spec', async () => {
+  it('validate_chart accepts a valid spec, and keeps the JSON result for other backends', async () => {
     const res: any = await client.callTool({
       name: 'validate_chart',
       arguments: { ...barChart, backend: 'vegalite' },
     });
-    const payload = JSON.parse(res.content[0].text);
-    expect(payload.valid).toBe(true);
+    expect(res.content).toHaveLength(1);
+    expect(res.content[0].text).toBe('Nothing to fix: call show with this spec.');
+    const echarts: any = await client.callTool({ name: 'validate_chart', arguments: { ...barChart, backend: 'echarts' } });
+    expect(JSON.parse(echarts.content[0].text).valid).toBe(true);
   });
 
   it('validate_chart rejects malformed specs before assembly', async () => {
@@ -216,9 +235,7 @@ describe('MCP server', () => {
         name: 'validate_chart',
         arguments: { ...barChart, chart_spec, backend: 'vegalite' },
       });
-      const payload = JSON.parse(res.content[0].text);
-      expect(payload.valid).toBe(false);
-      expect(payload.errors.length).toBeGreaterThan(0);
+      expect(res.content[0].text).toContain('- ✗ ');
     }
   });
 
@@ -255,13 +272,22 @@ describe('MCP server', () => {
     expect(payload[0].count).toBeGreaterThan(10);
     expect(payload[0].chartTypes[0]).toHaveProperty('chartType');
     expect(payload[0].chartTypes[0]).toHaveProperty('channels');
-    expect(payload[0].chartTypes[0]).toHaveProperty('interactions');
-    const bar = payload[0].chartTypes.find((entry: any) => entry.chartType === 'Bar Chart');
+    expect(payload[0].chartTypes[0]).toHaveProperty('note');
+    expect(payload[0].chartTypes[0]).not.toHaveProperty('interactions');
+    // Every Vega-Lite type carries its guide: a type without one leaves the agent no properties.
+    expect(payload[0].chartTypes.filter((entry: any) => !entry.note).map((entry: any) => entry.chartType)).toEqual([]);
+
+    const detail = async (chartType: string) => JSON.parse((await client.callTool({
+      name: 'list_chart_types',
+      arguments: { backend: 'vegalite', chartType },
+    }) as any).content[0].text);
+    const bar = await detail('Bar Chart');
     expect(bar.interactions).toContain('click-highlight');
     expect(bar.interactions).toContain('drag-reorder');
     expect(bar.interactions).not.toContain('brush-angle');
-    const kpi = payload[0].chartTypes.find((entry: any) => entry.chartType === 'KPI Card');
-    expect(kpi.interactions).not.toContain('legend-toggle');
+    expect(bar.channels).toContain('detail');
+    expect((await detail('KPI Card')).interactions).not.toContain('legend-toggle');
+    expect((await detail('choropleth map')).chartType).toBe('Choropleth');
   });
 
   it('validate_chart reports the interaction_spec entries the chart would drop', async () => {
@@ -275,11 +301,10 @@ describe('MCP server', () => {
         interaction_spec: { interactions: [{ type: 'click-highlight' }, { type: 'legend-toggle' }] },
       },
     });
-    const payload = JSON.parse(res.content[0].text);
-    expect(payload.valid).toBe(true);
-    const dropped = payload.warnings.filter((warning: any) => warning.code === 'unsupported_interaction');
-    expect(dropped).toHaveLength(1);
-    expect(dropped[0].message).toContain('"legend-toggle" requires a discrete legend; Bar Chart has none');
+    const report = res.content[0].text;
+    expect(report).not.toContain('✗');
+    expect(report.match(/requires/g)).toHaveLength(1);
+    expect(report).toContain('"legend-toggle" requires a discrete legend; Bar Chart has none');
   });
 
   it('validate_chart and show take updates beside the input, and reject a malformed layer', async () => {
@@ -290,23 +315,20 @@ describe('MCP server', () => {
     };
     const layer = { id: 'agent', ops: [{ op: 'set-style', targets: [{ select: { key: { region: 'East' } } }], value: { state: 'emphasized' } }] };
     const ok: any = await client.callTool({ name: 'validate_chart', arguments: { ...base, backend: 'vegalite', updates: [layer] } });
-    expect(JSON.parse(ok.content[0].text).valid).toBe(true);
-    expect(ok.content[1].text).toContain('- agent:\n  ✓ emphasizes marks where region = East');
+    expect(ok.content[0].text).toContain('- All 1 update ops apply.');
     const shorthand = {
       id: 'goal',
       ops: [{ op: 'set-overlay', name: 'goal', value: { mark: 'rule', role: 'reference', data: { values: [{ v: 100 }] }, encodings: { y: 'v' } } }],
     };
     const off: any = await client.callTool({ name: 'validate_chart', arguments: { ...base, backend: 'vegalite', updates: [shorthand] } });
-    expect(off.content[1].text).toContain('✗ overlay "goal" (rule, 1 row): encodings.y must be { "field": "v" }, not "v".');
+    expect(off.content[0].text).toContain('- 1 of 1 update ops do not apply; the chart draws without them.');
+    expect(off.content[0].text).toContain('overlay "goal" (rule, 1 row): encodings.y must be { "field": "v" }, not "v".');
     const bad: any = await client.callTool({
       name: 'validate_chart',
       arguments: { ...base, backend: 'vegalite', updates: [layer, { id: 'agent', ops: [] }] },
     });
     expect(bad.isError).toBeFalsy();
-    const payload = JSON.parse(bad.content[0].text);
-    expect(payload.valid).toBe(false);
-    expect(payload.errors[0]).toMatchObject({ code: 'invalid_updates' });
-    expect(payload.errors[0].message).toContain('updates[1]: duplicate id "agent"');
+    expect(bad.content[0].text).toContain('- ✗ updates[1]: duplicate id "agent"');
     // An unknown op name never reaches the handler: the schema enum rejects it.
     const unknownOp: any = await client.callTool({
       name: 'validate_chart',
@@ -316,7 +338,7 @@ describe('MCP server', () => {
     expect(unknownOp.content[0].text).toContain('set-style');
     const view = await drawChart({ ...base, updates: [layer] });
     expect(view.created.isError).toBeFalsy();
-    expect(view.created.content[0].text).toContain('Agent updates (yours):\n- agent:\n  ✓ emphasizes marks where region = East');
+    expect(view.created.content[0].text).toContain('- All 1 update ops apply.');
     expect(view.chart.updates).toEqual([layer]);
     const viewBad = await drawChart({ ...base, updates: [{ id: '', ops: [] }] });
     expect(viewBad.created.isError).toBe(true);
@@ -325,15 +347,14 @@ describe('MCP server', () => {
     const viewOff = await drawChart({ ...base, updates: [layer, shorthand] });
     expect(viewOff.created.isError).toBeFalsy();
     expect(viewOff.chart.updates).toEqual([layer, shorthand]);
-    expect(viewOff.created.content[0].text).toContain('1 of 2 update ops do not apply (✗ below); the chart draws without them.');
-    expect(viewOff.created.content[0].text).toContain('✗ overlay "goal"');
+    expect(viewOff.created.content[0].text).toContain('1 of 2 update ops do not apply; the chart draws without them.');
+    expect(viewOff.created.content[0].text).toContain('Update "goal" will not apply overlay "goal"');
   });
 
   it('show opens a chart as its table when asked, and draws a Table chart type as a table', async () => {
     const data = { values: [{ region: 'East', revenue: 120 }, { region: 'West', revenue: 90 }] };
     const bars = { data, chart_spec: { chartType: 'Bar Chart', encodings: { x: 'region', y: 'revenue' } } };
     const asTable = await drawChart({ ...bars, view: 'table' });
-    expect(asTable.created.content[0].text).toContain('Opens as the table of the rows it draws');
     expect(asTable.chart.view).toBe('table');
     const asChart = await drawChart(bars);
     expect(asChart.chart.view).toBeUndefined();
@@ -356,7 +377,7 @@ describe('MCP server', () => {
 
   it('validate_chart checks a chart and keeps nothing; show draws the spec it is given, each in a new card', async () => {
     const checked: any = await client.callTool({ name: 'validate_chart', arguments: { ...barChart, backend: 'vegalite' } });
-    expect(checked.content[1].text).toContain('Bar Chart');
+    expect(checked.content[0].text).toBe('Nothing to fix: call show with this spec.');
     const first: any = await client.callTool({ name: 'show', arguments: { chart: barChart } });
     expect(first.content[0].text).toContain('The chart is on screen in a new card.');
     expect(first._meta.flint.board).toMatchObject({ kind: 'chart', charts: [{ id: 'chart' }] });
@@ -370,27 +391,36 @@ describe('MCP server', () => {
       data: { values: [{ region: 'East', revenue: 120 }, { region: 'West', revenue: 90 }] },
       chart_spec: { chartType: 'Bar Chart', encodings: { x: 'region', y: 'revenue' } },
     };
-    const note = { op: 'set-annotation', target: { select: { key: { region: 'West' } } }, value: { text: 'Lowest' } };
+    const note = { op: 'annotate-text', target: { select: { key: { region: 'West' } } }, value: { text: 'Lowest' } };
     const ok: any = await client.callTool({
       name: 'validate_chart',
       arguments: { ...base, backend: 'vegalite', updates: [{ id: 'agent', ops: [note] }] },
     });
-    expect(JSON.parse(ok.content[0].text).valid).toBe(true);
+    expect(ok.content[0].text).toContain('- All 1 update ops apply.');
+    const old: any = await client.callTool({
+      name: 'validate_chart',
+      arguments: { ...base, backend: 'vegalite', updates: [{ id: 'agent', ops: [{ ...note, op: 'set-annotation' }] }] },
+    });
+    expect(old.isError).toBeFalsy();
+    expect(old.content[0].text).toContain('op "set-annotation" is deprecated');
     for (const op of [
-      { op: 'set-annotation', foo: 1 },
-      { op: 'set-annotation', annotations: [{ kind: 'rule', x: '2022-12-01', label: 'ChatGPT launch' }] },
+      { op: 'annotate-text', foo: 1 },
+      { op: 'annotate-text', annotations: [{ kind: 'rule', x: '2022-12-01', label: 'ChatGPT launch' }] },
     ]) {
       const bad: any = await client.callTool({
         name: 'show',
         arguments: { chart: { ...base, updates: [{ id: 'agent', ops: [op] }] } },
       });
       expect(bad.isError).toBe(true);
-      expect(bad.content[0].text).toContain('set-annotation has a missing or malformed "target". Shape:');
+      expect(bad.content[0].text).toContain('annotate-text has a missing or malformed "target". Shape:');
     }
     const { tools } = await client.listTools();
     const view = tools.find((tool) => tool.name === 'show')!;
     const schemaText = JSON.stringify(view.inputSchema);
-    expect(schemaText).toContain("set-annotation { target: UpdateTarget, value: { text, anchor?: 'segment' | 'point' } | null }");
+    expect(schemaText).toContain("annotate-text { target: UpdateTarget, value: { text, anchor?: 'segment' | 'point', highlight?: 'none' | 'light' | 'strong' | 'exclusive' } | null }: words beside one mark, never a card");
+    expect(schemaText).toContain('set-annotation is deprecated, still read until 2.0: it means annotate-text.');
+    expect(schemaText).toContain('annotate-region { name, value: { x?: [lo, hi] | categories');
+    expect(schemaText).toContain('annotate-enclosure { name, value: { targets: UpdateTarget[]');
   });
 
   it('render_chart surfaces assembly errors as isError', async () => {
@@ -424,7 +454,7 @@ describe('MCP server', () => {
     const read = await client.readResource({ uri: 'flint://agent-skill' });
     expect(read.contents[0].mimeType).toBe('text/markdown');
     const skillText = resourceText(read.contents[0]);
-    expect(skillText).toContain('# flint-chart: authoring and using a chart spec');
+    expect(skillText).toContain('# flint-chart: authoring a chart spec');
     expect(skillText).toContain('validate_chart');
   });
 
@@ -449,7 +479,7 @@ describe('MCP server', () => {
     const read = await client.readResource({ uri: 'flint://interaction-skill' });
     const skillText = resourceText(read.contents[0]);
     expect(skillText).toContain('# flint-chart: interactions and updates on a chart');
-    expect(skillText).toContain('Return the bare object');
+    expect(skillText).toContain('Fix or drop what it warns about.');
   });
 
   it('opens a card only from show, linked to the one UI resource', async () => {
@@ -461,7 +491,7 @@ describe('MCP server', () => {
     const { created, chart } = await drawChart({ ...barChart });
     expect(created.isError).toBeFalsy();
     expect(chart.input.chart_spec.chartType).toBe('Bar Chart');
-    expect(created.content[0].text).toContain('Bar Chart');
+    expect(created.content[0].text).toContain('The chart is on screen in a new card.');
   });
 
   it('serves the view UI resource', async () => {

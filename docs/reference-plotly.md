@@ -231,6 +231,7 @@ _No template-specific parameters._
 |---|---|---|---|---|---|
 | `sortSlices` | choice | `none` (Data order), `descending` (Largest first), `ascending` (Smallest first) | `none` | always | Sort slices |
 | `labelType` | choice | `categoryPercent` (Name + %), `category` (Name), `value` (Value), `percent` (Percent), `none` (None) | `categoryPercent` | always | Labels |
+| `sliceNames` | choice | `auto` (Auto), `onSlices` (On slices), `key` (In a key) | `auto` | always | Slice names |
 
 ### ![](chart-icon-doughnut.svg) Donut Chart
 
@@ -241,6 +242,7 @@ _No template-specific parameters._
 | `innerRadius` | number | 20 – 80 (step 5) | `55` | always | Inner radius as a percentage of the outer radius. |
 | `sortSlices` | choice | `none` (Data order), `descending` (Largest first), `ascending` (Smallest first) | `none` | always | Sort slices |
 | `labelType` | choice | `categoryPercent` (Name + %), `category` (Name), `value` (Value), `percent` (Percent), `none` (None) | `categoryPercent` | always | Labels |
+| `sliceNames` | choice | `auto` (Auto), `onSlices` (On slices), `key` (In a key) | `auto` | always | Slice names |
 
 ### ![](chart-icon-radar.svg) Radar Chart
 
@@ -313,17 +315,19 @@ _No template-specific parameters._
 
 ### ![](chart-icon-world-map.svg) Map
 
-**Encoding channels:** `longitude`, `latitude`, `color`, `size`, `opacity`
+**Encoding channels:** `longitude`, `latitude`, `color`, `size`, `shape`, `opacity`, `order`, `detail`, `strokeWidth`, `text`
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `region` | choice | `auto` (Auto-detect), `us` (United States), `world` (World) | `auto` | always | Region |
 | `projection` | choice | `default` (Default), `mercator` (Mercator), `equalEarth` (Equal Earth), `orthographic` (Orthographic (Globe)), `stereographic` (Stereographic), `conicEqualArea` (Conic Equal Area), `conicEquidistant` (Conic Equidistant), `azimuthalEquidistant` (Azimuthal Equidistant), `mollweide` (Mollweide) | `default` | conditional | Projection |
 | `projectionCenter` | choice | Default _(default)_, `0,0` (World (Atlantic) [0, 0]), `150,0` (World (Pacific) [150, 0]), `105,35` (China [105, 35]), `-98,39` (USA [-98, 39]), `10,50` (Europe [10, 50]), `138,36` (Japan [138, 36]), `78,22` (India [78, 22]), `-52,-14` (Brazil [-52, -14]), `134,-25` (Australia [134, -25]), `100,60` (Russia [100, 60]), `20,0` (Africa [20, 0]), `45,28` (Middle East [45, 28]), `115,5` (Southeast Asia [115, 5]), `-60,-15` (South America [-60, -15]), `-100,45` (North America [-100, 45]), `-2,54` (UK [-2, 54]), `10,51` (Germany [10, 51]), `2,47` (France [2, 47]), `128,36` (Korea [128, 36]) | — | conditional | Center |
+| `arrows` | toggle | on / off | `true` | conditional | Arrows |
+| `curve` | choice | `auto` (Auto: arcs between stops, great circles on a globe or along a track), `arc` (Arcs, bowed left of travel), `great-circle` (Great circles), `straight` (Straight (constant bearing)) | `auto` | conditional | Route curve |
 
 ### ![](chart-icon-us-map.svg) Choropleth
 
-**Encoding channels:** `id`, `color`, `detail`
+**Encoding channels:** `id`, `color`, `detail`, `text`
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|

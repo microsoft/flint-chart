@@ -8,7 +8,7 @@ import type { SemanticAnnotation, FormatSpec, DomainConstraint, TickConstraint }
 import type { ColorDecisionResult } from './color-decisions';
 import type { GeometryKind, ThemeGeometry, ThemeSpec } from './theme/types';
 import type { ChartInteractionSupport, InteractionSpec } from './interaction-spec';
-import type { ChartUpdateOp, UpdateTarget } from './interaction-contracts';
+import type { ChartUpdate, ChartUpdateOp, UpdateTarget } from './interaction-contracts';
 import type { ChartStructure, StructureContext } from './structure';
 import type { ViewNode } from './views';
 import type { FamilyMeasure } from './text-width';
@@ -560,7 +560,12 @@ export interface LayoutTrace {
  * inputs.
  */
 /** What a template reads to size its plot in the plan. */
-export type PlotPlanContext = Pick<InstantiateContext, 'layout' | 'canvasSize' | 'assembleOptions' | 'channelSemantics' | 'table' | 'fullTable' | 'semanticTypes' | 'chartProperties' | 'measureText'>;
+export type PlotPlanContext = Pick<InstantiateContext, 'layout' | 'canvasSize' | 'assembleOptions' | 'channelSemantics' | 'table' | 'fullTable' | 'semanticTypes' | 'chartProperties' | 'measureText'> & {
+    /** Original user-level encodings, where the plan has them. */
+    encodings?: Record<string, ChartEncoding>;
+    /** The room the title, keys and axes take round the plot, where the plan measured it (a template that `fillsCanvas`). */
+    reserve?: { width: number; height: number };
+};
 
 /** What a template reads to plan its views: the plot the plan sized and the gap it keeps between facet panels. */
 export type ViewPlanContext = PlotPlanContext & {
@@ -732,6 +737,14 @@ export type ChartPropertyDef = ChartProperty & {
      * only in the data-aware quick-config bar — without needing a separate flag.
      */
     check?: (ctx: OptionEvalContext) => { applicable: boolean; recommendedValue?: any };
+    /**
+     * Values a discrete property takes beside its options — a map's boundaries, as a file of its
+     * own — kept as given where this test accepts them. Any other value not among the options is
+     * dropped for the default, with a warning that quotes `acceptsLabel`.
+     */
+    accepts?: (value: unknown) => boolean;
+    /** What `accepts` takes, for the warning when a value is neither an option nor that. */
+    acceptsLabel?: string;
 };
 
 /**
@@ -1146,6 +1159,16 @@ export interface ChartTemplateDef {
     planPlot?: (context: PlotPlanContext) => { width: number; height: number } | undefined;
 
     /**
+     * The plot grows to the canvas less its furniture, as a map does, rather than holding its base
+     * size where nothing presses on it. The plan measures the title, keys and axes on both sides
+     * and hands `planPlot` that room as `context.reserve`.
+     */
+    fillsCanvas?: boolean;
+
+    /** What the chart's drawing owes a credit for — a map, the boundaries it draws — set at its foot. */
+    credit?: (context: PlotPlanContext) => ChartCredit | undefined;
+
+    /**
      * How far this chart type draws past its plot on each side, in px — a radar's spoke labels stand
      * outside its outer ring — and whether it fills the plot, so a key beside the plot stands clear
      * of what it draws there and a key inside the plot knows it has no empty corner. Runs in the
@@ -1340,7 +1363,8 @@ export interface ChartAssemblyInput {
          */
         source?: string | { text: string; href?: string };
         /**
-         * The house chrome this chart keeps. Unset follows the theme. `false` drops it all; an object
+         * The house chrome this chart keeps. Unset follows the theme, except on a map (`Map`,
+         * `Choropleth`), which keeps none unless it asks. `false` drops it all; an object
          * turns off parts: `header` (rules, tabs, wordmarks and logos above or beside the title),
          * `footer` (the closing rule and the house's credit beside the source) and `logos` (every
          * logo, header or footer — a footer credit then shows its words). The source line itself is
@@ -1360,14 +1384,22 @@ export interface ChartAssemblyInput {
          */
         baseSize?: { width: number; height: number };
         /**
-         * Hard ceiling on the rendered size in pixels (optional).
+         * The box the host shows the chart in, in pixels (optional).
          *
-         * The final image — a single plot OR an entire facet grid — never exceeds
-         * this box. The per-dimension growth allowance is derived from the ratio
+         * The plot — a single plot OR an entire facet grid — never stretches past
+         * it. The per-dimension growth allowance is derived from the ratio
          * to `baseSize`: `βx = canvasSize.width / baseSize.width`,
          * `βy = canvasSize.height / baseSize.height` (each clamped to ≥ 1).
+         * The title, keys and axes stand in the same box: the canvas fit
+         * (`options.canvasFit`) lays the chart out to read well in it, then,
+         * where the drawing still runs past the box, lays it out again for a
+         * smaller room so the plot gives up the room and the keys, labels and
+         * title stand inside it (Vega-Lite; a single view, not a composite).
+         * What it cannot bring within — the plot kept at least half each side,
+         * no value cut, no label turned — is the host's to scale down into
+         * the box, never past 70%, where the fit brings the plot down instead.
          *
-         * When omitted, the ceiling defaults to `baseSize × options.maxStretch`
+         * When omitted, the box defaults to `baseSize × options.maxStretch`
          * (default 1.5×) in each dimension.
          */
         canvasSize?: { width: number; height: number };
@@ -1410,6 +1442,18 @@ export interface ChartAssemblyInput {
      * honour is dropped with a warning rather than failing the chart.
      */
     interaction_spec?: InteractionSpec;
+
+    /**
+     * Updates the chart applies once it is drawn — notes, overlays, emphasis, a viewport — the
+     * same updates a host passes to `mountChart` (`options.updates`) or `<FlintChart updates>`,
+     * kept with the spec so a copied spec keeps them. A host's own update with the same `id`
+     * replaces the spec's.
+     *
+     * Applied by the interactive runtime only (Vega-Lite). A static output — `assembleVegaLite`'s
+     * spec, `renderSvg`, the other backends — draws the chart without them, with an `info`
+     * warning (`updates-not-compiled`).
+     */
+    updates?: readonly ChartUpdate[];
 
     /**
      * Options for the assembler — layout tuning, tooltips, etc.
@@ -1456,19 +1500,128 @@ export interface CanvasTreatment {
     plotSpace?: { width?: number; height?: number };
     /** The headline and deck set at this share of their size, never below a legible floor. */
     titleScale?: number;
+    /**
+     * The axis labels on both axes set at this share of the house's size, never below its floor: names
+     * wrapped onto two lines then take shorter rows, and the chart enters its box with every name whole.
+     */
+    labelScale?: number;
     /** Long key names kept to this many px a column, wrapped onto lines before they are cut. */
     names?: { keyWidth: number };
+    /**
+     * The keys' text set at this share of the library's size, never below the legible floor: a key
+     * of long names takes less room beside or above the plot. Read by the non-Vega-Lite backends.
+     */
+    keyScale?: number;
     /**
      * The plot laid out at this share of its base size, both ways, so it keeps its shape: what the
      * box cannot hold comes out of the plot rather than out of every glyph, as a host shrinking the
      * whole drawing would take it.
      */
     plotScale?: number;
+    /**
+     * The canvas the chart is laid out for, in px, smaller than the one the host states by what the
+     * drawing ran past it: the chart is planned again for this room so its keys, labels and title
+     * stand inside the stated canvas (see `canvasSize`). `keys` holds the keys at the edge they stood
+     * at, where the fit set no edge of its own, so a smaller plot does not send them to another.
+     */
+    contain?: { width: number; height: number; keys?: 'side' | 'top' | 'bottom' };
 }
+
+/** A credit a chart's drawing owes, drawn at the foot of the chart: words, a link, and a note shown on hover. */
+export interface ChartCredit {
+    text: string;
+    href?: string;
+    title?: string;
+}
+
+/**
+ * What a boundary file's feature ids are, so the rows' keys are matched to them: ISO 3166-1
+ * numeric (840), alpha-3 (`USA`) or alpha-2 (`US`) country codes, US FIPS codes (6, 06037), or the
+ * file's own keys, matched exactly as the rows give them (`as-is`).
+ */
+export type BoundaryIds = 'iso-numeric' | 'iso3' | 'iso2' | 'fips' | 'as-is';
+
+/**
+ * Boundaries a map draws from a file of its own — by `url`, or inline as `values` — rather than a
+ * set Flint ships (`chartProperties.boundaries` as an object).
+ *
+ * Files whose ids are country codes draw as the world map does: framed on the countries the rows
+ * name, a globe where the projection asks, the rows read as names or codes. Files keyed by FIPS or
+ * by their own keys are fitted to their shapes.
+ */
+export interface BoundaryFile {
+    /** The file: TopoJSON (give `feature`) or a GeoJSON FeatureCollection. One URL, or one per detail: `coarse` for the world, `medium` for a region. */
+    url?: string | { coarse?: string; medium?: string };
+    /** The shapes inline, so the compiled spec needs no network: a TopoJSON topology (give `feature`) or a GeoJSON FeatureCollection. */
+    values?: Record<string, unknown>;
+    /** The TopoJSON object holding the regions. Unset, the file is GeoJSON. */
+    feature?: string;
+    /** What the features' ids are. Default: `fips` on a US map, else `iso-numeric`. */
+    ids?: BoundaryIds;
+    /** Where each feature keeps its id, as a dotted path (`properties.code`). Default: `id`. */
+    key?: string;
+    /** A TopoJSON object of lines drawn dotted over the regions: borders in dispute. */
+    disputed?: string;
+    /** Who drew the boundaries, credited at the map's foot (`Boundaries: …`); or the credit itself, with a link and a note on hover. */
+    attribution?: string | ChartCredit;
+}
+
+/**
+ * The boundaries a map draws (`chartProperties.boundaries`): a set Flint ships, by name, or a file
+ * of the chart's own. Unset, a world map draws `world-bank` and a US map the US Census Bureau's.
+ *
+ * - `'world-bank'`: World Bank Official Boundaries (CC BY 4.0), areas of non-determined legal
+ *   status as regions of their own, the borders they share dotted, credited at the map's foot.
+ * - `'natural-earth'`: Natural Earth's de facto boundaries at 1:110m (public domain).
+ *
+ * A named set compiles to its URL on Flint's site (`https://microsoft.github.io/flint-chart/geo/v1/…`,
+ * a version that never changes once published). Flint's renderers (`mountChart`, `<FlintChart>`,
+ * `renderSvg`) serve those URLs from copies bundled in the package; `inlineBoundaries` from
+ * `flint-chart/geo` writes them into a compiled spec for a renderer with no network. Flint takes no
+ * position on disputed boundaries: a chart whose audience needs others gives its own file.
+ */
+export type Boundaries = 'world-bank' | 'natural-earth' | BoundaryFile;
 
 export interface AssembleOptions {
     /** Whether to add tooltips to the chart (default: false) */
     addTooltips?: boolean;
+    /**
+     * Notes the chart is drawn with from the start: each names its mark by the fields of the row the
+     * mark stands for (`key`) and gives the caption's text. A noted mark at the top of a vertical
+     * measure axis — the tallest bar, the highest point — gets room over it for its caption: the
+     * axis runs on just far enough for the caption at its nearest seat, ending at a fine round step,
+     * using at most a third of the axis. Bars keep their proportions; an axis with a
+     * stated domain is left as it is. Set by the interactive Vega-Lite renderer from the first
+     * `annotate-text` updates; a note added later is placed in the room the chart has.
+     */
+    notes?: readonly { key: Record<string, unknown>; text: string }[];
+    /**
+     * Regions the chart is drawn with from the start, as `annotate-region` sets them. A captioned
+     * stretch of x whose marks rise too near the plot's top for its caption to stand clear over them
+     * gets room as a note does: the measure axis runs on past the stretch's tallest mark, to a fine
+     * round step, within a third of the axis. A stretch with room above or below its marks, or a
+     * caption placed elsewhere, takes none. Set by the interactive Vega-Lite renderer from the first
+     * updates.
+     */
+    regions?: readonly { x?: readonly unknown[]; y?: readonly unknown[]; text?: string; placement?: string }[];
+    /**
+     * Measure values the chart's updates mark across the plot (a `set-overlay` reference rule on y, a
+     * band of y): the measure axis reaches them, so a line the reader asked for is drawn in the plot
+     * rather than cut off past its end. Set by the interactive Vega-Lite renderer from the first updates.
+     */
+    references?: readonly number[];
+    /**
+     * Enclosures the chart is drawn with from the start, as `annotate-enclosure` sets them: where a
+     * dot they enclose sits at the edge of a continuous axis, the axis is padded by the px the outline
+     * needs, so it is drawn whole. Set by the interactive Vega-Lite renderer from the first updates.
+     */
+    enclosures?: readonly { targets: readonly unknown[] }[];
+    /**
+     * The host page's background, as a CSS colour. A chart with no theme draws on it, and so does a
+     * theme whose surface defers to the host (`ink.surface.source: 'host'`); a theme with its own
+     * canvas keeps it.
+     */
+    background?: string;
     /**
      * Set by the interactive renderer when a viewport will change the rows in view:
      * value labels are built for any window that could print them, and this signal
@@ -1792,6 +1945,25 @@ export interface AssembleOptions {
      * again is aimed for instead.
      */
     bandBalance?: boolean;
+
+    /**
+     * Whether an x axis of few bands fills at least a share of the room the canvas leaves its plot
+     * (default false): the bands thicken past the sparse-fit ceiling until the plot spans `share` of
+     * that room (0.85), a band growing to at most `barCap` px where it holds bars (200) or
+     * `pointCap` px where it holds points (360). One view, y not banded.
+     */
+    sparseFill?: boolean | { share?: number; barCap?: number; pointCap?: number };
+
+    /**
+     * Whether a themed title wraps to the drawing rather than to the canvas (default false): its block
+     * is the plot with what stands beside it, which the title may overhang by `overhang` (1.15×),
+     * never narrower than `floor` of the canvas (0.6) nor `minWidth` px (320), never wider than the
+     * canvas unless the drawing is.
+     */
+    titleWrap?: boolean | { floor?: number; minWidth?: number; overhang?: number };
+
+    /** @internal Whether the plot's marks are filled bands (bars, boxes) rather than points, for the sparse fill's cap. */
+    sparseFillBars?: boolean;
 
     /** The centre of that range, as width over height: unset, the base's. */
     targetAspect?: number;

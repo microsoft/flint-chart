@@ -97,6 +97,43 @@ describe('names above their bars', () => {
         expect(vegaLiteStages(bars(always, undefined, 1.5, grouped, 'Grouped Bar Chart', { x: 'Deaths', y: 'Cause', color: 'Group' })).plan.rowNames).toBeUndefined();
         expect(vegaLiteStages(bars(always, undefined, 1.5, CAUSES.slice(0, 5), 'Bar Chart', { x: 'Cause', y: 'Deaths' })).plan.rowNames).toBeUndefined();
     });
+
+    it('keep the order of bars sorted by their measure, coloured or not', async () => {
+        const kinds = CAUSES.map((row, index) => ({ ...row, Group: index % 2 ? 'Injury' : 'Disease' }));
+        const ascending = [...CAUSES].sort((a, b) => (a.Deaths as number) - (b.Deaths as number)).map((row) => row.Cause);
+        for (const color of [undefined, { field: 'Group' }]) {
+            const encodings = { x: { field: 'Deaths' }, y: { field: 'Cause', sortBy: 'x', sortOrder: 'ascending' }, ...(color ? { color } : {}) };
+            const { plan, spec } = vegaLiteStages(bars('datawrapper', undefined, 1.5, kinds, 'Bar Chart', encodings));
+            expect(plan.rowNames, String(color)).toBeDefined();
+            const { names, rects } = await drawn(spec);
+            names.sort((a, b) => a.y1 - b.y1);
+            rects.sort((a, b) => a.y1 - b.y1);
+            expect(names.map((name) => name.text)).toEqual(ascending);
+            expect(rects.map((rect) => rect.cause)).toEqual(ascending);
+        }
+    });
+
+    it('stand beside where, above them, the title and keys would push the drawing past its canvas', () => {
+        const titled = (canvas: { width: number; height: number }) => ({
+            ...bars('datawrapper', { width: 400, height: 300 }, 1.5, CAUSES.map((row, index) => ({ ...row, Group: index % 2 ? 'Injury' : 'Disease' })), 'Bar Chart',
+                { x: 'Deaths', y: 'Cause', color: 'Group' }),
+            chart_spec: {
+                chartType: 'Bar Chart', encodings: { x: 'Deaths', y: 'Cause', color: 'Group' },
+                title: 'The leading causes of death in the United States, by the number of deaths',
+                subtitle: 'Deaths per 100,000 people, all ages, the most recent year reported',
+                baseSize: { width: 400, height: 300 }, canvasSize: canvas,
+            },
+        }) as any;
+        // In a 600 × 450 canvas the bands fit the stretch, but the header leaves them no room. The
+        // drawing still runs past it, so it is laid out for a smaller room within the canvas: the
+        // names are judged by that room.
+        const tight = vegaLiteStages(titled({ width: 600, height: 450 })).plan;
+        expect(tight.rowNames).toBeUndefined();
+        expect(tight.report.some((note) => note.code === 'row-names-beside' && /larger than its 600 × \d+ canvas/.test(note.message))).toBe(true);
+        expect(tight.report.some((note) => note.code === 'canvas-contain')).toBe(true);
+        // In 800 × 600 the whole drawing fits: the names stand above.
+        expect(vegaLiteStages(titled({ width: 800, height: 600 })).plan.rowNames).toBeDefined();
+    });
 });
 
 describe('a band holding a name over its bar', () => {

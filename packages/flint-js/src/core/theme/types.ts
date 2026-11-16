@@ -612,7 +612,8 @@ export interface ThemeLegend {
     /**
      * The symbol beside each name in a key to categories: `auto` (default) takes it from the mark —
      * a square for bars, a stroke for lines, the dot's own shape for points; `square`, `circle` or
-     * `line` (a short stroke) draw that symbol for every mark. A key whose entries are shapes (a
+     * `line` (a short stroke) draw that symbol for every mark, except that a square or circle is
+     * a filled chip and a line series keeps its stroke. A key whose entries are shapes (a
      * shape channel) or sizes keeps its own symbols. Vega-Lite only.
      */
     swatch?: 'auto' | 'square' | 'circle' | 'line';
@@ -1080,6 +1081,17 @@ export interface ThemeInteraction {
         haloWidth?: number;
         haloOpacity?: number;
     };
+    /**
+     * Paint for the marks an agent or the reader points at with an update: the ring round a dot, the
+     * outline round a bar, cell, slice or region a note names, and an enclosure's outline. Unset, they
+     * take the neutral annotation grey (an enclosure round one colour's cluster takes that colour).
+     */
+    highlight?: {
+        color?: string;
+        width?: number;
+        haloColor?: string;
+        haloWidth?: number;
+    };
 }
 
 /**
@@ -1196,6 +1208,23 @@ export interface ResolvedSource {
     rule?: { width: number; color: string; dash?: number[] };
     credit?: { text: string; placement: 'inline' | 'end' | 'nextLine'; separator: string; weight?: 'normal' | 'bold' | number; image?: { src: string; width: number; height: number } };
     gap: number;
+}
+
+/**
+ * The house's say in an annotation's colours and words: its `ink.accent` and categorical hues for a
+ * region's wash, its `type.annotation` role for a note's words, and the primary text ink a note is
+ * set in otherwise.
+ */
+export interface AnnotationDesign {
+    accent?: string;
+    /** The house's categorical hues, the first a region's wash is chosen from. */
+    palette?: readonly string[];
+    text?: ResolvedText;
+    ink: string;
+    /** The page an annotation is read on: the plot's own surface, else the canvas. */
+    background: string;
+    /** The house's paint for rings, outlines and enclosures, where it states one. */
+    highlight?: { color?: string; width?: number; haloColor?: string; haloWidth?: number };
 }
 
 export interface ResolvedText {
@@ -1550,6 +1579,8 @@ export interface DesignDecisions {
             haloWidth: number;
             haloOpacity: number;
         };
+        /** How the house sets the notes, regions and enclosures an update draws. */
+        annotation: AnnotationDesign;
     };
     facets: {
         header: { show: boolean; fieldTitle: boolean } & ResolvedText;

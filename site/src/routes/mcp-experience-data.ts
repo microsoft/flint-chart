@@ -55,7 +55,7 @@ const editUpdates: ChartUpdate[] = [
     id: 'agent',
     ops: [
       { op: 'set-style', targets: [warmestTarget], value: { state: 'emphasized' } },
-      { op: 'set-annotation', target: warmestTarget, value: { text: `${monthName(warmestMonth.Month)}: +${warmestMonth.Anomaly.toFixed(2)} °C` } },
+      { op: 'annotate-text', target: warmestTarget, value: { text: `${monthName(warmestMonth.Month)}: +${warmestMonth.Anomaly.toFixed(2)} °C` } },
     ],
   },
 ] as ChartUpdate[];
@@ -99,7 +99,7 @@ const coffeeNotes: ChartUpdate[] = [
     id: 'agent',
     ops: [
       {
-        op: 'set-annotation',
+        op: 'annotate-text',
         target: { select: { key: { Year: 2025, Country: 'China' } } },
         value: { text: `China: ${chinaGrowth >= 5.5 ? 'nearly 6×' : `${chinaGrowth.toFixed(1)}×`} since 2010` },
       },

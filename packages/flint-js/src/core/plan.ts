@@ -32,9 +32,10 @@ import { plotHeightAfter } from './title-fit';
 import { planAxisLabels, resolveLabelOverflow, type AxisLabelPlan } from './axis-labels';
 import { sequenceKindOf } from './label-sequence';
 import { LAYOUT_COSTS } from './layout-costs';
-import { CANVAS_FIT_LIMITS, LEGIBILITY_MARGIN, describeTreatment, plotFitScale, judgeCanvas, readingCost, treatmentCost, type CanvasFitEstimate, type CanvasFitResult, type CanvasParts } from './canvas-fit';
+import { CANVAS_FIT_LIMITS, DRAWING_PADDING, LEGIBILITY_MARGIN, describeTreatment, plotFitScale, judgeCanvas, readingCost, treatmentCost, type CanvasFitEstimate, type CanvasFitResult, type CanvasParts } from './canvas-fit';
 import { measureReserve, NO_RESERVE, type FurnitureReserve, type FurnitureSpacing } from './furniture-reserve';
 import { facetViews, gapOf, shortenViews, viewsExtent, type ViewNode } from './views';
+import { denseLineWidth, linesPerPanel, panelCount } from './line-density';
 
 /** The layout options a backend lays out with when neither the caller, the theme, nor the template sets them. */
 export interface BackendLayoutProfile {
@@ -232,14 +233,6 @@ const OVERLAP_SAMPLE = 2000;
 /** Vega-Lite's own dot area, which a chart without a house's size draws. */
 const VEGA_DOT_SIZE = 30;
 
-/** The panels a faceted chart draws, and so the panels its rows are shared among. */
-function panelCount(rows: any[], channelSemantics: Record<string, ChannelSemantics>): number {
-    let panels = 1;
-    for (const field of [channelSemantics.column?.field, channelSemantics.row?.field]) {
-        if (field) panels *= Math.max(1, new Set(rows.map((row) => row?.[field]).filter((value) => value != null)).size);
-    }
-    return panels;
-}
 
 /** A field's values as numbers along a continuous axis: dates as epoch ms, a log axis by its logarithm. */
 function axisPositions(rows: any[], field: string, temporal: boolean, log: boolean): (number | undefined)[] {
@@ -352,10 +345,6 @@ function planCrowding(
     return { share: Math.round(touch.share * 100) / 100, points: touch.points, size };
 }
 
-/** The stroke below which a line stops reading as a line on screen, in px. */
-const MIN_DENSE_STROKE = 0.75;
-/** The share of a panel's height a chart's lines may ink between them. */
-const LINE_INK_SHARE = 0.15;
 /** Vega-Lite's own line width, which an unthemed chart draws. */
 const DEFAULT_STROKE = 2;
 
@@ -371,15 +360,9 @@ function planLineWidth(
 ): number | undefined {
     if (!structure.marks.includes('line') || rows.length === 0 || plot.height <= 0) return undefined;
     const base = design?.marks.strokeWidth ?? DEFAULT_STROKE;
-    const seriesFields = (['color', 'detail', 'strokeDash'] as const)
-        .map((channel) => channelSemantics[channel]?.field)
-        .filter((field): field is string => !!field);
-    if (seriesFields.length === 0) return undefined;
-    const facetFields = [channelSemantics.column?.field, channelSemantics.row?.field].filter((field): field is string => !!field);
-    const keys = new Set(rows.map((row) => [...facetFields, ...seriesFields].map((field) => String(row?.[field])).join('\u0000')));
-    const perPanel = keys.size / panelCount(rows, channelSemantics);
-    const width = Math.max(MIN_DENSE_STROKE, Math.min(base, Math.round(((plot.height * LINE_INK_SHARE) / perPanel) * 100) / 100));
-    if (width >= base) return undefined;
+    const perPanel = linesPerPanel(rows, channelSemantics);
+    const width = denseLineWidth(base, perPanel, plot.height);
+    if (width === undefined) return undefined;
     report.push({
         stage: 'ground',
         path: 'marks.strokeWeight',
@@ -399,6 +382,25 @@ export const MIN_OUTLINE_WIDTH = 0.6;
 export const MIN_HALO_DOT = 28;
 
 /** A ring for a dot of `size` px²: `share` of the radius, at least `floor`, never more than the house's width. */
+
+/** One row per bar, its measure summed over the segments a bar split by `detail` draws. */
+function barTotals(structure: ChartStructure, channelSemantics: Record<string, ChannelSemantics>, rows: any[]): any[] {
+    const axis = stackedAxis(structure);
+    const measure = axis ? structure[axis]?.fields[0] : undefined;
+    const detail = channelSemantics.detail?.field;
+    if (!measure || !detail) return rows;
+    const keys = [...new Set(Object.values(channelSemantics).map((c) => c?.field)
+        .filter((field): field is string => typeof field === 'string' && field !== measure && field !== detail))];
+    const totals = new Map<string, any>();
+    for (const row of rows) {
+        const key = JSON.stringify(keys.map((k) => row?.[k]));
+        const total = totals.get(key) ?? totals.set(key, { ...Object.fromEntries(keys.map((k) => [k, row?.[k]])), [measure]: 0 }).get(key);
+        const v = Number(row?.[measure]);
+        if (Number.isFinite(v)) total[measure] += v;
+    }
+    return [...totals.values()];
+}
+
 export function ringWidth(size: number, share: number, houseWidth: number, floor = 0): number {
     const radius = Math.sqrt(size / Math.PI);
     return Math.min(houseWidth, Math.max(floor, Number((radius * share).toFixed(2))));
@@ -652,8 +654,8 @@ function pinAxisLabels(planned: AxisLabelPlan, pin: { fontSize?: number; angle?:
 /** Semantic types whose values are codes: read whole or not at all. */
 const IDENTIFIER_TYPES = new Set(['ID', 'ZipCode']);
 
-/** The ways x names may take, whether they run as a sequence, and the theme's thresholds. */
-function xLabelOverflow(theme: ThemeSpec | undefined, chartProperties: Record<string, any> | undefined, channelSemantics: Record<string, any>) {
+/** The ways x names may take, whether they run as a sequence, and the theme's thresholds; every backend's band labels are planned with these. */
+export function xLabelOverflow(theme: ThemeSpec | undefined, chartProperties: Record<string, any> | undefined, channelSemantics: Record<string, any>) {
     const semanticType = channelSemantics.x?.semanticAnnotation?.semanticType;
     const sequence = sequenceKindOf(semanticType);
     // An identifier cut short names nothing: codes are never truncated, whatever the theme allows.
@@ -743,7 +745,192 @@ export function planLayout(analysis: PlanAnalysis, context: PlanContext): Layout
     const held = context.pins?.treatment;
     if (held) return placeTitle(planLayoutOnce(analysis, withTreatment(context, held, boxOf(context))), analysis, context);
     const plan = planLayoutOnce(analysis, context);
-    return placeTitle(fitToCanvas(plan, analysis, context), analysis, context);
+    return placeTitle(containInCanvas(fitToCanvas(plan, analysis, context), analysis, context), analysis, context);
+}
+
+/** How far past its canvas, in px, a drawing may run and still count as within it. */
+const CONTAIN_TOLERANCE = 0.5;
+/** Under `titleWrap`, the least share of the canvas a title spans, however narrow the drawing. */
+const TITLE_WRAP_FLOOR = 0.6;
+/** Under `titleWrap`, the least width in px a title spans, however narrow the drawing. */
+const TITLE_WRAP_MIN_WIDTH = 320;
+/** Under `titleWrap`, how far a title may run past the drawing before it wraps, as a ratio of the drawing. */
+const TITLE_WRAP_OVERHANG = 1.15;
+/** The px a contained drawing keeps clear of its canvas's edge, for what the estimate misses and the renderer's rounding. */
+const CONTAIN_MARGIN = 4;
+/** How many times, at most, a chart is laid out again to bring its drawing within the canvas. */
+const CONTAIN_ROUNDS = 6;
+/** The least room a chart is laid out for, each way, as a share of its canvas. */
+const CONTAIN_FLOOR = 0.5;
+/** How much less a round must have its drawing shrunk than the best before it, to replace it. */
+const CONTAIN_GAIN = 0.01;
+/** The least share of each side of its plot a chart gives up to stay within its canvas. */
+const CONTAIN_PLOT_FLOOR = 0.5;
+
+/**
+ * The edge the keys are held at, where they all stand at one and setting them there again changes
+ * nothing: a smaller plot would otherwise move a row of keys too wide for it beside the plot, and a
+ * drawing laid out smaller to fit its canvas would come out wider.
+ */
+function keysHeld(plan: LayoutPlan): CanvasTreatment['keys'] {
+    const layout = plan.legend.layout;
+    const inputs = plan.legend.keyInputs ?? [];
+    const laid = (layout?.keys ?? []).map((key, index) => (key && inputs[index] && !inputs[index]!.fixed ? key.orient : undefined)).filter(Boolean);
+    const edges = new Set(laid);
+    if (!layout || edges.size !== 1) return undefined;
+    const edge = [...edges][0];
+    if (edge === 'right') return 'side';
+    // Keys held above or below stand in a row there: only where they already do.
+    const row = laid.length === 1 || layout.edges.some((at) => at.orient === edge && at.direction === 'horizontal');
+    return (edge === 'top' || edge === 'bottom') && row ? edge : undefined;
+}
+
+type Size = { width: number; height: number };
+const SIDES = ['width', 'height'] as const;
+
+/**
+ * Holds the drawing within the canvas the host states. A canvas-fit pass rebalances what stands
+ * around the plot, but leaves a chart that still reads well drawn somewhat larger than its box, for
+ * the host to scale the whole drawing down. Where the host states a canvas, the chart is laid out
+ * again for a smaller room — the edits the pass chose kept, its keys at the edge they stood at — so
+ * the plot gives up the room and the keys, labels and title stand inside the canvas. The room is
+ * searched for each way the drawing ran past: smaller by what it ran past, then halfway between the
+ * largest that fitted and the smallest that did not, a few rounds. The plot never gives up more than
+ * {@link CONTAIN_PLOT_FLOOR} of a side, no value is cut and no label turned for the room: a chart
+ * whose keys or labels take nearly all its canvas is brought nearer, not within, and the host scales
+ * what is left.
+ */
+function containInCanvas(plan: LayoutPlan, analysis: PlanAnalysis, context: PlanContext): LayoutPlan {
+    const box = context.size.canvasSize;
+    const holding = Boolean(context.pins?.plot || context.pins?.title || context.pins?.reserve);
+    if (!box || context.options?.canvasFit === 'off' || holding || plan.composite) return plan;
+    // A drawing whose furniture the plan cannot measure is left as the host scales it.
+    if (canvasParts(plan, analysis.channelSemantics, context, box, true).reserve.unmeasured?.length) return plan;
+    // The padding the backend draws: a house's own, else the renderer's default. A y label on the
+    // plot's top edge stands half above it, and what is above the plot stands above that.
+    // Series-end names stand past the plot only at the ends of lines run across it: down the page
+    // they head the runs, and on areas they stand inside the bands.
+    const drawn = (planned: LayoutPlan) => {
+        const parts = canvasParts(planned, analysis.channelSemantics, context, box, true);
+        const across = !planned.design.bound.measureChannels.includes('x') || planned.design.bound.measureChannels.includes('y');
+        const namesPast = across && planned.structure.marks.some((mark) => mark === 'line' || mark === 'trail');
+        const { seriesEnd, ...rest } = parts.reserve.parts;
+        const drawing = judgeCanvas({
+            ...parts,
+            ...(seriesEnd && !namesPast ? { reserve: { ...parts.reserve, width: parts.reserve.width - seriesEnd, parts: rest } } : {}),
+            padding: context.theme ? planned.design.layout?.padding : undefined,
+        }).drawing;
+        const ruler = planned.rulers.y;
+        const label = planned.design.axes.y?.label;
+        const topLabel = ruler && label && label.show !== false && !label.flush && ruler.values.at(-1) === ruler.domain[1];
+        return topLabel ? { width: drawing.width, height: drawing.height + Math.ceil((label.fontSize ?? 10) / 2) } : drawing;
+    };
+    const before = drawn(plan);
+    const runsPast = (drawing: Size, side: 'width' | 'height', within: number) => drawing[side] - box[side] > within + CONTAIN_TOLERANCE;
+    if (!SIDES.some((side) => runsPast(before, side, 0))) return plan;
+    // What the host shrinks a drawing by to show it within the canvas — less a margin, for what the
+    // estimate misses and the renderer's rounding.
+    const shrink = (drawing: Size) => Math.min(1, ...SIDES.map((side) => (box[side] - CONTAIN_MARGIN) / (drawing[side] || 1)));
+    const within = (drawing: Size) => shrink(drawing) >= 1;
+    const fitted: CanvasTreatment = { ...plan.canvasFit?.treatment };
+    const held = fitted.keys ? undefined : keysHeld(plan);
+    // A round keeps the plot past its floor, every value the chart showed, and its labels as they
+    // stood: a smaller room must not cut more values from a banded axis or the keys, nor turn labels
+    // the chart kept flat — the host scaling the drawing reads better than names set on end.
+    const omitted = (planned: LayoutPlan) => (planned.layout.truncations ?? []).reduce((sum, cut) => sum + cut.omittedCount, 0);
+    const turned = (planned: LayoutPlan) => (['x', 'y'] as const).map((channel) => Math.abs(planned.axisLabels[channel]?.angle ?? 0));
+    const keeps = (planned: LayoutPlan) => SIDES.every((side) => planned.plot[side] >= plan.plot[side] * CONTAIN_PLOT_FLOOR - 0.5)
+        && omitted(planned) <= omitted(plan)
+        && turned(planned).every((angle, index) => angle <= turned(plan)[index]!);
+    type Round = { plan: LayoutPlan; drawing: Size; treatment: CanvasTreatment };
+    // A drawing the host shrinks less is better; as little, the larger — more of the canvas used.
+    // An estimate a few px either way is no gain: a round must be shrunk a hundredth less to count.
+    const better = (a: Round, b: Round) => shrink(a.drawing) > shrink(b.drawing) + CONTAIN_GAIN
+        || (within(a.drawing) && within(b.drawing) && a.drawing.width * a.drawing.height > b.drawing.width * b.drawing.height);
+    const layOut = (room: Size): Round => {
+        // A plot the pass laid out in the room the box left gives up as much.
+        const space = fitted.plotSpace;
+        const plotSpace = space && {
+            ...(space.width !== undefined ? { width: Math.max(1, Math.floor(space.width - (box.width - room.width))) } : {}),
+            ...(space.height !== undefined ? { height: Math.max(1, Math.floor(space.height - (box.height - room.height))) } : {}),
+        };
+        const treatment: CanvasTreatment = { ...fitted, ...(plotSpace ? { plotSpace } : {}), contain: { ...room, ...(held ? { keys: held } : {}) } };
+        const planned = planLayoutOnce(analysis, withTreatment(context, treatment, box));
+        return { plan: planned, drawing: drawn(planned), treatment };
+    };
+    const original: Round = { plan, drawing: before, treatment: fitted };
+    // The best round a search of the room, the sides given, finds.
+    const search = (sides: readonly ('width' | 'height')[]): Round => {
+        let best = original;
+        // The room searched each way: the largest known to fit, the smallest known not to.
+        const fits: Size = { width: box.width * CONTAIN_FLOOR, height: box.height * CONTAIN_FLOOR };
+        const fails: Size = { ...box };
+        const fitOnce = { width: false, height: false };
+        const searched = { width: false, height: false };
+        for (const side of sides) searched[side] = runsPast(before, side, -CONTAIN_MARGIN);
+        let room: Size = { ...box };
+        let last = best;
+        for (let round = 0; round < CONTAIN_ROUNDS; round++) {
+            const next: Size = { ...room };
+            for (const side of SIDES) {
+                if (!searched[side]) continue;
+                const over = last.drawing[side] - (box[side] - CONTAIN_MARGIN);
+                // Smaller by what it ran past, not past the smallest known to fit; larger, halfway back.
+                next[side] = Math.floor(over > CONTAIN_TOLERANCE ? Math.max(fits[side], room[side] - over) : (fits[side] + fails[side]) / 2);
+            }
+            if (SIDES.every((side) => Math.abs(next[side] - room[side]) < 1) && round) break;
+            room = next;
+            last = layOut(room);
+            // A room that costs what the chart keeps is too small: the search goes back up.
+            const kept = keeps(last.plan);
+            for (const side of SIDES) {
+                // A side that ran within its canvas may run past it laid out for less room the other way.
+                if (!searched[side] && sides.includes(side) && runsPast(last.drawing, side, -CONTAIN_MARGIN)) searched[side] = true;
+                if (!searched[side]) continue;
+                if (runsPast(last.drawing, side, -CONTAIN_MARGIN)) fails[side] = Math.min(fails[side], room[side]);
+                else {
+                    fits[side] = Math.max(fits[side], room[side]);
+                    if (kept) fitOnce[side] = true;
+                }
+            }
+            if (kept && better(last, best)) best = last;
+            // Bounds that meet leave nothing more to search.
+            if (SIDES.every((side) => !searched[side] || fails[side] - fits[side] < 2)) break;
+        }
+        // Each side fitted in some round, but not both in one: the room each fitted in, together.
+        const closing = { width: searched.width ? fits.width : room.width, height: searched.height ? fits.height : room.height };
+        if (!within(best.drawing) && SIDES.every((side) => !searched[side] || fitOnce[side]) && SIDES.some((side) => closing[side] !== room[side])) {
+            const round = layOut(closing);
+            if (keeps(round.plan) && better(round, best)) best = round;
+        }
+        return best;
+    };
+    let best = search(SIDES);
+    // Room given up one way may cost what the chart keeps where the other way it would not: a
+    // drawing that ran past both ways, and that the search left past, is searched for each way alone.
+    if (!within(best.drawing) && SIDES.every((side) => runsPast(before, side, -CONTAIN_MARGIN))) {
+        for (const side of SIDES) {
+            const alone = search([side]);
+            if (better(alone, best)) best = alone;
+        }
+    }
+    // A drawing brought nearer its canvas, not within, is kept only as much nearer as a gentle edit
+    // must bring it, or half the way, where it ran past by less.
+    const nearer = shrink(best.drawing) - shrink(before);
+    if (best.plan === plan || (!within(best.drawing) && nearer < Math.min(SOFT_FIT_GAIN, (1 - shrink(before)) / 2))) return plan;
+    const judged = judgeCanvas(canvasParts(best.plan, analysis.channelSemantics, context, box));
+    const result: CanvasFitResult = {
+        ...(plan.canvasFit ?? { strategy: context.options?.canvasFit ?? 'auto', before: judgeCanvas(canvasParts(plan, analysis.channelSemantics, context, box)), tried: [] }),
+        treatment: best.treatment,
+        after: judged,
+    };
+    const still = SIDES.some((side) => runsPast(best.drawing, side, 0));
+    const report: ThemeReport = {
+        stage: 'realize', path: 'layout.canvasFit', code: 'canvas-contain',
+        message: `the drawing ran past its ${Math.round(box.width)} × ${Math.round(box.height)} canvas (${Math.round(before.width)} × ${Math.round(before.height)}) — laid out for ${Math.round(best.treatment.contain!.width)} × ${Math.round(best.treatment.contain!.height)}, so the plot gives up the room${still ? `; that brings it nearer, not within (${Math.round(best.drawing.width)} × ${Math.round(best.drawing.height)}), for the host to scale` : ''}`,
+    };
+    const fitReport = plan.report.filter((entry) => entry.code === 'canvas-fit');
+    return { ...best.plan, canvasFit: result, report: [...best.plan.report, ...fitReport, report] };
 }
 
 /**
@@ -785,13 +972,20 @@ function boxOf(context: PlanContext): { width: number; height: number } {
 
 /** The context a treatment lays the chart out under; a smaller plot keeps the box it is fitted to. */
 function withTreatment(context: PlanContext, treatment: CanvasTreatment, box: { width: number; height: number }): PlanContext {
-    const options = { ...context.options, canvasTreatment: treatment };
+    const room = treatment.contain;
+    // Keys a contained layout holds at their edge are laid out as a fit that sets them there.
+    const laid = room?.keys && !treatment.keys ? { ...treatment, keys: room.keys } : treatment;
+    const options = { ...context.options, canvasTreatment: laid };
     const scale = treatment.plotScale ?? 1;
-    if (scale === 1) return { ...context, options };
+    if (scale === 1 && !room) return { ...context, options };
     const base = context.size.baseSize;
+    const canvas = room ? { width: room.width, height: room.height } : box;
     return { ...context, options, size: {
-        baseSize: { width: Math.round(base.width * scale), height: Math.round(base.height * scale) },
-        canvasSize: box,
+        baseSize: {
+            width: Math.min(canvas.width, Math.round(base.width * scale)),
+            height: Math.min(canvas.height, Math.round(base.height * scale)),
+        },
+        canvasSize: canvas,
     } };
 }
 
@@ -806,11 +1000,28 @@ const CHART_SHAPE_TOLERANCE = 1.15;
 /** The headline and deck shares a canvas-fit pass sets them at: one size down, then a second where one is not enough. */
 const TITLE_SCALE = 0.85;
 const TITLE_SCALE_DEEP = 0.72;
+
+/** The smallest the axis labels are set: the house's least size, and never under three-quarters of its own. */
+function axisLabelFloor(size: number, minSize: number | undefined): number {
+    return Math.max(minSize ?? 8, size * 0.75);
+}
+
+/** The axis labels at a share of the house's size, to the half px, never past the floor. */
+function scaledAxisLabelSize(size: number, scale: number, floor: number): number {
+    return Math.max(floor, Math.round(size * scale * 2) / 2);
+}
+
+/** The most sizes down a canvas fit tries for axis labels, one px each. */
+const LABEL_STEPS = 3;
 /**
  * How short a canvas-fit pass keeps long key names: 120 px a column, wrapped onto lines before they
  * are cut. Names down a y axis keep their readable gutter: a cut row name names nothing.
  */
 const SHORT_NAMES = { keyWidth: 120 };
+
+/** How much larger a map must be shown for its keys to move to the side it leaves empty: with no theme, and where a theme set their edge. */
+const MAP_KEYS_GAIN = 1.1;
+const MAP_KEYS_THEMED_GAIN = 1.2;
 
 /**
  * The canvas-fit pass, for charts that will not read well in their box. Three goals, judged on the
@@ -822,7 +1033,8 @@ const SHORT_NAMES = { keyWidth: 120 };
  * A chart that meets them as planned is returned as it is. One that does not is mended with the
  * least edit to it a reader would notice ({@link culpritEdits}): each problem is put down to the
  * parts that cause it, and only their edits are tried — keys in a row on their edge, names wrapped,
- * the title a size down, keys to another edge, the title two sizes down — one at a time before any
+ * the title a size down, keys to another edge, the title two sizes down, names wrapped down the y
+ * axis set a size or two smaller — one at a time before any
  * two together. Of those that clear, the one that costs least wins: its edit, priced on the
  * planner's one scale ({@link LAYOUT_COSTS}), and what its result still costs in reading, which
  * tells edits alike apart. Where the box cannot hold the chart legibly, the plot comes down,
@@ -843,7 +1055,9 @@ function fitToCanvas(plan: LayoutPlan, analysis: PlanAnalysis, context: PlanCont
     // A chart that reads well but is drawn a little larger than its box — the host shrinks it, not
     // past legibility — is mended only by the gentlest edits, and only where they bring it inside.
     const overflowing = !before.flags.length && before.scale < SOFT_FIT_SCALE;
-    if (!before.flags.length && !overflowing) return { ...plan, canvasFit: result };
+    // A map keeps its shape and grows until one side meets the room: its keys may stand on the side it leaves empty.
+    const mapKeys = analysis.template.fillsCanvas === true && !plan.layout.facet && Boolean(plan.legend.layout?.keys.some(Boolean));
+    if (!before.flags.length && !overflowing && !mapKeys) return { ...plan, canvasFit: result };
 
     const keyed = Boolean(plan.legend.layout?.keys.some(Boolean));
     const named = keyed;
@@ -868,8 +1082,9 @@ function fitToCanvas(plan: LayoutPlan, analysis: PlanAnalysis, context: PlanCont
         const strayed = Boolean(treatment.oneKey) && others(planned) !== others(plan);
         const cuts = (cutsKeyNames(planned) && !cutsKeyNames(plan)) || (rowOverruns(planned) && !rowOverruns(plan)) || moved || strayed;
         // Nor change the chart's own shape: the fit rebalances what is around the chart, not the chart.
+        // Labels set smaller shorten the rows they wrapped in, and that is the edit's whole point.
         const shapeOf = (e: CanvasFitEstimate) => e.designed.width / (e.designed.height || 1);
-        const reshaped = Math.abs(Math.log(shapeOf(estimate) / shapeOf(before))) > Math.log(CHART_SHAPE_TOLERANCE);
+        const reshaped = !treatment.labelScale && Math.abs(Math.log(shapeOf(estimate) / shapeOf(before))) > Math.log(CHART_SHAPE_TOLERANCE);
         // Nor, where the text is already too small, make it smaller still: a flag cleared for smaller text is no mend.
         const smaller = !legible && estimate.scale < before.scale - 0.005;
         if (!cuts && !reshaped && !smaller && ((!legible && !treatment.plotScale) || readable)) tries.push(tried);
@@ -880,6 +1095,29 @@ function fitToCanvas(plan: LayoutPlan, analysis: PlanAnalysis, context: PlanCont
     const best = () => [...tries].sort((a, b) => score(a) - score(b))[0];
     // Clear: nothing around the chart squeezes it, and the plot's own shape is no worse for it.
     const clears = (tried: Tried) => !tried.estimate.flags.length && tried.estimate.plotExcess <= before.plotExcess + 0.01 && tries.includes(tried);
+
+    /**
+     * A map's keys on the side its shape leaves empty: a map grows until one side meets the room, so
+     * keys beside a wide map take width it needs while height goes spare, and keys above a tall one
+     * the reverse. Each other edge is tried, and the one that shows the map largest — its plot at the
+     * scale the drawing is shown — kept where that is clearly larger: a tenth, or a fifth where a
+     * theme set the keys' edge as its house style. Keys the author placed stay.
+     */
+    function roomierMapKeys(): Tried | undefined {
+        const shown = (planned: LayoutPlan, estimate: CanvasFitEstimate) => planned.plot.width * planned.plot.height * Math.min(1, estimate.scale) ** 2;
+        const now = shown(plan, before);
+        const at = edge === 'left' || edge === 'right' ? 'side' : edge;
+        let pick: Tried | undefined;
+        let largest = now * (context.theme ? MAP_KEYS_THEMED_GAIN : MAP_KEYS_GAIN);
+        for (const to of ['top', 'bottom', 'side'] as const) {
+            if (to === at) continue;
+            const tried = attempt({ keys: to });
+            if (!tries.includes(tried) || tried.estimate.flags.length || cutsKeyNames(tried.plan)) continue;
+            const size = shown(tried.plan, tried.estimate);
+            if (size > largest) { largest = size; pick = tried; }
+        }
+        return pick;
+    }
 
     /**
      * The plot laid out again in the room the box leaves it, at the scale the drawing is shown at,
@@ -946,6 +1184,20 @@ function fitToCanvas(plan: LayoutPlan, analysis: PlanAnalysis, context: PlanCont
         return noSmaller && nothingNew && better ? tried : undefined;
     };
 
+    if (!before.flags.length) {
+        const roomier = mapKeys ? roomierMapKeys() : undefined;
+        if (roomier) {
+            result.treatment = roomier.treatment;
+            result.after = roomier.estimate;
+            const report: ThemeReport = {
+                stage: 'realize', path: 'layout.canvasFit', code: 'canvas-fit',
+                message: `the map is drawn larger with its keys on the side it leaves empty in its ${Math.round(box.width)} × ${Math.round(box.height)} canvas — laid out with ${describeTreatment(roomier.treatment)}`,
+            };
+            return { ...roomier.plan, canvasFit: result, report: [...roomier.plan.report, report] };
+        }
+        if (!overflowing) return { ...plan, canvasFit: result };
+    }
+
     let chosen: Tried | undefined;
     // The edits that answer what is wrong, nearest to the chart as planned first: each problem is
     // put down to the parts that cause it, and only their edits are tried — one at a time before any
@@ -964,8 +1216,15 @@ function fitToCanvas(plan: LayoutPlan, analysis: PlanAnalysis, context: PlanCont
         keys: (layout?.footprint ?? []).filter((edge) => edge.orient === 'top' || edge.orient === 'bottom')
             .reduce((sum, edge) => sum + (layout?.offsets?.[edge.orient as 'top' | 'bottom'] ?? 0), 0),
     };
+    // Names down y wrapped onto two lines take rows tall enough for both: smaller, the rows come down with them.
+    const houseLabels = plan.axisLabelFontSize;
+    const rowsWrapped = rowNamed && houseLabels !== undefined
+        && Boolean(plan.layout.yLabel.labelLines?.some((lines) => lines.length > 1));
+    const labelSizes = rowsWrapped
+        ? { size: houseLabels!, floor: axisLabelFloor(houseLabels!, (context.theme as ThemeSpec | undefined)?.type?.minSize) }
+        : undefined;
     const edits = culpritEdits(before, canvasParts(plan, analysis.channelSemantics, context, box), box, {
-        keyed, titled, named, edge, keys: keyList, rowNamed, headerAir,
+        keyed, titled, named, edge, keys: keyList, rowNamed, headerAir, labelSizes,
     });
     // Of the edits that clear, the one that costs least: its edit, and what its result still costs
     // in reading — weighed so the result tells apart edits alike, and never makes a larger edit win
@@ -1025,13 +1284,36 @@ function fitToCanvas(plan: LayoutPlan, analysis: PlanAnalysis, context: PlanCont
     result.after = chosen.estimate;
     const report: ThemeReport = {
         stage: 'realize', path: 'layout.canvasFit', code: 'canvas-fit',
-        message: `the chart did not read well in its ${Math.round(box.width)} × ${Math.round(box.height)} canvas (${before.flags.join('; ')}) — laid out with ${describeTreatment(chosen.treatment)}${chosen.estimate.flags.length ? `, which helps but does not clear it (${chosen.estimate.flags.join('; ')})` : ''}`,
+        message: `the chart did not read well in its ${Math.round(box.width)} × ${Math.round(box.height)} canvas (${before.flags.length ? before.flags.join('; ') : `drawn larger than it, to be shown at ${Math.round(before.scale * 100)}%`}) — laid out with ${describeTreatment(chosen.treatment)}${chosen.estimate.flags.length ? `, which helps but does not clear it (${chosen.estimate.flags.join('; ')})` : ''}`,
     };
     return { ...chosen.plan, canvasFit: result, report: [...chosen.plan.report, report] };
 }
 
-/** What a plan draws, for the canvas-fit judge: its panels, the furniture measured both ways, its chrome. */
-function canvasParts(plan: LayoutPlan, channelSemantics: Record<string, ChannelSemantics>, context: PlanContext, box: { width: number; height: number }): CanvasParts {
+/**
+ * How wide the drawing runs with its rows of keys above or below the plot, from its left edge past
+ * the y labels: a row stands at its anchor along the plot, so one wider than the plot at its start
+ * runs past the plot's right edge rather than back over the labels.
+ */
+function keyRowSpan(plan: LayoutPlan, reserve: FurnitureReserve): number {
+    const layout = plan.legend.layout;
+    const rows = (layout?.footprint ?? []).filter((edge) => edge.orient === 'top' || edge.orient === 'bottom');
+    if (!rows.length) return 0;
+    const before = (reserve.parts.yLabels ?? 0) + (reserve.parts.yTitle ?? 0);
+    const columns = plan.layout.facet?.columns ?? 1;
+    const plot = plan.plot.width * columns + (plan.layout.effectiveFacetGap ?? 10) * Math.max(0, columns - 1);
+    return Math.max(...rows.map((row) => {
+        const anchor = layout?.edges.find((edge) => edge.orient === row.orient)?.anchor ?? 'start';
+        const start = anchor === 'start' ? 0 : anchor === 'end' ? plot - row.width : (plot - row.width) / 2;
+        return Math.max(plot, start + row.width) - Math.min(-before, start);
+    }));
+}
+
+/**
+ * What a plan draws, for the canvas-fit judge: its panels, the furniture measured both ways, its
+ * chrome. Measured `whole` — to hold the drawing within a stated canvas — it counts a deck printed
+ * without a headline, and a row of keys from where it stands along the plot.
+ */
+function canvasParts(plan: LayoutPlan, channelSemantics: Record<string, ChannelSemantics>, context: PlanContext, box: { width: number; height: number }, whole = false): CanvasParts {
     const reserve = measureReserve({
         along: { width: true, height: true },
         structure: plan.structure,
@@ -1047,6 +1329,7 @@ function canvasParts(plan: LayoutPlan, channelSemantics: Record<string, ChannelS
         legend: plan.legend,
         title: printedTitle(context, plan.structure),
         titlePlan: plan.title,
+        deckAlone: whole,
         rows: plan.rows,
         spacing: context.profile.spacing,
         measure: context.profile.measureText ?? tableTextMeasurer,
@@ -1056,6 +1339,8 @@ function canvasParts(plan: LayoutPlan, channelSemantics: Record<string, ChannelS
     const headerRoom = plan.header ? plan.header.edge + plan.header.line : 0;
     const rulesRoom = plan.rules?.room ?? 0;
     const sourceRoom = plan.source?.room ?? 0;
+    // A plot sized round its source line gives it nothing.
+    const sourceTaken = plan.source?.reserved ? 0 : sourceRoom;
     // Where the plot gives its height to them, the plot drawn is shorter by it.
     const gives = plan.rules?.fromPlot ?? !(plan.layout.yNominalCount > 0);
     const facet = plan.layout.facet;
@@ -1063,13 +1348,13 @@ function canvasParts(plan: LayoutPlan, channelSemantics: Record<string, ChannelS
     return {
         panel: {
             width: plan.plot.width,
-            height: gives && !facet ? Math.max(1, plan.plot.height - brokenTitle - rulesRoom - headerRoom - sourceRoom) : plan.plot.height,
+            height: gives && !facet ? Math.max(1, plan.plot.height - brokenTitle - rulesRoom - headerRoom - sourceTaken) : plan.plot.height,
         },
         designed: { width: plan.plot.width, height: plan.plot.height },
         grid: { columns: facet?.columns ?? 1, rows: facet?.rows ?? 1, gapX: gap, gapY: gap },
         reserve,
         chrome: { top: brokenTitle + headerRoom + rulesRoom, bottom: sourceRoom },
-        keyRowWidth: Math.max(0, ...(plan.legend.layout?.footprint ?? []).filter((edge) => edge.orient === 'top' || edge.orient === 'bottom').map((edge) => edge.width)),
+        keyRowWidth: whole ? keyRowSpan(plan, reserve) : Math.max(0, ...(plan.legend.layout?.footprint ?? []).filter((edge) => edge.orient === 'top' || edge.orient === 'bottom').map((edge) => edge.width)),
         padding: plan.design.layout?.padding,
         box,
         base: context.size.baseSize,
@@ -1286,7 +1571,11 @@ function planLayoutOnce(analysis: PlanAnalysis, context: PlanContext): LayoutPla
             message: 'widening the bands into the canvas\'s spare room was not enough for the labels — the bands are kept, and the labels withheld' });
     }
     const reserveReason = (chain: PlanStage[], decision: string): PlanReason => ({ part: 'reserve', decision, chain });
-    const along = { width: first.layout.xStepFitted === true, height: first.layout.yStepFitted === true };
+    // A plot that fills the canvas (a map) has the room round it measured on both sides, as a fitted step does.
+    const fills = prepared.analysis.template.fillsCanvas === true && !first.layout.facet && !first.composite;
+    const along = fills
+        ? { width: true, height: true }
+        : { width: first.layout.xStepFitted === true, height: first.layout.yStepFitted === true };
     if (pinned) {
         return { ...first, reserve: pinned, reasons: [...first.reasons, reserveReason([{ rule: 'pinned', value: `${Math.round(pinned.width)} × ${Math.round(pinned.height)}`, note: 'the room kept for the furniture is held from the plan the chart was opened with' }], 'held')] };
     }
@@ -1295,6 +1584,8 @@ function planLayoutOnce(analysis: PlanAnalysis, context: PlanContext): LayoutPla
     }
     const reserve = measureReserve({
         along,
+        // A plot that fills the canvas holds its shape: the foot's room is kept before it is sized, not taken from it after.
+        ...(fills && first.source ? { footer: first.source.room } : {}),
         structure: first.structure,
         design: first.design,
         themed: Boolean(theme),
@@ -1312,12 +1603,16 @@ function planLayoutOnce(analysis: PlanAnalysis, context: PlanContext): LayoutPla
         spacing: profile.spacing,
         measure: profile.measureText ?? tableTextMeasurer,
     });
-    const second = planAroundPlot(prepared, reserve);
+    // A plot that fills the canvas also leaves the drawing its padding on every side, as the drawing is padded.
+    const pad = fills ? (theme ? first.design.layout?.padding ?? 0 : DRAWING_PADDING) : 0;
+    const second = planAroundPlot(prepared, pad ? { ...reserve, width: reserve.width + 2 * pad, height: reserve.height + 2 * pad } : reserve);
     return {
         ...second,
         reserve,
         reasons: [...second.reasons, reserveReason([
-            { rule: 'fitted step', value: along.width && along.height ? 'both axes' : along.width ? 'x' : 'y', note: 'a banded axis fitted its step to the room, so the room is measured' },
+            fills
+                ? { rule: 'fills the canvas', value: 'both sides', note: 'the plot grows to the canvas less its furniture, so the furniture is measured' }
+                : { rule: 'fitted step', value: along.width && along.height ? 'both axes' : along.width ? 'x' : 'y', note: 'a banded axis fitted its step to the room, so the room is measured' },
             { rule: 'measured', value: `${Math.round(reserve.width)} wide, ${Math.round(reserve.height)} tall`, read: Object.fromEntries(Object.entries(reserve.parts).map(([part, px]) => [part, Math.round(px)])), note: `the furniture beside and above or below the plot, as the text measures${reserve.unmeasured?.length ? `; not measured: ${reserve.unmeasured.join(', ')}` : ''}` },
             { rule: 'laid out again', value: `${Math.round(second.plot.width)} × ${Math.round(second.plot.height)}`, note: 'the plot is planned once more into the canvas less that room, capped at 40% of it; one pass' },
         ], `${Math.round(reserve.width)} × ${Math.round(reserve.height)} kept`)],
@@ -1403,6 +1698,15 @@ function rowNamesAboveTrial(first: LayoutPlan, prepared: PreparedPlan, pinned: F
     const laid = planAroundPlot(trial, pinned ?? NO_RESERVE);
     if (!laid.layout.rowNamesAboveFit || !laid.rowNames) {
         const note = say('row-names-beside', `the names stand beside their bars: above them, each band needs twice its room, which the canvas's stretch cannot give ${layout.yNominalCount} of them`);
+        return { prepared: noted(prepared, note), first: { ...first, report: [...first.report, note] } };
+    }
+    // The bands hold within the stretch, but the title, keys and axis stand in the same box: names
+    // above are kept where the whole drawing fits it, or is shrunk no more than with the names beside.
+    const box = boxOf(prepared.context);
+    const scaleOf = (plan: LayoutPlan) => judgeCanvas(canvasParts(plan, prepared.analysis.channelSemantics, prepared.context, box)).scale;
+    const aboveScale = scaleOf(laid);
+    if (aboveScale < SOFT_FIT_SCALE && aboveScale < scaleOf(first) - 0.005) {
+        const note = say('row-names-beside', `the names stand beside their bars: above them, the chart would be drawn larger than its ${Math.round(box.width)} × ${Math.round(box.height)} canvas, to be shown at ${Math.round(aboveScale * 100)}%`);
         return { prepared: noted(prepared, note), first: { ...first, report: [...first.report, note] } };
     }
     return { prepared: trial, first: laid };
@@ -1491,6 +1795,9 @@ function planAroundPlot(prepared: PreparedPlan, reserve: FurnitureReserve): Layo
         ...prepared.options,
         bandStepFitCapacityX: Math.max(ceiling.width * 0.6, ceiling.width - reserve.width),
         bandStepFitCapacityY: Math.max(ceiling.height * 0.6, ceiling.height - reserve.height),
+        ...(prepared.options.sparseFill
+            ? { sparseFillBars: [...templateMarks(template)].some((mark) => mark === 'bar' || mark === 'rect' || mark === 'boxplot') }
+            : {}),
         // Small multiples shrink their tick labels no further than the theme lets type go.
         ...(theme && prepared.options.minLabelFontSize === undefined
             ? { minLabelFontSize: (theme as ThemeSpec).type?.minSize ?? 8 }
@@ -1537,9 +1844,14 @@ function planAroundPlot(prepared: PreparedPlan, reserve: FurnitureReserve): Layo
             : profile.nestedBandPadding.inner;
         return step * (bands - inner + 2 * profile.nestedBandPadding.outer);
     };
-    const axisLabelFontSize = theme
+    const houseLabelFontSize = theme
         ? resolveThemeFontSize(theme as ThemeSpec, theme.type?.axisLabel?.size, 10, layoutResult.subplotWidth || size.baseSize.width)
         : undefined;
+    const labelFloor = theme ? axisLabelFloor(houseLabelFontSize ?? 10, (theme as ThemeSpec).type?.minSize) : undefined;
+    // A canvas fit may set the labels on both axes a size or two down, never past the floor.
+    const axisLabelFontSize = houseLabelFontSize !== undefined && treatment?.labelScale
+        ? scaledAxisLabelSize(houseLabelFontSize, treatment.labelScale, labelFloor!)
+        : houseLabelFontSize;
     if (context.bandLabels) {
         planBandLabels(
             { layout: layoutResult, canvasSize: size.baseSize, channelSemantics, assembleOptions: effectiveOptions, table: values },
@@ -1547,7 +1859,7 @@ function planAroundPlot(prepared: PreparedPlan, reserve: FurnitureReserve): Layo
                 fontSize: axisLabelFontSize,
                 textCase: (theme as ThemeSpec | undefined)?.type?.axisLabel?.case,
                 // A themed chart's names are measured in the face they are drawn in, as its value labels are.
-                ...(theme ? { minFontSize: Math.max((theme as ThemeSpec).type?.minSize ?? 8, (axisLabelFontSize ?? 10) * 0.75) } : {}),
+                ...(theme ? { minFontSize: labelFloor } : {}),
                 ...(theme ? { measure: bandLabelMeasure(theme as ThemeSpec) } : {}),
                 // How x names that do not stand flat may be set, weighed by cost: the chart's ways, else the theme's, else the rule.
                 ...xLabelOverflow(theme as ThemeSpec | undefined, chartProperties, channelSemantics),
@@ -1558,10 +1870,12 @@ function planAroundPlot(prepared: PreparedPlan, reserve: FurnitureReserve): Layo
     }
 
     const plotContext: PlotPlanContext = {
+        ...(reserve.width > 0 || reserve.height > 0 ? { reserve: { width: reserve.width, height: reserve.height } } : {}),
         layout: layoutResult,
         canvasSize: size.baseSize,
         assembleOptions: effectiveOptions,
         channelSemantics,
+        encodings,
         table: values,
         fullTable: convertedData,
         semanticTypes: context.semanticTypes,
@@ -1626,6 +1940,13 @@ function planAroundPlot(prepared: PreparedPlan, reserve: FurnitureReserve): Layo
     });
 
     const segmented = segmentedBands(structure, values, [channelSemantics.column?.field, channelSemantics.row?.field]);
+    // A bar split only by `detail` stacks its segments (the axis spans their sum) but reads, and is
+    // labelled, as one bar: its segments are there for selection and links.
+    const detailOnly = structure.marks.includes('bar') && Boolean(channelSemantics.detail?.field)
+        && !channelSemantics.color?.field && !channelSemantics.x2?.field && !channelSemantics.y2?.field;
+    const stackedSegments = segmented && !detailOnly;
+    // What it shows, and its labels print, is each bar's total: the design is grounded on those.
+    const barRows = detailOnly && segmented ? barTotals(structure, channelSemantics, values) : values;
     const title = printedTitle(context, structure);
     // Grounding runs whether or not a theme was named, with the neutral one when it was not: some
     // design questions are Flint's own, such as whether this chart can carry its values at this density.
@@ -1644,12 +1965,12 @@ function planAroundPlot(prepared: PreparedPlan, reserve: FurnitureReserve): Layo
             ...(structure.y ? { y: { type: structure.y.type, field: structure.y.derived ? undefined : structure.y.fields[0] } } : {}),
             ...(structure.series?.field ? { color: { field: structure.series.field, type: structure.series.type } }
                 : structure.series?.derived ? { color: { field: structure.series.derived, type: structure.series.type, derived: true } } : {}),
-            ...(segmented ? { stacked: true } : {}),
+            ...(stackedSegments ? { stacked: true } : {}),
         },
         layout: layoutResult,
-        table: values,
+        table: barRows,
         canvasSize: size.baseSize,
-        stacked: structure.stacking === 'normalized' ? 'normalize' : segmented,
+        stacked: structure.stacking === 'normalized' ? 'normalize' : stackedSegments,
         partToWhole: structure.marks.includes('arc'),
         titled: Boolean(title),
         headline: headlineText(title),
@@ -1673,6 +1994,12 @@ function planAroundPlot(prepared: PreparedPlan, reserve: FurnitureReserve): Layo
             deck: { ...design.title.deck, fontSize: scaled(design.title.deck.fontSize, TITLE_FLOOR.deck) },
         };
         layoutResult.titleFontSize = scaled(layoutResult.titleFontSize, TITLE_FLOOR.headline)!;
+    }
+    if (treatment?.labelScale && axisLabelFontSize !== undefined) {
+        for (const channel of ['x', 'y'] as const) {
+            const axis = design.axes[channel];
+            if (axis && (axis.label.fontSize ?? 0) > axisLabelFontSize) design.axes[channel] = { ...axis, label: { ...axis.label, fontSize: axisLabelFontSize } };
+        }
     }
 
     const axisLabels = planAxisLabels(layoutResult, declaration, axisLabelFontSize === undefined ? undefined : {
@@ -1743,9 +2070,15 @@ function planAroundPlot(prepared: PreparedPlan, reserve: FurnitureReserve): Layo
             if (fit) axisTitleFit[channel] = fit;
         }
     }
+    const wrapAsked = context.options?.titleWrap;
     const titleInputs = {
         structure, design, layout: layoutResult, axisLabels, axisTitles: titles, plot, rows: values,
         title: context.title, rowFacet: channelSemantics.row?.field, themed: Boolean(theme),
+        ...(wrapAsked ? { wrap: {
+            floor: (typeof wrapAsked === 'object' ? wrapAsked.floor : undefined) ?? TITLE_WRAP_FLOOR,
+            minWidth: (typeof wrapAsked === 'object' ? wrapAsked.minWidth : undefined) ?? TITLE_WRAP_MIN_WIDTH,
+            overhang: (typeof wrapAsked === 'object' ? wrapAsked.overhang : undefined) ?? TITLE_WRAP_OVERHANG,
+        } } : {}),
     };
     // The header is planned before the title: its edge band and the line above push the title down,
     // and what sits beside the headline is taken from the width the title is fitted to.
@@ -1758,13 +2091,13 @@ function planAroundPlot(prepared: PreparedPlan, reserve: FurnitureReserve): Layo
     let titlePlan = composite ? undefined : context.pins?.title ?? planTitle(titleInputs);
 
     const labelLengths = drawnLengths(plot, titlePlan, undefined);
-    let valueLabels = planValueLabels({ design, structure, segmented, channelSemantics, rows: values, lengths: labelLengths });
+    let valueLabels = planValueLabels({ design, structure, segmented: stackedSegments, channelSemantics, rows: barRows, lengths: labelLengths });
     // A house that would rather every label read alike prints them all past the bar's end once one
     // bar is too short for its own (L4).
     if (valueLabels && !('refused' in valueLabels) && design.dataLabels.fallback === 'allOutside'
         && (valueLabels.channel === 'x' || valueLabels.channel === 'y')
-        && someLabelsOverrun(valueLabels, design, values, labelLengths[valueLabels.channel])) {
-        valueLabels = planValueLabels({ design, structure, segmented, channelSemantics, rows: values, lengths: labelLengths, outside: true });
+        && someLabelsOverrun(valueLabels, design, barRows, labelLengths[valueLabels.channel])) {
+        valueLabels = planValueLabels({ design, structure, segmented: stackedSegments, channelSemantics, rows: barRows, lengths: labelLengths, outside: true });
         report.push({ stage: 'realize', path: 'dataLabels.fallback', code: 'value-labels-all-outside',
             message: 'some bars are too short to hold their own label, so every label is printed past its bar’s end, as the house asks' });
     }
@@ -1844,7 +2177,7 @@ function planAroundPlot(prepared: PreparedPlan, reserve: FurnitureReserve): Layo
     // Inside labels are checked one by one against the axis as it will be drawn.
     if (valueLabels && !('refused' in valueLabels) && valueLabels.inside && (valueLabels.channel === 'x' || valueLabels.channel === 'y')) {
         const along = valueLabels.channel;
-        valueLabels = fitInsideLabels(valueLabels, design, values, { length: drawnLengths(plot, titlePlan, valueLabels)[along], domain: rulers[along]?.domain });
+        valueLabels = fitInsideLabels(valueLabels, design, barRows, { length: drawnLengths(plot, titlePlan, valueLabels)[along], domain: rulers[along]?.domain });
     }
     const displayNames = chartDisplayNames(context.fieldDisplayNames, analysis.staticSeries ?? undefined);
     const channelTitles: Partial<Record<string, string>> = {};
@@ -1880,8 +2213,10 @@ function planAroundPlot(prepared: PreparedPlan, reserve: FurnitureReserve): Layo
     const sourcePlan = planSource({
         design, source: context.source, block: chartBlock({ ...titleInputs, ...(extent ? { viewsWidth: extent.width } : {}) }) ?? size.baseSize.width,
         measure: tableTextMeasurer,
+        credit: template.credit?.(plotContext),
     });
-    const headerRoom = (header ? header.edge + header.line : 0) + (sourcePlan?.room ?? 0);
+    if (sourcePlan && reserve.parts.footer) sourcePlan.reserved = true;
+    const headerRoom = (header ? header.edge + header.line : 0) + (sourcePlan && !sourcePlan.reserved ? sourcePlan.room : 0);
     const drawViews = (title: TitlePlan | undefined) => {
         const drawn = views && (ruled || title || headerRoom) && plotGives
             ? shortenViews(views, (height) => {
@@ -2065,6 +2400,24 @@ function planAroundPlot(prepared: PreparedPlan, reserve: FurnitureReserve): Layo
  * as its value labels are. A face the width table does not know is measured as the fallback it
  * knows, with room for running up to a tenth wider.
  */
+/**
+ * The options a themed chart's band labels are planned with (`planBandLabels`): the house's size at
+ * this plot width, its floor, its case, its face, and the overflow path. Shared by every backend
+ * that draws a house, so a chart's names are wrapped, shrunk or turned the same way in each.
+ */
+export function themedBandLabelOptions(
+    theme: ThemeSpec, chartProperties: Record<string, any> | undefined, channelSemantics: Record<string, any>, plotWidth: number,
+) {
+    const fontSize = resolveThemeFontSize(theme, theme.type?.axisLabel?.size, 10, plotWidth);
+    return {
+        fontSize,
+        textCase: theme.type?.axisLabel?.case,
+        minFontSize: axisLabelFloor(fontSize, theme.type?.minSize),
+        measure: bandLabelMeasure(theme),
+        ...xLabelOverflow(theme, chartProperties, channelSemantics),
+    };
+}
+
 function bandLabelMeasure(theme: ThemeSpec): (fontSize: number) => (text: string) => number {
     const family = themeBodyFamily(theme) ?? 'sans-serif';
     const weight = theme.type?.axisLabel?.weight !== undefined ? fontWeightOf(theme.type.axisLabel.weight) ?? 'normal' : 'normal';
@@ -2114,6 +2467,8 @@ function culpritEdits(
         rowNamed?: boolean;
         /** The gaps under the title and beside keys above or below the plot, which no part is to blame for. */
         headerAir?: { title: number; keys: number };
+        /** The axis labels' house size and floor, where names down y wrap onto two lines and so set the rows' height. */
+        labelSizes?: { size: number; floor: number };
     },
 ): { single: CanvasTreatment[]; paired: CanvasTreatment[] } {
     const p = parts.reserve.parts;
@@ -2151,6 +2506,11 @@ function culpritEdits(
         if (keysToBlame && stackedKeys.length > 1) for (const key of [...stackedKeys].sort((a, b) => b.height - a.height)) oneKey(key, 'side');
         if (keysToBlame) add({ keys: 'side' });
         if (titleToBlame) add({ titleScale: TITLE_SCALE_DEEP });
+        // Rows of wrapped names: the labels a px down at a time, never past their floor, whole on their lines.
+        const labels = has.labelSizes;
+        for (let step = 1; labels && step <= LABEL_STEPS && labels.size - step >= labels.floor - 1e-9; step++) {
+            add({ labelScale: Math.round(((labels.size - step) / labels.size) * 1000) / 1000 });
+        }
     }
     // The chart area itself too wide for its box, or its names taking the plot's room: the names down
     // the y axis wrap, so the chart takes the width the box leaves it. Its plot is not touched.
@@ -2166,7 +2526,9 @@ function culpritEdits(
     const titleEdit = single.find((treatment) => treatment.titleScale);
     const oneKeyEdit = single.find((treatment) => treatment.oneKey);
     const rowEdit = single.find((treatment) => treatment.rowNames);
+    const labelEdit = single.find((treatment) => treatment.labelScale);
     if (keyEdit && titleEdit) paired.push({ ...keyEdit, ...titleEdit });
+    if (labelEdit && titleEdit) paired.push({ ...labelEdit, ...titleEdit });
     if (keyEdit?.keys === 'side' && has.named) paired.push({ keys: 'side', names: SHORT_NAMES });
     if (nameEdit && titleEdit) paired.push({ ...nameEdit, ...titleEdit });
     if (oneKeyEdit && titleEdit) paired.push({ ...oneKeyEdit, ...titleEdit });

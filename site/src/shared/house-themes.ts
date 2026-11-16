@@ -55,6 +55,11 @@ let housesPromise: Promise<HouseChoice[]> | undefined;
 /** Style-guide houses Flint now ships as presets; the page offers each once, as the preset. */
 const SHIPPED_AS_PRESET = new Set(['bbc', 'material']);
 
+/** How many houses `loadHouses` offers, counted from the module list without loading the modules (each file is named for its house). */
+export const HOUSE_COUNT = Object.keys(import.meta.glob('../playground/new-theme-test/themes/*.ts'))
+  .map((path) => path.split('/').pop()!.replace(/\.ts$/, ''))
+  .filter((name) => name !== 'index' && !SHIPPED_AS_PRESET.has(name)).length;
+
 /**
  * Every researched style-guide house, loaded on demand (the modules carry their research and gap
  * charts too) and loaded once. Their logos are left out: inline SVG and image data that would

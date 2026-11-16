@@ -180,10 +180,10 @@ function makeAxisDtypeCheck(axis: 'x' | 'y', banded: boolean) {
     return (ctx: OptionEvalContext): { applicable: boolean; recommendedValue?: any } => {
         const cs = ctx.channelSemantics?.[axis];
         if (!cs?.field) return { applicable: false };
-        // Dates read as snapshots along a banded chart are drawn discrete by default; a time
-        // scale stays one choice away.
-        const snapshots = Boolean(cs.snapshots) || (banded && cs.type === 'temporal'
-            && readsAsSnapshots((ctx.data ?? []).map(r => r[cs.field])));
+        const values = (ctx.data ?? []).map(r => r[cs.field]);
+        // Dates read as snapshots along a banded chart are drawn discrete by default; a time scale
+        // stays one choice away.
+        const snapshots = Boolean(cs.snapshots) || (banded && cs.type === 'temporal' && readsAsSnapshots(values));
         const recommendedValue = snapshots ? 'nominal' : 'temporal';
         // Once the user picks a value the override flips cs.type, so keep
         // the control visible on any explicit choice.

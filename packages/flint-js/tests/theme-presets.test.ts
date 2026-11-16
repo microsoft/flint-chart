@@ -130,6 +130,21 @@ describe('naming a house Flint ships', () => {
         expect(inherited?.ink?.series?.categorical).toEqual(categorical);
     });
 
+    it('carries the type set in the house’s text ink over to the ink it is recoloured in', () => {
+        const night = resolveThemeSpec({
+            extends: 'nyt',
+            ink: { surface: { source: 'house', canvas: '#141a24' }, text: { primary: '#f1e6cc', secondary: '#c9bc9c' } },
+        });
+        // The NYT states its headline in its primary ink and its deck in grey: both follow onto the dark page.
+        expect(night?.type?.headline?.color).toBe('#f1e6cc');
+        expect(night?.type?.deck?.color).not.toBe('#6b6b6b');
+        // A colour the extension states itself is kept.
+        const stated = resolveThemeSpec({ extends: 'nyt', ink: { text: { primary: '#222222' } }, type: { headline: { color: '#8a3b12' } } });
+        expect(stated?.type?.headline?.color).toBe('#8a3b12');
+        // An extension that leaves the ink alone leaves the type alone.
+        expect(resolveThemeSpec({ extends: 'nyt', accent: '#000000' } as any)?.type).toEqual(resolveThemeSpec('nyt')?.type);
+    });
+
     it('rejects an unknown inherited house', () => {
         expect(() => resolveThemeSpec({ extends: 'the-guardian' })).toThrow(/Unknown theme/);
     });
@@ -1978,5 +1993,59 @@ describe('status ink needs categories that carry a sign', () => {
         } as any);
         const range: string[] = vl.encoding.color.scale.range;
         expect(new Set(range.slice(0, rows.length)).size).toBe(rows.length);
+    });
+});
+
+describe('a bar split by detail reads as one bar', () => {
+    const rows = ['F0', 'F1', 'F2'].flatMap((magnitude, i) => ['TX', 'OK', 'KS', 'NE'].map((state, j) => ({ magnitude, state, count: (3 - i) * 400 + j * 50 })));
+    const input = (theme_spec?: string) => ({
+        data: { values: rows },
+        semantic_types: { magnitude: 'Category', state: 'State', count: 'Count' },
+        chart_spec: { chartType: 'Bar Chart', encodings: { y: { field: 'magnitude' }, x: { field: 'count' }, detail: { field: 'state' } } },
+        ...(theme_spec ? { theme_spec } : {}),
+    });
+    const bars = (spec: any) => (spec.layer ?? [spec]).filter((unit: any) => markTypeOf(unit.mark) === 'bar');
+    const texts = (spec: any) => (spec.layer ?? [spec]).filter((unit: any) => markTypeOf(unit.mark) === 'text');
+
+    it('seals its segments in their own ink, with no house outline between them', () => {
+        for (const house of [undefined, 'pop']) {
+            const spec: any = assembleVegaLite(input(house) as any);
+            const [bar] = bars(spec);
+            expect(bar.encoding?.detail?.field ?? spec.encoding?.detail?.field).toBe('state');
+            const mark = typeof bar.mark === 'string' ? { type: bar.mark } : bar.mark;
+            expect(mark.stroke, house).toBe(mark.fill ?? mark.color ?? '#4c78a8');
+        }
+    });
+
+    it('prints and makes room for each bar total, not a segment', () => {
+        const spec: any = assembleVegaLite(input('mckinsey') as any);
+        const labels = texts(spec);
+        expect(labels.length).toBeGreaterThan(0);
+        for (const label of labels) {
+            expect(label.encoding.detail).toBeUndefined();
+            expect(label.transform?.[0]).toEqual({ aggregate: [{ op: 'sum', field: 'count', as: 'count' }], groupby: ['magnitude'] });
+        }
+        const domainMax = bars(spec)[0].encoding.x.scale?.domainMax;
+        if (domainMax !== undefined) expect(domainMax).toBeGreaterThan(1350);
+    });
+});
+
+describe('a value-sorted bar chart keeps its order when the house prints the values', () => {
+    it('orders the bars and their labels by value, with a printed unit', () => {
+        const values = [
+            { Category: 'Candy', Change: 7.3 }, { Category: 'Clothing', Change: 10.5 }, { Category: 'Flowers', Change: 4.4 },
+            { Category: 'Jewelry', Change: 24.2 }, { Category: 'Greeting cards', Change: 1.6 },
+        ];
+        const spec: any = assembleVegaLite({
+            data: { values },
+            semantic_types: { Category: 'Category', Change: { semanticType: 'Amount', unit: 'USD' } },
+            chart_spec: { chartType: 'Bar Chart', encodings: { y: { field: 'Category', sortBy: 'x', sortOrder: 'descending' }, x: { field: 'Change' } } },
+            theme_spec: 'economist',
+        } as any);
+        const layers = (spec.layer ?? [spec]).filter((unit: any) => unit.encoding?.y?.field === 'Category');
+        expect(layers.length).toBeGreaterThan(1);
+        for (const layer of layers) {
+            expect(layer.encoding.y.sort).toEqual(['Jewelry', 'Clothing', 'Candy', 'Flowers', 'Greeting cards']);
+        }
     });
 });

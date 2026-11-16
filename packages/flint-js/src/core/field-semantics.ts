@@ -33,6 +33,7 @@ import {
     getZeroClass,
     inferOrdinalSortOrder,
     inferVisCategory,
+    isMeasureType,
     type ZeroClass,
 } from './semantic-types';
 
@@ -81,6 +82,16 @@ export interface SemanticAnnotation {
      */
     divergingMidpoint?: number;
 
+    /**
+     * How far either side of the diverging midpoint still reads as neither side, for a stepped
+     * colour scale: `0.1` makes correlations within ±0.1 one neutral class; `false` makes the
+     * midpoint a break, so every class is one side or the other and a small gain never looks like
+     * a small loss. Unset ⇒ the semantic type decides: a type that always diverges (Correlation,
+     * Sentiment) or a stated midpoint gets a neutral class a step wide; one that diverges where its
+     * values cross a sign (Profit, PercentageChange, Temperature) breaks at it.
+     */
+    divergingNeutral?: number | false;
+
     /** Explicit ordinal ordering. E.g., ["Low", "Medium", "High"] */
     sortOrder?: string[];
 
@@ -98,6 +109,14 @@ export interface SemanticAnnotation {
      * higher-is-better, temperatures run warm-high).
      */
     polarity?: 'higher-is-better' | 'lower-is-better';
+
+    /**
+     * How a percentage field's numbers are stored: `fraction` (0.45 is 45%) or `percent` (45 is
+     * 45%). Unset ⇒ a decisive `intrinsicDomain` says (within ±1 is fractions; reaching 100 is
+     * percent points), else the values do. State it where the values cannot tell: a growth rate
+     * stored as fractions mostly past 1 (2.4 is 240%).
+     */
+    percentScale?: 'fraction' | 'percent';
 }
 
 /** d3-compatible format specification */
@@ -297,7 +316,9 @@ export function resolveDisplayUnit(annotation?: SemanticAnnotation): DisplayUnit
     const currency = CURRENCY_MAP[declared.toUpperCase()] ?? CURRENCY_MAP[declared];
     if (currency) return { text: currency, placement: 'value', position: 'prefix' };
 
-    const compact = UNIT_SUFFIX_MAP[declared] ?? UNIT_SUFFIX_MAP[declared.toLowerCase()];
+    // A one-letter unit keeps its case: `M` is millions, not metres.
+    const compact = UNIT_SUFFIX_MAP[declared]
+        ?? (declared.length > 1 ? UNIT_SUFFIX_MAP[declared.toLowerCase()] : undefined);
     if (compact) return { text: compact.trim(), placement: 'value', position: 'suffix' };
 
     // Field-level units are labels, not prose. Reject control characters,
@@ -328,6 +349,27 @@ function detectPercentageRepresentation(values: number[]): '0-1' | '0-100' {
     const countBelow1 = abs.filter(v => v <= 1).length;
     if (countBelow1 / abs.length >= 0.8) return '0-1';
     return '0-100';
+}
+
+/**
+ * How a percentage field's numbers are stored, from what the annotation states before what the
+ * values suggest: `percentScale` first, then an `intrinsicDomain` that settles it (within ±1 is
+ * fractions; reaching 100 is percent points), then the values ({@link detectPercentageRepresentation}).
+ * A stated scale keeps one column formatted one way whichever rows a query returns.
+ */
+export function percentRepresentation(
+    annotation: Pick<SemanticAnnotation, 'percentScale' | 'intrinsicDomain'> | undefined,
+    values: number[],
+): '0-1' | '0-100' {
+    if (annotation?.percentScale === 'fraction') return '0-1';
+    if (annotation?.percentScale === 'percent') return '0-100';
+    const domain = annotation?.intrinsicDomain;
+    if (Array.isArray(domain) && domain.length === 2 && domain.every(Number.isFinite)) {
+        const reach = Math.max(Math.abs(domain[0]), Math.abs(domain[1]));
+        if (reach > 0 && reach <= 1) return '0-1';
+        if (reach >= 100) return '0-100';
+    }
+    return detectPercentageRepresentation(values);
 }
 
 /**
@@ -417,12 +459,13 @@ export function resolveFormat(
         }
 
         case 'percent': {
-            // Without intrinsicDomain we can't reliably distinguish 0–1
-            // from 0–100, so defer to VL.
-            if (!annotation.intrinsicDomain) {
+            // Unstated, the values say how they are stored — as the measure's domain and a KPI
+            // read them — so 0.164 prints "16.4%" on the axis its [0, 1] domain draws. Values
+            // read as percent points are left to VL, as they were.
+            const rep = percentRepresentation(annotation, nums);
+            if (!annotation.intrinsicDomain && !annotation.percentScale && rep !== '0-1') {
                 return { tooltipFormat: { pattern: precisionFormat(nums) } };
             }
-            const rep = detectPercentageRepresentation(nums);
             if (rep === '0-1') {
                 // 0–1 fractional → axis must transform (0.45 → "45%")
                 const p = detectPrecision(nums);
@@ -545,6 +588,7 @@ export function resolveDefaultVisType(
  * - Additive measures → sum (parts sum to a meaningful total)
  * - Intensive measures → average (rates/averages shouldn't be summed)
  * - Signed-additive    → sum (preserves sign semantics)
+ * - Generic measures   → undefined (additivity unknown: `Number`)
  * - Dimensions/IDs     → undefined (aggregation not meaningful)
  */
 export function resolveAggregationDefault(
@@ -555,10 +599,50 @@ export function resolveAggregationDefault(
         case 'additive':        return 'sum';
         case 'signed-additive': return 'sum';
         case 'intensive':       return 'average';
+        case 'measure':         return undefined;
         case 'dimension':       return undefined;
         case 'identifier':      return undefined;
         default:                return undefined;
     }
+}
+
+/** The operation an encoding's `aggregate` names, folding the `mean` synonym into `average`. */
+function declaredAggregate(aggregate: string | undefined): 'sum' | 'average' | 'count' | undefined {
+    if (aggregate === 'sum' || aggregate === 'count') return aggregate;
+    if (aggregate === 'average' || aggregate === 'mean') return 'average';
+    return undefined;
+}
+
+/**
+ * How a chart combines a measure's rows into the one value it shows per category (a bar's
+ * label, its share of the total). Types with a default keep it. A measure with none (`Number`,
+ * whose additivity is unknown) takes the encoding's own `aggregate`, else the mean: summing it
+ * is the riskier choice, and one row's mean is that row. `undefined` for non-measures.
+ *
+ * The rows have already been reduced by any declared `aggregate` (see `applyAggregation`), so a
+ * declared `count` combines by sum.
+ */
+export function resolveDisplayAggregate(
+    cs: { aggregationDefault?: 'sum' | 'average'; semanticAnnotation?: { semanticType: string } } | undefined,
+    aggregate?: string,
+): 'sum' | 'average' | undefined {
+    if (!cs || cs.aggregationDefault) return cs?.aggregationDefault;
+    if (!cs.semanticAnnotation || !isMeasureType(cs.semanticAnnotation.semanticType)) return undefined;
+    const declared = declaredAggregate(aggregate);
+    return declared === 'sum' || declared === 'count' ? 'sum' : 'average';
+}
+
+/**
+ * How an exporter that pivots raw rows reduces several rows on one cell: the encoding's own
+ * `aggregate` when it sets one, else `sum` for an additive default, `average` for an intensive
+ * one, and `average` when there is no default (summing values of unknown additivity is the
+ * riskier choice).
+ */
+export function resolvePivotAggregate(
+    aggregate: string | undefined,
+    aggregationDefault: 'sum' | 'average' | undefined,
+): 'sum' | 'average' | 'count' {
+    return declaredAggregate(aggregate) ?? aggregationDefault ?? 'average';
 }
 
 // =============================================================================
@@ -798,7 +882,7 @@ export function resolveDomainConstraint(
     if (semanticType === 'Percentage') {
         const nums = values.filter((v: any) => typeof v === 'number' && !isNaN(v));
         if (nums.length > 0) {
-            const rep = detectPercentageRepresentation(nums);
+            const rep = percentRepresentation(annotation, nums);
             const M = rep === '0-1' ? 1 : 100;
             return snapToBoundHeuristic([0, M], values);
         }
@@ -1085,7 +1169,7 @@ export function resolveBinningSuggested(
  *
  * - 'sum':       Additive measures (parts sum to whole)
  * - 'normalize': Proportions (show 100% breakdown)
- * - false:       Stacking is meaningless (rates, scores, identifiers)
+ * - false:       Stacking is meaningless (rates, scores, generic measures, identifiers)
  */
 export function resolveStackable(
     semanticType: string,
@@ -1099,6 +1183,7 @@ export function resolveStackable(
             // Percentage is the exception — normalizable
             if (semanticType === 'Percentage') return 'normalize';
             return false;
+        case 'measure':         return false;
         case 'dimension':       return false;
         case 'identifier':      return false;
         default:                return false;
@@ -1167,9 +1252,10 @@ export function resolveFieldSemantics(
 
     // 4. For unregistered types, provide data-driven fallbacks.
     //    The registry treats unknown types as categorical, but if the data
-    //    is actually numeric, we should behave like a generic measure.
+    //    is actually numeric, we should behave like a generic measure. An
+    //    untyped number keeps summing (unlike `Number`, which was chosen and
+    //    so says its additivity is unknown).
     if (!isRegistered(semanticType) && defaultVisType === 'quantitative') {
-        // Data looks numeric → treat like Number (GenericMeasure)
         if (!aggregationDefault) aggregationDefault = 'sum';
         if (zeroClass === 'unknown') zeroClass = 'meaningful';
         binningSuggested = true;

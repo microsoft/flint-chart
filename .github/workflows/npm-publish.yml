@@ -20,6 +20,9 @@ jobs:
     if: >-
       github.event_name == 'workflow_dispatch' ||
       contains(github.event.head_commit.message, '[deploy]')
+    env:
+      # The package's type declarations outgrow Node's default heap.
+      NODE_OPTIONS: --max-old-space-size=8192
     steps:
       - uses: actions/checkout@v4
 

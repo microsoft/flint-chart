@@ -6,7 +6,7 @@ import { INTERACTION_PRESET_REQUIREMENTS } from 'flint-chart';
 const root = new URL('../../../', import.meta.url);
 const read = (path: string) => readFileSync(fileURLToPath(new URL(path, root)), 'utf8');
 
-const SKILLS = ['flint-chart-author', 'flint-theme-author', 'flint-interaction-author', 'flint-board-author'];
+const SKILLS = ['flint-chart-author', 'flint-theme-author', 'flint-interaction-author', 'flint-board-author', 'flint-app-author'];
 const interactionSkill = read('agent-skills/flint-interaction-author/SKILL.md');
 
 describe('agent skills', () => {
@@ -25,7 +25,7 @@ describe('agent skills', () => {
     }
     expect([...named].sort()).toEqual([...presets].sort());
 
-    const table = interactionSkill.slice(interactionSkill.indexOf('### Step 2 — pick presets'), interactionSkill.indexOf('### Step 3 — resolve conflicts'));
+    const table = interactionSkill.slice(interactionSkill.indexOf('### Pick presets'), interactionSkill.indexOf('### Conflicts'));
     const listed = [...table.matchAll(/^\| `([a-z-]+)`(?:, `([a-z-]+)`)? \|/gm)].flatMap((m) => [m[1], m[2]].filter(Boolean));
     expect(listed.sort()).toEqual([...presets].sort());
   });

@@ -1,6 +1,13 @@
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  resolve: {
+    alias: [
+      // The renderers import the bundled boundaries by the package's own name; read them from source.
+      { find: /^flint-chart\/geo\/lazy\/([\w-]+)$/, replacement: fileURLToPath(new URL('./src/geo/lazy/$1.js', import.meta.url)) },
+    ],
+  },
   test: {
     globals: true,
     environment: 'node',

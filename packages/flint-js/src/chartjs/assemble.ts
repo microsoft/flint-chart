@@ -23,6 +23,7 @@
  * This module has NO React, Redux, or UI framework dependencies.
  */
 
+import { noteSpecUpdates } from '../core/spec-updates';
 import { withEncodingColorAnnotations } from '../core/color-controls';
 import {
     ChartEncoding,
@@ -38,9 +39,13 @@ import { applyAggregation, resolveImplicitAggregation } from '../core/aggregate'
 import { applyPivot, applyTransform, type PivotSurface, type TransformSurface } from '../core/pivot';
 import { cjsGetTemplateDef } from './templates';
 import { resolveChannelSemantics, convertTemporalData, repairEncodingSorts } from '../core/resolve-semantics';
-import { computeZeroDecision } from '../core/semantic-types';
+import { computeZeroDecision, zeroMarkType } from '../core/semantic-types';
 import { filterOverflow } from '../core/filter-overflow';
-import { computeLayout, computeChannelBudgets, deriveStretchCaps, resolveBaseSize, resolveFacetColumnsOption } from '../core/compute-layout';
+import { computeLayout, computeChannelBudgets, deriveStretchCaps, planBandLabels, resolveBaseSize, resolveFacetColumnsOption } from '../core/compute-layout';
+import { xLabelOverflow } from '../core/plan';
+import { tableTextMeasurer } from '../core/text-width';
+import { BACKEND_MIN_LABEL_SIZE, canvasFitSummary, fitBox, judgeBackendCanvas, refitCanvas, withTreatment } from '../core/backend-frame';
+import { CJS_FONT, cjsFitFrame } from './frame';
 import { decideColorMaps } from '../core/color-decisions';
 import { cjsApplyLayoutToSpec, cjsApplyTooltips } from './instantiate-spec';
 import { normalizeStaticSeries } from '../core/static-series';
@@ -163,7 +168,7 @@ export function assembleChartjs(input: ChartAssemblyInput): any {
     );
 
     // Finalize zero-baseline (requires template mark knowledge)
-    const effectiveMarkType = templateMarkType || 'point';
+    const effectiveMarkType = zeroMarkType(chartTemplate.chart, templateMarkType);
     for (const [channel, cs] of Object.entries(channelSemantics)) {
         if ((channel === 'x' || channel === 'y') && cs.type === 'quantitative') {
             const numericValues = data
@@ -287,6 +292,19 @@ export function assembleChartjs(input: ChartAssemblyInput): any {
         }),
     };
 
+    // Names along a banded axis are wrapped, turned, thinned or cut as the layout decides them for
+    // every backend, measured in Chart.js' type, before the template sizes its bands.
+    const labelsBefore = { x: JSON.stringify(layoutResult.xLabel), y: JSON.stringify(layoutResult.yLabel) };
+    planBandLabels(instantiateContext, {
+        measure: (fontSize) => tableTextMeasurer(fontSize, CJS_FONT, 'normal', 'normal'),
+        minFontSize: BACKEND_MIN_LABEL_SIZE,
+        ...xLabelOverflow(undefined, chartProperties, channelSemantics),
+    });
+    const plannedLabels = {
+        x: JSON.stringify(layoutResult.xLabel) !== labelsBefore.x,
+        y: JSON.stringify(layoutResult.yLabel) !== labelsBefore.y,
+    };
+
     const colField = channelSemantics.column?.field;
     const rowField = channelSemantics.row?.field;
     const hasFacet = !!(colField || rowField);
@@ -375,6 +393,7 @@ export function assembleChartjs(input: ChartAssemblyInput): any {
                     position: 'right',
                 };
                 cjsApplyLayoutToSpec(panelConfig, panelContext, []);
+                delete panelConfig._plot;
                 if (addTooltipsOpt) cjsApplyTooltips(panelConfig);
                 if (chartTemplate.postProcess) chartTemplate.postProcess(panelConfig, panelContext);
 
@@ -458,6 +477,23 @@ export function assembleChartjs(input: ChartAssemblyInput): any {
         cjsConfig._viewports = overflowResult.viewports;
     }
 
+    // Names are printed as the reader sees them before the frame measures them.
+    applyFieldDisplayNames(cjsConfig, input.field_display_names);
+
+    // The frame: title broken over its block, scale gutters and titles measured, the legend placed.
+    // A facet grid is composed by the host, which draws no title of its own yet.
+    if (!(hasFacet && hasAxes)) {
+        const frame = cjsFitFrame(cjsConfig, instantiateContext, { title: input.chart_spec.title, subtitle: input.chart_spec.subtitle }, plannedLabels,
+            fitBox(baseSize, sizeCeiling, options.maxStretch).width);
+        // The canvas fit: where the host would shrink the drawing past legibility to enter its box,
+        // the plot is laid out smaller once instead, as the plan does for Vega-Lite.
+        const box = fitBox(baseSize, sizeCeiling, options.maxStretch);
+        const judged = judgeBackendCanvas({ plot: frame.plot, designed: frame.designed, parts: frame.parts, padding: 0, box, base: baseSize });
+        const refit = refitCanvas(judged, options, (treatment) => assembleChartjs(withTreatment(input, treatment, box)));
+        if (refit) return refit;
+        cjsConfig._canvasFit = canvasFitSummary(judged.estimate, box, options.canvasTreatment);
+    }
+
     cjsConfig._dataLength = values.length;
 
     if (transformed.surface) {
@@ -470,9 +506,7 @@ export function assembleChartjs(input: ChartAssemblyInput): any {
         cjsConfig._pivot = legacyPivot.surface;
     }
 
-    applyFieldDisplayNames(cjsConfig, input.field_display_names);
-
-    return cjsConfig;
+    return noteSpecUpdates(cjsConfig, input);
 }
 
 /** Inspect the Chart.js legacy (composed) view transformation surface for an input. */

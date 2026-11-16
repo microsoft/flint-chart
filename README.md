@@ -42,6 +42,11 @@ https://github.com/user-attachments/assets/c1cda0fa-3ea7-41af-b3fd-a127bc83d641
 
 ## Updates
 
+- **November 15, 2026** — Flint 1.1 brings maps and layout: maps with
+  customizable boundaries, globes, routes and labelled points, framed to
+  their data; charts that fit their canvas on every backend; and
+  annotations as captions beside what they name.
+  ([release notes](https://github.com/microsoft/flint-chart/releases/tag/1.1), [changelog](CHANGELOG.md))
 - **October 19, 2026** — Flint 1.0 introduces
   [Flint Interactive](https://microsoft.github.io/flint-chart/#/interactions):
   interaction presets, semantic events, and an interaction API that connects
@@ -106,7 +111,9 @@ npm install flint-chart
 ```
 
 The library compiles Flint specs into backend-native chart specs and provides
-React and vanilla JavaScript APIs for embedding interactive charts.
+React and vanilla JavaScript APIs for embedding interactive charts. It comes
+with every backend it draws with (Vega-Lite, ECharts, Chart.js, Plotly); React
+is an optional peer for `<FlintChart>`.
 
 A Flint spec describes the data, semantic types, and field mappings, with
 optional theme and interaction settings. In React, pass it to `<FlintChart>`
@@ -142,7 +149,7 @@ https://github.com/microsoft/flint-chart/blob/main/agent-skills/flint-chart-auth
 https://github.com/microsoft/flint-chart/blob/main/agent-skills/flint-interaction-author/SKILL.md
 
 Use these skills to add a chart to this app.
-Install flint-chart and the renderer dependencies needed for this project.
+Install flint-chart (it includes its chart renderers) and add it to this project.
 Plot monthly users by region from our data in Economist style.
 Let readers hover to compare regions at each month, and add a region selector
 that updates the chart.

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { changeset, parse, View, type GroupMark } from 'vega';
 import { expressionInterpreter } from 'vega-interpreter';
 import { compile } from 'vega-lite';
-import { scaleAwareCanvasPicking } from '../src/vegalite/interactive';
+import { scaleAwareCanvasPicking, tooltipType } from '../src/vegalite/interactive';
 import { rendererElement, vegaRendererOrigin } from '../src/vegalite/interactions/hit-adapter';
 import { assembleVegaLite, indexAxisOf } from '../src/vegalite/assemble';
 import { axisHighlight, brushAngle, brushX, brushZoom, clickAnnotate, clickHighlight, dragReorder, externalInteraction, inspect, legendToggle, navigate, select } from '../src/interactive/interactions';
@@ -71,6 +71,7 @@ import {
     rendererPlotOrigin,
     renderHit,
     sceneItems,
+    nearestThinItem,
     tolerantInspectHits,
     continuousLegendSegmentCount,
     clippedBounds,
@@ -99,9 +100,9 @@ import {
 import {
     annotationBounds,
     annotationConnectionPoint,
-    annotationPrimaryAnchor,
 } from '../src/vegalite/interactions/presentation/annotation-overlay';
 import { createVegaNavigationController } from '../src/vegalite/interactions/navigation-scale';
+import { PROXIMITY_READOUT_DISTANCE, proximityTooltip } from '../src/vegalite/interactions/runtime';
 import { INTERACTION_PROVENANCE } from '../src/vegalite/interaction-provenance';
 import { THEME_PRESETS } from '../src/core/theme/presets';
 import { INTERACTION_CAPABILITIES } from '../src/core/interaction-spec';
@@ -150,7 +151,7 @@ function annotationUpdate(
     return {
         id: 'test-annotation',
         ops: [{
-            op: 'set-annotation' as const,
+            op: 'annotate-text' as const,
             target: { visual, elements: [element] },
             value: {},
         }],
@@ -265,7 +266,7 @@ describe('Vega-Lite semantic interactions', () => {
             value: { text: '2' },
         });
         expect((update.ops[0] as any).value.candidates[0]).toEqual({
-            connection: 'value-end', valueAxis: 'y', priority: 0,
+            connection: 'value-end', valueAxis: 'y',
         });
     });
 
@@ -309,7 +310,7 @@ describe('Vega-Lite semantic interactions', () => {
                 text: 'Median: 5,000\nIQR: 4,700 → 5,400',
             },
         });
-        expect((update.ops[0] as any).value.candidates[0]).toEqual({ connection: 'center', priority: 0 });
+        expect((update.ops[0] as any).value.candidates[0]).toEqual({ connection: 'center' });
     });
 
     it('keeps a Regression\u2019s dots selectable when a house redraws its circles as squares', async () => {
@@ -637,13 +638,6 @@ describe('Vega-Lite semantic interactions', () => {
         expect(midpoint.point).toEqual({ x: 126, y: 136 });
         expect(rightFallback.point).toEqual(midpoint.point);
         expect(rightFallback.preferredAngle).toBe(0);
-        expect(annotationPrimaryAnchor(
-            item,
-            { left: 56, top: 52, width: 140, height: 168 },
-            { left: 220, top: 120, width: 30, height: 20 },
-            'right',
-            rightFallback.point,
-        )).toEqual(midpoint.point);
     });
 
     it('uses a borderless spotlight for area hover', () => {
@@ -1312,6 +1306,18 @@ describe('Vega-Lite semantic interactions', () => {
         });
     });
 
+    it('carries the theme\'s highlight paint to annotations, and leaves it unset by default', () => {
+        const makeSpec = (theme_spec: any) => assembleVegaLite({
+            data: { values: [{ Year: '2020', Value: 10 }, { Year: '2021', Value: 14 }] },
+            semantic_types: { Year: 'Category', Value: 'Quantity' },
+            chart_spec: { chartType: 'Bar Chart', encodings: { x: 'Year', y: 'Value' } },
+            theme_spec,
+        } as any) as any;
+        expect(makeSpec('economist')._interactionSemantics.annotationDesign.highlight).toBeUndefined();
+        expect(makeSpec({ extends: 'economist', interaction: { highlight: { color: '#b54a20', width: 2 } } })
+            ._interactionSemantics.annotationDesign.highlight).toEqual({ color: '#b54a20', width: 2 });
+    });
+
     it('merges selected heatmap cells by contiguous region without bridging gaps', () => {
         expect(mergeContiguousSelectionBounds([
             { x1: 0, y1: 0, x2: 10, y2: 10 },
@@ -1712,7 +1718,7 @@ describe('Vega-Lite semantic interactions', () => {
 
         expect(update.ops[0]).toMatchObject({ value: { text: '140' } });
         expect((update.ops[0] as any).value.candidates).toEqual([
-            { connection: 'outer-radial', priority: 0 },
+            { connection: 'outer-radial' },
         ]);
     });
 
@@ -1750,12 +1756,7 @@ describe('Vega-Lite semantic interactions', () => {
         expect(bulletUpdate.ops[0]).toMatchObject({
             value: {
                 text: 'Actual: 51.6\nExpected: 80',
-                candidates: expect.arrayContaining([expect.objectContaining({
-                    connectorAnchors: [
-                        { role: 'bullet-actual', connection: 'value-end', valueAxis: 'x' },
-                        { role: 'bullet-expected', connection: 'center' },
-                    ],
-                })]),
+                candidates: [{ connection: 'value-end', valueAxis: 'x' }],
             },
         });
 
@@ -2128,7 +2129,7 @@ describe('Vega-Lite semantic interactions', () => {
         ).ops[0]).toMatchObject({
             value: {
                 text: '60 → 67',
-                candidates: [{ connection: 'segment-midpoint', priority: 0 }],
+                candidates: [{ connection: 'segment-midpoint' }],
             },
         });
     });
@@ -3000,7 +3001,7 @@ describe('Vega-Lite semantic interactions', () => {
         ).ops[0]).toMatchObject({
             value: {
                 text: 'Male: 81.5, Female: 87.6',
-                candidates: [{ connection: 'segment-midpoint', priority: 0 }],
+                candidates: [{ connection: 'segment-midpoint' }],
             },
         });
     });
@@ -3024,8 +3025,8 @@ describe('Vega-Lite semantic interactions', () => {
 
         expect(update.ops[0]).toMatchObject({ value: { text: 'Chrome: 65' } });
         expect((update.ops[0] as any).value.candidates).toEqual([
-            { connection: 'radial-midpoint', priority: 0 },
-            { connection: 'outer-radial', priority: 1 },
+            { connection: 'radial-midpoint' },
+            { connection: 'outer-radial' },
         ]);
     });
 
@@ -4220,7 +4221,7 @@ describe('Vega-Lite semantic interactions', () => {
             },
         });
         expect((update.ops[0] as any).value.candidates[0]).toEqual({
-            connection: 'segment-midpoint', priority: 0,
+            connection: 'segment-midpoint',
         });
     });
 
@@ -4278,7 +4279,7 @@ describe('Vega-Lite semantic interactions', () => {
         ['Slope Chart', slopeChartDef, ['line', 'point'], 'X'],
         ['Regression', regressionDef, ['circle'], 'X'],
         ['Streamgraph', streamgraphDef, ['area'], 'X'],
-        ['Map', mapDef, ['circle'], 'Longitude'],
+        ['Map', mapDef, ['circle', 'geoshape'], 'Longitude'],
         ['Density Plot', densityPlotDef, ['area'], 'value'],
         ['ECDF Plot', ecdfPlotDef, ['line', 'point'], 'X'],
         ['Calendar Heatmap', vlCalendarHeatmapDef, ['rect'], '__flintCalendarWeek'],
@@ -4745,6 +4746,37 @@ describe('set-style visibility', () => {
         expect(spec.encoding.color.scale.domain).toEqual(['Female', 'Male']);
     });
 
+    it('pins a legend in the order of the rows when the colour is unsorted, and its edge in the same order', () => {
+        const spec: Record<string, any> = {
+            _interactionSemantics: {
+                capabilities: ALL_CAPABILITIES,
+                fields: ['Team', 'Gold'],
+                legendFields: { color: 'Team' },
+                selectableMarks: ['circle'],
+            },
+            data: {
+                values: [
+                    { Team: 'United States', Gold: 40, Silver: 44 },
+                    { Team: 'China', Gold: 40, Silver: 27 },
+                    { Team: 'Australia', Gold: 18, Silver: 19 },
+                ],
+            },
+            mark: { type: 'circle', strokeWidth: 1 },
+            encoding: {
+                x: { field: 'Gold', type: 'quantitative' },
+                y: { field: 'Silver', type: 'quantitative' },
+                color: { field: 'Team', type: 'nominal', sort: null, scale: { range: ['#4e79a7', '#f28e2c', '#ffffb3'] } },
+                // A faint ink's darker edge, as the theme draws it: the same field on a second scale.
+                stroke: { field: 'Team', type: 'nominal', sort: null, scale: { range: ['#4e79a7', '#f28e2c', '#b3b37d'] }, legend: null },
+            },
+        };
+
+        addVegaLiteInteractions(spec, [legendToggle()]);
+
+        expect(spec.encoding.color.scale.domain).toEqual(['United States', 'China', 'Australia']);
+        expect(spec.encoding.stroke.scale.domain).toEqual(spec.encoding.color.scale.domain);
+    });
+
     it('pins an aggregate-sorted donut legend so hidden slices keep their keys', () => {
         const spec: Record<string, any> = {
             _interactionSemantics: {
@@ -4924,5 +4956,58 @@ describe('elementsFromHits', () => {
         ];
         const elements = elementsFromHits(hits, key);
         expect(elements.map((element) => semanticElementRenderKeys(element))).toEqual([['a'], ['b'], ['z']]);
+    });
+});
+
+describe('baseline tooltip reach', () => {
+    const series = ['a', 'b'].flatMap((g, s) => [0, 1, 2, 3].map((x) => ({ x, y: x * 10 + s * 40, g })));
+    async function viewOf(chartType: string) {
+        const spec = assembleVegaLite({
+            data: { values: series },
+            semantic_types: { x: 'Quantity', y: 'Quantity', g: 'Category' },
+            chart_spec: { chartType, encodings: { x: 'x', y: 'y', color: 'g' } },
+            options: { addTooltips: true },
+        } as never) as any;
+        const { compiled } = instrument(spec);
+        const view = new View(parse(compiled), { renderer: 'none' });
+        await view.runAsync();
+        return view;
+    }
+
+    it('reads a line a few px off its stroke, at the vertex nearer along it, and nothing farther off', async () => {
+        const view = await viewOf('Line Chart');
+        const segment = sceneItems(view).find((item) => item.mark.marktype === 'line' && item.interactionGeometry?.points?.length >= 2);
+        const [start, end] = segment.interactionGeometry.points;
+        const nearEnd = { x: start.x + (end.x - start.x) * 0.8, y: start.y + (end.y - start.y) * 0.8 - 4 };
+        const read = nearestThinItem(view, nearEnd, PROXIMITY_READOUT_DISTANCE);
+        expect(read?.datum?.g).toBe(segment.datum.g);
+        const { value, dot } = proximityTooltip(read, nearEnd);
+        expect(dot).toMatchObject({ x: end.x, y: end.y });
+        expect(value).toMatchObject({ x: '1' });
+        expect(nearestThinItem(view, { x: nearEnd.x, y: nearEnd.y - 20 }, PROXIMITY_READOUT_DISTANCE)).toBeUndefined();
+    });
+
+    it('leaves a bar to the exact hit: no reach from beside it, none from inside it', async () => {
+        const view = await viewOf('Stacked Bar Chart');
+        const bar = sceneItems(view).find((item) => item.mark.marktype === 'rect');
+        const inside = { x: (bar.bounds.x1 + bar.bounds.x2) / 2, y: (bar.bounds.y1 + bar.bounds.y2) / 2 };
+        expect(nearestThinItem(view, inside, PROXIMITY_READOUT_DISTANCE)).toBeUndefined();
+    });
+});
+
+describe('waterfall legend', () => {
+    it('reads legend values from the derived step kind the legend shows, not the author\'s Type column', () => {
+        const semantics = waterfallChartDef.semanticInteractions!(semanticContext({
+            resolvedEncodings: { x: { field: 'Step', type: 'nominal' }, y: { field: 'Value', type: 'quantitative' }, color: { field: 'Type', type: 'nominal' } } as never,
+        }));
+        expect(semantics.legendFields).toEqual({ color: '__wf_color' });
+    });
+});
+
+describe('tooltip type', () => {
+    it('takes the house\'s label face at its largest label size, kept to 11–13 px, and nothing with no house', () => {
+        expect(tooltipType({ config: { legend: { labelFont: 'Reith', labelFontSize: 9 }, axisX: { labelFontSize: 16 } } })).toEqual({ family: 'Reith', size: 13 });
+        expect(tooltipType({ config: { font: 'Futura', axisY: { labelFontSize: 8 } } })).toEqual({ family: 'Futura', size: 11 });
+        expect(tooltipType({ config: { axis: { labelFontSize: 12 } } })).toBeUndefined();
     });
 });

@@ -785,11 +785,11 @@ describe('a headline wider than its block', () => {
         expect(spec.title.text.join(' ')).toBe(LONG);
     });
 
-    it('breaks over even lines, not one full line and an orphan', () => {
+    it('breaks over full lines, with no orphan at the end', () => {
         const lines: string[] = scattered(LONG, 'economist').title.text;
         expect(lines.length).toBeGreaterThan(1);
         const lengths = lines.map((l) => l.length);
-        expect(Math.min(...lengths)).toBeGreaterThan(Math.max(...lengths) * 0.6);
+        expect(lengths[lengths.length - 1]).toBeGreaterThan(Math.max(...lengths) / 4);
     });
 
     it('takes the lines it gains out of the plot, not out of the canvas', () => {

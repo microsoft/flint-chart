@@ -4,7 +4,7 @@ import './categorical-temporal-lab.css';
 
 type Row = Record<string, string | number>;
 
-interface TemporalCase {
+export interface TemporalCase {
   id: string;
   group: string;
   note: string;
@@ -96,7 +96,7 @@ const monthlyBars = (): ChartAssemblyInput => ({
   chart_spec: { chartType: 'Bar Chart', title: 'Monthly revenue', encodings: { x: 'month', y: 'revenue' }, ...SIZE },
 });
 
-const CASES: TemporalCase[] = [
+export const CASES: TemporalCase[] = [
   // ── Few dates on a banded axis ────────────────────────────────────────
   { id: 'ym-two', group: 'Few dates on a banded axis', note: 'YearMonth, 2 values (Jul vs Dec 2025)', input: twoMonths() },
   { id: 'ym-two-economist', group: 'Few dates on a banded axis', theme: 'economist', note: 'Same, Economist', input: twoMonths() },

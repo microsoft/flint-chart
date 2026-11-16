@@ -27,6 +27,8 @@ function boardOf(result: { _meta?: unknown; structuredContent?: unknown }): Boar
   return meta?.flint?.board ?? structured?.flint?.board;
 }
 
+const HELD_TEXT = 'The assistant is revising this spec; the fixed chart follows in a new card.';
+
 export function FlintApp() {
   const [shown, setShown] = useState<Board | null>(null);
   const [failed, setFailed] = useState<string | null>(null);
@@ -50,7 +52,9 @@ export function FlintApp() {
       app.ontoolresult = (result) => {
         const { content } = result as { content?: { type: string; text?: string }[] };
         if (result.isError) {
-          setFailed(content?.find((part) => part.type === 'text')?.text ?? '');
+          // A spec held back for fixes is the agent's to revise: the card says so rather than list them.
+          const held = (result._meta as { flint?: { held?: string } } | undefined)?.flint?.held;
+          setFailed(held ? HELD_TEXT : content?.find((part) => part.type === 'text')?.text ?? '');
           return;
         }
         const next = boardOf(result);

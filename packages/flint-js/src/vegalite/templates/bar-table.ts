@@ -6,7 +6,7 @@ import { facetViews, type ViewNode } from '../../core/views';
 import { facetPanelLength, resolveStretchCaps } from '../../core/compute-layout';
 import { getRegistryEntry } from '../../core/type-registry';
 import { fitTwoLineLabels } from '../../core/decisions';
-import { resolveDisplayUnit, titleWithDisplayUnit, type FormatSpec } from '../../core/field-semantics';
+import { resolveDisplayAggregate, resolveDisplayUnit, titleWithDisplayUnit, type FormatSpec } from '../../core/field-semantics';
 import {
     fieldsFromEncodingChannels,
     firstDiscreteEncodingField,
@@ -124,7 +124,7 @@ function barTableLayout(
     // Used for both the Top-N trim decision and the panel-width
     // estimation. `aggValue` collapses one group's sum/count into
     // the single number the chart will display.
-    const useMeanForDisplay = xCS?.aggregationDefault === 'average';
+    const useMeanForDisplay = resolveDisplayAggregate(xCS, ctx.encodings?.x?.aggregate) === 'average';
     const aggValue = (g: { sum: number; n: number }) =>
         useMeanForDisplay ? g.sum / Math.max(1, g.n) : g.sum;
 
@@ -297,7 +297,7 @@ function barTableLayout(
     // share. Without this, each input row would render its own text
     // mark (overlapping) and each share would be value/grand-total
     // (~0% per row instead of the per-category percent).
-    const sortOp: 'sum' | 'mean' = (xCS?.aggregationDefault === 'average') ? 'mean' : 'sum';
+    const sortOp: 'sum' | 'mean' = useMeanForDisplay ? 'mean' : 'sum';
     const uniqueGroupby = (fields: string[]) => Array.from(new Set(fields));
     const textGroupby = hasFacet ? uniqueGroupby([...facetFields, yField]) : [yField];
     const textPanelTransform: any[] = [
@@ -1102,11 +1102,13 @@ export const barTableDef: ChartTemplateDef = {
         {
             key: 'showPercent', label: '% of total', type: 'binary', defaultValue: false,
             check: (ctx) => {
-                // A "% of total" share only reads sensibly for an additive,
+                // A "% of total" share only reads sensibly for a summed,
                 // single-sign measure with a non-zero total — a share of a
-                // mixed-sign or intensive (mean-aggregated) measure is misleading.
+                // mixed-sign, intensive or not-additive (mean-aggregated)
+                // measure is misleading.
                 const mcs = ctx.channelSemantics?.x;
-                if (!mcs?.field || mcs.type !== 'quantitative' || mcs.aggregationDefault === 'average') {
+                if (!mcs?.field || mcs.type !== 'quantitative'
+                    || resolveDisplayAggregate(mcs, ctx.encodings?.x?.aggregate) !== 'sum') {
                     return { applicable: false };
                 }
                 let sum = 0, hasNeg = false, hasPos = false, count = 0;
