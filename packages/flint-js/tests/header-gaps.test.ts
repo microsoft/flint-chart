@@ -137,7 +137,8 @@ describe('the header block', () => {
         const layout = plan.legend.layout!;
         const key = layout.keys.find(Boolean)!;
         const side = Math.min(layout.plot.width, layout.plot.height);
-        expect(layout.headerGap).toBe(headerInnerGap(key.labelFontSize, side, gaps));
+        // On a canvas smaller than the house's own, the theme's gaps come in with the rest.
+        expect(layout.headerGap).toBe(headerInnerGap(key.labelFontSize, side, gaps, plan.legend.preferences?.gapScale));
         const header = await drawnHeader(spec);
         expect(Math.abs(header.keys[0].y1 - header.title!.y2 - layout.headerGap!)).toBeLessThanOrEqual(2);
     });

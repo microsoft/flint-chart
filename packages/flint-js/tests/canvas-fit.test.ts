@@ -199,7 +199,8 @@ describe('the plot laid out again in the room left', () => {
     const institutions = ['Small business', 'Scientists', 'The military', 'The police', 'The Supreme Court', 'The press', 'Congress'];
     const answers = ['A great deal', 'Some', 'Not much', 'None at all'];
     // Answers in a key row under a two-line deck, in a small square tile: the header makes the
-    // drawing tall, so the box, shown at the scale its height asks, has width to spare.
+    // drawing tall, so the box, shown at the scale its height asks, has width to spare. Material, whose
+    // key keeps its text beside the rows' names, so moving the key does not win over lengthening the bars.
     const likert = (options: Record<string, unknown> = {}) => ({
         data: { values: institutions.flatMap((Institution, i) => answers.map((Answer, k) => ({ Institution, Answer, Share: 10 + ((i + k) % 4) * 10 }))) },
         semantic_types: { Institution: 'Category', Answer: 'Category', Share: 'Percentage' },
@@ -209,7 +210,7 @@ describe('the plot laid out again in the room left', () => {
             subtitle: 'Share of adults, by how much they trust each institution',
             baseSize: { width: 200, height: 200 }, canvasSize: { width: 230, height: 230 },
         },
-        theme_spec: 'datawrapper',
+        theme_spec: 'material',
         options,
     }) as any;
 

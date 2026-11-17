@@ -21,6 +21,14 @@ Released together for `flint-chart`, `flint-chart-mcp`, and the Copilot Canvas p
   (64 MB unpacked instead of 220 MB), which brings it back under jsDelivr's 150 MB limit: jsDelivr
   could not serve 1.1.0. Nothing a chart draws changes; a stack trace into Flint now points into
   its bundles, which are not minified, instead of its TypeScript sources.
+- On a canvas smaller than its theme's own size (a board cell, a thumbnail), a Vega-Lite chart's key
+  and header come in with it. A colour ramp slims from 16 px to as little as 8, the gaps between the
+  title, the keys and the plot shrink by the same share of the room, and a key's text is never set
+  larger than the axis labels beside it, so a small chart no longer pairs 8 px row names with an 11 px
+  key. At the theme's size or larger, and where no size is given, nothing changes.
+- A stepped colour key (bins of one quantity, as Datawrapper draws them) above the plot is measured as
+  the one bar it is drawn as, so its title stays beside it instead of moving above it, and the key may
+  run over the row names' gutter, as the title does.
 
 ### Fixed
 
@@ -34,6 +42,9 @@ Released together for `flint-chart`, `flint-chart-mcp`, and the Copilot Canvas p
   for `vegalite`, while the other backends returned JSON, which broke hosts that parse the result. The
   JSON now comes first, and also in `structuredContent`; for `vegalite` the report follows as a second
   text block.
+- A calendar heatmap's title is broken where the chart is drawn as the plan laid it out. Its weekday
+  names, which the chart derives, were measured as empty when the drawn title was fitted, so a deck
+  could wrap there and not in the plan.
 
 ### Security
 

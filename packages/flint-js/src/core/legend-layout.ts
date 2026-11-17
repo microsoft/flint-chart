@@ -44,6 +44,8 @@ export interface KeyStyle {
 export interface KeyToLayout {
     /** A colour ramp rather than a list of swatches. */
     gradient: boolean;
+    /** A stepped ramp: its bins are drawn side by side as one bar, which never wraps onto rows. */
+    bar?: boolean;
     /** The labels a key naming categories lists; wrapping only applies to these. */
     labels?: string[];
     /** What a key to values prints, for its width. */
@@ -84,6 +86,8 @@ export interface KeyLayout {
     titlePadding?: number;
     /** The length a ramp beside the plot is drawn at, where the plot is too short for its own. */
     gradientLength?: number;
+    /** The thickness a ramp is drawn at, where the plan slims it for a small plot. */
+    gradientThickness?: number;
     direction?: string;
     titleOrient?: string;
     columns?: number;
@@ -116,6 +120,8 @@ export interface KeyPreferences {
     align?: 'start' | 'center' | 'end' | 'spread';
     /** The air between keys, as the theme sets it, in em of their labels (see `header-gaps`). */
     gaps?: KeyGapSpec;
+    /** The share of the house's room a squeezed canvas has, which the gaps between keys are scaled by; unset is 1. */
+    gapScale?: number;
     /** The widest a key beside the plot may run, in px; unset is 24 of its label size, plus its padding. */
     sideWidth?: number;
     /**
@@ -260,16 +266,21 @@ function fitKey(
             layout.gradientLength = fitted;
         }
     }
+    if ((key.gradient || key.bar) && s.gradientThickness !== undefined) layout.gradientThickness = s.gradientThickness;
     const nativeColumns = s.columns || (horizontal ? count : 1);
+    // A ramp, or a stepped one run across the edge as one bar, spans its length and stands its
+    // thickness and a line of labels tall.
+    const ramp = key.gradient || (key.bar === true && horizontal);
     let box: Box = {
-        width: titleExtent + (key.gradient ? horizontal ? gradientLength : (s.gradientThickness ?? 16) + nativeLabelWidth + 6
+        width: titleExtent + (ramp ? horizontal ? gradientLength : (s.gradientThickness ?? 16) + nativeLabelWidth + 6
             : symbolGridWidth(key, nativeColumns, nativeSymbol, nativeLabelWidth, labelWidth)) + 2 * s.padding,
-        height: titleHeight + (key.gradient ? horizontal ? (s.gradientThickness ?? 16) + fontSize * 1.5 : gradientLength
+        height: titleHeight + (ramp ? horizontal ? (s.gradientThickness ?? 16) + fontSize * 1.5 : gradientLength
             : nativeRows * (Math.max(fontSize * 1.2, nativeSymbol) + (s.rowPadding ?? 2))) + 2 * s.padding,
-        fontSize, cost: 0, entryRows: key.gradient ? 1 : nativeRows, entryLines: 1, layout,
+        fontSize, cost: 0, entryRows: ramp ? 1 : nativeRows, entryLines: 1, layout,
     };
-    // A row of values wider than its edge wraps onto more rows, as Vega sets a key's entries in columns.
-    if (horizontal && !key.gradient && !key.labels?.length && s.columns === undefined) {
+    // A row of values wider than its edge wraps onto more rows, as Vega sets a key's entries in columns;
+    // a stepped ramp's bins stand as one bar and never wrap.
+    if (horizontal && !key.gradient && !key.bar && !key.labels?.length && s.columns === undefined) {
         const room = (budget?.width ?? block) - titleExtent - 2 * s.padding;
         const gridWidth = (columns: number) => symbolGridWidth(key, columns, nativeSymbol, nativeLabelWidth, labelWidth);
         let columns = nativeColumns;
@@ -472,8 +483,8 @@ export function planKeyLayout(
         // Keys side by side stand apart; one above another, at the header's rhythm — both in em of
         // their labels, eased with the plot.
         const plotSide = Math.min(plot.width, plot.height);
-        const edgeGap = keyRowGap(laid[0].key.style.labelFontSize, plotSide, preferences.gaps);
-        const stackGap = keyStackGap(laid[0].key.style.labelFontSize, plotSide, preferences.gaps);
+        const edgeGap = keyRowGap(laid[0].key.style.labelFontSize, plotSide, preferences.gaps, preferences.gapScale);
+        const stackGap = keyStackGap(laid[0].key.style.labelFontSize, plotSide, preferences.gaps, preferences.gapScale);
         // Whether a row this wide stands at the house's anchor within the drawing, as `anchorOf` places it below.
         const houseAnchor = preferences.align === 'center' ? 'middle' : preferences.align === 'end' ? 'end' : 'start';
         const fitsAnchor = (width: number) => {

@@ -6,6 +6,7 @@ import type { DesignDecisions } from './theme/types';
 import type { ChannelSemantics, LayoutResult } from './types';
 import { format as formatNumber } from 'd3-format';
 import { niceTicks } from './ruler';
+import { DEFAULT_BASE_SIZE } from './compute-layout';
 import { exactFormat, printFormatted } from './sample-format';
 
 /** A key the chart may draw, and what the plan decides about it. */
@@ -39,6 +40,8 @@ export interface LegendPlan extends LegendPlacementPlan {
     untitled: boolean;
     /** A horizontal colour ramp the theme leaves to the chart: its length and the block it spans, in px. */
     gradient?: { length: number; block: number };
+    /** How thick a colour ramp is drawn, in px: slimmer on a small plot, as its labels and marks are. */
+    rampThickness?: number;
     /** How much further a top key stands above the plot to clear a flat y title, in px. */
     titleClearance?: number;
     /** What each drawn key needs laid out, by key. */
@@ -181,6 +184,10 @@ export interface LegendInputs {
     rows: any[];
     layout: LayoutResult;
     plot: { width: number; height: number };
+    /** The size the spec asks for, which a colour ramp's thickness follows; none is the default room. */
+    canvas?: { width: number; height: number };
+    /** The size the house lays its charts out at, the room a ramp keeps its full thickness in; Flint's default where unstated. */
+    roomy?: { width: number; height: number };
     composite: boolean;
     /** The width the views of a chart of several views span, which its keys are planned along. */
     viewsWidth?: number;
@@ -239,6 +246,20 @@ function foldedColour(inputs: LegendInputs, field: string, design: DesignDecisio
     return { kept: ordered.slice(0, k), others };
 }
 
+/** A colour ramp's thickness in px: Vega's own on a canvas with the default room, and the least it slims to. */
+const RAMP_THICKNESS = { full: 16, min: 8 } as const;
+
+/**
+ * How much of the room a chart is designed for (the house's own size, else Flint's 400 × 320) a canvas
+ * has, on its tighter side: 1 at that size or more, or where the spec asks for none.
+ */
+export function canvasSqueeze(
+    canvas: { width: number; height: number } | undefined,
+    roomy: { width: number; height: number } = DEFAULT_BASE_SIZE,
+): number {
+    return canvas ? Math.min(1, canvas.width / roomy.width, canvas.height / roomy.height) : 1;
+}
+
 /**
  * The keys a chart draws. Without a theme every key the structure states is drawn as it is. A
  * theme that names series some other way (or not at all) drops the keys that name series and keeps
@@ -246,7 +267,9 @@ function foldedColour(inputs: LegendInputs, field: string, design: DesignDecisio
  * those titles, while a key to values keeps its title, a number naming nothing until it says what
  * it counts, and every key keeps its title where a chart draws several. A size key is sampled at round values, one for every 80 px of the edge it stands on,
  * from three to five, never more than the house allows; an opacity key only where the house says how many. A horizontal ramp the house does not size runs 45% of the
- * block, between 80 and 200 px, and a top key clears a flat y title by its line and 12 px.
+ * block, between 80 and 200 px, and a top key clears a flat y title by its line and 12 px. A colour
+ * ramp keeps Vega's 16 px on a canvas with the house's room (else Flint's 400 × 320) or more, and on a
+ * smaller one slims by the share of that room it has, to 8 px at the least.
  */
 export function planLegend(inputs: LegendInputs): LegendPlan {
     const { placement, structure, design, rows, layout, plot, composite, flatYTitle } = inputs;
@@ -296,6 +319,14 @@ export function planLegend(inputs: LegendInputs): LegendPlan {
         const block = Math.round((inputs.viewsWidth ?? (bands ? layout.xStep * bands : plot.width)) * 1.07);
         if (block) gradient = { length: Math.round(Math.min(200, Math.max(80, block * 0.45))), block };
     }
+    // A ramp keeps Vega's 16 px on a canvas with Flint's default room; on a smaller one it slims as the
+    // canvas does, so a squeezed chart's key does not outweigh its marks. The canvas, unlike the plot,
+    // holds still while the plan lays the chart out again around its keys.
+    const ramped = Boolean(design) && keys.some((key) => key.show && key.valueKey && INK_CHANNELS.has(key.channel) && !key.entries);
+    const squeeze = canvasSqueeze(inputs.canvas, inputs.roomy);
+    const rampThickness = ramped && squeeze < 1
+        ? Math.round(Math.max(RAMP_THICKNESS.min, RAMP_THICKNESS.full * squeeze))
+        : undefined;
     // Names drawn at the ends of lines take the right margin, so the other keys move below the plot.
     const secondaryEdge = design && design.legend.show && (placement.placement === 'seriesEnd' || placement.placement === 'inline')
         && !structure.marks.includes('text') && structure.marks.some((mark) => mark === 'line' || mark === 'trail')
@@ -311,6 +342,7 @@ export function planLegend(inputs: LegendInputs): LegendPlan {
         keys,
         untitled,
         ...(gradient ? { gradient } : {}),
+        ...(rampThickness !== undefined && rampThickness < RAMP_THICKNESS.full ? { rampThickness } : {}),
         ...(titleClearance !== undefined ? { titleClearance } : {}),
         ...(secondaryEdge ? { secondaryEdge } : {}),
     };
@@ -390,6 +422,7 @@ export function keysToLayout(plan: LegendPlan, inputs: KeyLayoutInputs): Array<K
             ...(symbolSize !== undefined ? { symbolSize } : {}),
             padding: corner ? 4 : 0,
             ...(plan.gradient ? { gradientLength: plan.gradient.length } : l?.gradientLength ? { gradientLength: l.gradientLength } : {}),
+            ...(plan.rampThickness !== undefined ? { gradientThickness: plan.rampThickness } : {}),
         };
         // A key to values with none sampled draws its scale's ticks, about five, as the backend does:
         // those are what it lists, not the rows' values.
@@ -401,6 +434,7 @@ export function keysToLayout(plan: LegendPlan, inputs: KeyLayoutInputs): Array<K
         const ranked = styled ? inputs.placements?.filter((placement) => SIDES.has(placement)) : undefined;
         return {
             gradient,
+            ...(stepped && !discrete ? { bar: true } : {}),
             ...(key.entries ? { labels: key.entries } : {}),
             ...(!key.entries && (key.samples || key.field)
                 ? { valueLabels: key.sampleLabels ?? key.samples?.map(String) ?? drawnTicks ?? [...new Set(inputs.rows.map((row) => String(row?.[key.field!])))] } : {}),

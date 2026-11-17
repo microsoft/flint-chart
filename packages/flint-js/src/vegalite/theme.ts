@@ -912,7 +912,9 @@ function fitTitle(spec: any, d: DesignDecisions, table: any[], say: ReportDepart
         const size = axis.labelFontSize ?? d.axes.y?.label.fontSize ?? 10;
         const limit = axis.labelLimit ?? 180;
         let labelWidth = 0;
-        const values = axis.values ?? encoding.scale?.domain ?? table.map(row => row[encoding.field]);
+        // A field a transform derives is in no row; its stated order names what the axis prints.
+        const derived = !table.some(row => row?.[encoding.field] != null) && Array.isArray(encoding.sort) ? encoding.sort : undefined;
+        const values = axis.values ?? encoding.scale?.domain ?? derived ?? table.map(row => row[encoding.field]);
         if (!Array.isArray(values)) return;
         for (const value of values) {
             if (value == null) continue;
@@ -4302,6 +4304,7 @@ function applyLegend(
     if (gradient) {
         config.legend.gradientLength = gradient.length;
     }
+    if (planned.rampThickness !== undefined) config.legend.gradientThickness = planned.rampThickness;
     fitBinnedKeyLength(spec, config, table, gradient?.block);
     // A key the plan leaves untitled drops its title — a series key whose labels name themselves, a
     // key the chart makes itself — even where its template wrote one; a key to values keeps its own,

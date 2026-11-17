@@ -60,29 +60,38 @@ export function gapEase(plotSide: number | undefined): number {
     return EASE.least + (EASE.most - EASE.least) * t * t * (3 - 2 * t);
 }
 
-/** A gap in px: so many em of the labels, eased with the plot. */
-export function gapPx(em: number, labelFontSize: number, plotSide?: number, floor = GAP_FLOOR): number {
-    return Math.max(floor, Math.round(em * labelFontSize * gapEase(plotSide)));
+/** A gap in px: so many em of the labels, eased with the plot, and scaled with a squeezed canvas (`scale`, 1 at the house's room or more). */
+export function gapPx(em: number, labelFontSize: number, plotSide?: number, floor = GAP_FLOOR, scale = 1): number {
+    return Math.max(floor, Math.round(em * labelFontSize * gapEase(plotSide) * scale));
+}
+
+/**
+ * The title block's gap to what stands under it where no keys stand between: the house's gap, at
+ * its room or more as set, on a smaller canvas by the share of the room it has, never under the gap
+ * anything keeps to the plot.
+ */
+export function titleGapPx(gap: number, scale = 1): number {
+    return scale >= 1 ? gap : Math.max(Math.min(gap, PLOT_GAP_FLOOR), Math.round(gap * scale));
 }
 
 /** The gap between keys one above another. */
-export function keyStackGap(labelFontSize: number, plotSide?: number, spec?: KeyGapSpec): number {
-    return gapPx(spec?.stack ?? KEY_STACK_GAP_EM, labelFontSize, plotSide);
+export function keyStackGap(labelFontSize: number, plotSide?: number, spec?: KeyGapSpec, scale = 1): number {
+    return gapPx(spec?.stack ?? KEY_STACK_GAP_EM, labelFontSize, plotSide, GAP_FLOOR, scale);
 }
 
 /** The gap between keys side by side. */
-export function keyRowGap(labelFontSize: number, plotSide?: number, spec?: KeyGapSpec): number {
-    return gapPx(spec?.row ?? KEY_ROW_GAP_EM, labelFontSize, plotSide);
+export function keyRowGap(labelFontSize: number, plotSide?: number, spec?: KeyGapSpec, scale = 1): number {
+    return gapPx(spec?.row ?? KEY_ROW_GAP_EM, labelFontSize, plotSide, GAP_FLOOR, scale);
 }
 
 /** The gap from a key to the plot. */
-export function keyGap(labelFontSize: number, density: Density = 'normal', plotSide?: number, spec?: KeyGapSpec): number {
-    return gapPx(spec?.plot ?? KEY_GAP_EM[density], labelFontSize, plotSide, spec?.plot !== undefined ? GAP_FLOOR : PLOT_GAP_FLOOR);
+export function keyGap(labelFontSize: number, density: Density = 'normal', plotSide?: number, spec?: KeyGapSpec, scale = 1): number {
+    return gapPx(spec?.plot ?? KEY_GAP_EM[density], labelFontSize, plotSide, spec?.plot !== undefined ? GAP_FLOOR : PLOT_GAP_FLOOR, scale);
 }
 
 /** The gap between the title block and keys standing under it. */
-export function headerInnerGap(labelFontSize: number, plotSide?: number, spec?: KeyGapSpec): number {
-    return gapPx(spec?.title ?? HEADER_TITLE_GAP_EM, labelFontSize, plotSide, spec?.title !== undefined ? GAP_FLOOR : TITLE_GAP_FLOOR);
+export function headerInnerGap(labelFontSize: number, plotSide?: number, spec?: KeyGapSpec, scale = 1): number {
+    return gapPx(spec?.title ?? HEADER_TITLE_GAP_EM, labelFontSize, plotSide, spec?.title !== undefined ? GAP_FLOOR : TITLE_GAP_FLOOR, scale);
 }
 
 /**
@@ -104,15 +113,18 @@ export function keyGaps(input: {
     topKeys: boolean;
     /** The title's gap to what is under it, as the theme sets it. */
     titleGap: number;
+    /** The share of the house's room a squeezed canvas has, which every gap is scaled by; 1 leaves them as set. */
+    scale?: number;
     atLeast?: Partial<Record<string, number>>;
 }): { offsets: Record<'left' | 'right' | 'top' | 'bottom', number>; headerGap?: number } {
-    const gap = keyGap(input.labelFontSize, input.density, input.plotSide, input.spec);
+    const scale = input.scale ?? 1;
+    const gap = keyGap(input.labelFontSize, input.density, input.plotSide, input.spec, scale);
     const header = input.titled && input.topKeys;
-    const headerGap = header ? headerInnerGap(input.labelFontSize, input.plotSide, input.spec) : undefined;
+    const headerGap = header ? headerInnerGap(input.labelFontSize, input.plotSide, input.spec, scale) : undefined;
     const below = headerGap === undefined ? gap
         : input.spec?.plot !== undefined ? gap
             : Math.max(PLOT_GAP_FLOOR, Math.round(Math.min(HEADER_PLOT_GAP.most * headerGap,
-                Math.max(HEADER_PLOT_GAP.least * headerGap, input.titleGap * gapEase(input.plotSide)))));
+                Math.max(HEADER_PLOT_GAP.least * headerGap, input.titleGap * gapEase(input.plotSide) * scale))));
     const offsets = { left: gap, right: gap, bottom: gap, top: below };
     for (const [edge, least] of Object.entries(input.atLeast ?? {})) {
         if (least !== undefined && edge in offsets) offsets[edge as keyof typeof offsets] = Math.max(offsets[edge as keyof typeof offsets], least);
