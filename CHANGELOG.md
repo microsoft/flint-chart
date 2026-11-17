@@ -29,6 +29,11 @@ Released together for `flint-chart`, `flint-chart-mcp`, and the Copilot Canvas p
   Deno, or in Node. The lazy imports named the renderer without its extension, which only a bundler
   (or unpkg's redirect) resolved, so the chart never drew there. ES modules now load `.js` files and
   CommonJS loads `.cjs` files.
+- `validate_chart` returns its result as JSON again on every backend
+  ([#179](https://github.com/microsoft/flint-chart/issues/179)). 1.1.0 returned only a prose report
+  for `vegalite`, while the other backends returned JSON, which broke hosts that parse the result. The
+  JSON now comes first, and also in `structuredContent`; for `vegalite` the report follows as a second
+  text block.
 
 ### Security
 

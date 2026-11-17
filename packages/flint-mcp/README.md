@@ -25,7 +25,7 @@ renders **locally**.
 |---|---|---|
 | `render_chart` | spec + `backend` + `format` (`png`/`svg`) + `scale?` | inline PNG image or SVG text |
 | `compile_chart` | spec + `backend` | backend-native spec JSON + warnings |
-| `validate_chart` | spec + `backend` + optional `updates` | validity, warnings/errors, computed size; a malformed update layer is an error |
+| `validate_chart` | spec + `backend` + optional `updates` | validity, warnings/errors, computed size as JSON (also in `structuredContent`); on Vega-Lite, a report of what to fix follows; a malformed update layer is an error |
 | `list_chart_types` | `backend?` | chart types, encoding channels, and supported interaction presets per backend |
 | `list_interaction_presets` | `chartType?`, `type?` | interaction presets: what each does, what it needs from the chart, reset gestures, and every option it accepts |
 | `list_themes` | optional preset `id` | shipped visual themes, plus guidance for a selected theme |
