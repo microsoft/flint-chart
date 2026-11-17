@@ -23,6 +23,10 @@ app. Flint supports **52 chart types across 5 rendering backends**
 [Chart.js](https://www.chartjs.org/), [Plotly](https://plotly.com/javascript/) and
 native Excel charts), with **14 preset themes** and **23 interaction presets**.
 
+<p align="center">
+  <a href="https://microsoft.github.io/flint-chart/#/gallery"><img src="docs/figs/flint-chart-wall.png" alt="A wall of charts drawn by Flint from real data, each in a different preset theme: a globe of the Ring of Fire, a route map of Magellan's voyage, a US choropleth, ridgelines, a calendar heatmap, a waterfall, violins, a radar, a bump chart, a population pyramid, and everyday bar, line, scatter, area and donut charts." width="100%"></a>
+</p>
+
 https://github.com/user-attachments/assets/c1cda0fa-3ea7-41af-b3fd-a127bc83d641
 
 <p align="center">
