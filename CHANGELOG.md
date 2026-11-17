@@ -11,6 +11,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-11-16
+
+Released together for `flint-chart`, `flint-chart-mcp`, and the Copilot Canvas plugin.
+
+### Changed
+
+- `flint-chart` no longer ships source maps. The package downloads at 15.6 MB instead of 48.6 MB
+  (64 MB unpacked instead of 220 MB), which brings it back under jsDelivr's 150 MB limit: jsDelivr
+  could not serve 1.1.0. Nothing a chart draws changes; a stack trace into Flint now points into
+  its bundles, which are not minified, instead of its TypeScript sources.
+- On a canvas smaller than its theme's own size (a board cell, a thumbnail), a Vega-Lite chart's key
+  and header come in with it. A colour ramp slims from 16 px to as little as 8, the gaps between the
+  title, the keys and the plot shrink by the same share of the room, and a key's text is never set
+  larger than the axis labels beside it, so a small chart no longer pairs 8 px row names with an 11 px
+  key. At the theme's size or larger, and where no size is given, nothing changes.
+- A stepped colour key (bins of one quantity, as Datawrapper draws them) above the plot is measured as
+  the one bar it is drawn as, so its title stays beside it instead of moving above it, and the key may
+  run over the row names' gutter, as the title does.
+
+### Fixed
+
+- A live chart (`mountChart`, or a `flint-chart/react` component) loads its backend's renderer
+  without a bundler: from a CDN such as jsDelivr, from the package's files served as they are, in
+  Deno, or in Node. The lazy imports named the renderer without its extension, which only a bundler
+  (or unpkg's redirect) resolved, so the chart never drew there. ES modules now load `.js` files and
+  CommonJS loads `.cjs` files.
+- `validate_chart` returns its result as JSON again on every backend
+  ([#179](https://github.com/microsoft/flint-chart/issues/179)). 1.1.0 returned only a prose report
+  for `vegalite`, while the other backends returned JSON, which broke hosts that parse the result. The
+  JSON now comes first, and also in `structuredContent`; for `vegalite` the report follows as a second
+  text block.
+- A calendar heatmap's title is broken where the chart is drawn as the plan laid it out. Its weekday
+  names, which the chart derives, were measured as empty when the drawn title was fitted, so a deck
+  could wrap there and not in the plan.
+
+### Security
+
+- `flint-chart` requires `echarts` 6.1 or later and `vega` 6.2 or later, which fix cross-site
+  scripting flaws (it accepted ECharts 5 and Vega 5 before). An app with ECharts 5 or Vega 5 of its
+  own keeps it; Flint installs its own copy beside it.
+- `flint-chart-mcp` moves to zod 4 (from 3), which fixes a memory exhaustion on oversized input, and
+  takes patched versions of the libraries its HTTP server runs on (hono, @hono/node-server,
+  body-parser, qs, fast-uri). Its tools' input schemas keep their shape, and `show` still defines
+  each chart field once; a rejected argument now reads, e.g., "chart_spec.chartType: Invalid input:
+  expected string, received undefined" instead of "Required".
+
 ## [1.1.0] - 2026-11-15
 
 Released together for `flint-chart`, `flint-chart-mcp`, and the Copilot Canvas plugin.
@@ -1029,7 +1075,8 @@ Released together for `flint-chart`, `flint-chart-mcp`, and the Copilot Canvas p
 - Treated only lowercase `start` and `end` Waterfall Type values as total
   anchors in Vega-Lite; other values now remain floating deltas colored by sign.
 
-[Unreleased]: https://github.com/microsoft/flint-chart/compare/1.1...HEAD
+[Unreleased]: https://github.com/microsoft/flint-chart/compare/1.1.1...HEAD
+[1.1.1]: https://github.com/microsoft/flint-chart/compare/1.1...1.1.1
 [1.1.0]: https://github.com/microsoft/flint-chart/compare/f098e497...1.1
 [1.0.1]: https://github.com/microsoft/flint-chart/compare/1.0...f098e497
 [1.0.0]: https://github.com/microsoft/flint-chart/compare/0.5.1...1.0

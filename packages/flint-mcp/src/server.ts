@@ -161,6 +161,11 @@ function jsonResult(value: unknown): JsonContent {
   return { content: [{ type: 'text', text: JSON.stringify(value, null, 2) }] };
 }
 
+/** A result as plain JSON, for a tool's structuredContent. */
+function toStructured(value: unknown): Record<string, unknown> {
+  return JSON.parse(JSON.stringify(value));
+}
+
 function errorResult(err: unknown): JsonContent {
   const message = err instanceof Error ? err.message : String(err);
   return { content: [{ type: 'text', text: `Error: ${message}` }], isError: true };
@@ -352,11 +357,12 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
     {
       title: 'Validate chart spec',
       description:
-        'Validate a Flint chart spec for a backend without rendering. For vegalite, the report lists only ' +
-        'what to act on: errors, warnings, interaction_spec entries the chart drops, and update ops that ' +
-        'will not apply (✗), the same report show returns; "Nothing to fix" when it is clean. Other ' +
-        'backends return the validation result as JSON. For a host with no card UI; with a card, call show ' +
-        'directly, which runs the same check. Nothing is kept between calls.',
+        'Validate a Flint chart spec for a backend without rendering. Every backend returns the validation ' +
+        'result as JSON (also in structuredContent). For vegalite, a second block follows: the report of ' +
+        'what to act on (errors, warnings, interaction_spec entries the chart drops, and update ops that ' +
+        'will not apply, ✗), the same report show returns; "Nothing to fix" when it is clean. For a host ' +
+        'with no card UI; with a card, call show directly, which runs the same check. Nothing is kept ' +
+        'between calls.',
       inputSchema: { ...referencedShape({ ...assemblyInputShape, ...updatesShape }, 'chart'), backend: backendEnum },
     },
     async (args: any) => {
@@ -367,10 +373,17 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
           roots: await clientRoots(),
           updates: args.updates,
         });
-        if (args.backend !== 'vegalite') return jsonResult(result);
+        if (args.backend !== 'vegalite') return { ...jsonResult(result), structuredContent: toStructured(result) };
         const findings = result.valid ? chartFindings(args.updates, result) : result.errors.map((error) => `✗ ${error.message}`);
         const chart = { id: 'chart', kind: 'chart' as const, charts: [] };
-        return { content: [{ type: 'text' as const, text: viewReport(chart, [{ id: 'chart', drawn: result.valid, findings }]) }] };
+        // The JSON result comes first on every backend, for hosts that parse it; the report follows for the agent.
+        return {
+          content: [
+            ...jsonResult(result).content,
+            { type: 'text' as const, text: viewReport(chart, [{ id: 'chart', drawn: result.valid, findings }]) },
+          ],
+          structuredContent: toStructured(result),
+        };
       } catch (err) {
         return errorResult(err);
       }

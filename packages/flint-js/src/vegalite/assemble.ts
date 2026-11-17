@@ -344,7 +344,10 @@ function vegaLitePlanContext(input: ChartAssemblyInput, prepared: VegaLitePrepar
         semanticTypes,
         options,
         chartType,
-        size: { baseSize, canvasSize: sizeCeiling },
+        size: {
+            baseSize, canvasSize: sizeCeiling,
+            ...(input.chart_spec.canvasSize ?? input.chart_spec.baseSize ? { requested: input.chart_spec.canvasSize ?? input.chart_spec.baseSize } : {}),
+        },
         title: authoredTitle(input),
         ...(input.chart_spec.label?.trim() ? { label: input.chart_spec.label.trim() } : {}),
         ...(sourceOf(input.chart_spec.source) ? { source: sourceOf(input.chart_spec.source) } : {}),

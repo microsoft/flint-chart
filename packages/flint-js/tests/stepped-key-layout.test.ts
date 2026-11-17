@@ -85,3 +85,59 @@ describe('a stepped colour key', () => {
         expect(spec.config.legend.gradientLength).toBeGreaterThan(200);
     });
 });
+
+/**
+ * A colour ramp keeps Vega's 16 px on a canvas with the default room, and slims only on a smaller,
+ * squeezed one, so its key does not outweigh the marks.
+ */
+describe('colour ramp thickness follows the plot', () => {
+    const CITIES = ['Singapore', 'Delhi', 'Cairo', 'Sydney', 'Seattle', 'Moscow'];
+    const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const heatmap = (width: number, height: number) => assembleVegaLite({
+        data: { values: CITIES.flatMap((City, c) => MONTHS.map((Month, m) => ({ City, Month, Temp: 5 + ((c * 7 + m * 3) % 25) }))) },
+        semantic_types: { City: 'Category', Month: 'Category', Temp: 'Temperature' },
+        chart_spec: {
+            chartType: 'Heatmap', title: 'Monthly temperature by city', encodings: { x: 'Month', y: 'City', color: 'Temp' },
+            baseSize: { width, height }, canvasSize: { width, height },
+        },
+        theme_spec: 'swiss',
+    } as any) as any;
+
+    it('keeps the default ramp at the house\'s own size and slims it on a smaller canvas', () => {
+        // Swiss lays its charts out at 420 × 320.
+        expect(heatmap(420, 320).config?.legend?.gradientThickness).toBeUndefined();
+        expect(heatmap(1200, 900).config?.legend?.gradientThickness).toBeUndefined();
+        const small = heatmap(260, 180).config?.legend?.gradientThickness;
+        expect(small).toBeGreaterThanOrEqual(8);
+        expect(small).toBeLessThan(16);
+    });
+});
+
+/**
+ * A stepped key above a small chart: its bins stand as one bar, so its title stays beside it rather
+ * than over it, and its text is set no larger than the axis labels the crowded rows came down to.
+ */
+describe('a stepped key on a squeezed chart', () => {
+    const PRICES: Array<[string, number]> = [
+        ['Switzerland', 8.1], ['Norway', 6.9], ['United States', 5.7], ['Euro area', 5.5], ['UK', 4.9], ['Brazil', 4.5],
+        ['Mexico', 3.9], ['China', 3.5], ['Japan', 3.2], ['Egypt', 2.7], ['South Africa', 2.6], ['India', 2.5],
+    ];
+    const bigMac = (width = 360, height = 240) => assembleVegaLite({
+        data: { values: PRICES.map(([Country, Price]) => ({ Country, Price, 'vs US price': Math.round((Price / 5.7 - 1) * 100) / 100 })) },
+        semantic_types: { Country: 'Country', Price: 'Quantity', 'vs US price': 'PercentageChange' },
+        chart_spec: {
+            chartType: 'Bar Chart', title: 'The Big Mac index, 2023', encodings: { x: 'Price', y: 'Country', color: 'vs US price' },
+            baseSize: { width, height }, canvasSize: { width, height },
+        },
+        theme_spec: 'datawrapper',
+    } as any) as any;
+
+    it('keeps the title beside the bar and the key text at the axis labels\' size', () => {
+        const spec = bigMac();
+        const legend = JSON.stringify(spec).match(/"legend":\{"format"[^}]*\}/)?.[0] ?? '';
+        expect(legend).toContain('"titleOrient":"left"');
+        const axis = spec.config.axisY.labelFontSize;
+        expect(spec.config.legend.labelFontSize).toBeLessThanOrEqual(axis);
+        expect(spec.config.legend.titleFontSize).toBeLessThanOrEqual(spec.config.title.fontSize);
+    });
+});

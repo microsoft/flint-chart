@@ -3,6 +3,22 @@ import { defineConfig, type Options } from 'tsup';
 /** The boundaries the renderers import on a map's first draw: one ES module each, split off by the host's bundler. */
 const LAZY_TOPOLOGIES = ['world-bank-coarse', 'world-bank-medium', 'world-110m', 'states-10m', 'counties-albers-10m'];
 
+/** The entries the live-chart and React entries load on demand, each kept a file of its own. */
+const LAZY_IMPORT = /import\((['"])(\.\.\/(?:(?:vegalite|echarts|chartjs|plotly)\/interactive|validate\/links))\1\)/g;
+
+// Node, Deno and a browser reading the files as published resolve no import without its extension,
+// so each format names its own sibling: `.js` from the ES modules, `.cjs` from the CommonJS ones.
+// (A tsup plugin, not an esbuild one: with treeshake on, esbuild writes every format as ES modules.)
+// The boundaries keep the package's own name (src/vegalite/boundary-loader.ts): a host aliases it to
+// leave them out of its bundle, as flint-mcp's one-file view does.
+const lazyEntries: NonNullable<Options['plugins']>[number] = {
+  name: 'lazy-entries',
+  renderChunk(code) {
+    const extension = this.format === 'cjs' ? '.cjs' : '.js';
+    return { code: code.replace(LAZY_IMPORT, (_, quote, path) => `import(${quote}${path}${extension}${quote})`) };
+  },
+};
+
 const library: Options = {
   entry: {
     index: 'src/index.ts',
@@ -36,7 +52,9 @@ const library: Options = {
   },
   format: ['esm', 'cjs'],
   dts: true,
-  sourcemap: true,
+  // No source maps: they made up three quarters of the package (157 of 220 MB) and put it past
+  // jsDelivr's 150 MB limit. The bundles are not minified, so a stack trace into them still reads.
+  sourcemap: false,
   clean: true,
   splitting: false,
   treeshake: true,
@@ -48,6 +66,7 @@ const library: Options = {
     // The bundled boundaries, imported by the package's own name (see src/vegalite/boundary-loader.ts).
     /^flint-chart\/geo\/lazy\//,
   ],
+  plugins: [lazyEntries],
 };
 
 const lazyGeo: Options = {

@@ -17,12 +17,12 @@ import { niceDomain, spacingRuler, type AxisRuler } from './ruler';
 import { planFurniture, rulerOverhang, type FurniturePlan } from './furniture-plan';
 import { categoryOrder, encodedType, sizeRange, type CategoryOrder } from './channel-decisions';
 import { planLegendPlacement, type RunValueScale } from './series-end';
-import { keysToLayout, planLegend, type LegendPlan } from './legend-plan';
+import { canvasSqueeze, keysToLayout, planLegend, type LegendPlan } from './legend-plan';
 import { familyMeasure, hostTextMeasurer, measuresDrawnFace, tableTextMeasurer } from './text-width';
 import { valueLabelMeasurer } from './value-label-measure';
 import { planKeyLayout, type KeyToLayout, type TextMeasurer } from './legend-layout';
 import { fitAxisTitle, type AxisTitleFit } from './axis-title-fit';
-import { keyGaps } from './header-gaps';
+import { keyGaps, titleGapPx } from './header-gaps';
 import { FALLBACK_WIDEN, naturalAspectRange, widenRange } from './natural-shape';
 import { encodingTitle } from './structure';
 import { format as formatNumber } from 'd3-format';
@@ -61,6 +61,8 @@ export interface LayoutSize {
     baseSize: { width: number; height: number };
     /** The hard ceiling, when the spec or the theme sets one. */
     canvasSize?: { width: number; height: number };
+    /** The size the spec asks for (its `canvasSize`, else its `baseSize`), before a theme's frame takes its room. */
+    requested?: { width: number; height: number };
 }
 
 export interface LayoutPlan {
@@ -986,6 +988,7 @@ function withTreatment(context: PlanContext, treatment: CanvasTreatment, box: { 
             height: Math.min(canvas.height, Math.round(base.height * scale)),
         },
         canvasSize: canvas,
+        ...(context.size.requested ? { requested: context.size.requested } : {}),
     } };
 }
 
@@ -2014,6 +2017,26 @@ function planAroundPlot(prepared: PreparedPlan, reserve: FurnitureReserve): Layo
         const pin = { ...declaration.axisLabels?.[channel], ...context.pins?.axisLabels?.[channel] };
         if (Object.keys(pin).length) axisLabels[channel] = pinAxisLabels(axisLabels[channel], pin);
     }
+    // The key's text is one tier with the axis labels: never set larger than they are drawn, so a
+    // chart whose names shrink for crowded bands or a small canvas keeps no larger key beside them.
+    // Its title gives up the same share, never below the labels.
+    const axisText = Math.min(...(['x', 'y'] as const).filter((channel) => present[channel]).map((channel) => axisLabels[channel].fontSize));
+    const keyText = design.legend.label.fontSize;
+    if (theme && Number.isFinite(axisText) && keyText !== undefined && keyText > axisText) {
+        const share = axisText / keyText;
+        const title = design.legend.titleText.fontSize;
+        design.legend = {
+            ...design.legend,
+            label: { ...design.legend.label, fontSize: axisText },
+            titleText: { ...design.legend.titleText, ...(title !== undefined ? { fontSize: Math.max(axisText, Math.round(title * share * 2) / 2) } : {}) },
+        };
+    }
+    // The header's gaps keep the house's spacing at its room or more; on a smaller canvas each, the
+    // title's to what is under it and the keys' (keyGaps, planKeyLayout), comes in by the share of
+    // that room the canvas has — one scale for every gap, as the key's ramp slims.
+    const houseTitleGap = design.title.offset;
+    const gapScale = theme ? canvasSqueeze(size.requested, (theme as ThemeSpec).compileDefaults?.baseSize) : 1;
+    if (gapScale < 1) design.title = { ...design.title, offset: titleGapPx(houseTitleGap, gapScale) };
     for (const channel of ['x', 'y'] as const) {
         if (!present[channel]) continue;
         const sizing = channel === 'x' ? layoutResult.xLabel : layoutResult.yLabel;
@@ -2237,6 +2260,8 @@ function planAroundPlot(prepared: PreparedPlan, reserve: FurnitureReserve): Layo
         }),
         structure, design: theme ? design : undefined, channelSemantics, orders, rows: values,
         layout: layoutResult, plot, composite, flatYTitle: (furniture.yTitle?.top ?? 0) > 0, axisTitles: titles,
+        canvas: size.requested,
+        ...(theme && (theme as ThemeSpec).compileDefaults?.baseSize ? { roomy: (theme as ThemeSpec).compileDefaults!.baseSize } : {}),
         ...(furniture.yTitle ? { flatYTitleLift: furniture.yTitle.lift } : {}),
         ...(extent ? { viewsWidth: extent.width } : {}),
     });
@@ -2306,6 +2331,7 @@ function planAroundPlot(prepared: PreparedPlan, reserve: FurnitureReserve): Layo
         });
         legend.preferences = { ...legend.preferences, besidePlot: { start: (parts.yLabels ?? 0) + (parts.yTitle ?? 0), end: 0 } };
     }
+    if (gapScale < 1) legend.preferences = { ...legend.preferences, gapScale };
     if (extent || !template.composite) {
         legend.layout = planKeyLayout(
             legend.keyInputs,
@@ -2325,7 +2351,8 @@ function planAroundPlot(prepared: PreparedPlan, reserve: FurnitureReserve): Layo
             spec: legend.preferences?.gaps,
             titled,
             topKeys: legend.layout.footprint.some((edge) => edge.orient === 'top'),
-            titleGap: theme ? design.title.offset : profile.spacing.titleOffset,
+            titleGap: theme ? houseTitleGap : profile.spacing.titleOffset,
+            scale: gapScale,
             // A top key standing clear of a flat y title stays where it stood.
             ...(legend.titleClearance !== undefined ? { atLeast: { top: profile.spacing.keyOffset + legend.titleClearance } } : {}),
         });

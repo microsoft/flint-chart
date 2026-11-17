@@ -30,6 +30,7 @@ function keyLegend(legend: any, layout: KeyLayout, labels: string[] | undefined,
         if (out.titleOrient === undefined) out.titleOrient = 'top';
     }
     if (layout.gradientLength !== undefined) out.gradientLength = layout.gradientLength;
+    if (layout.gradientThickness !== undefined) out.gradientThickness = layout.gradientThickness;
     if (layout.inlineTitle) {
         out.titleOrient = 'left';
         if (layout.titlePadding !== undefined && out.titlePadding === undefined) out.titlePadding = layout.titlePadding;
@@ -234,6 +235,9 @@ function keyFromSpec(spec: any, channel: string, encoding: any, table: any[], la
     const font = spec.config?.font ?? 'sans-serif';
     return {
         gradient: numericGradient,
+        // A stepped scale's bins are drawn side by side as one bar.
+        ...(!discrete && ['color', 'fill', 'stroke', 'opacity'].includes(channel) && settings.type !== 'symbol'
+            && ['quantize', 'quantile', 'threshold'].includes(encoding.scale?.type) ? { bar: true } : {}),
         ...(labels ? { labels } : { valueLabels: (values ?? tableValues).map((value: any) => String(value)) }),
         count: Array.isArray(values) ? values.length : discrete ? new Set(tableValues).size : 5,
         title: typeof title === 'string' ? title : null,

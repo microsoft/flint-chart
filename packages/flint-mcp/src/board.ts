@@ -82,9 +82,8 @@ export function boardChartShape(assemblyInputShape: Record<string, z.ZodTypeAny>
   return z.object({
     id: z.string().describe('Names the chart on the board; link_spec, grid and the report use it.'),
     ...assemblyInputShape,
-    updates: updatesShape.updates.describe(
-      'ChartUpdate layers the chart shows: state, where interaction_spec is behaviour.',
-    ),
+    // The chart's own schema, not a re-described copy: zod would write a copy out in full again.
+    ...updatesShape,
     layout: layoutShape.optional(),
     ...viewShape,
   });

@@ -27,6 +27,7 @@ const pages: NavEntry[] = [
       { to: 'labs', label: 'Figures: colour, bands, dodge' },
       { heading: 'Fit and overflow' },
       { to: 'canvas-fit', label: 'Canvas fit' },
+      { to: 'small-canvas', label: 'Small canvases: keys and gaps' },
       { to: 'viewport', label: 'Viewport and clipping' },
       { heading: 'Axes and titles' },
       { to: 'axis-label', label: 'Axis labels' },
@@ -82,6 +83,7 @@ const pages: NavEntry[] = [
       { to: 'release-examples/1.1', label: '1.1' },
       { to: 'release-examples/1.0.0', label: '1.0.0' },
       { to: 'fun/greek', label: 'Greek myths on maps' },
+      { to: 'release-examples/chart-wall', label: 'Chart wall (README)' },
     ],
   },
   {

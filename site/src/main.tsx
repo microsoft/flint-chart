@@ -25,6 +25,7 @@ import { ThemeLab } from './playground/ThemeLab';
 import { NewThemeTest } from './playground/new-theme-test/NewThemeTest';
 import { ThemeImprovement } from './playground/theme-improvement/ThemeImprovement';
 import { CanvasSqueeze } from './playground/canvas-squeeze/CanvasSqueeze';
+import { SmallCanvasLab } from './playground/SmallCanvasLab';
 import { MapsLab } from './playground/MapsLab';
 import { HeatmapLab } from './playground/HeatmapLab';
 import { ColorLab } from './playground/ColorLab';
@@ -39,6 +40,7 @@ import { CalendarAxisLab } from './playground/CalendarAxisLab';
 import { CategoricalTemporalLab } from './playground/CategoricalTemporalLab';
 import { ReleaseExamples100 } from './playground/release-examples/1.0.0';
 import { ReleaseExamples11 } from './playground/release-examples/1.1';
+import { ReleaseChartWall } from './playground/release-examples/chart-wall';
 import { GreekStories } from './playground/fun/GreekStories';
 import { OverflowViewportLab } from './playground/OverflowViewportLab';
 import { ZoomClippingLab } from './playground/ZoomClippingLab';
@@ -135,6 +137,7 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="theme-lab-real" element={<Navigate to="../theme-labs" replace />} />
           <Route path="new-theme-test" element={<NewThemeTest />} />
           <Route path="theme-improvement" element={<ThemeImprovement />} />
+          <Route path="small-canvas" element={<SmallCanvasLab />} />
           <Route path="canvas-fit" element={<TabbedLab tabs={[
             { id: 'squeeze', label: 'Canvas squeeze', element: <CanvasSqueeze /> },
             { id: 'bands', label: 'Band stretching', element: <BandStretchingLab /> },
@@ -166,6 +169,7 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="release-examples">
             <Route index element={<Navigate to="1.1" replace />} />
             <Route path="1.1" element={<ReleaseExamples11 />} />
+            <Route path="chart-wall" element={<ReleaseChartWall />} />
             <Route path="1.0.0" element={<ReleaseExamples100 />} />
             <Route path="application-demos" element={<Navigate to={localePath('/interactions/advanced', locale)} replace />} />
           </Route>
