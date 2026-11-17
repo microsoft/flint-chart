@@ -113,17 +113,22 @@ export const chartSpecSchema = z
 /**
  * The five fields of a {@link ChartAssemblyInput}, expressed as a flat MCP tool
  * parameter shape so each part is self-documenting in the JSON schema.
+ *
+ * `show` takes these fields for a chart and again for each chart on a board. zod writes a schema
+ * out in full at every use unless it carries an id, so each large one has one: the tool's JSON
+ * Schema defines it once and refers to it.
  */
 export function buildAssemblyInputShape(disableFileReference = false) {
   return {
-    data: makeDataSchema(disableFileReference),
+    data: makeDataSchema(disableFileReference).meta({ id: 'ChartData' }),
     semantic_types: z
       .record(z.string(), z.any())
       .optional()
       .describe(
         'Field name → semantic type, e.g. { revenue: "Quantity", country: "Country" }. A value may instead be an annotation object when the type alone understates what you know, e.g. { rating: { semanticType: "Score", intrinsicDomain: [1, 5] } } — see get_flint_skill with skill "chart", section "Semantic types".',
-      ),
-    chart_spec: chartSpecSchema,
+      )
+      .meta({ id: 'SemanticTypes' }),
+    chart_spec: chartSpecSchema.meta({ id: 'ChartSpec' }),
     theme_spec: z
       .union([z.string(), z.record(z.string(), z.any())])
       .optional()
@@ -152,15 +157,18 @@ export function buildAssemblyInputShape(disableFileReference = false) {
       .optional()
       .describe(
         'How the chart behaves on screen (Vega-Lite only). Lists interaction presets by type with their options nested under `options`. An entry the chart type cannot honour is dropped with a warning and the chart still renders; validate_chart reports the same warnings. Call get_flint_skill with skill "interaction", section "Add interactions", before you write one.',
-      ),
+      )
+      .meta({ id: 'InteractionSpec' }),
     options: z
       .record(z.string(), z.any())
       .optional()
-      .describe('Assembler options (e.g. { addTooltips: true } and layout tuning).'),
+      .describe('Assembler options (e.g. { addTooltips: true } and layout tuning).')
+      .meta({ id: 'AssemblerOptions' }),
     field_display_names: z
       .record(z.string(), z.string())
       .optional()
-      .describe('Field name → display label, used for axis titles and legend headers.'),
+      .describe('Field name → display label, used for axis titles and legend headers.')
+      .meta({ id: 'FieldDisplayNames' }),
   };
 }
 
@@ -176,7 +184,8 @@ export const viewShape = {
   view: z
     .enum(['chart', 'table'])
     .optional()
-    .describe('Open the chart as its table of the rows it draws ("table"), or as the chart ("chart", the default). The reader can switch between the two; to draw a table without a chart, use chartType "Table" instead.'),
+    .describe('Open the chart as its table of the rows it draws ("table"), or as the chart ("chart", the default). The reader can switch between the two; to draw a table without a chart, use chartType "Table" instead.')
+    .meta({ id: 'ChartView' }),
 };
 
 export const updatesShape = {
@@ -213,7 +222,8 @@ export const updatesShape = {
     .optional()
     .describe(
       'ChartUpdate layers the chart shows at open: state, where interaction_spec is behaviour. Call get_flint_skill with skill "interaction", section "Update the chart", before you write one. To change them, pass the chart again with new layers to show.',
-    ),
+    )
+    .meta({ id: 'ChartUpdates' }),
 };
 
 export type AssemblyInputArgs = {
@@ -257,7 +267,7 @@ export function toAssemblyInput(args: AssemblyInputArgs): ChartAssemblyInput {
  * handler ({@link checkArgs}).
  */
 export function referencedShape(shape: z.ZodRawShape, where: string): z.ZodRawShape {
-  return Object.fromEntries(Object.entries(shape).map(([key, schema]) => {
+  return Object.fromEntries((Object.entries(shape) as [string, z.ZodType][]).map(([key, schema]) => {
     const loose = z.any().describe(`As \`${where}.${key}\` on the show tool.`);
     return [key, schema.isOptional() ? loose.optional() : loose.refine((value) => value !== undefined, { message: 'Required' })];
   }));

@@ -30,6 +30,17 @@ Released together for `flint-chart`, `flint-chart-mcp`, and the Copilot Canvas p
   (or unpkg's redirect) resolved, so the chart never drew there. ES modules now load `.js` files and
   CommonJS loads `.cjs` files.
 
+### Security
+
+- `flint-chart` requires `echarts` 6.1 or later and `vega` 6.2 or later, which fix cross-site
+  scripting flaws (it accepted ECharts 5 and Vega 5 before). An app with ECharts 5 or Vega 5 of its
+  own keeps it; Flint installs its own copy beside it.
+- `flint-chart-mcp` moves to zod 4 (from 3), which fixes a memory exhaustion on oversized input, and
+  takes patched versions of the libraries its HTTP server runs on (hono, @hono/node-server,
+  body-parser, qs, fast-uri). Its tools' input schemas keep their shape, and `show` still defines
+  each chart field once; a rejected argument now reads, e.g., "chart_spec.chartType: Invalid input:
+  expected string, received undefined" instead of "Required".
+
 ## [1.1.0] - 2026-11-15
 
 Released together for `flint-chart`, `flint-chart-mcp`, and the Copilot Canvas plugin.

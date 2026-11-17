@@ -195,7 +195,7 @@ describe('MCP server', () => {
     expect(compile.inputSchema.properties.chart_spec).toEqual({ description: 'As `chart.chart_spec` on the show tool.' });
     const res: any = await client.callTool({ name: 'compile_chart', arguments: { backend: 'vegalite', data: { values: [] }, chart_spec: { encodings: {} } } });
     expect(res.isError).toBe(true);
-    expect(res.content[0].text).toContain('Invalid arguments: chart_spec.chartType: Required.');
+    expect(res.content[0].text).toContain('Invalid arguments: chart_spec.chartType: Invalid input: expected string, received undefined.');
   });
 
   it('validate_chart flags an unknown chart type as invalid', async () => {
