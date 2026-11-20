@@ -224,6 +224,37 @@ describe('MCP server', () => {
     expect(vegalite.content[1].text).toBe('Nothing to fix: call show with this spec.');
   });
 
+  it.each(['vegalite', 'echarts'])('validate_chart reports unknown keys for %s', async (backend) => {
+    const res: any = await client.callTool({
+      name: 'validate_chart',
+      arguments: {
+        ...barChart,
+        chart_spec: {
+          ...barChart.chart_spec,
+          chartProperties: { totallyFakeKnob: true },
+        },
+        options: { bogusOption: 'xyz' },
+        backend,
+      },
+    });
+    if (backend === 'vegalite') {
+      expect(res.isError).toBeFalsy();
+      expect(res.content[0].text).toContain('chartProperties.totallyFakeKnob: unknown property');
+      expect(res.content[0].text).toContain('options.bogusOption: unknown assemble option');
+      return;
+    }
+    const payload = JSON.parse(res.content[0].text);
+
+    expect(payload.valid).toBe(true);
+    expect(payload.errors).toEqual([]);
+    expect(payload.warnings.map((w: any) => w.code)).toEqual(
+      expect.arrayContaining([
+        'unknown-chart-property',
+        'unknown-assemble-option',
+      ]),
+    );
+  });
+
   it('validate_chart rejects malformed specs before assembly', async () => {
     for (const chart_spec of [
       { ...barChart.chart_spec, encodings: {} },

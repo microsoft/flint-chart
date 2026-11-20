@@ -16,6 +16,7 @@ function niceMaximum(value: number): number {
 }
 
 export const excelRadarChartDef: ExcelTemplateDef = {
+    additionalPropertyKeys: ['filled'],
     chart: 'Radar Chart',
     channels: ['x', 'y', 'color'],
     typeMapping: { vertical: 'RadarMarkers' },

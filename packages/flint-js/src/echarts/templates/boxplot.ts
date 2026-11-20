@@ -201,6 +201,7 @@ function makeGroupSeparatorSeries(categoryCount: number, horizontal: boolean): a
 }
 
 export const ecBoxplotDef: ChartTemplateDef = {
+    additionalPropertyKeys: ['nestedSnapThreshold'],
     chart: 'Boxplot',
     template: { mark: 'boxplot', encoding: {} },
     channels: ['x', 'y', 'color', 'opacity', 'column', 'row'],

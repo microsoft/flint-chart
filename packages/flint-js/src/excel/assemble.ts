@@ -21,7 +21,6 @@
 import type {
     ChartAssemblyInput,
     ChartEncoding,
-    ChartWarning,
     LayoutDeclaration,
     SemanticResult,
 } from '../core/types';
@@ -31,6 +30,7 @@ import { detectBandedAxisFromSemantics } from '../core/axis-detection';
 import { computeChannelBudgets, deriveStretchCaps, resolveBaseSize } from '../core/compute-layout';
 import { filterOverflow } from '../core/filter-overflow';
 import { normalizeChartEncodingAliases } from '../core/static-series';
+import { validateUnknownInputKeys } from '../core/validate-input-keys';
 import { formatSpecToExcel } from './chart-types';
 import { excelGetTemplateDef } from './templates';
 import type {
@@ -214,6 +214,9 @@ export function assembleExcel(input: ChartAssemblyInput): ExcelChartSpec {
     if (fieldOf('column') || fieldOf('row')) {
         throw new Error(`Excel backend does not support faceting in one native Excel chart: "${flintType}".`);
     }
+    const warnings = validateUnknownInputKeys(
+        [chartTemplate], input.chart_spec.chartProperties, input.options,
+    );
     const templateContext = { input, table: convertedData, semantics: sem, fieldOf, typeOf };
     const unsupportedReason = chartTemplate.validate?.(templateContext);
     if (unsupportedReason) {
@@ -221,9 +224,11 @@ export function assembleExcel(input: ChartAssemblyInput): ExcelChartSpec {
     }
 
     if (chartTemplate.instantiate) {
+        const spec = chartTemplate.instantiate(templateContext);
         return applyFieldDisplayNames(
             {
-                ...chartTemplate.instantiate(templateContext),
+                ...spec,
+                ...(warnings.length ? { warnings: [...(spec.warnings ?? []), ...warnings] } : {}),
                 ...(input.chart_spec.title !== undefined ? { title: input.chart_spec.title } : {}),
             },
             input.field_display_names,
@@ -298,7 +303,6 @@ export function assembleExcel(input: ChartAssemblyInput): ExcelChartSpec {
     const bubbleSizes = sizeField
         ? normalizedBubbleSizes(convertedData, sizeField, typeOf('size'), base.width, base.height)
         : undefined;
-    const warnings: ChartWarning[] = [];
 
     if (!catField || !measField) {
         throw new Error(

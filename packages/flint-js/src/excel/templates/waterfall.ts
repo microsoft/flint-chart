@@ -6,6 +6,7 @@ import { formatSpecToExcel } from '../chart-types';
 import type { ExcelTemplateDef } from './types';
 
 export const excelWaterfallChartDef: ExcelTemplateDef = {
+    additionalPropertyKeys: ['totals'],
     chart: 'Waterfall Chart',
     channels: ['x', 'y', 'color'],
     typeMapping: { vertical: 'Waterfall' },

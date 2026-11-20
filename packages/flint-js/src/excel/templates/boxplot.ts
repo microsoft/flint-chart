@@ -5,6 +5,7 @@ import { formatSpecToExcel } from '../chart-types';
 import type { ExcelTemplateDef } from './types';
 
 export const excelBoxplotDef: ExcelTemplateDef = {
+    additionalPropertyKeys: ['whiskerMethod', 'showOutliers'],
     chart: 'Boxplot',
     channels: ['x', 'y', 'color'],
     typeMapping: { vertical: 'BoxWhisker' },

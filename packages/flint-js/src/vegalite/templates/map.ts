@@ -957,6 +957,7 @@ const classProperties: ChartPropertyDef[] = [
 ];
 
 export const mapDef: ChartTemplateDef = {
+    additionalPropertyKeys: ['baseMapUrl', 'levelField', 'levels'],
     chart: "Map",
     fillsCanvas: true,
     template: {
@@ -1353,6 +1354,7 @@ function keepRegionsWithoutData(spec: any): void {
 }
 
 export const choroplethDef: ChartTemplateDef = {
+    additionalPropertyKeys: ['baseMapUrl', 'featureKey', 'levels'],
     chart: "Choropleth",
     fillsCanvas: true,
     template: {
