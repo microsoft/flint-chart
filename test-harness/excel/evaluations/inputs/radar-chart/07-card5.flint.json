@@ -1,0 +1,98 @@
+{
+  "semantic_types": {
+    "Food": "Category",
+    "Nutrient": "Category",
+    "Grams/100g": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Radar Chart",
+    "encodings": {
+      "x": "Nutrient",
+      "y": "Grams/100g",
+      "color": "Food"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Food": "Almonds",
+        "Nutrient": "Protein",
+        "Grams/100g": 21
+      },
+      {
+        "Food": "Almonds",
+        "Nutrient": "Fat",
+        "Grams/100g": 50
+      },
+      {
+        "Food": "Almonds",
+        "Nutrient": "Carbs",
+        "Grams/100g": 22
+      },
+      {
+        "Food": "Almonds",
+        "Nutrient": "Fiber",
+        "Grams/100g": 12
+      },
+      {
+        "Food": "Almonds",
+        "Nutrient": "Sugar",
+        "Grams/100g": 4
+      },
+      {
+        "Food": "Oats",
+        "Nutrient": "Protein",
+        "Grams/100g": 17
+      },
+      {
+        "Food": "Oats",
+        "Nutrient": "Fat",
+        "Grams/100g": 7
+      },
+      {
+        "Food": "Oats",
+        "Nutrient": "Carbs",
+        "Grams/100g": 66
+      },
+      {
+        "Food": "Oats",
+        "Nutrient": "Fiber",
+        "Grams/100g": 11
+      },
+      {
+        "Food": "Oats",
+        "Nutrient": "Sugar",
+        "Grams/100g": 1
+      },
+      {
+        "Food": "Greek yogurt",
+        "Nutrient": "Protein",
+        "Grams/100g": 10
+      },
+      {
+        "Food": "Greek yogurt",
+        "Nutrient": "Fat",
+        "Grams/100g": 5
+      },
+      {
+        "Food": "Greek yogurt",
+        "Nutrient": "Carbs",
+        "Grams/100g": 4
+      },
+      {
+        "Food": "Greek yogurt",
+        "Nutrient": "Fiber",
+        "Grams/100g": 0
+      },
+      {
+        "Food": "Greek yogurt",
+        "Nutrient": "Sugar",
+        "Grams/100g": 4
+      }
+    ]
+  }
+}

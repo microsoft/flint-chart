@@ -11,6 +11,10 @@ export interface CalendarExample {
   stepHours: number;
   semanticType?: 'Date' | 'DateTime' | 'Timestamp';
   facets?: boolean;
+  /** The panels a faceted example sets side by side; North and South where unstated. */
+  panels?: string[];
+  /** A `labels.timeContext` the example asks of the theme (Datawrapper where the lab is unthemed). */
+  timeContext?: 'inline' | 'stacked';
   vertical?: boolean;
   planningWidth?: number;
   planningHeight?: number;
@@ -32,6 +36,8 @@ export const INSPECTION_EXAMPLES: CalendarExample[] = [
   { id: 'inspection-single-date', title: '4. Single date / missing context', start: '2024-02-29', end: '2024-02-29', stepHours: 24, planningWidth: 480 },
 ];
 
+const SIX_CITIES = ['Las Vegas', 'Los Angeles', 'Portland', 'San Diego', 'San Francisco', 'Seattle'];
+
 export const EXAMPLES: CalendarExample[] = [
   { id: 'year-boundaries', title: 'January boundaries', start: '2020-01-01', end: '2022-01-01', stepHours: 168 },
   { id: 'partial-years', title: 'Weekly series / partial years', start: '2020-04-06', end: '2024-12-30', stepHours: 168 },
@@ -42,6 +48,9 @@ export const EXAMPLES: CalendarExample[] = [
   { id: 'intraday', title: 'Intraday / New Year', start: '2023-12-31T18:00:00Z', end: '2024-01-01T12:00:00Z', stepHours: 0.5 },
   { id: 'long-range', title: 'Forty-year range', start: '2020-01-01', end: '2060-01-01', stepHours: 720 },
   { id: 'facets', title: 'Faceted calendar axes', start: '2020-01-01', end: '2024-12-30', stepHours: 168, facets: true },
+  { id: 'facet-week', title: 'Faceted week / context on a second row', start: '2026-11-21', end: '2026-11-27', stepHours: 24, facets: true, panels: SIX_CITIES, planningWidth: 900 },
+  { id: 'facet-week-inline', title: 'Faceted week / theme keeps context inline', start: '2026-11-21', end: '2026-11-27', stepHours: 24, facets: true, panels: SIX_CITIES, planningWidth: 900, timeContext: 'inline' },
+  { id: 'single-week-stacked', title: 'Single week / theme stacks context', start: '2026-11-21', end: '2026-11-27', stepHours: 24, timeContext: 'stacked' },
   { id: 'vertical', title: 'Vertical date axis', start: '2020-01-01', end: '2024-12-30', stepHours: 168, vertical: true },
 ];
 
@@ -59,11 +68,13 @@ export function exampleInput(example: CalendarExample, width: number, height: nu
   });
   return {
     data: { values: example.facets
-      ? ['North', 'South'].flatMap((region, index) => rows.map(row => ({ ...row, region, value: row.value + index * 15 })))
+      ? (example.panels ?? ['North', 'South']).flatMap((region, index) => rows.map(row => ({ ...row, region, value: row.value + index * 15 })))
       : rows },
     semantic_types: { date: semanticType, value: 'Quantity', region: 'Category' },
     field_display_names: { date: 'Date', value: 'Reading', region: 'Region' },
-    theme_spec: theme || undefined,
+    theme_spec: example.timeContext
+      ? { extends: theme || 'datawrapper', labels: { timeContext: example.timeContext } }
+      : theme || undefined,
     chart_spec: {
       chartType: example.vertical || start === end ? 'Scatter Plot' : 'Line Chart',
       title: example.title,
@@ -187,6 +198,7 @@ export function CalendarAxisLab() {
           <li><strong>Regular grid cadence.</strong> Divide calendar periods into near-equal intervals that meet their boundaries. Weekly and fortnightly grids may adjust by up to two days; do not insert cramped extra lines beside month or year boundaries. Include a start tick only when it respects that cadence.</li>
           <li><strong>Boundary priority.</strong> Place higher-level dividers first. Lower-level dividers and ordinary labels must not displace them.</li>
           <li><strong>Gridlines and ticks survive hidden labels.</strong> Keep every planned tick and normal gridline, including ordinary days or months, even when its label cannot fit. Hide only the overlapping text; do not create gaps or change line styling.</li>
+          <li><strong>Panels share their seams.</strong> Side-by-side panels draw the same labels, so one panel's last label meets the next one's first across the gap. Where they would meet, the axis keeps its day numbers on one row and names the month and year on a second, starting at the first tick; the plot gives that row its height. A theme may keep the context inline (<code>labels.timeContext: 'inline'</code>), and then the label that would cross gives way, or stack it everywhere (<code>'stacked'</code>).</li>
           <li><strong>Start context.</strong> Shorten redundant context before changing alignment: for example, 10 AM before a visible 2024 divider closing the opening calendar period. Without that divider, keep the date and year. Include the start only when it fits; never borrow context from a hidden label.</li>
           <li><strong>Calendar consistency.</strong> Use one timezone for positions, boundaries, and labels. Respect variable month lengths, leap days, and daylight-saving changes.</li>
           <li><strong>Cyclic axes stay cyclic.</strong> Month-of-year and hour-of-day categories do not imply years or dates. DateTime and Timestamp permit sub-day precision.</li>

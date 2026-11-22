@@ -1,5 +1,5 @@
 import type { LayoutDeclaration, LayoutResult } from './types';
-import type { LabelFitStep, ThemeLabels } from './theme/types';
+import type { LabelFitStep, ThemeLabels, TimeContext } from './theme/types';
 
 /** Space two straight names keep between them so they never read as one, in px. */
 export const STRAIGHT_LABEL_GAP = 6;
@@ -68,6 +68,13 @@ export interface AxisLabelPlan {
     crowdedFrom?: number;
     /** The step of the overflow sequence that made names too wide for their band fit. */
     overflowFit?: LabelOverflowFit;
+    /**
+     * How a time axis along x carries its larger period: the theme's ask, then, once the plan has
+     * weighed it against the panels, its choice — `inline` or `stacked`.
+     */
+    timeContext?: TimeContext;
+    /** The height the plot gives a stacked time axis's second row. */
+    timeRowRoom?: number;
 }
 
 /** What a theme states about tick labels. */
@@ -76,6 +83,7 @@ export interface AxisLabelTheme {
     /** The theme never truncates labels. */
     noLimit: boolean;
     font?: string;
+    timeContext?: TimeContext;
 }
 
 /** What the plan knows about the data along each axis. */
@@ -149,6 +157,7 @@ export function planAxisLabels(
             ...fittedAngle,
             ...(crowded ? { crowdedFrom: theme.fontSize } : {}),
             ...overflowFit,
+            ...(channel === 'x' && theme.timeContext ? { timeContext: theme.timeContext } : {}),
         };
     };
     return { x: plan('x'), y: plan('y') };

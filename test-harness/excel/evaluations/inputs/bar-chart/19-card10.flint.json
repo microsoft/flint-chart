@@ -1,0 +1,61 @@
+{
+  "semantic_types": {
+    "Country": "Country",
+    "Population": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Bar Chart",
+    "encodings": {
+      "y": "Country",
+      "x": "Population"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Country": "India",
+        "Population": 1428.6
+      },
+      {
+        "Country": "China",
+        "Population": 1425.7
+      },
+      {
+        "Country": "United States",
+        "Population": 339.9
+      },
+      {
+        "Country": "Indonesia",
+        "Population": 277.5
+      },
+      {
+        "Country": "Pakistan",
+        "Population": 240.5
+      },
+      {
+        "Country": "Nigeria",
+        "Population": 223.8
+      },
+      {
+        "Country": "Brazil",
+        "Population": 216.4
+      },
+      {
+        "Country": "Bangladesh",
+        "Population": 173
+      },
+      {
+        "Country": "Russia",
+        "Population": 144.4
+      },
+      {
+        "Country": "Mexico",
+        "Population": 128.5
+      }
+    ]
+  }
+}

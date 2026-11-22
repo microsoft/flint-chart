@@ -79,7 +79,7 @@ import { normalizeChartProperties } from '../core/normalize-properties';
 import { resolveChartDefaults, resolveCompileDefaults, resolveGeometry, resolveValueLabelChoice } from '../core/theme/ground';
 import { resolveThemeSpec } from '../core/theme/presets';
 import { chartChrome, withChrome } from '../core/theme/chrome';
-import { alignBandOrders, applyHeaderFurniture, applySourceLine, realizeThemeVegaLite, realizeValueLabelsVegaLite, sealDetailSegments, vegaLiteBuiltFacts } from './theme';
+import { alignBandOrders, applyHeaderFurniture, applySourceLine, realizeThemeVegaLite, realizeValueLabelsVegaLite, sealDetailSegments, takeFromPlotHeight, vegaLiteBuiltFacts } from './theme';
 import { applyChartValueColors } from './value-colors';
 import { vlCaseKeyLabels, vlWriteKeyLayout } from './key-layout';
 import { vlReserveEnclosureRoom, vlReserveNoteRoom } from './note-room';
@@ -220,12 +220,13 @@ function vlWriteAxisTitles(spec: any, fits: LayoutPlan['axisTitleFit']): void {
 }
 
 /** The plot's stated size — the view's continuous size, and the plot view's width and height — as one string. */
-function plotSizeFields(spec: any, title?: TitlePlan, ruleRoom = 0, headerRoom = 0): string {
+function plotSizeFields(spec: any, title?: TitlePlan, ruleRoom = 0, headerRoom = 0, timeRow = 0): string {
     const height = (value: unknown) => {
         if (typeof value !== 'number') return value;
         const titled = heightAfterTitle(value, title);
         const closed = ruleRoom ? plotHeightAfter(titled, ruleRoom) : titled;
-        return headerRoom ? plotHeightAfter(closed, headerRoom) : closed;
+        const headed = headerRoom ? plotHeightAfter(closed, headerRoom) : closed;
+        return timeRow ? plotHeightAfter(headed, timeRow) : headed;
     };
     // A theme may wrap the plot in a concatenation with its rules; the plot is its first view that is not one.
     let plot = spec;
@@ -590,7 +591,7 @@ function emitVegaLite(input: ChartAssemblyInput, prepared: VegaLitePreparation, 
     // a house's ink, type and furniture.
     // A source line the plot was sized round takes nothing from it.
     const sourceTakes = plan.source && !plan.source.reserved ? plan.source.room : 0;
-    const plannedPlotSize = plotSizeFields(vgObj, plan.title, plan.rules?.room, (plan.header ? plan.header.edge + plan.header.line : 0) + sourceTakes);
+    const plannedPlotSize = plotSizeFields(vgObj, plan.title, plan.rules?.room, (plan.header ? plan.header.edge + plan.header.line : 0) + sourceTakes, plan.axisLabels.x.timeRowRoom);
     // Some templates write their own text on the marks. Where they do, the
     // label layer stands down (it will not print a second number beside the
     // template's), so the toggle would be a control that changes nothing.
@@ -659,6 +660,8 @@ function emitVegaLite(input: ChartAssemblyInput, prepared: VegaLitePreparation, 
     // The author's colour controls win over every default and the theme's ramp.
     if (authoredColor) applyAuthoredColorScaleVL(vgObj, authoredColor, values, colorNeutralBand(channelSemantics, authoredColor.field));
     vlFinalizeTemporalAxes(vgObj, instantiateContext);
+    // A stacked time axis's second row, which the plan gave room for, comes out of the plot.
+    if (plan.axisLabels.x.timeRowRoom) takeFromPlotHeight(vgObj, plan.axisLabels.x.timeRowRoom);
     vlWriteKeyLayout(vgObj, plan.legend, plan.plot, plan.layout, VEGA_LITE_LAYOUT.measureText!);
     vlWriteAxisTitles(vgObj, plan.axisTitleFit);
     vlCaseKeyLabels(vgObj, plan.legend);
@@ -1053,13 +1056,15 @@ export function vegaLiteHonour(input: ChartAssemblyInput): PlanDeparture[] {
 
 /**
  * The plot's height as drawn: the plan's drawn view, once a broken title, a theme's closing rules,
- * the header and the source line have taken theirs from it where the plot gives them.
+ * the header, the source line and a stacked time axis's second row have taken theirs from it where
+ * the plot gives them.
  */
 function drawnHeight(plan: LayoutPlan): number {
     const [view] = plan.views ? plotViews(plan.views) : [];
     if (view) return view.height;
     const titled = heightAfterTitle(plan.plot.height, plan.title);
-    return plan.rules?.fromPlot ? plotHeightAfter(titled, plan.rules.room) : titled;
+    const closed = plan.rules?.fromPlot ? plotHeightAfter(titled, plan.rules.room) : titled;
+    return plan.axisLabels.x.timeRowRoom ? plotHeightAfter(closed, plan.axisLabels.x.timeRowRoom) : closed;
 }
 
 export function openVegaLiteSession(

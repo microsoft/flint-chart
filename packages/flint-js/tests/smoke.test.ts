@@ -277,7 +277,7 @@ describe('public API smoke', () => {
       ['Cost (50)', 0.4, 0.8],
       ['Quality (100)', 0.75, 0.5],
     ]);
-    expect(spec.valueAxis).toEqual({ minimumScale: 0, maximumScale: 1, majorUnit: 0.25 });
+    expect(spec.valueAxis).toEqual({ minimumScale: 0, maximumScale: 1, majorUnit: 0.25, numberFormat: ';;;' });
     expect(spec.legend).toEqual({ visible: true, position: 'Bottom' });
     expect(spec.warnings).toEqual([expect.objectContaining({ code: 'excel-radar-fill-unsupported' })]);
   });
@@ -385,7 +385,7 @@ describe('public API smoke', () => {
       [46024, 100, 108, 98, 105],
       [46027, 105, 110, 101, 103],
     ]);
-    expect(spec.categoryAxis.numberFormat).toBe('yyyy-mm-dd');
+    expect(spec.categoryAxis.numberFormat).toBe('mmm d');
     expect(spec.valueAxis).toEqual({
       title: 'Price',
       numberFormat: undefined,
@@ -479,7 +479,7 @@ describe('public API smoke', () => {
     expect(spec.categoryAxis).toMatchObject({
       categoryType: 'DateAxis',
       baseTimeUnit: 'Days',
-      majorUnit: 20,
+      majorUnit: 14,
       majorTimeUnitScale: 'Days',
     });
     expect(spec.categoryAxis.tickLabelSpacing).toBeUndefined();
@@ -512,10 +512,10 @@ describe('public API smoke', () => {
       chart_spec: { chartType: 'Line Chart', encodings: { x: 'X', y: 'Value' } },
     }) as any;
 
-    expect(spec.chartType).toBe('XYScatterLines');
+    expect(spec.chartType).toBe('XYScatterLinesNoMarkers');
     expect(spec.data).toEqual([['X', 'Value'], [0, 2], [10, 5]]);
-    expect(spec.categoryAxis).toMatchObject({ minimumScale: 0, maximumScale: 10.5, majorUnit: 2 });
-    expect(spec.valueAxis).toMatchObject({ minimumScale: 2, maximumScale: 5.3, majorUnit: 1 });
+    expect(spec.categoryAxis).toMatchObject({ minimumScale: 0, maximumScale: 10, majorUnit: 2 });
+    expect(spec.valueAxis).toMatchObject({ minimumScale: 0, maximumScale: 5, majorUnit: 1 });
   });
 
   it('assembleExcel binds grouped numeric-x lines as explicit XY series', () => {
@@ -529,7 +529,7 @@ describe('public API smoke', () => {
       chart_spec: { chartType: 'Line Chart', encodings: { x: 'X', y: 'Value', color: 'Series' } },
     }) as any;
 
-    expect(spec.chartType).toBe('XYScatterLines');
+    expect(spec.chartType).toBe('XYScatterLinesNoMarkers');
     expect(spec.series).toEqual([
       { name: 'A', xColumn: 0, yColumn: 1, rowCount: 2 },
       { name: 'B', xColumn: 2, yColumn: 3, rowCount: 1 },
@@ -557,7 +557,7 @@ describe('public API smoke', () => {
     expect(spec.categoryAxis).toMatchObject({
       categoryType: 'DateAxis',
       baseTimeUnit: 'Days',
-      majorUnit: 10,
+      majorUnit: 7,
       majorTimeUnitScale: 'Days',
     });
     expect(spec.categoryAxis.tickLabelSpacing).toBeUndefined();
@@ -593,7 +593,7 @@ describe('public API smoke', () => {
       ] },
       semantic_types: { Category: 'Category', Group: 'Category', Size: 'Quantity' },
       chart_spec: { chartType: 'Scatter Plot', encodings: { x: 'Category', y: 'Group', size: 'Size' } },
-    })).toThrow('requires quantitative x and y fields');
+    })).toThrow('requires a quantitative or temporal x field and a quantitative y field');
   });
 
   it('assembleExcel rejects continuous-color scatter instead of dropping the color encoding', () => {
@@ -703,7 +703,8 @@ describe('public API smoke', () => {
       ['South', null, 30, 40],
     ]);
     expect(spec.legend).toEqual({ visible: true, position: 'Bottom' });
-    expect(spec.gapWidth).toBe(180);
+    // Three lanes with a gap a quarter of the band: 3 × 25 / 75.
+    expect(spec.gapWidth).toBe(100);
     expect(spec.overlap).toBe(0);
   });
 
@@ -719,7 +720,7 @@ describe('public API smoke', () => {
     }) as any;
 
     expect(spec.chartType).toBe('BarClustered');
-    expect(spec.gapWidth).toBe(120);
+    expect(spec.gapWidth).toBe(100);
     expect(spec.overlap).toBe(0);
   });
 
@@ -906,8 +907,8 @@ describe('public API smoke', () => {
       chart_spec: { chartType: 'Scatter Plot', encodings: { x: 'X', y: 'Y' } },
     }) as any;
 
-    expect(spec.categoryAxis).toMatchObject({ minimumScale: 0, maximumScale: 105, majorUnit: 20 });
-    expect(spec.valueAxis).toMatchObject({ minimumScale: 0, maximumScale: 105, majorUnit: 20 });
+    expect(spec.categoryAxis).toMatchObject({ minimumScale: 0, maximumScale: 100, majorUnit: 20 });
+    expect(spec.valueAxis).toMatchObject({ minimumScale: 0, maximumScale: 100, majorUnit: 20 });
   });
 
   it('assembleExcel uses a sequential scale for ordered grouped-bar series', () => {

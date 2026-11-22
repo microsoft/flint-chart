@@ -1059,7 +1059,7 @@ function applyHeadlineFit(
 }
 
 /** Take pixels out of the plotting rectangle, wherever its height is stated. */
-function takeFromPlotHeight(spec: any, px: number): void {
+export function takeFromPlotHeight(spec: any, px: number): void {
     const view = spec.config?.view;
     if (view && typeof view.continuousHeight === 'number') {
         view.continuousHeight = plotHeightAfter(view.continuousHeight, px);

@@ -16,6 +16,8 @@ export interface ExcelRenderOptions {
     scale?: number;
     cleanWorksheet?: boolean;
     inspectNativeChart?: boolean;
+    /** Render into this worksheet (added when missing) instead of the active one. */
+    worksheetName?: string;
 }
 
 export interface ExcelRenderResult {
@@ -25,10 +27,11 @@ export interface ExcelRenderResult {
 
 function applyChartFormat(chart: any, prepared: PreparedExcelArtifact, nativeSeriesCount: number): void {
     const { spec } = prepared;
+    const fonts = spec.fontSizes ?? {};
     if (spec.legend) {
         chart.legend.visible = spec.legend.visible;
         if (spec.legend.visible && spec.legend.position) chart.legend.position = spec.legend.position;
-        if (spec.legend.visible) chart.legend.format.font.size = EXCEL_LEGEND_FONT_SIZE;
+        if (spec.legend.visible) chart.legend.format.font.size = fonts.legend ?? EXCEL_LEGEND_FONT_SIZE;
     }
     if (prepared.hasAxes) {
         const axes = [
@@ -43,23 +46,32 @@ function applyChartFormat(chart: any, prepared: PreparedExcelArtifact, nativeSer
             if (format.title) {
                 axis.title.text = format.title;
                 axis.title.visible = true;
-                axis.title.format.font.size = EXCEL_AXIS_TITLE_FONT_SIZE;
+                axis.title.format.font.size = fonts.axisTitle ?? EXCEL_AXIS_TITLE_FONT_SIZE;
             }
             if (format.numberFormat) axis.numberFormat = format.numberFormat;
-            axis.format.font.size = format.labelFontSize ?? EXCEL_LABEL_FONT_SIZE;
+            axis.format.font.size = format.labelFontSize ?? fonts.label ?? EXCEL_LABEL_FONT_SIZE;
             if (format.tickLabelSpacing !== undefined) axis.tickLabelSpacing = format.tickLabelSpacing;
             if (format.reversePlotOrder !== undefined) axis.reversePlotOrder = format.reversePlotOrder;
+            if (format.logBase !== undefined) axis.logBase = format.logBase;
             if (format.minimumScale !== undefined) axis.minimum = format.minimumScale;
             if (format.maximumScale !== undefined) axis.maximum = format.maximumScale;
             if (format.majorUnit !== undefined) axis.majorUnit = format.majorUnit;
+            if (format.position) axis.position = format.position;
+            if (format.tickLabelPosition) axis.tickLabelPosition = format.tickLabelPosition;
         }
+    }
+    // Funnel stage names sit on a category axis, and treemap/sunburst tiles carry labels by default;
+    // left alone they take Excel's small default type beside a full-size title.
+    if (/^Funnel$/.test(prepared.chartType)) chart.axes.categoryAxis.format.font.size = fonts.label ?? EXCEL_LABEL_FONT_SIZE;
+    if (/^(Treemap|Sunburst)$/.test(prepared.chartType) && !spec.dataLabels) {
+        chart.dataLabels.format.font.size = fonts.dataLabel ?? EXCEL_DATA_LABEL_FONT_SIZE;
     }
     if (spec.dataLabels) {
         chart.dataLabels.visible = spec.dataLabels.visible;
         if (spec.dataLabels.position) chart.dataLabels.position = spec.dataLabels.position;
         if (spec.dataLabels.numberFormat) chart.dataLabels.numberFormat = spec.dataLabels.numberFormat;
         if (spec.dataLabels.fontColor) chart.dataLabels.format.font.color = spec.dataLabels.fontColor;
-        chart.dataLabels.format.font.size = spec.dataLabels.fontSize ?? EXCEL_DATA_LABEL_FONT_SIZE;
+        chart.dataLabels.format.font.size = spec.dataLabels.fontSize ?? fonts.dataLabel ?? EXCEL_DATA_LABEL_FONT_SIZE;
     }
     for (let index = 0; index < Math.min(prepared.seriesCount, nativeSeriesCount); index += 1) {
         const series = chart.series.getItemAt(index);
@@ -147,7 +159,12 @@ export async function renderExcelChart(
     const { spec } = prepared;
     const scale = imageScale(options.scale);
     return excelApi.run(async (context) => {
-        const sheet = context.workbook.worksheets.getActiveWorksheet();
+        let sheet = context.workbook.worksheets.getActiveWorksheet();
+        if (options.worksheetName) {
+            const existing = context.workbook.worksheets.getItemOrNullObject(options.worksheetName);
+            await context.sync();
+            sheet = existing.isNullObject ? context.workbook.worksheets.add(options.worksheetName) : existing;
+        }
         if (options.cleanWorksheet !== false) {
             sheet.charts.load('items/name');
             const previousRange = sheet.getUsedRangeOrNullObject();
@@ -170,6 +187,8 @@ export async function renderExcelChart(
         ));
         dataRange.values = prepared.data;
         const chart = sheet.charts.add(prepared.chartType, dataRange, spec.seriesBy);
+        // The chart sits beside its data, one column clear of it.
+        chart.setPosition(sheet.getCell(0, prepared.columns + 1));
 
         if (spec.series?.length) {
             chart.series.load('items/name');
@@ -195,7 +214,7 @@ export async function renderExcelChart(
         if (spec.title) {
             chart.title.text = spec.title;
             chart.title.visible = true;
-            chart.title.format.font.size = EXCEL_CHART_TITLE_FONT_SIZE;
+            chart.title.format.font.size = spec.fontSizes?.title ?? EXCEL_CHART_TITLE_FONT_SIZE;
         }
         chart.series.load?.('items/name');
         await context.sync();

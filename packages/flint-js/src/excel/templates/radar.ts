@@ -88,7 +88,9 @@ export const excelRadarChartDef: ExcelTemplateDef = {
                     ...seriesKeys.map((series) => normalizedValue(series, metric)),
                 ]),
             ],
-            valueAxis: { minimumScale: 0, maximumScale: 1, majorUnit: 0.25 },
+            // Each spoke is scaled to its own maximum (named in its label), so shared ticks would mislead: rings stay, numbers go.
+            categoryAxis: {},
+            valueAxis: { minimumScale: 0, maximumScale: 1, majorUnit: 0.25, numberFormat: ';;;' },
             legend: { visible: Boolean(seriesField), position: 'Bottom' },
             width: base.width,
             height: base.height,

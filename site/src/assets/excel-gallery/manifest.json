@@ -1,0 +1,263 @@
+[
+  {
+    "id": "palmer-penguins-flipper-length-vs-body-mass",
+    "title": "Palmer Penguins — flipper length vs body mass",
+    "label": "Palmer Penguins",
+    "chartType": "Scatter Plot",
+    "excelType": "XYScatter",
+    "size": "460x458",
+    "source": "Three species form crisp clusters — the modern replacement for the iris dataset (Palmer Station LTER, CC0)."
+  },
+  {
+    "id": "gapminder-life-expectancy-vs-income-per-capita-2",
+    "title": "Gapminder — life expectancy vs income per capita (2018)",
+    "label": "Gapminder",
+    "chartType": "Scatter Plot",
+    "excelType": "Bubble",
+    "size": "447x478",
+    "source": "The Rosling bubble chart: wealth vs health, bubble size = population, colour = continent, on a log income axis (Gapminder / World Bank)."
+  },
+  {
+    "id": "most-populous-countries-2023-millions",
+    "title": "Most populous countries, 2023 (millions)",
+    "label": "Most populous countries, 2023",
+    "chartType": "Bar Chart",
+    "excelType": "BarClustered",
+    "size": "470x362",
+    "source": "The year India overtook China (UN World Population Prospects / World Bank)."
+  },
+  {
+    "id": "global-temperature-anomaly-by-decade-c-vs-1951-1",
+    "title": "Global temperature anomaly by decade (°C vs 1951–1980)",
+    "label": "Global temperature anomaly by decade",
+    "chartType": "Bar Chart",
+    "excelType": "ColumnClustered",
+    "size": "467x410",
+    "source": "Bars cross zero — cool early decades below, rapid warming above (NASA GISTEMP)."
+  },
+  {
+    "id": "electricity-generation-mix-by-country-2023",
+    "title": "Electricity generation mix by country, 2023",
+    "label": "Electricity generation mix by country, 2023",
+    "chartType": "Stacked Bar Chart",
+    "excelType": "ColumnStacked",
+    "size": "453x429",
+    "source": "How each country splits generation across sources (Our World in Data / Ember)."
+  },
+  {
+    "id": "titanic-survival-rate-by-class-and-sex",
+    "title": "Titanic survival rate by class and sex",
+    "label": "Titanic survival rate by class and sex",
+    "chartType": "Grouped Bar Chart",
+    "excelType": "ColumnClustered",
+    "size": "382x356",
+    "source": "\"Women and children first\" — and first class — are stark in the numbers (Encyclopedia Titanica)."
+  },
+  {
+    "id": "old-faithful-distribution-of-eruption-durations",
+    "title": "Old Faithful — distribution of eruption durations",
+    "label": "Old Faithful",
+    "chartType": "Histogram",
+    "excelType": "ColumnClustered",
+    "size": "480x320",
+    "source": "Two humps: short (~2 min) and long (~4.5 min) eruptions — a mean would hide this (R \"faithful\" sample)."
+  },
+  {
+    "id": "average-monthly-temperature-by-city",
+    "title": "Average monthly temperature by city",
+    "label": "Average monthly temperature by city",
+    "chartType": "Line Chart",
+    "excelType": "Line",
+    "size": "395x411",
+    "source": "Warm bands for the tropics, cold winters for Moscow (climate normals). (drawn as an Excel-native chart; Flint draws it as a Heatmap)"
+  },
+  {
+    "id": "keeling-curve-atmospheric-co-at-mauna-loa",
+    "title": "Keeling Curve — atmospheric CO₂ at Mauna Loa",
+    "label": "Keeling Curve",
+    "chartType": "Line Chart",
+    "excelType": "Line",
+    "size": "454x429",
+    "source": "The defining climate record: annual-mean CO₂ rising from 316 ppm (1959) to 421 ppm (2023) (Scripps / NOAA)."
+  },
+  {
+    "id": "us-unemployment-rate-2000-2023",
+    "title": "US unemployment rate, 2000–2023 (%)",
+    "label": "US unemployment rate, 2000–2023",
+    "chartType": "Line Chart",
+    "excelType": "Line",
+    "size": "514x376",
+    "source": "The 2009 financial-crisis plateau and the sharp 2020 pandemic spike (US Bureau of Labor Statistics)."
+  },
+  {
+    "id": "driving-shifts-into-reverse-miles-vs-gas-price-u",
+    "title": "Driving Shifts Into Reverse — miles vs gas price (US, 1956–2010)",
+    "label": "Driving Shifts Into Reverse",
+    "chartType": "Connected Scatter Plot",
+    "excelType": "XYScatterLines",
+    "size": "461x445",
+    "source": "Miles driven per capita vs the price of gas, connected in year order — the classic self-crossing connected scatterplot (NYT / Hannah Fairfield; FHWA + EIA data)."
+  },
+  {
+    "id": "penguin-body-mass-by-species",
+    "title": "Penguin body mass by species",
+    "label": "Penguin body mass by species",
+    "chartType": "Boxplot",
+    "excelType": "BoxWhisker",
+    "size": "480x320",
+    "source": "Gentoo penguins are markedly heavier than Adélie and Chinstrap (Palmer Station LTER, CC0)."
+  },
+  {
+    "id": "desktop-browser-market-share-2024",
+    "title": "Desktop browser market share, 2024",
+    "label": "Desktop browser market share, 2024",
+    "chartType": "Pie Chart",
+    "excelType": "Pie",
+    "size": "400x320",
+    "source": "Chrome dominates; Safari and Edge trail (StatCounter)."
+  },
+  {
+    "id": "mobile-os-market-share-2024",
+    "title": "Mobile OS market share, 2024",
+    "label": "Mobile OS market share, 2024",
+    "chartType": "Donut Chart",
+    "excelType": "Doughnut",
+    "size": "400x320",
+    "source": "Android vs iOS worldwide (StatCounter)."
+  },
+  {
+    "id": "life-expectancy-gap-male-vs-female-2021",
+    "title": "Life expectancy gap, male vs female (2021)",
+    "label": "Life expectancy gap, male vs female",
+    "chartType": "Grouped Bar Chart",
+    "excelType": "BarClustered",
+    "size": "541x435",
+    "source": "The dumbbell length is the female–male gap in years (World Bank 2021). (drawn as an Excel-native chart; Flint draws it as a Ranged Dot Plot)"
+  },
+  {
+    "id": "share-of-the-world-online-1995-2023",
+    "title": "Share of the world online, 1995–2023 (%)",
+    "label": "Share of the world online, 1995–2023",
+    "chartType": "Area Chart",
+    "excelType": "Area",
+    "size": "455x421",
+    "source": "From ~1% to two-thirds of humanity in under three decades (Our World in Data / ITU)."
+  },
+  {
+    "id": "world-population-by-region-1950-2020",
+    "title": "World population by region, 1950–2020",
+    "label": "World population by region, 1950–2020",
+    "chartType": "Area Chart",
+    "excelType": "AreaStacked",
+    "size": "463x455",
+    "source": "Asia's dominance and Africa's acceleration as a centre-stacked stream (UN World Population Prospects). (drawn as an Excel-native chart; Flint draws it as a Streamgraph)"
+  },
+  {
+    "id": "seattle-average-monthly-temperature-range",
+    "title": "Seattle average monthly high and low (°F)",
+    "label": "Seattle average monthly high and low",
+    "chartType": "Line Chart",
+    "excelType": "Line",
+    "size": "391x411",
+    "source": "The band spans the average daily low to high each month (NOAA climate normals). (drawn as an Excel-native chart; Flint draws it as a Range Area Chart)"
+  },
+  {
+    "id": "co-emissions-per-capita-2022-tonnes",
+    "title": "CO₂ emissions per capita, 2022 (tonnes)",
+    "label": "CO₂ emissions per capita, 2022",
+    "chartType": "Bar Chart",
+    "excelType": "ColumnClustered",
+    "size": "449x443",
+    "source": "Per-person emissions vary ~20× across countries (Our World in Data / Global Carbon Project). (drawn as an Excel-native chart; Flint draws it as a Lollipop Chart)"
+  },
+  {
+    "id": "daily-stock-ohlc-over-two-weeks",
+    "title": "Daily stock OHLC over two weeks",
+    "label": "Daily stock OHLC over two weeks",
+    "chartType": "Candlestick Chart",
+    "excelType": "StockOHLC",
+    "size": "480x320",
+    "source": "Open-high-low-close candles over ~10 trading days."
+  },
+  {
+    "id": "gdp-by-country-2023-trillion-usd",
+    "title": "GDP by country, 2023 (trillion USD)",
+    "label": "GDP by country, 2023",
+    "chartType": "Bar Chart",
+    "excelType": "BarClustered",
+    "size": "470x308",
+    "source": "Compact ranked bars with value labels (IMF / World Bank 2023). (drawn as an Excel-native chart; Flint draws it as a Bar Table)"
+  },
+  {
+    "id": "nutrition-profile-per-100-g-almonds-vs-oats-vs-y",
+    "title": "Nutrition profile per 100 g — almonds vs oats vs yogurt",
+    "label": "Nutrition profile per 100 g",
+    "chartType": "Radar Chart",
+    "excelType": "RadarMarkers",
+    "size": "480x400",
+    "source": "Compare three foods across five nutrients; each traces a distinct polygon (USDA FoodData Central)."
+  },
+  {
+    "id": "us-population-by-age-and-sex-2020",
+    "title": "US population by age and sex, 2020",
+    "label": "US population by age and sex, 2020",
+    "chartType": "Pyramid Chart",
+    "excelType": "BarStacked",
+    "size": "560x360",
+    "source": "A classic population pyramid — male vs female by age band (US Census 2020)."
+  },
+  {
+    "id": "seattle-monthly-rainfall",
+    "title": "Seattle monthly rainfall",
+    "label": "Seattle monthly rainfall",
+    "chartType": "Bar Chart",
+    "excelType": "ColumnClustered",
+    "size": "456x386",
+    "source": "Wet winters, dry midsummer — as polar bars around the year (NOAA climate normals). (drawn as an Excel-native chart; Flint draws it as a Rose Chart)"
+  },
+  {
+    "id": "daily-temperature-2023",
+    "title": "Daily mean temperature, 2023 — Seattle, New York, Los Angeles, Chicago",
+    "label": "Daily mean temperature, 2023",
+    "chartType": "Line Chart",
+    "excelType": "Line",
+    "size": "614x412",
+    "source": "NASA POWER / MERRA-2 daily mean 2 m temperature, 2023"
+  },
+  {
+    "id": "monthly-temperature-columns",
+    "title": "Seattle monthly mean temperature, 2023",
+    "label": "Seattle monthly mean temperature, 2023",
+    "chartType": "Bar Chart",
+    "excelType": "ColumnClustered",
+    "size": "391x386",
+    "source": "NASA POWER / MERRA-2 (monthly means of daily values), 2023"
+  },
+  {
+    "id": "world-population-treemap",
+    "title": "World population by region, 2023 (millions)",
+    "label": "World population by region, 2023",
+    "chartType": "Treemap",
+    "excelType": "Treemap",
+    "size": "480x320",
+    "source": "UN World Population Prospects 2022, 2023 estimates (millions)"
+  },
+  {
+    "id": "population-sunburst",
+    "title": "Most populous countries by continent, 2023 (millions)",
+    "label": "Most populous countries by continent, 2023",
+    "chartType": "Sunburst Chart",
+    "excelType": "Sunburst",
+    "size": "480x320",
+    "source": "UN World Population Prospects 2022, 2023 estimates (millions)"
+  },
+  {
+    "id": "education-funnel",
+    "title": "US adults 25+ by educational attainment, 2022 (%)",
+    "label": "US adults 25+ by educational attainment, 2022",
+    "chartType": "Funnel Chart",
+    "excelType": "Funnel",
+    "size": "480x320",
+    "source": "US Census Bureau, Educational Attainment in the US: 2022 (CB23-TPS.21); cumulative from the published shares of adults 25+"
+  }
+]

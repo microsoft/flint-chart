@@ -25,19 +25,13 @@ import { formatSpecToLabelExpr } from './format';
 import { measureDomain, type MeasureDomain } from '../core/measure-domain';
 import type { AxisRuler } from '../core/ruler';
 import type { LayoutPlan } from '../core/plan';
-import { AXIS_LABEL_LIMIT } from '../core/compute-layout';
 import { planAxisLabels, type AxisLabelPlan } from '../core/axis-labels';
 import { OWNED_AXIS_KEYS } from './owned-axis-keys';
 import { spansCalendarCells } from './templates/utils';
-import {
-    timeMillisecond, timeSecond, timeMinute, timeHour, timeDay, timeWeek, timeMonth, timeYear,
-    utcMillisecond, utcSecond, utcMinute, utcHour, utcDay, utcWeek, utcMonth, utcYear,
-} from 'd3-time';
-import { timeFormat, utcFormat } from 'd3-time-format';
-import { hostTextMeasurer } from '../core/text-width';
+import type { TimeContext } from '../core/theme/types';
+import { planTemporalTicks, type TemporalTickPlan } from '../core/temporal-ticks';
 
 const DEFAULT_QUANTITATIVE_AXIS_FORMAT = ',.12~g';
-const VEGA_AXIS_LABEL_LIMIT = AXIS_LABEL_LIMIT;
 
 /** The label expression of a sequence axis thinned to round values: only `shown` print. */
 export function skipLabelExpr(shown: readonly string[]): string {
@@ -698,24 +692,6 @@ function vlApplyFieldContext(
     }
 }
 
-const TEMPORAL_LEVELS = [
-    { unit: 'millisecond', local: timeMillisecond, utc: utcMillisecond, steps: [1, 2, 5, 10, 20, 50, 100, 200, 500], format: '.%L', context: '%b %-d, %Y %H:%M:%S.%L' },
-    { unit: 'second', local: timeSecond, utc: utcSecond, steps: [1, 5, 15, 30], format: ':%S', context: '%b %-d, %Y %H:%M:%S' },
-    { unit: 'minute', local: timeMinute, utc: utcMinute, steps: [1, 5, 15, 30], format: '%-I:%M', context: '%b %-d, %Y %H:%M' },
-    { unit: 'hour', local: timeHour, utc: utcHour, steps: [1, 3, 6, 12], format: '%-I %p', context: '%b %-d, %Y %-I %p' },
-    { unit: 'day', local: timeDay, utc: utcDay, steps: [1, 2, 7, 14], format: '%-d', context: '%b %-d, %Y' },
-    { unit: 'month', local: timeMonth, utc: utcMonth, steps: [1, 3, 6], format: '%b', context: '%b %Y' },
-    { unit: 'year', local: timeYear, utc: utcYear, steps: [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000], format: '%Y', context: '%Y' },
-] as const;
-
-interface TemporalTickPlan {
-    values: string[];
-    labels: Record<string, string>;
-    labelExpr: string;
-    labelOverlap: false;
-    labelFlush: false;
-}
-
 /** What a temporal axis needs besides its domain and pixel span to plan its ticks again at runtime. */
 export interface TemporalAxisPlanInputs {
     semanticType: string | undefined;
@@ -725,6 +701,10 @@ export interface TemporalAxisPlanInputs {
     fontSize: number;
     /** The first and last instant in the data; ticks are planned over the data the domain shows, as at compile time. */
     extent?: [number, number];
+    /** The gap to the neighbouring panels' axes, which this axis's end labels share with theirs. None when unset. */
+    seam?: number;
+    /** The theme's preference when planned at compile time; the plan's choice, `inline` or `stacked`, for runtime. */
+    timeContext?: TimeContext;
 }
 
 const TEMPORAL_PLAN_SETTING_KEYS = [
@@ -743,18 +723,28 @@ function temporalPlanSettings(settings: Record<string, unknown>): Record<string,
  * narrower than the plan expected would keep every other tick — and drop the January that names
  * the year.
  */
-function axisPropertiesOf({ labels: _labels, ...axis }: TemporalTickPlan): Omit<TemporalTickPlan, 'labels'> & { tickCount: number } {
-    return { ...axis, tickCount: axis.values.length };
+function axisPropertiesOf({ labels: _labels, stacked, offsets, ...axis }: TemporalTickPlan): Record<string, unknown> & { tickCount: number } {
+    const key = 'toString(toNumber(datum.value))';
+    const anchored = JSON.stringify(offsets);
+    return {
+        ...axis,
+        tickCount: axis.values.length,
+        // A stacked label stands from its left edge, so its period name runs on from the tick into the plot.
+        ...(stacked ? {
+            labelAlign: { expr: `(${anchored})[${key}] != null ? 'left' : 'center'` },
+            labelOffset: { expr: `(${anchored})[${key}] || 0` },
+        } : {}),
+    };
 }
 
 export function temporalAxisPlanInputs(encoding: object): TemporalAxisPlanInputs | undefined {
     return temporalAxisPlans.get(encoding)?.inputs;
 }
 
-/** Tick positions (ms) and label text for a temporal axis over `domain`, laid out across `span` pixels. */
+/** Tick positions (ms), label text and left-edge offsets for a temporal axis over `domain`, laid out across `span` pixels. */
 export function planTemporalTickValues(
     domain: unknown[], span: number, inputs: TemporalAxisPlanInputs,
-): { values: number[]; labels: Record<string, string> } {
+): { values: number[]; labels: Record<string, string | string[]>; offsets: Record<string, number> } {
     const bounds = domain.map((value) => +new Date(value as any));
     const [lo, hi] = [Math.min(...bounds), Math.max(...bounds)];
     const start = Math.max(lo, inputs.extent?.[0] ?? lo);
@@ -762,25 +752,16 @@ export function planTemporalTickValues(
     const plan = Number.isFinite(start) && Number.isFinite(end) && hi > lo
         ? planTemporalTicks({ ...inputs, start, end, span: span * (end - start) / (hi - lo) })
         : undefined;
-    if (!plan) return { values: [], labels: {} };
-    return { values: plan.values.map(value => +new Date(value)), labels: plan.labels };
+    if (!plan) return { values: [], labels: {}, offsets: {} };
+    return { values: plan.values.map(value => +new Date(value)), labels: plan.labels, offsets: plan.offsets };
 }
 
-interface TemporalTickLayout {
-    start: number;
-    end: number;
-    semanticType: string | undefined;
-    utc: boolean;
-    span: number;
-    vertical: boolean;
-    settings: any;
-    fontSize: number;
-}
 
 const temporalAxisPlans = new WeakMap<object, {
     start: number; end: number; semanticType: string | undefined; labelExpr: string;
     /** The pixels the ticks were planned across. */
     span: number;
+    stacked: boolean;
     inputs: TemporalAxisPlanInputs;
 }>();
 
@@ -791,7 +772,7 @@ const temporalAxisPlans = new WeakMap<object, {
  */
 function temporalLabelSettings(
     labels: AxisLabelPlan, formatting: Record<string, unknown>, stated: Record<string, unknown> | undefined, themed: boolean,
-): { fontSize: number; settings: Record<string, unknown> } {
+): { fontSize: number; settings: Record<string, unknown>; timeContext?: TimeContext } {
     const own = { ...stated };
     if (themed) for (const key of OWNED_AXIS_KEYS) delete own[key];
     const planned: Record<string, unknown> = {
@@ -801,18 +782,40 @@ function temporalLabelSettings(
     return {
         fontSize: typeof own.labelFontSize === 'number' ? own.labelFontSize : labels.fontSize,
         settings: temporalPlanSettings({ ...formatting, ...planned, ...own }),
+        ...(labels.timeContext ? { timeContext: labels.timeContext } : {}),
     };
 }
 
 /**
+ * The gap between facet panels set side by side, which a panel's last x label and its neighbour's
+ * first share. Undefined where nothing stands beside the panel.
+ */
+function facetSeam(node: any, config: any): number | undefined {
+    const operator = node.facet && node.spec ? node.facet : undefined;
+    const fields = operator ?? node.encoding;
+    if (!fields) return undefined;
+    const wrapped = operator?.field ? operator : fields.facet;
+    if (!fields.column && !(wrapped && wrapped.columns !== 1)) return undefined;
+    const column = (value: unknown): number | undefined =>
+        typeof value === 'number' ? value : typeof (value as any)?.column === 'number' ? (value as any).column : undefined;
+    const gap = column(fields.column?.spacing) ?? column(node.spacing) ?? column(config.facet?.spacing) ?? VEGA_LITE_FACET_SPACING;
+    return Math.max(0, gap);
+}
+
+/** Vega-Lite's gap between facet panels where nothing states one. */
+const VEGA_LITE_FACET_SPACING = 20;
+
+/**
  * Plans a temporal axis's ticks again where a stage after the plan changed the plot they run
- * across, such as the theme fitting a long title.
+ * across, such as the theme fitting a long title, or where panels stand beside it, whose labels
+ * its own must not run into. Whether the axis stacks was the plan's to decide, with the room for it.
  */
 export function vlFinalizeTemporalAxes(spec: any, context: InstantiateContext): void {
     const config = spec.config ?? {};
-    const visit = (node: any, width: number, height: number): void => {
+    const visit = (node: any, width: number, height: number, inheritedSeam: number | undefined): void => {
         const plotWidth = typeof node.width === 'number' ? node.width : width;
         const plotHeight = typeof node.height === 'number' ? node.height : height;
+        const seam = facetSeam(node, config) ?? inheritedSeam;
         for (const channel of ['x', 'y'] as const) {
             const encoding = node.encoding?.[channel];
             const original = encoding && temporalAxisPlans.get(encoding);
@@ -821,220 +824,33 @@ export function vlFinalizeTemporalAxes(spec: any, context: InstantiateContext): 
             const domainSpan = Array.isArray(domain) && domain.length === 2
                 ? +new Date(domain[1]) - +new Date(domain[0]) : original.end - original.start;
             const span = (channel === 'x' ? plotWidth : plotHeight) * (original.end - original.start) / domainSpan;
-            if (span === original.span) continue;
+            const axisSeam = channel === 'x' ? seam : undefined;
+            if (span === original.span && axisSeam === original.inputs.seam) continue;
             const plan = planTemporalTicks({
                 start: original.start, end: original.end, semanticType: original.semanticType,
                 utc: original.inputs.utc, span, vertical: channel === 'y',
                 settings: original.inputs.settings, fontSize: original.inputs.fontSize,
+                seam: axisSeam, timeContext: original.inputs.timeContext,
             });
             if (!plan) continue;
+            if (original.stacked && !plan.stacked) {
+                delete encoding.axis.labelAlign;
+                delete encoding.axis.labelOffset;
+            }
             Object.assign(encoding.axis, axisPropertiesOf(plan));
             original.labelExpr = plan.labelExpr;
             original.span = span;
+            original.stacked = plan.stacked;
+            if (axisSeam !== undefined) original.inputs = { ...original.inputs, seam: axisSeam };
         }
-        if (node.spec) visit(node.spec, plotWidth, plotHeight);
-        for (const child of [...(node.layer ?? []), ...(node.vconcat ?? []), ...(node.hconcat ?? []), ...(node.concat ?? [])]) {
-            visit(child, plotWidth, plotHeight);
+        if (node.spec) visit(node.spec, plotWidth, plotHeight, seam);
+        for (const child of node.layer ?? []) visit(child, plotWidth, plotHeight, seam);
+        for (const child of [...(node.vconcat ?? []), ...(node.hconcat ?? []), ...(node.concat ?? [])]) {
+            visit(child, plotWidth, plotHeight, undefined);
         }
     };
     visit(spec, config.view?.continuousWidth ?? context.layout.subplotWidth,
-        config.view?.continuousHeight ?? context.layout.subplotHeight);
-}
-
-function planTemporalTicks({
-    start, end, semanticType, utc, span, vertical, settings, fontSize,
-}: TemporalTickLayout): TemporalTickPlan | undefined {
-    if (!(end > start && span > 0)) return;
-    if (['Month', 'Quarter', 'Week', 'Day', 'Hour', 'Time', 'YearWeek'].includes(semanticType ?? '')) return;
-    const levels = TEMPORAL_LEVELS.map(level => ({ ...level, interval: utc ? level.utc : level.local }));
-    const format = utc ? utcFormat : timeFormat;
-    const minimumUnit = semanticType === 'Date' ? 'day'
-        : semanticType === 'YearMonth' || semanticType === 'YearQuarter' ? 'month'
-        : semanticType === 'Year' || semanticType === 'Decade' ? 'year' : 'millisecond';
-    const minimumLevel = levels.findIndex(level => level.unit === minimumUnit);
-    const dayLevel = levels.findIndex(level => level.unit === 'day');
-    const month = levels[dayLevel + 1].interval;
-    const monthsCrossed = month.count(new Date(start), new Date(end));
-    let monthDayLabels = false;
-    const ordinaryFormat = (level: number): string =>
-        level === dayLevel && monthDayLabels ? '%b %-d' : levels[level].format;
-    const minimumStep = semanticType === 'YearQuarter' ? 3 : semanticType === 'Decade' ? 10 : 1;
-    const canvas = typeof document === 'undefined' ? null : document.createElement('canvas').getContext('2d');
-    if (canvas) canvas.font = `${settings.labelFontStyle ?? 'normal'} ${settings.labelFontWeight ?? 'normal'} ${fontSize}px ${settings.labelFont ?? 'sans-serif'}`;
-    const angle = (typeof settings.labelAngle === 'number' ? settings.labelAngle : 0) * Math.PI / 180;
-    const host = canvas ? undefined : hostTextMeasurer()?.(fontSize, settings.labelFont ?? 'sans-serif', settings.labelFontWeight ?? 'normal', settings.labelFontStyle ?? 'normal');
-    const textWidth = (text: string): number => canvas ? canvas.measureText(text).width : host ? host(text) : text.length * fontSize * 0.8;
-    const extent = (text: string): number => {
-        const width = textWidth(text);
-        return vertical ? Math.abs(Math.sin(angle)) * width + Math.abs(Math.cos(angle)) * fontSize
-            : Math.abs(Math.cos(angle)) * width + Math.abs(Math.sin(angle)) * fontSize;
-    };
-    const gap = typeof settings.labelSeparation === 'number' ? settings.labelSeparation : Math.round(fontSize * 0.6);
-    const position = (value: number): number => (value - start) / (end - start) * span;
-    const rank = (value: number, base: number): number => {
-        for (let level = levels.length - 1; level > base; level--) {
-            if (+levels[level].interval.floor(new Date(value)) === value) return level;
-        }
-        return base;
-    };
-    const boundaryFormat = (level: number, base: number): string => {
-        if (base === dayLevel && monthDayLabels) {
-            return levels[level].unit === 'year' ? '%Y' : ordinaryFormat(base);
-        }
-        if (level === base) return ordinaryFormat(base);
-        const detail = base + 1;
-        if (levels[level].unit === 'year') return levels[detail].context;
-        if (level >= dayLevel && base < dayLevel) return levels[detail].context.replace(', %Y', '');
-        if (levels[detail].unit === 'second' && level > detail) return '%H:%M:%S';
-        return levels[detail].format;
-    };
-    let candidates: number[] = [];
-    let base = minimumLevel;
-    let cadence = 1;
-    for (let level = minimumLevel; level < levels.length && candidates.length === 0; level++) {
-        for (const step of levels[level].steps) {
-            if (level === minimumLevel && step % minimumStep !== 0) continue;
-            if (levels[level].interval.count(new Date(start), new Date(end)) / step > Math.max(2, span / fontSize)) continue;
-            const interval = levels[level].unit === 'day' && step >= 7
-                ? (utc ? utcWeek : timeWeek).every(step / 7)
-                : levels[level].interval.every(step);
-            if (!interval) continue;
-            const ticks = interval.range(new Date(start), new Date(end + 1)).map(Number);
-            if (!ticks.length) continue;
-            monthDayLabels = false;
-            if (level === dayLevel && monthsCrossed >= 2) {
-                const repetitions = new Map<number, number>();
-                for (const value of ticks) {
-                    const period = +month.floor(new Date(value));
-                    repetitions.set(period, (repetitions.get(period) ?? 0) + 1);
-                }
-                monthDayLabels = Math.max(...repetitions.values()) <= 5;
-            }
-            const ordinarySize = (value: number): number => extent(format(ordinaryFormat(level))(new Date(value)));
-            const fits = ticks.every((value, index) => index === 0 || position(value) - position(ticks[index - 1])
-                >= (ordinarySize(value) + ordinarySize(ticks[index - 1])) / 2 + gap);
-            if (fits) {
-                candidates = ticks;
-                base = level;
-                cadence = step;
-                break;
-            }
-        }
-    }
-    if (!candidates.length) return;
-    let startAnchor = +levels[minimumLevel].interval.ceil(new Date(start));
-    if (levels[base].unit === 'day' && cadence > 1) {
-        const day = levels[base].interval;
-        const month = levels[base + 1].interval;
-        let periodStart = day.ceil(new Date(start));
-        const openingDays = day.count(periodStart, month.ceil(new Date(+periodStart + 1)));
-        const openingStep = openingDays / Math.max(1, Math.round(openingDays / cadence));
-        if (Math.abs(openingStep - cadence) > 2) periodStart = month.floor(periodStart);
-        candidates = [];
-        while (+periodStart <= end) {
-            const periodEnd = month.ceil(new Date(+periodStart + 1));
-            const days = day.count(periodStart, periodEnd);
-            const divisions = Math.max(1, Math.round(days / cadence));
-            for (let index = 0; index < divisions; index++) {
-                const value = +day.offset(periodStart, Math.round(days * index / divisions));
-                if (value >= start && value <= end) candidates.push(value);
-            }
-            periodStart = periodEnd;
-        }
-        startAnchor = candidates[0];
-    }
-    for (let level = base + 1; level < levels.length; level++) {
-        candidates.push(...levels[level].interval.range(new Date(start), new Date(end + 1)).map(Number));
-    }
-    if (startAnchor <= end) candidates.push(startAnchor);
-    const choose = (anchor: number, from: number) => {
-        const ticks = [...new Set(candidates)].sort((left, right) => left - right).map(value => {
-            const level = rank(value, base);
-            const calendarLevel = rank(value, minimumLevel);
-            const initial = value === anchor && calendarLevel < levels.length - 1;
-            const pattern = initial ? levels[calendarLevel].context : boundaryFormat(level, base);
-            const text = format(pattern)(new Date(value));
-            const priority = initial ? Math.min(base, calendarLevel) + 0.5
-                : base === dayLevel && monthDayLabels && levels[level].unit === 'month' ? base : level;
-            return { value, pattern, text, priority, size: extent(text), initial, level: calendarLevel };
-        });
-        const selected: typeof ticks = [];
-        for (const tick of [...ticks].sort((left, right) => right.priority - left.priority || left.value - right.value)) {
-            if (tick.value < from) continue;
-            if (tick.initial) {
-                const parent = levels[Math.min(base + 1, levels.length - 1)].interval;
-                const periodEnd = +parent.offset(parent.floor(new Date(tick.value)), 1);
-                const hasYearContext = selected.some(other => other.level > base && levels[other.level].unit === 'year'
-                    && other.value > tick.value && other.value <= periodEnd);
-                if (hasYearContext) {
-                    const floor = Math.max(base, tick.level);
-                    tick.pattern = boundaryFormat(rank(tick.value, floor), floor);
-                    tick.text = format(tick.pattern)(new Date(tick.value));
-                    tick.size = extent(tick.text);
-                }
-            }
-            if (selected.every(other => Math.abs(position(tick.value) - position(other.value)) >= (tick.size + other.size) / 2 + gap)) {
-                selected.push(tick);
-            }
-        }
-        return { ticks, selected };
-    };
-    let { ticks, selected } = choose(startAnchor, -Infinity);
-    // An opening label crowded out (say a half-hour start beside the next full hour) would leave
-    // the axis without its date; the earliest label that fits carries it instead.
-    if (selected.length > 0 && ticks.some(tick => tick.initial) && !selected.some(tick => tick.initial)) {
-        const first = Math.min(...selected.map(tick => tick.value));
-        ({ ticks, selected } = choose(first, first));
-    }
-    selected.sort((left, right) => left.value - right.value);
-    const expandMonth = (pattern: string): string =>
-        pattern === '%b' || pattern === '%b %Y' ? pattern.replace('%b', '%B') : pattern;
-    const expanded = selected.map(tick => {
-        const pattern = expandMonth(tick.pattern);
-        const text = format(pattern)(new Date(tick.value));
-        return { value: tick.value, size: extent(text), width: textWidth(text), changed: pattern !== tick.pattern };
-    });
-    const labelLimit = typeof settings.labelLimit === 'number' ? settings.labelLimit : VEGA_AXIS_LABEL_LIMIT;
-    const fullMonthNames = expanded.every((tick, index) =>
-        (!tick.changed || labelLimit <= 0 || tick.width <= labelLimit)
-        && (index === 0 || position(tick.value) - position(expanded[index - 1].value)
-            >= (tick.size + expanded[index - 1].size) / 2 + gap));
-    const labelPattern = (pattern: string): string => JSON.stringify(fullMonthNames ? expandMonth(pattern) : pattern);
-    const formatter = utc ? 'utcFormat' : 'timeFormat';
-    const boundaries = [
-        ['', ''], ['%L', '000'], ['%S.%L', '00.000'], ['%M:%S.%L', '00:00.000'],
-        ['%H:%M:%S.%L', '00:00:00.000'], ['%d %H:%M:%S.%L', '01 00:00:00.000'],
-        ['%m-%d %H:%M:%S.%L', '01-01 00:00:00.000'],
-    ];
-    const boundaryExpr = (level: number, value: string): string =>
-        `${formatter}(${value}, ${JSON.stringify(boundaries[level][0])}) === ${JSON.stringify(boundaries[level][1])}`;
-    const patternExpr = (floor: number, context: boolean): string => {
-        let pattern = labelPattern(context ? levels[floor].context : ordinaryFormat(floor));
-        for (let level = floor + 1; level < levels.length; level++) {
-            const promoted = context ? levels[level].context : boundaryFormat(level, floor);
-            pattern = `(${boundaryExpr(level, 'datum.value')} ? ${labelPattern(promoted)} : ${pattern})`;
-        }
-        return pattern;
-    };
-    let pattern = patternExpr(base, false);
-    const initial = selected.find(tick => tick.initial);
-    if (initial) {
-        const parent = levels[Math.min(base + 1, levels.length - 1)].interval;
-        const periodEnd = +parent.offset(parent.floor(new Date(initial.value)), 1);
-        const yearContext = selected.filter(tick => tick.level > base && levels[tick.level].unit === 'year'
-            && tick.value > initial.value && tick.value <= periodEnd)
-            .map(tick => `(${boundaryExpr(levels.length - 1, String(tick.value))})`).join(' || ') || 'false';
-        pattern = `(toNumber(datum.value) === ${initial.value} && !(${yearContext}) ? ${patternExpr(minimumLevel, true)} : ${pattern})`;
-    }
-    const labels = Object.fromEntries(selected.map(tick => [tick.value, true]));
-    return {
-        values: ticks.map(tick => new Date(tick.value).toISOString()),
-        labels: Object.fromEntries(selected.map(tick =>
-            [tick.value, format(fullMonthNames ? expandMonth(tick.pattern) : tick.pattern)(new Date(tick.value))])),
-        labelExpr: `(${JSON.stringify(labels)})[toString(toNumber(datum.value))] ? ${formatter}(datum.value, ${pattern}) : ''`,
-        labelOverlap: false,
-        labelFlush: false,
-    };
+        config.view?.continuousHeight ?? context.layout.subplotHeight, undefined);
 }
 
 function vlApplyDefaultAxisFormat(
@@ -1083,15 +899,17 @@ function vlApplyDefaultAxisFormat(
                 // UTC-midnight dates are calendar dates read as UTC, wherever the chart is built.
                 const utc = enc.scale?.type === 'utc' || utcMidnights;
                 const semantics = context.channelSemantics[ch];
-                const { fontSize, settings } = temporalLabelSettings(axisLabels[ch], formatting, enc.axis, themed);
+                const { fontSize, settings, timeContext } = temporalLabelSettings(axisLabels[ch], formatting, enc.axis, themed);
                 const plot = vgObj.facet && vgObj.spec ? vgObj.spec : vgObj;
                 const size = ch === 'x' ? plot.width : plot.height;
                 const span = typeof size === 'number' ? size
                     : ch === 'x' ? context.layout.subplotWidth : context.layout.subplotHeight;
                 const semanticType = semantics?.field === enc.field ? semantics.semanticAnnotation?.semanticType : undefined;
+                // The plan alone stacks an axis, having given its second row room; otherwise it stays inline.
+                const rows: TimeContext = ch === 'x' && timeContext === 'stacked' ? 'stacked' : 'inline';
                 const plan = planTemporalTicks({
                     start: earliest, end: latest, semanticType, utc,
-                    span, vertical: ch === 'y', settings, fontSize,
+                    span, vertical: ch === 'y', settings, fontSize, timeContext: rows,
                 });
                 if (!plan) continue;
                 temporalAxisPlans.set(enc, {
@@ -1099,10 +917,12 @@ function vlApplyDefaultAxisFormat(
                     semanticType,
                     labelExpr: plan.labelExpr,
                     span,
+                    stacked: plan.stacked,
                     inputs: {
                         semanticType, utc, vertical: ch === 'y',
                         settings, fontSize,
                         extent: [earliest, latest],
+                        timeContext: rows,
                     },
                 });
                 enc.axis = {

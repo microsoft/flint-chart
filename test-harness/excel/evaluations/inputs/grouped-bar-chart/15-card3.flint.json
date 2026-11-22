@@ -1,0 +1,53 @@
+{
+  "semantic_types": {
+    "Class": "Category",
+    "Sex": "Category",
+    "Survival (%)": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Grouped Bar Chart",
+    "encodings": {
+      "x": "Class",
+      "y": "Survival (%)",
+      "group": "Sex"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Class": "1st",
+        "Sex": "Female",
+        "Survival (%)": 97
+      },
+      {
+        "Class": "1st",
+        "Sex": "Male",
+        "Survival (%)": 34
+      },
+      {
+        "Class": "2nd",
+        "Sex": "Female",
+        "Survival (%)": 89
+      },
+      {
+        "Class": "2nd",
+        "Sex": "Male",
+        "Survival (%)": 15
+      },
+      {
+        "Class": "3rd",
+        "Sex": "Female",
+        "Survival (%)": 49
+      },
+      {
+        "Class": "3rd",
+        "Sex": "Male",
+        "Survival (%)": 15
+      }
+    ]
+  }
+}

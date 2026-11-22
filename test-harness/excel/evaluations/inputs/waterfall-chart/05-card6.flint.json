@@ -1,0 +1,48 @@
+{
+  "semantic_types": {
+    "Step": "Category",
+    "Population (M)": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Waterfall Chart",
+    "encodings": {
+      "x": "Step",
+      "y": "Population (M)"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    },
+    "chartProperties": {
+      "totals": "last"
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Step": "1950",
+        "Population (M)": 2536
+      },
+      {
+        "Step": "Asia",
+        "Population (M)": 3237
+      },
+      {
+        "Step": "Africa",
+        "Population (M)": 1134
+      },
+      {
+        "Step": "Americas",
+        "Population (M)": 684
+      },
+      {
+        "Step": "Europe",
+        "Population (M)": 199
+      },
+      {
+        "Step": "Oceania",
+        "Population (M)": 32
+      }
+    ]
+  }
+}

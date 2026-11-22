@@ -557,6 +557,9 @@ export interface ThemeLabelFit {
     rowLimit?: number | `${number}%`;
 }
 
+/** How a time axis carries its larger period: see {@link ThemeLabels.timeContext}. */
+export type TimeContext = 'auto' | 'inline' | 'stacked';
+
 export interface ThemeLabels {
     truncation?: 'never' | 'ellipsis' | 'wrap';
     /**
@@ -568,6 +571,15 @@ export interface ThemeLabels {
      */
     rowNames?: 'beside' | 'above' | 'auto';
     flush?: boolean;
+    /**
+     * How a horizontal time axis names the larger period its ticks fall in — the month over days,
+     * the year over months, the date over hours. `inline`: in the row, on the opening tick and at
+     * each boundary ("Nov 21, 2026 · 23 · 25", "2025 · Apr · Jul"). `stacked`: on a second row
+     * under the tick labels, at the start and at each change ("21 22 23" over "Nov 2026"), the plot
+     * giving up a line for it. `auto` (the default): inline, stacked only where the inline labels
+     * would run into a neighbouring panel's. Year axes and turned labels keep one row.
+     */
+    timeContext?: TimeContext;
     /**
      * The path category names along x take when they do not stand flat and whole. Names that fit
      * are always flat — a theme never forces a turn. Leave it unset for the general path:

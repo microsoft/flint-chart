@@ -40,7 +40,7 @@ const artifact = assembleExcel(input);
 const result = await renderExcelChart(Excel, artifact);
 ```
 
-`renderExcelChart` 必须在提供 Office.js `Excel.run` 和 `Excel.ImageFittingMode.fit` 的 Excel 宿主中运行。它会在活动工作表中创建原生图表，并返回由 `Chart.getImage()` 捕获的 PNG。
+`renderExcelChart` 必须在提供 Office.js `Excel.run` 和 `Excel.ImageFittingMode.fit` 的 Excel 宿主中运行。它会在活动工作表（或 `worksheetName` 指定的工作表）中、数据旁创建原生图表，并返回由 `Chart.getImage()` 捕获的 PNG。
 
 若需要可移植的 Office.js 源码而不是立即执行，可调用 `generateOfficeJs(artifact)`。
 
@@ -48,6 +48,6 @@ const result = await renderExcelChart(Excel, artifact);
 
 - 一个原生 Excel 图表不支持 Flint 的 `column` 或 `row` 分面。
 - 没有原生 Excel 对应类型的图表（例如 Heatmap）会在渲染前被拒绝。
-- 部分图表有更严格的数据要求；例如散点图要求定量 `x` 和 `y`，蜡烛图要求 `open`、`high`、`low`、`close` 通道。Assembler 会返回具体的验证错误。
+- 部分图表有更严格的数据要求；例如散点图要求定量或时间型 `x` 与定量 `y`，蜡烛图要求 `open`、`high`、`low`、`close` 通道。Assembler 会返回具体的验证错误。
 
 可使用 `excelGetTemplateDef(chartType)` 或 `excelGetTemplateChannels(chartType)` 在编译前检查支持情况。

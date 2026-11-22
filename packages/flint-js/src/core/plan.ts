@@ -30,6 +30,7 @@ import { chartBlock, fittedTitleWidth, heightAfterTitle, keysBesideWidth, neares
 import { planRules, withRules, type ClosingRule } from './rule-plan';
 import { plotHeightAfter } from './title-fit';
 import { planAxisLabels, resolveLabelOverflow, type AxisLabelPlan } from './axis-labels';
+import { timeAxisStacks, timeRowRoom } from './temporal-ticks';
 import { sequenceKindOf } from './label-sequence';
 import { LAYOUT_COSTS } from './layout-costs';
 import { CANVAS_FIT_LIMITS, DRAWING_PADDING, LEGIBILITY_MARGIN, describeTreatment, plotFitScale, judgeCanvas, readingCost, treatmentCost, type CanvasFitEstimate, type CanvasFitResult, type CanvasParts } from './canvas-fit';
@@ -2009,6 +2010,7 @@ function planAroundPlot(prepared: PreparedPlan, reserve: FurnitureReserve): Layo
         fontSize: axisLabelFontSize,
         noLimit: theme?.labels?.truncation === 'never',
         font: theme ? themeBodyFamily(theme) : undefined,
+        ...(theme?.labels?.timeContext ? { timeContext: theme.labels.timeContext } : {}),
     }, {
         present,
         xRuler: typeOf('x') === 'temporal' || typeOf('x') === 'quantitative',
@@ -2240,12 +2242,31 @@ function planAroundPlot(prepared: PreparedPlan, reserve: FurnitureReserve): Layo
     });
     if (sourcePlan && reserve.parts.footer) sourcePlan.reserved = true;
     const headerRoom = (header ? header.edge + header.line : 0) + (sourcePlan && !sourcePlan.reserved ? sourcePlan.room : 0);
+    // A time axis whose inline labels would run into the next panel's — or whose theme asks for
+    // it — names its periods on a second row, and the plot gives that row its height.
+    const timeField = channelSemantics.x?.field;
+    if (present.x && timeField && typeOf('x') === 'temporal' && plotGives && design.axes.x?.label.show !== false) {
+        const labels = axisLabels.x;
+        const label = design.axes.x?.label;
+        const settings = Object.fromEntries(Object.entries({
+            labelFont: labels.font, labelAngle: labels.angle, labelSeparation: labels.separation, labelLimit: labels.limit,
+            labelFontWeight: label?.fontWeight, labelFontStyle: label?.fontStyle,
+        }).filter(([, value]) => value !== undefined));
+        const stacked = timeAxisStacks({
+            rows: values, field: timeField, semanticType: channelSemantics.x?.semanticAnnotation?.semanticType,
+            span: plot.width, seam: facetColumns > 1 ? gapOf(furniture.facets.spacing, 0).column : undefined,
+            fontSize: labels.fontSize, settings, timeContext: labels.timeContext,
+        });
+        axisLabels.x = { ...labels, timeContext: stacked ? 'stacked' : 'inline', ...(stacked ? { timeRowRoom: timeRowRoom(labels.fontSize) } : {}) };
+    }
+    const timeRow = axisLabels.x.timeRowRoom ?? 0;
     const drawViews = (title: TitlePlan | undefined) => {
-        const drawn = views && (ruled || title || headerRoom) && plotGives
+        const drawn = views && (ruled || title || headerRoom || timeRow) && plotGives
             ? shortenViews(views, (height) => {
                 const titled = heightAfterTitle(height, title);
                 const closed = ruled ? plotHeightAfter(titled, ruled.room) : titled;
-                return headerRoom ? plotHeightAfter(closed, headerRoom) : closed;
+                const headed = headerRoom ? plotHeightAfter(closed, headerRoom) : closed;
+                return timeRow ? plotHeightAfter(headed, timeRow) : headed;
             })
             : views;
         return drawn && ruled ? withRules(drawn, ruled.rules) : drawn;

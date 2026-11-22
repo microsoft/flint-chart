@@ -11,6 +11,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Excel charts are laid out by Flint's shared layout: a chart's size follows its bands and series as the
+  other backends' do (a 60-column chart is wider than a 5-column one, three columns no longer stretch
+  into slabs), with room for Excel's own labels, title and legend, and smaller type on a small canvas.
+  Bar gaps keep one proportion across single, dense and grouped bars.
+- Excel date axes follow the data: yearly, monthly and daily rows set the axis unit, ticks fall on
+  calendar boundaries and read `2021`, `Jan 2021` or `Jan 8` instead of `yyyy-mm-dd`. Times of day draw
+  on a time axis (they failed to render before), and a scatter plot takes a date `x`.
+- Excel value axes stop on round numbers, keep zero where Flint does, print the field's currency,
+  percent or units with grouping (no `8.7E+09`), and honour `logScale_x`/`logScale_y` on scatter plots.
+  Months and weekdays are ordered as on the other backends, horizontal bars keep their values at the
+  bottom, and names stay clear of negative bars.
+- `renderExcelChart` takes `worksheetName` to draw on a named sheet, and places the chart beside its data.
+- Vega-Lite time axes in small multiples no longer run their labels into the next panel's: where the
+  opening date (`Nov 21, 2026`) would cross the gap, the axis sets its days on one row and the month and
+  year on a second (`21 22 23` over `November 2026`), the plot giving the row its height. Themes choose
+  with `labels.timeContext`: `auto` (the default), `inline` or `stacked`.
+
 ## [1.1.1] - 2026-11-16
 
 Released together for `flint-chart`, `flint-chart-mcp`, and the Copilot Canvas plugin.

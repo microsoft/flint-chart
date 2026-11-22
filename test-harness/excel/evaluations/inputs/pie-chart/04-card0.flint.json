@@ -1,0 +1,41 @@
+{
+  "semantic_types": {
+    "Browser": "Category",
+    "Share": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Pie Chart",
+    "encodings": {
+      "size": "Share",
+      "color": "Browser"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Browser": "Chrome",
+        "Share": 65
+      },
+      {
+        "Browser": "Safari",
+        "Share": 12
+      },
+      {
+        "Browser": "Edge",
+        "Share": 12
+      },
+      {
+        "Browser": "Firefox",
+        "Share": 6
+      },
+      {
+        "Browser": "Other",
+        "Share": 5
+      }
+    ]
+  }
+}

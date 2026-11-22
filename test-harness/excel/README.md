@@ -84,12 +84,38 @@ npm run evaluate:layout
 
 Generated images and summaries are written under `evaluations/out/` and are ignored by Git.
 
-## Native Excel examples
-
-The [curated example gallery](evaluations/examples/README.md) contains tracked snapshots of native Excel charts captured from the real Office.js worker. Bulk evaluation output stays ignored; after reviewing regenerated output, refresh the selected snapshots with:
+Date/layout edge cases and a real-data gallery render at the size the backend itself chooses:
 
 ```bash
-npm run evaluate:examples
+node evaluations/stress-audit.mjs          # 25 date, value and layout cases, side by side with Vega-Lite
+node evaluations/real-gallery.mjs          # charts from real datasets
+node evaluations/export-workbook.mjs       # the gallery as one .xlsx of native charts + overview
+```
+
+`export-workbook.mjs` asks the worker to draw each artifact on its own sheet, exports the workbook with
+`Office.context.document.getFileAsync`, and removes the added sheets afterwards.
+
+### Iterating without reopening the pane
+
+The pane imports the backend bundle per job, keyed by its build time, and reloads only when
+`officejs/taskpane.js` or `taskpane.html` change. Rebuild the JS bundle alone and keep the server and pane
+running (this also works while the screen is locked):
+
+```bash
+cd ../../packages/flint-js && npx tsup
+```
+
+The server's startup build includes declarations; give Node room for it:
+`NODE_OPTIONS=--max-old-space-size=8192 npm run server:supervised`.
+
+## Native Excel examples
+
+The [example gallery](evaluations/examples/README.md) holds native Excel charts drawn from real datasets and captured from the real Office.js worker; the site's Excel gallery page shows the same images and offers the workbook for download. Bulk evaluation output stays ignored; after reviewing regenerated output, publish it with:
+
+```bash
+node evaluations/real-gallery.mjs
+node evaluations/export-workbook.mjs
+npm run evaluate:examples    # copies the charts, a manifest and the workbook into examples/ and site/
 ```
 
 ## Worker safety

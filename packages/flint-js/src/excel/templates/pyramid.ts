@@ -88,7 +88,7 @@ export const excelPyramidChartDef: ExcelTemplateDef = {
                     ];
                 }),
             ],
-            categoryAxis: { title: categoryField, reversePlotOrder: true },
+            categoryAxis: { title: categoryField, reversePlotOrder: true, position: 'Maximum', tickLabelPosition: 'Low' },
             valueAxis: {
                 title: measureField,
                 numberFormat: absoluteNumberFormat(numberFormat),
