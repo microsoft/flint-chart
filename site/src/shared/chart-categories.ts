@@ -342,6 +342,68 @@ const figure = assemblePlotly(input);`,
       createChart('plotly', 'plotly-gauge', 'Gauge Chart *', 'ECharts: Gauge', gaugeIcon),
     ],
   },
+  {
+    id: 'canvasxpress',
+    label: BACKEND_LABELS.canvasxpress,
+    description:
+      'Compiles a Flint spec into a CanvasXpress spec (`{ graphType, data, config }`) — ' +
+      'ideal for interactive scientific and analytical graphics rendered on an HTML ' +
+      'canvas, with CanvasXpress’s own zoom, selection, and reproducible-research tooling.',
+    fn: 'assembleCanvasXpress',
+    snippet: `import { assembleCanvasXpress } from 'flint-chart';
+
+const input = {
+  data: {
+    values: [
+      { quarter: 'Q1', revenue: 120 },
+      { quarter: 'Q2', revenue: 156 },
+      { quarter: 'Q3', revenue: 143 },
+      { quarter: 'Q4', revenue: 189 },
+    ],
+  },
+  semantic_types: { quarter: 'Quarter', revenue: 'Amount' },
+  chart_spec: {
+    chartType: 'Bar Chart',
+    encodings: {
+      x: { field: 'quarter' },
+      y: { field: 'revenue' },
+    },
+  },
+};
+
+const spec = assembleCanvasXpress(input);`,
+    charts: [
+      createChart('canvasxpress', 'cx-scatter', 'Scatter Plot', 'Scatter Plot', scatterIcon),
+      createChart('canvasxpress', 'cx-scatter3d', 'Scatter 3D', 'Scatter 3D', scatterIcon),
+      createChart('canvasxpress', 'cx-bubble', 'Bubble Chart', 'Bubble Chart', bubbleIcon),
+      createChart('canvasxpress', 'cx-tagcloud', 'Tag Cloud', 'Tag Cloud', bubbleIcon),
+      createChart('canvasxpress', 'cx-tree', 'Tree', 'Tree', networkIcon),
+      createChart('canvasxpress', 'cx-bar', 'Bar Chart', 'Bar Chart', barIcon),
+      createChart('canvasxpress', 'cx-line', 'Line Chart', 'Line Chart', lineIcon),
+      createChart('canvasxpress', 'cx-area', 'Area Chart', 'Area Chart', areaIcon),
+      createChart('canvasxpress', 'cx-streamgraph', 'Streamgraph', 'Streamgraph', streamgraphIcon),
+      createChart('canvasxpress', 'cx-boxplot', 'Boxplot', 'Boxplot', boxplotIcon),
+      createChart('canvasxpress', 'cx-violin', 'Violin Plot', 'Violin Plot', violinIcon),
+      createChart('canvasxpress', 'cx-histogram', 'Histogram', 'Histogram', histogramIcon),
+      createChart('canvasxpress', 'cx-density', 'Density Plot', 'Density Plot', densityIcon),
+      createChart('canvasxpress', 'cx-contour', 'Density Contour', 'Density Contour', densityIcon),
+      createChart('canvasxpress', 'cx-regression', 'Regression', 'Regression', regressionIcon),
+      createChart('canvasxpress', 'cx-kaplan-meier', 'Kaplan-Meier', 'Kaplan-Meier', lineIcon),
+      createChart('canvasxpress', 'cx-volcano', 'Volcano Plot', 'Volcano Plot', scatterIcon),
+      createChart('canvasxpress', 'cx-venn', 'Venn Diagram', 'Venn Diagram', sankeyIcon),
+      createChart('canvasxpress', 'cx-upset', 'UpSet Plot', 'UpSet Plot', barTableIcon),
+      createChart('canvasxpress', 'cx-oncoprint', 'Oncoprint', 'Oncoprint', heatmapIcon),
+      createChart('canvasxpress', 'cx-network', 'Network Graph', 'Network Graph', networkIcon),
+      createChart('canvasxpress', 'cx-clustermap', 'Clustered Heatmap', 'Clustered Heatmap', heatmapIcon),
+      createChart('canvasxpress', 'cx-correlation', 'Correlation Matrix', 'Correlation Matrix', heatmapIcon),
+      createChart('canvasxpress', 'cx-sankey', 'Sankey Diagram', 'Sankey Diagram', sankeyIcon),
+      createChart('canvasxpress', 'cx-chord', 'Chord Diagram', 'Chord Diagram', networkIcon),
+      createChart('canvasxpress', 'cx-circos', 'Circos Plot', 'Circos Plot', sunburstIcon),
+      createChart('canvasxpress', 'cx-loess', 'Loess Fit', 'Loess Fit', regressionIcon),
+      createChart('canvasxpress', 'cx-splom', 'SPLOM', 'SPLOM', scatterIcon),
+      createChart('canvasxpress', 'cx-genome', 'Genome Browser', 'Genome Browser', barTableIcon),
+    ],
+  },
 ];
 
 export const DEFAULT_CHART_ID = CHART_CATEGORIES[0]?.charts[0]?.id ?? 'scatter-plot';

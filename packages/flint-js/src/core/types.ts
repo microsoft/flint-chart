@@ -29,6 +29,8 @@ import type { FamilyMeasure } from './text-width';
 export const channels = [
     "x", "y", "x2", "y2", "id", "color", "opacity", "size", "shape", "strokeDash", "column",
     "row", "latitude", "longitude", "radius", "detail", "group",
+    // Scatter 3D: the third spatial axis.
+    "z",
     "open", "high", "low", "close", "angle",
     // Connected Scatter Plot: the sequence field that defines the line's
     // connection order (the trajectory), independent of the x value.

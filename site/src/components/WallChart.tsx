@@ -66,5 +66,19 @@ export function WallChart({
     return { ...themed, chart_spec: spec };
   }, [testCase, canvasSize, chartPropertyOverrides, themeId, themeSpec, useThemeCanvas, backend, headline?.title, headline?.subtitle]);
 
-  return <FlintView spec={input} backend={backend} compact onChange={onChange} />;
+  // CanvasXpress binds its own pointer handlers to the <canvas> (hover, select,
+  // zoom, double-click customizer) and swallows the click, so — unlike the inert
+  // SVG backends — a tile click never bubbles to the gallery card's button. A
+  // transparent overlay above the chart catches the click before the canvas and
+  // lets it bubble, so the card opens. Thumbnails are not meant to be interactive;
+  // the detail view (not this component) keeps full CanvasXpress interactivity.
+  const needsClickShield = backend === 'canvasxpress';
+  const chart = <FlintView spec={input} backend={backend} compact onChange={onChange} />;
+  if (!needsClickShield) return chart;
+  return (
+    <div style={{ position: 'relative' }}>
+      {chart}
+      <div aria-hidden="true" style={{ position: 'absolute', inset: 0, cursor: 'pointer' }} />
+    </div>
+  );
 }

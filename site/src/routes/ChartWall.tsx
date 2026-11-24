@@ -39,6 +39,19 @@ import { scrollNavItemIntoView } from '../shared/scroll-to-heading';
 
 const MAX_VARIANTS = 4;
 const TILE_CHART_HEIGHT = 190;
+/**
+ * Chart types whose meaning spans their full width, so the thumbnail must show
+ * the whole chart (contain-fit) rather than height-gate and crop the right side
+ * to the left edge at rest. Pyramids are centre-origin (cropping hides one half);
+ * bullets put the target marker on the right; ranged-dot/dumbbell ranges run the
+ * full width. Without this they read as half-charts until hovered.
+ */
+const WIDTH_ESSENTIAL_CHARTS = new Set<string>([
+  'Calendar Heatmap',
+  'Pyramid Chart',
+  'Bullet Chart',
+  'Ranged Dot Plot',
+]);
 const SCROLL_SPY_ACTIVATION_RATIO = 0.45;
 const SCROLL_SPY_VISIBLE_MARGIN = 24;
 type GalleryBackend = PreviewBackend | 'excel';
@@ -592,6 +605,7 @@ function BackendIntro({
     echarts: 'option',
     chartjs: 'config',
     plotly: 'figure',
+    canvasxpress: 'spec',
   };
   const snippet = `import { ${category.fn} } from 'flint-chart';
 
@@ -749,7 +763,7 @@ function VariantCard({ tile, onOpen }: { tile: Tile; onOpen: () => void }) {
           <ChartThumb
             height={TILE_CHART_HEIGHT}
             hovered={hovered}
-            contain={faceted || tile.testCase.chartType === 'Calendar Heatmap'}
+            contain={faceted || WIDTH_ESSENTIAL_CHARTS.has(tile.testCase.chartType)}
           >
             <WallChart testCase={tile.testCase} backend={tile.chart.backend} />
           </ChartThumb>

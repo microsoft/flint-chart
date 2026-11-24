@@ -66,6 +66,11 @@ const LABEL_TO_FAMILY: Record<string, string> = {
   'violin plot': 'distribution',
   ecdf: 'distribution',
   'ecdf plot': 'distribution',
+  // Scatter & Points (scientific point/curve charts)
+  'kaplan-meier': 'scatter',
+  'volcano plot': 'scatter',
+  'loess fit': 'scatter',
+  splom: 'scatter',
   // Circular & Radial
   pie: 'radial',
   doughnut: 'radial',
@@ -73,20 +78,29 @@ const LABEL_TO_FAMILY: Record<string, string> = {
   radar: 'radial',
   funnel: 'radial',
   gauge: 'radial',
+  'chord diagram': 'radial',
+  'circos plot': 'radial',
   // Tables & Multi-Dimensional
   heatmap: 'matrix',
   'calendar heatmap': 'matrix',
+  'clustered heatmap': 'matrix',
+  'correlation matrix': 'matrix',
   'parallel coordinates': 'matrix',
   candlestick: 'matrix',
+  'genome browser': 'matrix',
+  'upset plot': 'matrix',
+  oncoprint: 'matrix',
   // Maps
   map: 'maps',
   choropleth: 'maps',
-  // Hierarchies & Flows
+  // Hierarchies & Flows — CanvasXpress network/sankey join the ECharts
+  // tree/treemap/sankey/graph charts already in this family.
+  'network graph': 'flow',
+  'sankey diagram': 'flow',
+  sankey: 'flow',
   treemap: 'flow',
   sunburst: 'flow',
   tree: 'flow',
-  sankey: 'flow',
-  'network graph': 'flow',
 };
 
 export function familyForChart(chart: ChartEntry): string {

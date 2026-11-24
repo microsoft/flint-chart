@@ -4,7 +4,7 @@ import { defineConfig, type Options } from 'tsup';
 const LAZY_TOPOLOGIES = ['world-bank-coarse', 'world-bank-medium', 'world-110m', 'states-10m', 'counties-albers-10m'];
 
 /** The entries the live-chart and React entries load on demand, each kept a file of its own. */
-const LAZY_IMPORT = /import\((['"])(\.\.\/(?:(?:vegalite|echarts|chartjs|plotly)\/interactive|validate\/links))\1\)/g;
+const LAZY_IMPORT = /import\((['"])(\.\.\/(?:(?:vegalite|echarts|chartjs|plotly|canvasxpress)\/interactive|validate\/links))\1\)/g;
 
 // Node, Deno and a browser reading the files as published resolve no import without its extension,
 // so each format names its own sibling: `.js` from the ES modules, `.cjs` from the CommonJS ones.
@@ -27,6 +27,7 @@ const library: Options = {
     'echarts/index': 'src/echarts/index.ts',
     'chartjs/index': 'src/chartjs/index.ts',
     'plotly/index': 'src/plotly/index.ts',
+    'canvasxpress/index': 'src/canvasxpress/index.ts',
     'excel/index': 'src/excel/index.ts',
     'image-charts/index': 'src/image-charts/index.ts',
     'validate/index': 'src/validate/index.ts',
@@ -47,6 +48,7 @@ const library: Options = {
     'echarts/interactive': 'src/echarts/interactive.ts',
     'chartjs/interactive': 'src/chartjs/interactive.ts',
     'plotly/interactive': 'src/plotly/interactive.ts',
+    'canvasxpress/interactive': 'src/canvasxpress/interactive.ts',
     'test-data/index': 'src/test-data/index.ts',
     'gallery/index': 'src/gallery/index.ts',
   },
@@ -60,8 +62,8 @@ const library: Options = {
   treeshake: true,
   target: 'es2020',
   external: [
-    'vega', 'vega-lite', 'vega-tooltip', 'echarts', 'chart.js', 'plotly.js', 'plotly.js-dist-min', 'react',
-    '../vegalite/interactive', '../echarts/interactive', '../chartjs/interactive', '../plotly/interactive',
+    'vega', 'vega-lite', 'vega-tooltip', 'echarts', 'chart.js', 'plotly.js', 'plotly.js-dist-min', 'canvasxpress', 'react',
+    '../vegalite/interactive', '../echarts/interactive', '../chartjs/interactive', '../plotly/interactive', '../canvasxpress/interactive',
     '../validate/links',
     // The bundled boundaries, imported by the package's own name (see src/vegalite/boundary-loader.ts).
     /^flint-chart\/geo\/lazy\//,

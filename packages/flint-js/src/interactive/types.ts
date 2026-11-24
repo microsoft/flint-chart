@@ -6,6 +6,7 @@ import type { AssistedTargetingOptions, InteractionDefaults } from '../core/inte
 import type { InteractionResetGesture } from './reset';
 import type { VegaInteractiveRendererOptions } from '../vegalite/interactive';
 import type { EChartsInteractiveRendererOptions } from '../echarts/interactive';
+import type { CanvasXpressInteractiveRendererOptions } from '../canvasxpress/interactive';
 
 export type {
     AssistedTargetingOptions,
@@ -141,7 +142,7 @@ export interface InteractiveChartSurfaceOptions {
     warnings?: readonly ChartWarning[];
 }
 
-export type InteractiveBackend = 'vegalite' | 'echarts' | 'chartjs' | 'plotly';
+export type InteractiveBackend = 'vegalite' | 'echarts' | 'chartjs' | 'plotly' | 'canvasxpress';
 
 /**
  * Each backend's interactive renderer factory, as `flint-chart/<backend>/interactive` exports it
@@ -154,6 +155,7 @@ export interface InteractiveRenderers {
     echarts?: (options?: EChartsInteractiveRendererOptions) => InteractiveRendererAdapter;
     chartjs?: () => InteractiveRendererAdapter;
     plotly?: () => InteractiveRendererAdapter;
+    canvasxpress?: (options?: CanvasXpressInteractiveRendererOptions) => InteractiveRendererAdapter;
 }
 
 /** How an entry loads each backend's renderer factory when the host passes none. */
