@@ -1,6 +1,8 @@
+import { isTextAnnotationOp, type PresentedAnnotationSpec, type RegionAnnotationSpec } from '../../core/interaction-contracts';
 import type {
     AnnotationCandidate,
     AnnotationConnection,
+    ChartUpdate,
     ChartUpdatePresenter,
     InteractionContext,
     SemanticElement,
@@ -9,10 +11,7 @@ import type {
 export function annotationCandidates(
     ...connections: readonly AnnotationConnection[]
 ): readonly AnnotationCandidate[] {
-    return connections.map((connection, priority) => ({
-        connection,
-        priority,
-    }));
+    return connections.map((connection) => ({ connection }));
 }
 
 export function valueEndAnnotationCandidates(
@@ -20,8 +19,8 @@ export function valueEndAnnotationCandidates(
     ...fallbacks: readonly AnnotationConnection[]
 ): readonly AnnotationCandidate[] {
     return [
-        { connection: 'value-end', valueAxis, priority: 0 },
-        ...fallbacks.map((connection, index) => ({ connection, priority: index + 1 })),
+        { connection: 'value-end', valueAxis },
+        ...fallbacks.map((connection) => ({ connection })),
     ];
 }
 
@@ -32,12 +31,8 @@ export function lollipopAnnotationCandidates(
         ? ['right', 'left']
         : ['top', 'bottom'];
     return [
-        { connection: 'value-end', valueAxis, anglePreference: 'oblique', priority: 0 },
-        ...sideConnections.map((connection, index) => ({
-            connection,
-            anglePreference: 'oblique' as const,
-            priority: index + 1,
-        })),
+        { connection: 'value-end', valueAxis },
+        ...sideConnections.map((connection) => ({ connection })),
     ];
 }
 
@@ -48,10 +43,10 @@ export function barAnnotationCandidates(
         ? ['top', 'bottom']
         : ['right', 'left'];
     return [
-        { connection: 'value-end', valueAxis, priority: 0 },
-        { connection: 'value-side', valueAxis, crossSide: 'start', valueInset: 1 / 8, priority: 1 },
-        { connection: 'value-side', valueAxis, crossSide: 'end', valueInset: 1 / 8, priority: 1 },
-        ...crossAxisEdges.map((connection) => ({ connection, priority: 2 })),
+        { connection: 'value-end', valueAxis },
+        { connection: 'value-side', valueAxis, crossSide: 'start', valueInset: 1 / 8 },
+        { connection: 'value-side', valueAxis, crossSide: 'end', valueInset: 1 / 8 },
+        ...crossAxisEdges.map((connection) => ({ connection })),
     ];
 }
 
@@ -70,7 +65,7 @@ export function presentAnnotationUpdate(
     return (update, context) => ({
         id: update.id,
         ops: update.ops.flatMap((op) => {
-            if (op.op !== 'set-annotation' || op.value === null || 'select' in op.target) return op;
+            if (!isTextAnnotationOp(op) || op.value === null || 'select' in op.target) return op;
             const element = op.target.elements[0];
             if (!element) return [];
             const presentation = presentAnnotation(
@@ -78,25 +73,66 @@ export function presentAnnotationUpdate(
                 context,
                 op.value.anchor === 'point' ? { ...op.target.visual, kind: 'mark' } : op.target.visual,
             );
+            // An empty text is a cue with no caption; an absent one is the chart's own wording.
             const text = op.value.text ?? formatAnnotation(element, context, op.target.visual);
-            if (!text) return [];
-            return {
-                ...op,
-                value: {
-                    ...op.value,
-                    text,
-                    candidates: Array.isArray(presentation) ? presentation : [presentation],
-                    subject: op.target.visual,
-                },
+            if (text === undefined || (text === '' && op.value.text !== '')) return [];
+            const value: PresentedAnnotationSpec = {
+                ...op.value,
+                text,
+                candidates: Array.isArray(presentation) ? presentation : [presentation],
+                subject: op.target.visual,
             };
+            return { ...op, value };
         }),
     });
 }
 
 export const suppressAnnotationUpdate: ChartUpdatePresenter = (update) => ({
     id: update.id,
-    ops: update.ops.filter((op) => op.op !== 'set-annotation'),
+    ops: update.ops.filter((op) => !isTextAnnotationOp(op)),
 });
+
+/**
+ * The notes a list of updates sets, each by the fields that name its mark and its text, for a
+ * compile to make room for them: a note by `select.key`, or on an element with its row. A note
+ * whose text the chart would write, or set on a `where` selection, is left out.
+ */
+export function notesOfUpdates(updates: readonly ChartUpdate[] | undefined): { key: Record<string, unknown>; text: string }[] {
+    return (updates ?? []).flatMap((update) => update.ops.flatMap((op) => {
+        if (!isTextAnnotationOp(op) || !op.value || typeof op.value.text !== 'string' || !op.value.text) return [];
+        const text = op.value.text;
+        if ('select' in op.target) return 'key' in op.target.select && op.target.select.key ? [{ key: { ...op.target.select.key }, text }] : [];
+        const record = op.target.elements[0]?.records?.[0];
+        return record && typeof record === 'object' ? [{ key: { ...(record as Record<string, unknown>) }, text }] : [];
+    }));
+}
+
+/** The enclosures a list of updates sets, for a compile to make room for their outlines (`AssembleOptions.enclosures`). */
+export function enclosuresOfUpdates(updates: readonly ChartUpdate[] | undefined): { targets: readonly unknown[] }[] {
+    return (updates ?? []).flatMap((update) => update.ops.flatMap((op) => op.op === 'annotate-enclosure' && op.value ? [{ targets: op.value.targets }] : []));
+}
+
+/** The regions a list of updates sets, for a compile to make room for their captions (`AssembleOptions.regions`). */
+/**
+ * The y values the updates mark across the plot: a reference rule's (an overlay with y and no x) and
+ * a band's ends (an overlay rect, or a region, with y and no x), for the compile to keep in the axis.
+ */
+export function referencesOfUpdates(updates: readonly ChartUpdate[] | undefined): number[] {
+    const numbers = (values: readonly unknown[]) => values.filter((value): value is number => typeof value === 'number' && Number.isFinite(value));
+    return (updates ?? []).flatMap((update) => update.ops.flatMap((op) => {
+        if (op.op === 'set-overlay' && op.value && (op.value.mark === 'rule' || op.value.mark === 'rect')) {
+            const { y, y2, x } = op.value.encodings ?? {};
+            if (!y || x) return [];
+            return numbers((op.value.data?.values ?? []).flatMap((row) => [row[y.field], ...(y2 ? [row[y2.field]] : [])]));
+        }
+        if (op.op === 'annotate-region' && op.value && op.value.y && !op.value.x) return numbers(op.value.y);
+        return [];
+    }));
+}
+
+export function regionsOfUpdates(updates: readonly ChartUpdate[] | undefined): RegionAnnotationSpec[] {
+    return (updates ?? []).flatMap((update) => update.ops.flatMap((op) => op.op === 'annotate-region' && op.value ? [op.value] : []));
+}
 
 // In the chart's locale: Vega labels axes in en-US whatever the browser's.
 function displayValue(field: string | undefined, value: unknown): string | undefined {

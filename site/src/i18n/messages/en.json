@@ -400,10 +400,21 @@
     "ctaMcp": "Get MCP Server",
     "ctaGithub": "Visit GitHub",
     "ctaDocs": "Read the docs",
+    "ctaTalk": "VIS 2026 talk",
+    "tryIt": {
+      "title": "Try it now",
+      "body": "Copy this prompt into your AI agent, such as GitHub Copilot, Claude Code, Cursor or Codex. It adds the Flint MCP server and draws your first chart.",
+      "manual": "Wondering about the experience? Check out <mcp>the MCP server</mcp>."
+    },
     "news": {
       "title": "Updates",
       "video": "Video",
       "watchVideo": "Watch the Flint 1.0 demo video on YouTube",
+      "release110": {
+        "date": "November 15, 2026",
+        "dateTime": "2026-11-15",
+        "text": "Flint 1.1 brings maps (custom boundaries, globes, routes and labels) and sturdier layouts across every backend."
+      },
       "release100": {
         "date": "October 19, 2026",
         "dateTime": "2026-10-19",
@@ -443,16 +454,40 @@
     "howItWorks": "How it works?",
     "howItWorksBody": "A Flint spec consists of the data, semantic types, the chart spec, and optional theme and interaction specs. Instead of relying on complex user-side logic to glue them together, the compiler does the heavy lifting: it resolves each part against the others and composes a complete backend-native spec (shown here in Vega-Lite), filling in the necessary low-level details, and renders a good-looking, interactive chart.",
     "overviewAlt": "Flint workflow: an agent infers a dataSpec from a raw table, a short chartSpec is written, and Flint compiles it into a faceted line chart, then a grouped bar, waterfall, heatmap, and sunburst as the spec is edited.",
-    "leadBefore": "Flint is a visualization intermediate language that lets",
-    "leadHighlight1": "AI agents reliably create expressive, good-looking and interactive charts from simple, human-editable chart specs",
-    "leadStop": ". ",
-    "leadAvailability": "It is available as an <mcp>MCP server</mcp> for everyday use with your agent, and as an <npm>npm library</npm> for building interactive applications.",
-    "leadHighlight2": "Flint supports {{chartTypes}} chart types across {{backends}} rendering backends through one unified interface, with {{themes}} themes and {{presets}} interaction presets",
-    "leadAfter": "To create bespoke visualizations, you can design custom themes in the <themeLab>Theme Lab</themeLab> and build <advanced>advanced interactions</advanced> with the Flint API.",
-    "backendRosterLabel": "Backends",
-    "themeRosterLabel": "Themes",
-    "interactionRosterLabel": "Interactions",
-    "themeRosterMore": "+ {{count}} more",
+    "points": {
+      "agent": "Flint lets AI agents <strong>reliably create expressive, good-looking and interactive charts</strong> from simple, human-editable specs.",
+      "agentIcon": "An agent beside the chart it made",
+      "untangle": "Traditionally, good-looking charts rely on verbose <strong>low-level details</strong> that entangle visual, style and interaction logic. Flint pushes these challenges to the compiler so that the spec stays simple.",
+      "untangleIcon": "Tangled threads straightened into three",
+      "many": "Flint supports <strong>{{chartTypes}} chart types</strong> across <strong>{{backends}} rendering backends</strong>, <strong>{{themes}} themes</strong> and <strong>{{presets}} interaction presets</strong>. It's easy to <customize>customize</customize>, too!",
+      "manyIcon": "Many charts in many looks"
+    },
+    "leadAvailability": "Use it as an <mcp>MCP server</mcp> with your agent, or as an <npm>npm library</npm> in your app.",
+    "wiring": {
+      "alt": "Flint spec = data spec + chart spec + theme spec + interaction spec. The Flint compiler wires them together: it grounds the semantic types, optimizes the layout, resolves the theme and links interaction semantics, then emits rendering-library specs such as Vega-Lite, ECharts and Chart.js.",
+      "spec": "Flint spec =",
+      "parts": {
+        "data": {
+          "name": "data spec",
+          "note": "What data means"
+        },
+        "chart": {
+          "name": "chart spec",
+          "note": "What to show"
+        },
+        "theme": {
+          "name": "theme spec",
+          "note": "How it looks"
+        },
+        "interaction": {
+          "name": "interaction spec",
+          "note": "How it behaves"
+        }
+      },
+      "compiler": "Flint compiler",
+      "compilerNote": "wires them together",
+      "backends": "Rendering-library specs"
+    },
     "flintSpec": "Flint spec",
     "compiledChart": "Compiled chart",
     "backendAria": "Rendering backend",
@@ -511,8 +546,8 @@
         "title": "Eggs swung while bread crept up",
         "subtitle": "U.S. average price in USD, a dozen eggs and a pound of white bread (BLS)"
       },
-      "drawIt": {
-        "label": "You draw it"
+      "odyssey": {
+        "label": "Odyssey journey"
       },
       "facetedLine": {
         "label": "Faceted line",
@@ -566,6 +601,8 @@
     "leadBefore": "Install <code>flint-chart-mcp</code> as a",
     "leadMcpLink": "Model Context Protocol",
     "leadAfter": "server and your agent can create interactive charts or author reusable visual themes. By default it opens an interactive Flint chart view; it can also return static artifacts and guide agents through a formal ThemeSpec.",
+    "copyPrompt": "Copy prompt",
+    "copied": "Copied",
     "quickStart": "Quick start:",
     "quickStartBody": "paste this setup request into your agent and let it configure Flint for the current project. For manual setup, see",
     "installConfigure": "install & configure",

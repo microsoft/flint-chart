@@ -11,7 +11,7 @@
  */
 
 import { compile } from 'vega-lite';
-import { parse, View } from 'vega';
+import { loader as vegaLoader, parse, View } from 'vega';
 import { describe, expect, it } from 'vitest';
 import { assembleVegaLite } from '../src';
 import { navigate } from '../src/interactive/interactions';
@@ -27,6 +27,7 @@ import {
     GEO_PROJECTION_SIGNAL,
     GEO_ROTATE_SIGNAL,
     guardGeoExtent,
+    MAP_PAN_SLACK,
     eastwardSpan,
     interpolateRotation,
     sphericalCentroid,
@@ -36,6 +37,8 @@ import {
     type GeoExtent,
 } from '../src/vegalite/interactions/navigation-geo';
 import { domainForPlotGeometry, resolveSupportedOperation } from '../src/vegalite/interactions/runtime';
+import { followGeoDetail, GEO_DETAIL_SIGNAL, injectVegaGeoDetail } from '../src/vegalite/interactions/geo-detail';
+import { withBundledBoundaries } from '../src/vegalite/boundary-loader';
 
 const GUARD = { minVisibleFraction: 0.02, maxVisibleFraction: 1, overscrollFraction: 0 };
 
@@ -65,7 +68,7 @@ function worldBubbleMap(): any {
         chart_spec: {
             chartType: 'Map',
             encodings: { longitude: 'Lon', latitude: 'Lat', size: 'Pop' },
-            chartProperties: { region: 'world', projection: 'mercator' },
+            chartProperties: { region: 'world', projection: 'mercator', fit: 'whole' },
         },
     } as any) as any;
     // Replace the remote TopoJSON base with inline features.
@@ -155,6 +158,16 @@ describe('geo extent helpers', () => {
             ...GUARD, overscrollFraction: 0.15,
         });
         extent.flat().forEach((value, index) => expect(value).toBeCloseTo([0, 0, 100, 50][index], 10));
+    });
+
+    it('lets a flat map be dragged half its plot past each edge, at any zoom, and no further', () => {
+        const size = { width: 100, height: 50 };
+        const near = (actual: GeoExtent, expected: GeoExtent) => actual.flat().forEach((value, i) => expect(value).toBeCloseTo(expected.flat()[i], 6));
+        // At the full frame, a drag moves the map up to half the plot.
+        near(guardGeoExtent([[30, 10], [130, 60]], size, GUARD, MAP_PAN_SLACK), [[30, 10], [130, 60]]);
+        near(guardGeoExtent([[90, -40], [190, 10]], size, GUARD, MAP_PAN_SLACK), [[50, -25], [150, 25]]);
+        // Zoomed in four times, the slack is still half the plot in pixels past the map's edge.
+        near(guardGeoExtent([[80, 0], [480, 200]], size, GUARD, MAP_PAN_SLACK), [[50, 0], [450, 200]]);
     });
 
     it('remaps a pixel between extents by the fit\'s scale and offset', () => {
@@ -340,6 +353,8 @@ async function mountedGlobe(center: [number, number] = [0, 0]) {
             chartProperties: { region: 'world', projection: 'orthographic', projectionCenter: center },
         },
     } as any) as any;
+    // The inline blocks stand in for the countries; the disputed borders and the mesh of borders have none to draw.
+    spec.layer = spec.layer.filter((layer: any) => layer.data?.format?.feature !== 'disputed' && !layer.data?.format?.mesh);
     for (const layer of spec.layer) {
         if (layer.data?.url) layer.data = { values: BASE_FEATURES };
     }
@@ -358,6 +373,118 @@ function facing(view: any): [number, number] {
     return view.signal(GEO_PROJECTION_SIGNAL).invert([view.width() / 2, view.height() / 2]);
 }
 
+/** A point map drawn as a globe over the inline land blocks: a near point at (10°, 0) and a far one at (170°, 0). */
+function pointGlobe(chartProperties: Record<string, unknown> = { projection: 'orthographic', projectionCenter: [0, 0] }): any {
+    const spec = assembleVegaLite({
+        data: { values: [{ Site: 'near', Lon: 10, Lat: 0, Kind: 'a' }, { Site: 'far', Lon: 170, Lat: 0, Kind: 'b' }] },
+        semantic_types: { Site: 'Name', Lon: 'Longitude', Lat: 'Latitude', Kind: 'Category' },
+        chart_spec: { chartType: 'Map', encodings: { longitude: 'Lon', latitude: 'Lat', color: 'Kind' }, chartProperties: { region: 'world', ...chartProperties } },
+    } as any) as any;
+    for (const layer of spec.layer) {
+        if (layer.data?.url) layer.data = layer.data.format?.feature === 'disputed' ? { values: [] } : { values: BASE_FEATURES };
+    }
+    return spec;
+}
+
+/** The opacity each point is drawn at, by its site. */
+function pointOpacities(view: any): Record<string, number> {
+    const out: Record<string, number> = {};
+    const visit = (item: any) => {
+        if (item.mark?.marktype === 'symbol' && item.datum?.Site) out[item.datum.Site] = item.opacity;
+        for (const child of item.items ?? []) visit(child);
+    };
+    visit(view.scenegraph().root);
+    return out;
+}
+
+describe('point map as a globe', () => {
+    it('is square, shares one sphere-fitted projection, and puts the sea under the land and the points', () => {
+        const spec = pointGlobe();
+        expect(spec.width).toBe(spec.height);
+        expect(spec.projection).toEqual(expect.objectContaining({ type: 'orthographic', fit: { type: 'Sphere' } }));
+        expect(spec.layer.every((layer: any) => layer.projection === undefined)).toBe(true);
+        expect(spec.layer[0].data).toEqual({ sphere: true });
+        // The sea under all, then the land and its borders, the dotted disputed borders, and the points over them.
+        const circle = spec.layer.findIndex((layer: any) => (layer.mark?.type ?? layer.mark) === 'circle');
+        expect(circle).toBe(spec.layer.length - 1);
+        expect(spec.layer[circle - 1].mark.strokeDash).toBeDefined();
+        expect(spec.layer.slice(1, circle - 1).every((layer: any) => (layer.mark?.type ?? layer.mark) === 'geoshape')).toBe(true);
+        expect(spec.layer[circle].encoding.opacity.condition.value).toBe(0);
+        expect(spec.params).toContainEqual({ name: GEO_ROTATE_SIGNAL, value: [0, 0, 0] });
+    });
+
+    it('faces its data where no centre is given, never tipped onto a pole', () => {
+        const spec = assembleVegaLite({
+            data: { values: [{ Lon: 100, Lat: 10 }, { Lon: 120, Lat: 30 }] },
+            semantic_types: { Lon: 'Longitude', Lat: 'Latitude' },
+            chart_spec: { chartType: 'Map', encodings: { longitude: 'Lon', latitude: 'Lat' }, chartProperties: { projection: 'orthographic' } },
+        } as any) as any;
+        expect(spec.projection.rotate).toEqual([-110, -20, 0]);
+        const spread = assembleVegaLite({
+            data: { values: [[-6, 53], [104, 1], [-96, 41], [-71, -33], [27, 61], [121, 24]].map(([Lon, Lat]) => ({ Lon, Lat })) },
+            semantic_types: { Lon: 'Longitude', Lat: 'Latitude' },
+            chart_spec: { chartType: 'Map', encodings: { longitude: 'Lon', latitude: 'Lat' }, chartProperties: { projection: 'orthographic' } },
+        } as any) as any;
+        expect(Math.abs(spread.projection.rotate[1])).toBeLessThanOrEqual(60);
+        const across = assembleVegaLite({
+            data: { values: [{ Lon: 170, Lat: 0 }, { Lon: -170, Lat: 0 }] },
+            semantic_types: { Lon: 'Longitude', Lat: 'Latitude' },
+            chart_spec: { chartType: 'Map', encodings: { longitude: 'Lon', latitude: 'Lat' }, chartProperties: { projection: 'orthographic' } },
+        } as any) as any;
+        expect(Math.abs(across.projection.rotate[0])).toBeCloseTo(180, 5);
+    });
+
+    it('hides a point behind the horizon, statically', async () => {
+        const view = new View(parse(compile(pointGlobe()).spec as any), { renderer: 'none' });
+        await view.runAsync();
+        const opacity = pointOpacities(view);
+        expect(opacity.near).toBeGreaterThan(0);
+        expect(opacity.far).toBe(0);
+        view.finalize();
+    });
+
+    it('shows the far point once a drag turns it to the front', async () => {
+        const spec = pointGlobe();
+        const plan = addVegaLiteInteractions(spec, [navigate()])!;
+        const compiled = compile(spec).spec as any;
+        const axes = injectVegaGeoNavigationSignals(compiled, plan.navigationChannels);
+        expect(compiled.signals.filter((signal: any) => signal.name === GEO_ROTATE_SIGNAL)).toHaveLength(1);
+        const view = new View(parse(compiled), { renderer: 'none' });
+        await view.runAsync();
+        const controller = createVegaGeoNavigationController(view, axes);
+        expect(controller.apply({ op: 'set-viewport', axes: 'xy', value: { x: [150, 190] } })).toBe(true);
+        await view.runAsync();
+        const opacity = pointOpacities(view);
+        expect(opacity.far).toBeGreaterThan(0);
+        expect(opacity.near).toBe(0);
+        view.finalize();
+    });
+
+    it('mounts its interactions as an interactive chart does, the far side still hidden under focus and hover', () => {
+        // Semantic updates on, as <FlintChart> mounts every chart: the points take focus and hover,
+        // and the plan must not fall back to a static chart because their opacity is the template's.
+        const spec = pointGlobe();
+        const plan = addVegaLiteInteractions(spec, [navigate()], true);
+        expect(plan).not.toBeNull();
+        expect(plan!.geoNavigation).toBe(true);
+        const points = spec.layer.find((layer: any) => (layer.mark?.type ?? layer.mark) === 'circle');
+        const conditions = points.encoding.opacity.condition;
+        expect(Array.isArray(conditions)).toBe(true);
+        expect(conditions[0]).toEqual(expect.objectContaining({ value: 0 }));
+        expect(conditions[0].test).toMatch(/cos/);
+        expect(conditions.length).toBeGreaterThan(1);
+    });
+
+    it('leaves a flat point map without a sea, a rotation signal, or hidden points', () => {
+        const flat = pointGlobe({ projection: 'equalEarth' });
+        // The water's frame, the land, its borders, the disputed borders on the land's colour, the points: no sphere.
+        expect(flat.layer.some((layer: any) => layer.data?.sphere)).toBe(false);
+        expect(flat.params ?? []).not.toContainEqual(expect.objectContaining({ name: GEO_ROTATE_SIGNAL }));
+        const points = flat.layer.find((layer: any) => (layer.mark?.type ?? layer.mark) === 'circle');
+        expect(points.encoding.opacity).toBeUndefined();
+    });
+});
+
 describe('globe navigation', () => {
     it('draws a world choropleth as a globe: a square plot, the sea, no-data land, and a sphere fit', () => {
         const { spec } = { spec: assembleVegaLite({
@@ -372,19 +499,22 @@ describe('globe navigation', () => {
             type: 'orthographic', rotate: [-10, -50, 0], fit: { type: 'Sphere' },
         }));
         expect(spec.width).toBe(spec.height);
-        expect(spec.layer).toHaveLength(3);
+        // The sea, the land without data, the countries, the borders between them, the disputed borders.
+        expect(spec.layer).toHaveLength(5);
         expect(spec.layer[0].data).toEqual({ sphere: true });
         expect(spec.layer[1].mark.fill).toBeDefined();
         expect(spec.layer[2].encoding.color.field).toBe('Warming');
+        expect(spec.layer[3].data.format).toMatchObject({ mesh: 'countries', filter: 'interior' });
+        expect(spec.layer[4].data.format.feature).toBe('disputed');
     });
 
-    it('keeps a flat world choropleth one layer, and offers the projection only on the world map', () => {
+    it('keeps a flat world choropleth to its regions and their disputed borders, and offers the projection only on the world map', () => {
         const flat = assembleVegaLite({
             data: { values: [{ Country: 'Norway', Warming: 2.8 }] },
             semantic_types: { Country: 'Country', Warming: 'Quantity' },
             chart_spec: { chartType: 'Choropleth', encodings: { id: 'Country', color: 'Warming' }, chartProperties: { region: 'world', projection: 'mercator' } },
         } as any) as any;
-        expect(flat.layer).toBeUndefined();
+        expect(flat.layer.filter((layer: any) => layer.data?.format).map((layer: any) => layer.data.format.feature ?? 'mesh')).toEqual(['countries', 'mesh', 'disputed']);
         expect(flat.projection.type).toBe('mercator');
     });
 
@@ -520,5 +650,64 @@ describe('globe maths', () => {
         expect(eastwardSpan(170, -170)).toBe(20);
         expect(eastwardSpan(-180, 180)).toBe(360);
         expect(turnGlobe([0, 0, 0], 0, -1e6, 100)[1]).toBe(90);
+    });
+});
+
+describe('boundaries that sharpen with the zoom', () => {
+    it('swap the coarse World Bank map for the medium one near a continent, from the package, and back on the way out', async () => {
+        const spec = assembleVegaLite({
+            data: { values: ['United States', 'China', 'Brazil', 'Nigeria', 'India'].map((Country, i) => ({ Country, Value: i })) },
+            semantic_types: { Country: 'Country', Value: 'Quantity' },
+            chart_spec: { chartType: 'Choropleth', encodings: { id: 'Country', color: 'Value' } },
+        } as any) as any;
+        const plan = addVegaLiteInteractions(spec, [navigate()])!;
+        const compiled = compile(spec).spec as any;
+        const axes = injectVegaGeoNavigationSignals(compiled, plan.navigationChannels);
+        expect(injectVegaGeoDetail(compiled)).toBe(true);
+        const requested: string[] = [];
+        const base = vegaLoader();
+        const load = base.load.bind(base);
+        base.load = ((uri: string, options?: any) => {
+            requested.push(uri);
+            return load(uri, options);
+        }) as typeof base.load;
+        const view = new View(parse(compiled), { renderer: 'none', loader: withBundledBoundaries(base) } as any);
+        await view.runAsync();
+        const stop = followGeoDetail(view);
+        const controller = createVegaGeoNavigationController(view, axes, undefined, undefined, { focusSource: vegaGeoFocusSource(compiled) });
+        const settle = async () => {
+            await view.runAsync();
+            await new Promise((resolve) => setTimeout(resolve, 0));
+            await view.runAsync();
+        };
+        const zoom = async (factor: number) => {
+            const update = controller.resolve({ type: 'navigation', phase: 'commit', operation: 'zoom', axes: 'xy', factor, anchor: { x: 0.5, y: 0.5 } }, GUARD)!;
+            controller.apply(update);
+            await settle();
+        };
+        expect(view.signal(GEO_DETAIL_SIGNAL)).toBe('coarse');
+        await zoom(8);
+        expect(view.signal(GEO_DETAIL_SIGNAL)).toBe('medium');
+        // The bundled copy answered: the medium file was asked for, and nothing was fetched.
+        expect(requested).toEqual([]);
+        expect(view.data(vegaGeoFocusSource(compiled)!).length).toBeGreaterThan(200);
+        await zoom(1 / 8);
+        expect(view.signal(GEO_DETAIL_SIGNAL)).toBe('coarse');
+        stop();
+        view.finalize();
+    });
+
+    it('leave a map framed on a region, or drawn from a file of its own, as it is', () => {
+        const compiledOf = (rows: string[], chartProperties: Record<string, unknown> = {}) => {
+            const spec = assembleVegaLite({
+                data: { values: rows.map((Country, i) => ({ Country, Value: i })) },
+                semantic_types: { Country: 'Country', Value: 'Quantity' },
+                chart_spec: { chartType: 'Choropleth', encodings: { id: 'Country', color: 'Value' }, chartProperties },
+            } as any) as any;
+            addVegaLiteInteractions(spec, [navigate()]);
+            return compile(spec).spec as any;
+        };
+        expect(injectVegaGeoDetail(compiledOf(['France', 'Germany']))).toBe(false);
+        expect(injectVegaGeoDetail(compiledOf(['United States', 'China', 'Brazil'], { boundaries: { url: '/maps/world.json', feature: 'countries' } }))).toBe(false);
     });
 });

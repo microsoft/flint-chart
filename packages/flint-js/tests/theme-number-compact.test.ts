@@ -144,6 +144,34 @@ describe('number compaction: precision and collisions', () => {
     });
 });
 
+describe('number compaction: a value that rounds up to the next unit (#172)', () => {
+    const each: CompactRule = { suffixes: COMPACT_SUFFIXES.short, per: 'value', threshold: 1000, on: ['labels'], types: DEFAULT_COMPACT_TYPES };
+    const one: CompactRule = { ...each, per: 'scale' };
+    const printed = (values: number[], rule: CompactRule) => values.map((v) => formatCompact(v, compactPrint(values, rule, 'significant')!, format));
+
+    it('rolls over to the next unit where rounding reaches a thousand', () => {
+        expect(printed([999600, -999600, 999600000, 999499], each)).toEqual(['1M', '−1M', '1B', '999k']);
+        expect(printed([999600, 420000, 150000], one)).toEqual(['1M', '0.42M', '0.15M']);
+    });
+
+    it('rolls over only where the stated precision rounds there', () => {
+        expect(printed([999960], { ...each, decimals: 2 })).toEqual(['999.96k']);
+        expect(printed([999960], { ...each, decimals: 0 })).toEqual(['1M']);
+    });
+
+    it('draws the same as it measures', async () => {
+        const chart = (values: number[], extra: Record<string, unknown>) => drawn(assembleVegaLite({
+            data: { values: values.map((revenue, i) => ({ region: 'NSEW'[i], revenue })) },
+            semantic_types: { region: 'Category', revenue: 'Amount' },
+            chart_spec: { chartType: 'Bar Chart', encodings: { x: { field: 'region' }, y: { field: 'revenue' } }, chartProperties: { showValueLabels: true } },
+            ...extra,
+        } as any) as any);
+        expect((await chart([999600, 420000, 150000], { theme_spec: 'nyt' })).labels).toEqual(expect.arrayContaining(['1M', '420k']));
+        expect((await chart([1200000000, 999600000, 999600], {})).labels).toEqual(expect.arrayContaining(['1.2B', '1B', '1M']));
+        expect((await chart([999600, 420000, 150000], { theme_spec: house({}) })).labels).toEqual(expect.arrayContaining(['1M', '0.42M']));
+    });
+});
+
 describe('number compaction: a scale the chart already states', () => {
     it('leaves values the headline says are in millions whole', () => {
         expect(compactApplies({ semanticType: 'Quantity', said: 'Most populous countries, 2023 (millions)' }, DEFAULT_COMPACT_TYPES)).toBe(false);

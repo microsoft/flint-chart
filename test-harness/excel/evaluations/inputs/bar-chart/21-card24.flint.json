@@ -1,0 +1,117 @@
+{
+  "semantic_types": {
+    "Hour": "Category",
+    "Views": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Bar Chart",
+    "encodings": {
+      "x": "Hour",
+      "y": "Views"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Hour": "00:00",
+        "Views": 15
+      },
+      {
+        "Hour": "01:00",
+        "Views": 15
+      },
+      {
+        "Hour": "02:00",
+        "Views": 15
+      },
+      {
+        "Hour": "03:00",
+        "Views": 31
+      },
+      {
+        "Hour": "04:00",
+        "Views": 58
+      },
+      {
+        "Hour": "05:00",
+        "Views": 79
+      },
+      {
+        "Hour": "06:00",
+        "Views": 79
+      },
+      {
+        "Hour": "07:00",
+        "Views": 89
+      },
+      {
+        "Hour": "08:00",
+        "Views": 111
+      },
+      {
+        "Hour": "09:00",
+        "Views": 88
+      },
+      {
+        "Hour": "10:00",
+        "Views": 94
+      },
+      {
+        "Hour": "11:00",
+        "Views": 93
+      },
+      {
+        "Hour": "12:00",
+        "Views": 82
+      },
+      {
+        "Hour": "13:00",
+        "Views": 88
+      },
+      {
+        "Hour": "14:00",
+        "Views": 82
+      },
+      {
+        "Hour": "15:00",
+        "Views": 88
+      },
+      {
+        "Hour": "16:00",
+        "Views": 103
+      },
+      {
+        "Hour": "17:00",
+        "Views": 98
+      },
+      {
+        "Hour": "18:00",
+        "Views": 82
+      },
+      {
+        "Hour": "19:00",
+        "Views": 69
+      },
+      {
+        "Hour": "20:00",
+        "Views": 50
+      },
+      {
+        "Hour": "21:00",
+        "Views": 17
+      },
+      {
+        "Hour": "22:00",
+        "Views": 15
+      },
+      {
+        "Hour": "23:00",
+        "Views": 15
+      }
+    ]
+  }
+}

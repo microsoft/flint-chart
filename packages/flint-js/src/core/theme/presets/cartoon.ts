@@ -8,8 +8,8 @@ import { CARTOON_ICON } from './icons';
  * Cartoon — a playful, friendly house in the spirit of xkcd and modern
  * flat-cartoon illustration.
  *
- * Modelled on the hand-authored mockups in the Cartoon lab (see
- * `site/src/playground/cartoon-lab-data.ts`). Flint cannot draw the
+ * Modelled on the hand-authored mockups of the former Cartoon lab
+ * (`site/src/playground/cartoon-lab-data.ts`, removed after commit 8682029d). Flint cannot draw the
  * hand-wobbled "last mile" of a true xkcd plot — that is a per-pixel filter on
  * the rendered SVG, not a chart decision — so the character is carried by the
  * parts a theme owns and by three levers that read as *fun*:
@@ -173,6 +173,9 @@ export const cartoon: ThemePreset = {
             point: {
                 presence: 'full',
                 fill: 'solid',
+                // Stickers stack: a dot laid over another hides it, its dark edge keeping the one
+                // beneath readable, rather than fading so piles darken.
+                opacity: 1,
                 size: 170,
                 // The dark sticker edge is the identity here; a pale halo would
                 // replace it because Vega-Lite gives a point only one stroke.

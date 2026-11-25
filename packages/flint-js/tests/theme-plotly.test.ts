@@ -104,7 +104,7 @@ describe('omitted axis titles', () => {
         });
         const text = plainTitle(figure.layout.title.text);
         expect(text).toContain('Consumer price changes; yoy_year_change');
-        expect(figure.layout.xaxis.title.text).toBe('');
+        expect(figure.layout.xaxis.title?.text ?? '').toBe('');
     });
 
     it.each([
@@ -124,7 +124,7 @@ describe('omitted axis titles', () => {
         const text = plainTitle(figure.layout.title.text);
         expect(text).toContain(subtitle ? `${subtitle}; Mass (kg)` : 'Mass (kg)');
         if (title) expect(text).toContain(title);
-        expect(figure.layout.xaxis.title.text).toBe('');
+        expect(figure.layout.xaxis.title?.text ?? '').toBe('');
     });
 });
 
@@ -475,9 +475,10 @@ describe('an outlined house on bars too thin to hold the outline', () => {
 
 describe('a banded axis measured against the room it has', () => {
     it('takes the house\'s overflow where straight labels will not fit, and never thins a row of names', () => {
-        const narrow = monthlyLine(theme({}), 260);
-        // Twelve month names (as plain categories) across 260px: too narrow a band to cut, and a row
-        // of names never drops some, so they stand upright.
+        const narrow = monthlyLine(theme({}), 160);
+        // Twelve month names (as plain categories) across 160px: measured in the face Plotly draws
+        // them in, too narrow a band to stand straight or cut, and a row of names never drops some,
+        // so they stand upright.
         expect(narrow.layout.xaxis.tickangle).toBe(-90);
         expect(narrow.layout.xaxis.ticklabelstep).toBeUndefined();
     });

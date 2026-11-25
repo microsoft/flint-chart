@@ -5,30 +5,15 @@ import { SidebarNav, SidebarNavItem, SidebarNavSection } from '../components/Sid
 import { useLocale } from '../i18n/LocaleContext';
 import { CHART_CATEGORIES } from '../shared/chart-categories';
 import { CONTENT_MAX_WIDTH, GITHUB_REPO, siteTheme } from '../shared/theme';
-import groupedBar from '../assets/excel-gallery/grouped-bar.png';
-import multiSeriesLine from '../assets/excel-gallery/multi-series-line.png';
-import stackedArea from '../assets/excel-gallery/stacked-area.png';
-import treemap from '../assets/excel-gallery/treemap.png';
-import sunburst from '../assets/excel-gallery/sunburst.png';
-import waterfall from '../assets/excel-gallery/waterfall.png';
-import pyramid from '../assets/excel-gallery/pyramid.png';
-import radar from '../assets/excel-gallery/radar.png';
-import candlestick from '../assets/excel-gallery/candlestick.png';
+import manifest from '../assets/excel-gallery/manifest.json';
 
 const HARNESS_URL = `${GITHUB_REPO}/tree/main/test-harness/excel`;
 const EXAMPLES_URL = `${GITHUB_REPO}/tree/main/test-harness/excel/evaluations/examples`;
+const WORKBOOK_URL = `${import.meta.env.BASE_URL}excel/flint-excel-gallery.xlsx`;
 
-const EXAMPLES = [
-  { id: 'grouped-bar', title: 'Grouped bar', image: groupedBar, nativeType: 'ColumnClustered' },
-  { id: 'multi-series-line', title: 'Multi-series line', image: multiSeriesLine, nativeType: 'XYScatterLines' },
-  { id: 'stacked-area', title: 'Stacked area', image: stackedArea, nativeType: 'AreaStacked' },
-  { id: 'treemap', title: 'Treemap', image: treemap, nativeType: 'Treemap' },
-  { id: 'sunburst', title: 'Sunburst', image: sunburst, nativeType: 'Sunburst' },
-  { id: 'waterfall', title: 'Waterfall', image: waterfall, nativeType: 'Waterfall' },
-  { id: 'pyramid', title: 'Population pyramid', image: pyramid, nativeType: 'BarStacked' },
-  { id: 'radar', title: 'Radar', image: radar, nativeType: 'RadarMarkers' },
-  { id: 'candlestick', title: 'Candlestick', image: candlestick, nativeType: 'StockOHLC' },
-];
+// Written by test-harness/excel/evaluations/update-examples.mjs from the real-data gallery.
+const IMAGES = import.meta.glob('../assets/excel-gallery/*.png', { eager: true, import: 'default' }) as Record<string, string>;
+const EXAMPLES = manifest.map((entry) => ({ ...entry, image: IMAGES[`../assets/excel-gallery/${entry.id}.png`] }));
 
 const COPY = {
   en: {
@@ -37,7 +22,9 @@ const COPY = {
     galleries: 'Galleries',
     examples: 'Native chart examples',
     intro: 'Flint compiles semantic chart specs into native, editable Excel charts through Office.js. Because Excel is the renderer, this gallery shows verified captures from the real Excel for Mac worker instead of a browser preview.',
-    provenance: 'These are unedited Chart.getImage() captures. The source data, titles, axes, formatting, and series remain editable in the workbook.',
+    provenance: 'Every chart is drawn from a real dataset and captured unedited with Chart.getImage(), at the size Flint\'s layout chooses. Size, axes, date ticks, number formats and bar spacing come from Flint; colours and fonts are Excel\'s own.',
+    download: 'Download the workbook (.xlsx)',
+    downloadNote: 'Every chart on its own sheet, beside its data, ready to edit.',
     harnessTitle: 'Render with the test harness',
     steps: [
       'Install the Office add-in development certificate and sideload the Flint Render manifest once.',
@@ -53,7 +40,9 @@ const COPY = {
     galleries: '示例库',
     examples: '原生图表示例',
     intro: 'Flint 通过 Office.js 将语义图表规范编译为可编辑的原生 Excel 图表。由于渲染器是 Excel，本页展示真实 Excel for Mac 工作进程生成并验证过的截图，而不是浏览器实时预览。',
-    provenance: '这些图片是未经编辑的 Chart.getImage() 输出；工作簿中的源数据、标题、坐标轴、格式和系列仍可继续编辑。',
+    provenance: '每张图表都基于真实数据集，以 Flint 布局选定的尺寸用 Chart.getImage() 原样截取。尺寸、坐标轴、日期刻度、数字格式和柱间距由 Flint 决定；配色和字体沿用 Excel 自身样式。',
+    download: '下载工作簿（.xlsx）',
+    downloadNote: '每张图表各占一个工作表，旁边附有源数据，可直接编辑。',
     harnessTitle: '使用测试工具渲染',
     steps: [
       '安装 Office 加载项开发证书，并一次性旁加载 Flint Render manifest。',
@@ -96,7 +85,7 @@ export function ExcelGallery() {
             <SidebarNavSection label={copy.examples}>
               {EXAMPLES.map((example) => (
                 <SidebarNavItem key={example.id} active={false} onClick={() => navigateToExample(example.id)}>
-                  {example.title}
+                  {example.label}
                 </SidebarNavItem>
               ))}
             </SidebarNavSection>
@@ -117,6 +106,12 @@ export function ExcelGallery() {
               </nav>
               <p style={introStyle}>{copy.intro}</p>
               <p style={provenanceStyle}>{copy.provenance}</p>
+              <div style={downloadRowStyle}>
+                <a className="excel-gallery-action excel-gallery-action--primary" href={WORKBOOK_URL} download>
+                  {copy.download}
+                </a>
+                <span style={provenanceStyle}>{copy.downloadNote}</span>
+              </div>
             </header>
 
             <section className="excel-gallery-grid" aria-label={copy.examples}>
@@ -125,14 +120,17 @@ export function ExcelGallery() {
                   <div style={imageFrameStyle}>
                     <img
                       src={example.image}
-                      alt={`${example.title} rendered as a native Excel chart`}
+                      alt={`${example.title}, rendered as a native Excel ${example.excelType} chart`}
                       loading="lazy"
                       style={imageStyle}
                     />
                   </div>
                   <figcaption style={captionStyle}>
-                    <strong style={captionTitleStyle}>{example.title}</strong>
-                    <span style={nativeTypeStyle}>{example.nativeType}</span>
+                    <span style={captionRowStyle}>
+                      <strong style={captionTitleStyle}>{example.label}</strong>
+                      <span style={nativeTypeStyle}>{example.excelType}</span>
+                    </span>
+                    {example.source && <span style={sourceStyle}>{example.source}</span>}
                   </figcaption>
                 </figure>
               ))}
@@ -170,7 +168,10 @@ const provenanceStyle: CSSProperties = { margin: '10px 0 0', color: siteTheme.te
 const cardStyle: CSSProperties = { margin: 0, minWidth: 0, scrollMarginTop: 16 };
 const imageFrameStyle: CSSProperties = { aspectRatio: '4 / 3', overflow: 'hidden', border: `1px solid ${siteTheme.border}`, background: '#fff' };
 const imageStyle: CSSProperties = { display: 'block', width: '100%', height: '100%', objectFit: 'contain' };
-const captionStyle: CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, paddingTop: 10 };
+const downloadRowStyle: CSSProperties = { display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px 16px', marginTop: 20 };
+const captionStyle: CSSProperties = { display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 10 };
+const captionRowStyle: CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 };
+const sourceStyle: CSSProperties = { color: siteTheme.textMuted, fontSize: 12, lineHeight: 1.45 };
 const captionTitleStyle: CSSProperties = { color: siteTheme.text, fontSize: 14, fontWeight: 600 };
 const nativeTypeStyle: CSSProperties = { color: siteTheme.textMuted, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 11 };
 const harnessStyle: CSSProperties = { marginTop: 64, paddingTop: 28, borderTop: `1px solid ${siteTheme.border}`, maxWidth: 820 };

@@ -145,7 +145,7 @@ export const SemanticTypes = {
     // FALLBACK TYPES
     // =========================================================================
     
-    Number: 'Number',           // Generic number (measure fallback)
+    Number: 'Number',           // Measure not to be added up (or additivity unknown); totals are Count, Amount, Quantity or Profit
     Unknown: 'Unknown',         // Cannot determine type
 } as const;
 
@@ -165,7 +165,7 @@ export type SemanticType = typeof SemanticTypes[keyof typeof SemanticTypes];
 /**
  * Types suitable for quantitative encoding (true continuous measures).
  *
- * Derived from the registry: aggRole ∈ {additive, intensive, signed-additive},
+ * Derived from the registry: aggRole ∈ {additive, intensive, signed-additive, measure},
  * excluding Score/Rating (t1='Score') which behave as bounded ordinal scales
  * for vis purposes (e.g., 1–5 star rating). This is an intentional vis-level
  * distinction, not a mathematical one.
@@ -173,7 +173,7 @@ export type SemanticType = typeof SemanticTypes[keyof typeof SemanticTypes];
 export const measureTypes = new Set<string>(
     getRegisteredTypes().filter(t => {
         const e = getRegistryEntry(t);
-        return ['additive', 'intensive', 'signed-additive'].includes(e.aggRole) && e.t1 !== 'Score';
+        return ['additive', 'intensive', 'signed-additive', 'measure'].includes(e.aggRole) && e.t1 !== 'Score';
     })
 );
 
@@ -466,6 +466,18 @@ function dataFarFromZero(values?: number[]): boolean {
     return dataMin / dataMax >= ZERO_BASELINE_GAP_THRESHOLD;
 }
 
+/**
+ * Charts that draw a distribution: where values fall and how they spread is the read, so their value
+ * axis is a position, not a length. (A density's own height is computed, never a data channel.)
+ */
+const DISTRIBUTION_CHARTS = new Set(['Boxplot', 'Violin Plot', 'Density Plot', 'Ridgeline Plot', 'ECDF Plot']);
+
+/** The mark the zero baseline is decided for: a distribution chart's value axis reads as positions. */
+export function zeroMarkType(chartType: string | undefined, templateMarkType: string | undefined): string {
+    if (chartType && DISTRIBUTION_CHARTS.has(chartType)) return 'boxplot';
+    return templateMarkType || 'point';
+}
+
 export function computeZeroDecision(
     semanticType: string,
     channel: string,
@@ -473,12 +485,18 @@ export function computeZeroDecision(
     values?: number[],
 ): ZeroDecision {
     const isBarLike = ['bar', 'area', 'rect'].includes(markType);
-    const isScatterMark = markType === 'circle' || markType === 'point';
+    // A distribution's values are positions too: the box and its spread are the read, not a length.
+    const isScatterMark = markType === 'circle' || markType === 'point' || markType === 'boxplot';
     // A line runs along x, so x is its index, not a measured length.
     const isLineIndex = (markType === 'line' || markType === 'trail') && channel === 'x';
     const isPositional = ['x', 'y'].includes(channel);
     const entry = getRegistryEntry(semanticType);
     const zeroClass = getZeroClass(semanticType);
+
+    // A distribution whose values reach or cross zero keeps it in view: the data already spans it.
+    if (markType === 'boxplot' && isPositional && values && values.length > 0 && Math.min(...values) <= 0) {
+        return { zero: true, domainPadFraction: 0, zeroClass, forced: true, uncertain: false };
+    }
 
     // --- Zero-meaningful types: zero is the conventional baseline ---
     if (zeroClass === 'meaningful') {
@@ -612,6 +630,11 @@ export interface ColorSchemeRecommendation {
     reason: string;
     /** For diverging schemes, the recommended midpoint value */
     domainMid?: number;
+    /**
+     * For diverging schemes stepped into classes, how the midpoint sits among them: a neutral class
+     * `'auto'` (a step wide) or this far either side of it; unset, the midpoint is a break.
+     */
+    neutral?: number | 'auto';
 }
 
 // getDivergingMidpoint: REMOVED — superseded by resolveDivergingInfo() in field-semantics.ts

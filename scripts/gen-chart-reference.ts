@@ -287,7 +287,7 @@ function domain(p: ChartPropertyDef): string {
                         ? `${o.label} _(default)_`
                         : `\`${o.value}\`${o.label ? ` (${o.label})` : ''}`,
                 )
-                .join(', ');
+                .join(', ') + (p.acceptsLabel ? `, or ${p.acceptsLabel}` : '');
         case 'binary':
             return 'on / off';
     }
@@ -517,8 +517,8 @@ function renderExcelReference(locale: 'en' | 'zh-CN'): string {
         '```',
         '',
         zh
-            ? '`renderExcelChart` 必须在提供 Office.js `Excel.run` 和 `Excel.ImageFittingMode.fit` 的 Excel 宿主中运行。它会在活动工作表中创建原生图表，并返回由 `Chart.getImage()` 捕获的 PNG。'
-            : '`renderExcelChart` must run in an Excel host that provides Office.js `Excel.run` and `Excel.ImageFittingMode.fit`. It creates a native chart on the active worksheet and returns a PNG captured through `Chart.getImage()`.',
+            ? '`renderExcelChart` 必须在提供 Office.js `Excel.run` 和 `Excel.ImageFittingMode.fit` 的 Excel 宿主中运行。它会在活动工作表（或 `worksheetName` 指定的工作表）中、数据旁创建原生图表，并返回由 `Chart.getImage()` 捕获的 PNG。'
+            : '`renderExcelChart` must run in an Excel host that provides Office.js `Excel.run` and `Excel.ImageFittingMode.fit`. It creates a native chart beside its data on the active worksheet (or on the sheet named by `worksheetName`) and returns a PNG captured through `Chart.getImage()`.',
         '',
         zh
             ? '若需要可移植的 Office.js 源码而不是立即执行，可调用 `generateOfficeJs(artifact)`。'
@@ -533,8 +533,8 @@ function renderExcelReference(locale: 'en' | 'zh-CN'): string {
             ? '- 没有原生 Excel 对应类型的图表（例如 Heatmap）会在渲染前被拒绝。'
             : '- Chart types without a native Excel equivalent, such as Heatmap, are rejected before rendering.',
         zh
-            ? '- 部分图表有更严格的数据要求；例如散点图要求定量 `x` 和 `y`，蜡烛图要求 `open`、`high`、`low`、`close` 通道。Assembler 会返回具体的验证错误。'
-            : '- Some charts impose stricter data requirements. For example, scatter charts require quantitative `x` and `y`, while candlesticks require `open`, `high`, `low`, and `close`. The assembler reports a specific validation error.',
+            ? '- 部分图表有更严格的数据要求；例如散点图要求定量或时间型 `x` 与定量 `y`，蜡烛图要求 `open`、`high`、`low`、`close` 通道。Assembler 会返回具体的验证错误。'
+            : '- Some charts impose stricter data requirements. For example, scatter charts require a quantitative or temporal `x` and a quantitative `y`, while candlesticks require `open`, `high`, `low`, and `close`. The assembler reports a specific validation error.',
         '',
         zh
             ? '可使用 `excelGetTemplateDef(chartType)` 或 `excelGetTemplateChannels(chartType)` 在编译前检查支持情况。'
@@ -785,7 +785,7 @@ function renderEventTypes(): string {
 }
 
 {
-    const path = resolve(__dirname, '../agent-skills/flint-interaction-author/SKILL.md');
+    const path = resolve(__dirname, '../agent-skills/flint-app-author/SKILL.md');
     const doc = readFileSync(path, 'utf8');
     const start = '<!-- event-types:start -->';
     const end = '<!-- event-types:end -->';
@@ -794,5 +794,5 @@ function renderEventTypes(): string {
     if (from < 0 || to < 0) throw new Error(`${path}: event type markers not found`);
     writeFileSync(path, `${doc.slice(0, from + start.length)}\n${renderEventTypes()}\n${doc.slice(to)}`, 'utf8');
     // eslint-disable-next-line no-console
-    console.log('Wrote the event types into agent-skills/flint-interaction-author/SKILL.md');
+    console.log('Wrote the event types into agent-skills/flint-app-author/SKILL.md');
 }

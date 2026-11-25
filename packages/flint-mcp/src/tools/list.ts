@@ -15,6 +15,7 @@ import {
   type InteractionPresetType,
 } from 'flint-chart';
 import type { RenderBackend } from '../render/types.js';
+import { CHART_GUIDE, CROSS_CUTTING_PROPERTIES, type ChartGuideProperty } from './chart-guide.js';
 
 const REGISTRY: Record<RenderBackend, ChartTemplateDef[]> = {
   vegalite: vlAllTemplateDefs,
@@ -23,15 +24,24 @@ const REGISTRY: Record<RenderBackend, ChartTemplateDef[]> = {
   highcharts: hcAllTemplateDefs,
 };
 
-export interface ChartTypeInfo {
+export interface ChartTypeSummary {
   chartType: string;
   /** Encoding channels this chart type accepts (e.g. x, y, color, size). */
   channels: string[];
+  /** What the chart is for and how its channels read; Vega-Lite types only. */
+  note?: string;
+}
+
+export interface ChartTypeDetail extends ChartTypeSummary {
+  /** Advice that applies whenever this type is used (map keys, which bar chart). */
+  guidance?: string[];
+  /** Its chartProperties: values, default and effect. Set one only when the user asks. */
+  properties: ChartGuideProperty[];
+  /** Properties every positional or faceted chart takes. */
+  crossCutting: ChartGuideProperty[];
   /**
    * Interaction presets the chart type supports in `interaction_spec`, by
-   * declaration. The data can still remove one at mount: a legend needs a
-   * bound discrete legend channel, navigation needs a continuous axis. Empty
-   * for backends that run no interactions.
+   * declaration. The data can still remove one at mount. Empty for backends that run no interactions.
    */
   interactions: InteractionPresetType[];
 }
@@ -39,14 +49,35 @@ export interface ChartTypeInfo {
 export interface BackendCatalog {
   backend: RenderBackend;
   count: number;
-  chartTypes: ChartTypeInfo[];
+  chartTypes: ChartTypeSummary[];
 }
 
 /**
- * Enumerate the chart-type catalog (chart type + accepted channels) for one
- * backend, or for all supported backends when `backend` is omitted.
+ * The chart-type catalog: each type, its channels and a one-line note, for one backend or all.
+ * With `chartType`, that one type in full: its guidance, chartProperties and interaction presets.
  */
-export function listChartTypes(backend?: RenderBackend): BackendCatalog[] {
+export function listChartTypes(backend?: RenderBackend, chartType?: string): BackendCatalog[] | ChartTypeDetail {
+  if (chartType) {
+    const on = backend ?? 'vegalite';
+    const defs = REGISTRY[on] ?? [];
+    // A near name ("choropleth map", "scatter") resolves when it points at one type.
+    const loose = (name: string) => name.toLowerCase().replace(/\s+(chart|map|plot)$/, '').trim();
+    const near = defs.filter((d) => loose(d.chart) === loose(chartType));
+    const def = defs.find((d) => d.chart === chartType) ?? (near.length === 1 ? near[0] : undefined);
+    if (!def) {
+      throw new Error(`Unknown chart type "${chartType}" for ${on}. Chart types: ${defs.map((d) => d.chart).sort().join(', ')}.`);
+    }
+    const guide = on === 'vegalite' ? CHART_GUIDE[def.chart] : undefined;
+    return {
+      chartType: def.chart,
+      channels: def.channels ?? [],
+      ...(guide?.note ? { note: guide.note } : {}),
+      ...(guide?.guidance ? { guidance: guide.guidance } : {}),
+      properties: guide?.properties ?? [],
+      crossCutting: CROSS_CUTTING_PROPERTIES,
+      interactions: supportedInteractionPresets(def.interactionSupport),
+    };
+  }
   const backends: RenderBackend[] = backend
     ? [backend]
     : (Object.keys(REGISTRY) as RenderBackend[]);
@@ -56,7 +87,7 @@ export function listChartTypes(backend?: RenderBackend): BackendCatalog[] {
       .map((d) => ({
         chartType: d.chart,
         channels: d.channels ?? [],
-        interactions: supportedInteractionPresets(d.interactionSupport),
+        ...(b === 'vegalite' && CHART_GUIDE[d.chart] ? { note: CHART_GUIDE[d.chart].note } : {}),
       }))
       .sort((a, b2) => a.chartType.localeCompare(b2.chartType));
     return { backend: b, count: chartTypes.length, chartTypes };

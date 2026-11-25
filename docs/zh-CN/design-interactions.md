@@ -73,7 +73,7 @@
 | 操作 | 效果 |
 |---|---|
 | `set-style` | 强调或淡化目标，隐藏系列 |
-| `set-annotation` | 在目标上固定或清除注释 |
+| `annotate-text` | 在目标上固定或清除注释 |
 | `set-viewport` | 移动连续域或投影 |
 | `set-order` | 重排离散域 |
 | `set-overlay`、`set-freeform-overlay` | 绘制引导线或自由路径 |

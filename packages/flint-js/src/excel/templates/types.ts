@@ -22,8 +22,9 @@ export interface ExcelTemplateDef {
 }
 
 export function requireQuantitativeAxes(context: ExcelTemplateContext): string | undefined {
-    if (context.typeOf('x') !== 'quantitative' || context.typeOf('y') !== 'quantitative') {
-        return 'requires quantitative x and y fields for a native Excel XY chart';
+    const x = context.typeOf('x');
+    if ((x !== 'quantitative' && x !== 'temporal') || context.typeOf('y') !== 'quantitative') {
+        return 'requires a quantitative or temporal x field and a quantitative y field for a native Excel XY chart';
     }
     if (context.fieldOf('shape')) {
         return 'does not support a shape encoding in native Excel charts';

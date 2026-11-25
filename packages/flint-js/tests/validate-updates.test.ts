@@ -23,15 +23,26 @@ describe('validateChart updates: shape', () => {
         expect(errorsOf([])).toEqual([]);
         expect(errorsOf([
             { id: 'agent', ops: [{ op: 'set-style', targets: [], value: { state: 'normal' } }] },
-            { id: 'note', ops: [{ op: 'set-annotation', target: { select: { key: { a: 1 } } }, value: { text: 'x' } }] },
+            { id: 'note', ops: [{ op: 'annotate-text', target: { select: { key: { a: 1 } } }, value: { text: 'x' } }] },
         ])).toEqual([]);
+    });
+
+    it('still reads the deprecated set-annotation, with a warning to write annotate-text', () => {
+        const op = { op: 'set-annotation', target: { select: { key: { a: 1 } } }, value: { text: 'x' } };
+        const result = validateChart(anyChart, 'vegalite', { updates: [{ id: 'note', ops: [op] }] });
+        expect(result.errors).toEqual([]);
+        expect(result.updates![0].ops[0]).toMatchObject({ op: 'set-annotation', deprecated: 'annotate-text' });
+        expect(result.warnings).toContainEqual(expect.objectContaining({ severity: 'warning', code: 'deprecated_op' }));
+        expect(CHART_UPDATE_OPS).not.toContain('set-annotation');
     });
 
     it('accepts a well-formed op of every name the contract lists', () => {
         const target = { select: { key: { a: 1 } } };
         const ops = [
             { op: 'set-style', targets: [target], value: { state: 'emphasized' } },
-            { op: 'set-annotation', target, value: null },
+            { op: 'annotate-text', target, value: null },
+            { op: 'annotate-region', name: 'r', value: { x: [0, 1], text: 'Recovery' } },
+            { op: 'annotate-enclosure', name: 'e', value: { targets: [target], shape: 'hull' } },
             { op: 'set-viewport', axes: 'x', value: { x: [0, 1] } },
             { op: 'set-order', scope: 'category', field: 'a', values: [2, 1] },
             { op: 'set-overlay', name: 'line', value: null },
@@ -43,10 +54,10 @@ describe('validateChart updates: shape', () => {
     });
 
     it('names the first missing or malformed field of an op, with its shape', () => {
-        expect(message([{ id: 'a', ops: [{ op: 'set-annotation', foo: 1 }] }])).toBe(
-            'updates[0] (a).ops[0]: set-annotation has a missing or malformed "target". Shape: { op, target: UpdateTarget, value: { text, anchor?: \'segment\' | \'point\' } | null }. A target is { select: { key: { field: value } } }: this op acts on one mark, so it takes a key, not a where.',
+        expect(message([{ id: 'a', ops: [{ op: 'annotate-text', foo: 1 }] }])).toBe(
+            'updates[0] (a).ops[0]: annotate-text has a missing or malformed "target". Shape: { op, target: UpdateTarget, value: { text, anchor?: \'segment\' | \'point\', highlight?: \'none\' | \'light\' | \'strong\' | \'exclusive\', style?: { fontSize?, fontWeight?, color? }, highlightStyle?: { color?, width? } } | null }. A target is { select: { key: { field: value } } }: this op acts on one mark, so it takes a key, not a where.',
         );
-        expect(message([{ id: 'a', ops: [{ op: 'set-annotation', annotations: [{ kind: 'rule', x: '2022-12-01' }] }] }]))
+        expect(message([{ id: 'a', ops: [{ op: 'annotate-text', annotations: [{ kind: 'rule', x: '2022-12-01' }] }] }]))
             .toContain('missing or malformed "target"');
         expect(message([{ id: 'a', ops: [{ op: 'set-style', targets: [{ region: 'East' }], value: {} }] }]))
             .toContain('set-style has a missing or malformed "targets"');
@@ -137,7 +148,7 @@ describe('validateChart updates: each op on the chart', () => {
 
     it('matches a note key against the rows, temporal values as dates', () => {
         const note = (key: Record<string, unknown>) => only(line(), {
-            op: 'set-annotation', target: { select: { key } }, value: { text: 'Launch' },
+            op: 'annotate-text', target: { select: { key } }, value: { text: 'Launch' },
         } as ChartUpdateOp);
         expect(note({ month: '2022-12-01' })).toMatchObject({ ok: true, text: 'note "Launch" at month = 2022-12-01' });
         expect(note({ month: '2022-12' }).ok).toBe(true);
@@ -149,5 +160,40 @@ describe('validateChart updates: each op on the chart', () => {
         const viewport = { op: 'set-viewport', axes: 'x', value: { x: ['2022-11-01', '2022-12-01'] } } as ChartUpdateOp;
         expect(only(line(), viewport).reason).toContain('add a navigate or brush-zoom interaction');
         expect(only(line([{ type: 'navigate' }]), viewport).ok).toBe(true);
+    });
+
+    it('checks a region\'s bounds against the chart\'s axes, and an enclosure\'s targets against its rows', () => {
+        const region = (value: unknown) => only(line(), { op: 'annotate-region', name: 'r', value } as ChartUpdateOp);
+        expect(region({ x: ['2022-11-01', '2022-12-01'], text: 'Holidays' })).toMatchObject({ ok: true, text: 'region "r" over x 2022-11-01 to 2022-12-01, captioned "Holidays"' });
+        expect(region({ x: ['2022-11-01', null] }).ok).toBe(true);
+        expect(region({ x: ['2022-11-01'] }).reason).toContain('exactly two bounds');
+        expect(region({ y: [0.8, 'high'] }).reason).toContain('is not a value of the y axis');
+        const enclosure = (targets: unknown[]) => only(line(), { op: 'annotate-enclosure', name: 'e', value: { targets, text: 'Late year' } } as ChartUpdateOp);
+        expect(enclosure([{ select: { where: { month: { in: ['2022-11-01', '2022-12-01'] } } } }]).ok).toBe(true);
+        expect(enclosure([{ select: { key: { month: '2021-01-01' } } }]).reason).toContain('no row has');
+        expect(enclosure([]).reason).toContain('names no targets');
+        // set-annotation, the deprecated name of annotate-text, is checked alike.
+        const note = (op: string) => only(line(), { op, target: { select: { key: { month: '2022-12-01' } } }, value: { text: 'Launch' } } as ChartUpdateOp);
+        expect(note('annotate-text')).toMatchObject({ ok: true, text: note('set-annotation').text });
+        expect(note('annotate-text').deprecated).toBeUndefined();
+    });
+
+    it('advises against a note that repeats a value the chart prints on its mark', () => {
+        const bars = (theme?: string): ChartAssemblyInput => ({
+            data: { values: [{ region: 'East', revenue: 55 }, { region: 'Online', revenue: 61 }] },
+            semantic_types: { region: 'Category', revenue: 'Quantity' },
+            chart_spec: { chartType: 'Bar Chart', encodings: { x: { field: 'region' }, y: { field: 'revenue' } } },
+            ...(theme ? { theme_spec: theme } : {}),
+        } as ChartAssemblyInput);
+        const note = (text: string, theme?: string) => validateChart(bars(theme), 'vegalite', {
+            updates: [{ id: 'n', ops: [{ op: 'annotate-text', target: { select: { key: { region: 'Online' } } }, value: { text } }] }],
+        });
+        const repeated = note('Online leads: 61', 'nyt');
+        expect(repeated.updates![0].ops[0]).toMatchObject({ ok: true });
+        expect(repeated.updates![0].ops[0].advice).toContain('repeats revenue 61');
+        expect(repeated.warnings).toContainEqual(expect.objectContaining({ severity: 'info', code: 'note_repeats_chart' }));
+        expect(note('Overtook East in March', 'nyt').updates![0].ops[0].advice).toBeUndefined();
+        // Without value labels the value is read off the axis, not printed.
+        expect(note('Online leads: 61').updates![0].ops[0].advice).toBeUndefined();
     });
 });

@@ -7,8 +7,8 @@ import { SWISS_ICON } from './icons';
 /**
  * Swiss / International Typographic Style.
  *
- * Modelled on the hand-authored mockups in the Swiss lab (see
- * `site/src/playground/swiss-lab-data.ts`), which were in turn measured against
+ * Modelled on the hand-authored mockups of the former Swiss lab
+ * (`site/src/playground/swiss-lab-data.ts`, removed after commit 8682029d), which were in turn measured against
  * the poster/diagram canon — swissted.com, Poster House "The Swiss Grid",
  * Müller-Brockmann's Tonhalle posters, Vignelli's 1972 NYC subway diagram, and
  * Otl Aicher's 1972 Munich colour system.
@@ -112,8 +112,10 @@ export const swiss: ThemePreset = {
                 size: 'text.200',
                 color: '#555555',
             },
+            // Labels in the structural ink, as the axes they sit on: high contrast, not a grey aside.
             axisLabel: {
                 size: 'text.100',
+                color: '#1a1a1a',
             },
             axisTitle: {
                 size: 'text.100',
@@ -125,12 +127,14 @@ export const swiss: ThemePreset = {
             axis: {
                 categorical: {
                     line: 'full',
+                    lineWeight: 1.5,
                     ticks: 'omit',
                 },
                 measure: {
                     line: 'full',
+                    lineWeight: 1.5,
                     ticks: 'full',
-                    tickLength: 'short',
+                    tickLength: 'long',
                     tickDirection: 'outward',
                 },
             },
@@ -149,6 +153,10 @@ export const swiss: ThemePreset = {
             strokeCap: 'butt',
             strokeJoin: 'miter',
             interpolation: 'linear',
+            // An area is a flat fill under its own edge: the grid reads through
+            // the fill, and the edge, not a paper gap, parts stacked bands.
+            fillOpacity: 0.75,
+            areaEdge: { presence: 'full', width: 1.5 },
             point: {
                 presence: 'omit',
                 fill: 'solid',
@@ -175,6 +183,7 @@ export const swiss: ThemePreset = {
             show: 'always',
             placement: ['top'],
             direction: 'horizontal',
+            swatch: 'square',
             title: 'whenAmbiguous',
             suppressWhenAxisNames: true,
         },

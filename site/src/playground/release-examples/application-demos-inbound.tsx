@@ -97,7 +97,7 @@ const ALERTS: Alert[] = [
   { id: 'singapore', City: 'Singapore', Month: 'Apr', text: 'Singapore barely moves: 26–28 °C all year' },
 ];
 const ANNOTATION_INTERACTIONS = controlled<{ alert: Alert | null }>(({ alert }) => (alert
-  ? [{ op: 'set-annotation', target: { select: { key: { City: alert.City, Month: alert.Month } } }, value: { text: alert.text } }]
+  ? [{ op: 'annotate-text', target: { select: { key: { City: alert.City, Month: alert.Month } } }, value: { text: alert.text } }]
   : CLEAR_STYLE));
 
 export function SetAnnotationDemo() {
@@ -375,14 +375,14 @@ const GDP_INTERACTIONS: readonly InteractionDef[] = [
       ? { op: 'set-style', targets: [{ select: { key: { Country: follow! } } }], value: { fill: FOLLOW_INK } }
       : CLEAR_STYLE[0],
     ...(event && has(rows, event.country)
-      ? [{ op: 'set-annotation', target: { select: { key: { Country: event.country! } } }, value: { text: event.title } } as const]
+      ? [{ op: 'annotate-text', target: { select: { key: { Country: event.country! } } }, value: { text: event.title } } as const]
       : []),
   ] }) }),
 ];
 
 /** The chart opens on 1960 with its event already noted. */
 const GDP_INITIAL_UPDATES: readonly ChartUpdate[] = [{ id: FOLLOW, ops: [
-  { op: 'set-annotation', target: { select: { key: { Country: GDP_EVENTS[0].country! } } }, value: { text: GDP_EVENTS[0].title } },
+  { op: 'annotate-text', target: { select: { key: { Country: GDP_EVENTS[0].country! } } }, value: { text: GDP_EVENTS[0].title } },
 ] }];
 
 const STEP_MS = 900;

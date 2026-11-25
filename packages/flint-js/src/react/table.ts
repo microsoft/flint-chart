@@ -1,15 +1,28 @@
-import { createElement, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import { chartTableRowTest, type ChartTable, type ChartTableText } from '../core/chart-table';
+import { createElement, useEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from 'react';
+import { chartTableRowTest, type ChartTable, type ChartTableFurniture, type ChartTableText } from '../core/chart-table';
+import type { ClosingRule } from '../core/rule-plan';
+import type { SourceLine, SourcePlan } from '../core/source-plan';
+import { canvasFurnitureMarkup, headerFurnitureItems } from '../vegalite/canvas-furniture';
 import type { ChartUpdate, UpdateTarget } from '../core/interaction-contracts';
 
 /** The most rows a table draws; the rest are counted below it. */
 export const MAX_TABLE_ROWS = 500;
 
+/** The table's inset from its edges, as its cells pad their text. */
+const INSET = 10;
+
 /** The opacity of rows outside an emphasis, as charts mute their marks. */
 const MUTED_ROW_OPACITY = 0.35;
 
 const TABLE_CSS = `
-.flint-table { overflow: auto; box-sizing: border-box; background: var(--flint-table-bg); }
+.flint-table { position: relative; display: flex; flex-direction: column; overflow: hidden; box-sizing: border-box; background: var(--flint-table-bg); }
+.flint-table-heading, .flint-table-note, .flint-table-rule, .flint-table-source, .flint-table-room { flex: none; }
+.flint-table-furniture { position: absolute; top: 0; left: 0; pointer-events: none; overflow: visible; }
+.flint-table-rule { margin: 0 10px; }
+.flint-table-source { padding: 6px 10px 2px; }
+.flint-table-source-line { display: flex; justify-content: space-between; gap: 12px; margin: 0; }
+.flint-table-source-line a { color: inherit; }
+.flint-table-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; }
 .flint-table table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
 .flint-table th { position: sticky; top: 0; z-index: 1; padding: 0; text-align: left; font-weight: inherit;
   white-space: nowrap; background: var(--flint-table-bg); box-shadow: inset 0 -1px 0 var(--flint-table-header-rule); }
@@ -71,6 +84,62 @@ export function tableNotes(table: ChartTable, shown: number): string[] {
     ].filter(Boolean);
 }
 
+/** A theme's closing rule across the table's width. */
+function ruleElement(rule: ClosingRule, key: number) {
+    return createElement('div', {
+        key,
+        className: 'flint-table-rule',
+        style: { height: rule.height, background: rule.color ?? 'currentColor', ...(rule.stated ? { width: rule.width } : {}) },
+    });
+}
+
+/** The words of one source line, its runs in their weights. */
+function sourceRuns(line: SourceLine) {
+    const runs = line.runs.map((run, i) => createElement('span', {
+        key: i,
+        style: { fontWeight: run.fontWeight, fontStyle: run.fontStyle },
+    }, (i > 0 ? ' ' : '') + run.text));
+    return line.href ? createElement('a', { href: line.href, target: '_blank', rel: 'noopener' }, runs) : runs;
+}
+
+/** The source line at the table's foot, as the chart sets it: the lines from the top, a credit at the other end. */
+function sourceElement(source: SourcePlan) {
+    const rows = [...new Set(source.lines.map((line) => line.bottom))].sort((a, b) => b - a);
+    const image = source.creditImage;
+    return createElement('div', {
+        className: 'flint-table-source',
+        style: { fontFamily: source.font, fontSize: source.fontSize, color: source.color, lineHeight: `${source.lineHeight}px` },
+    },
+        source.rule
+            ? createElement('div', { style: { borderTop: `${source.rule.width}px ${source.rule.dash ? 'dashed' : 'solid'} ${source.rule.color}`, marginBottom: 6 } })
+            : null,
+        rows.map((bottom, row) => {
+            const at = source.lines.filter((line) => line.bottom === bottom);
+            const start = at.filter((line) => line.align === 'start');
+            const end = at.filter((line) => line.align === 'end');
+            const credit = row === 0 && image
+                ? createElement('img', { src: image.src, alt: image.alt, width: image.width, height: image.height, style: { verticalAlign: 'middle' } })
+                : null;
+            return createElement('p', { key: bottom, className: 'flint-table-source-line' },
+                createElement('span', null, start.map((line, i) => createElement('span', { key: i }, sourceRuns(line))), image?.align === 'start' ? credit : null),
+                createElement('span', { style: { textAlign: 'right' } }, end.map((line, i) => createElement('span', { key: i }, sourceRuns(line))), image?.align === 'end' ? credit : null));
+        }));
+}
+
+/** The width of an element as laid out, followed as it changes; 0 until measured. */
+function useWidth(watch: boolean): [RefObject<HTMLDivElement | null>, number] {
+    const ref = useRef<HTMLDivElement>(null);
+    const [width, setWidth] = useState(0);
+    useEffect(() => {
+        const element = ref.current;
+        if (!watch || !element || typeof ResizeObserver === 'undefined') return;
+        const observer = new ResizeObserver(([entry]) => setWidth(Math.round(entry.contentRect.width)));
+        observer.observe(element);
+        return () => observer.disconnect();
+    }, [watch]);
+    return [ref, width];
+}
+
 function textStyle(text: ChartTableText): CSSProperties {
     return { fontFamily: text.font, fontSize: text.fontSize, fontWeight: text.fontWeight, fontStyle: text.fontStyle, color: text.color };
 }
@@ -86,7 +155,10 @@ export interface FlintTableProps {
 
 const NO_UPDATES: readonly ChartUpdate[] = [];
 
-/** A chart's table in the chart's theme: headings sort, rows an emphasis names stay in full ink. */
+/**
+ * A chart's table in the chart's theme: headings sort, rows an emphasis names stay in full ink. Only
+ * the rows scroll: the title, subtitle and notes stay in place, and the column headings stick.
+ */
 export function FlintTable({ table, updates = NO_UPDATES, className, style }: FlintTableProps) {
     const [sort, setSort] = useState<TableSort | null>(null);
     const order = useMemo(() => sortedRows(table, sort), [table, sort]);
@@ -104,6 +176,13 @@ export function FlintTable({ table, updates = NO_UPDATES, className, style }: Fl
     }, [emphasized, order]);
     const { style: look } = table;
     const notes = tableNotes(table, shown.length);
+    const furniture: ChartTableFurniture | undefined = table.furniture;
+    const headerPlan = furniture?.header;
+    const [root, width] = useWidth(!!headerPlan);
+    const headerItems = headerPlan && width > 0 ? headerFurnitureItems(headerPlan, { left: INSET, right: INSET, top: 0 }) : [];
+    const headerRoom = headerPlan ? headerPlan.edge + headerPlan.line : 0;
+    const topRules = furniture?.rules.filter((rule) => rule.edge === 'top') ?? [];
+    const footRules = furniture?.rules.filter((rule) => rule.edge === 'bottom') ?? [];
     const header = table.columns.map((column, i) => createElement('th', {
         key: column.field,
         scope: 'col',
@@ -122,7 +201,7 @@ export function FlintTable({ table, updates = NO_UPDATES, className, style }: Fl
         className: table.columns[i].align === 'end' ? 'flint-table-end' : undefined,
     }, cell.text))));
     return createElement('div', {
-        ref: scroller,
+        ref: root,
         className: className ? `flint-table ${className}` : 'flint-table',
         style: {
             '--flint-table-bg': look.background,
@@ -132,15 +211,32 @@ export function FlintTable({ table, updates = NO_UPDATES, className, style }: Fl
         } as CSSProperties,
     },
         createElement('style', null, TABLE_CSS),
+        headerItems.length > 0
+            ? createElement('svg', {
+                className: 'flint-table-furniture',
+                width,
+                height: Math.max(...headerItems.map((item) => (item.y ?? 0) + item.height)),
+                'aria-hidden': true,
+                dangerouslySetInnerHTML: { __html: canvasFurnitureMarkup(headerItems, width) },
+            })
+            : null,
+        headerPlan && !table.heading ? createElement('div', { className: 'flint-table-room', style: { height: headerRoom } }) : null,
         table.heading
-            ? createElement('div', { className: 'flint-table-heading' },
+            ? createElement('div', {
+                className: 'flint-table-heading',
+                style: headerPlan ? { paddingTop: headerRoom + 2, paddingLeft: INSET + headerPlan.beside.start, paddingRight: INSET + headerPlan.beside.end } : undefined,
+            },
                 table.heading.title ? createElement('p', { className: 'flint-table-title', style: textStyle(table.heading.style.title) }, table.heading.title) : null,
                 table.heading.subtitle ? createElement('p', { className: 'flint-table-subtitle', style: textStyle(table.heading.style.subtitle) }, table.heading.subtitle) : null)
             : null,
-        createElement('table', null,
-            createElement('thead', null, createElement('tr', null, header)),
-            createElement('tbody', { style: textStyle(look.body) }, body)),
+        ...topRules.map((rule, i) => ruleElement(rule, i)),
+        createElement('div', { ref: scroller, className: 'flint-table-scroll' },
+            createElement('table', null,
+                createElement('thead', null, createElement('tr', null, header)),
+                createElement('tbody', { style: textStyle(look.body) }, body))),
         notes.length > 0
             ? createElement('p', { className: 'flint-table-note', style: { ...textStyle(look.header), fontSize: Math.max(10, look.header.fontSize - 1) } }, notes.join(' · '))
-            : null);
+            : null,
+        ...footRules.map((rule, i) => ruleElement(rule, i)),
+        furniture?.source ? sourceElement(furniture.source) : null);
 }

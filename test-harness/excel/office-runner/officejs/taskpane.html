@@ -82,6 +82,10 @@
         <pre class="log" id="log"></pre>
       </div>
     </div>
+    <script>
+      // A worker module that fails to load (a backend bundle swapped mid-build) never polls; reload until it does.
+      setTimeout(function () { if (!window.__flintWorkerLoaded) location.reload(); }, 15000);
+    </script>
     <script type="module" src="/officejs/taskpane.js?v=backend-runtime-1"></script>
   </body>
 </html>

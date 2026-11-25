@@ -40,7 +40,7 @@ import {
     isDateField,
     type EncodingTypeContext,
 } from './decisions';
-import { hasTemporalParsers, parseTemporalByType } from './temporal-parse';
+import { hasTemporalParsers, parseTemporalByType, readIsoTimestamp } from './temporal-parse';
 import {
     resolveFieldSemantics,
     toTypeString,
@@ -189,10 +189,22 @@ export function repairEncodingSorts<T>(
 ): { encodings: Record<string, T>; warnings: ChartWarning[] } {
     const warnings: ChartWarning[] = [];
     if (!encodings || typeof encodings !== 'object') return { encodings, warnings };
-    const dataFields = new Set(data.flatMap(row => row && typeof row === 'object' ? Object.keys(row) : []));
+    const dataFields = new Set<string>();
+    let fieldsCollected = false;
     const repair = (channel: string, entry: unknown): unknown => {
         if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return entry;
         const encoding = entry as Record<string, unknown>;
+        const sortByValue = encoding.sortBy;
+        if (!fieldsCollected && typeof sortByValue === 'string' && sortByValue.trim()
+            && sortByValue !== 'x' && sortByValue !== 'y' && sortByValue !== 'color') {
+            for (const row of data) {
+                if (row && typeof row === 'object') {
+                    const fields = Object.keys(row);
+                    for (let index = 0; index < fields.length; index++) dataFields.add(fields[index]);
+                }
+            }
+            fieldsCollected = true;
+        }
         const { sortBy, sortOrder, issues } = inspectEncodingSort(encoding, channel, encodings, dataFields, options);
         if (issues.length === 0) return entry;
         for (const issue of issues) {
@@ -451,8 +463,10 @@ export function convertTemporalData(
         for (const temporalKey of temporalKeys) {
             const val = r[temporalKey];
             const st = effectiveSemanticTypes[temporalKey];
+            const calendar = (SEMANTIC_LEVEL[st] ?? -1) >= SEMANTIC_LEVEL.Date;
             // An untyped full date in a spelling only some engines parse is read here, once.
-            const parsed = parseTemporalByType(val, st)
+            const parsed = readIsoTimestamp(val, calendar)
+                ?? parseTemporalByType(val, st)
                 ?? (!st && typeof val === 'string' && !ISO_PREFIX.test(val.trim()) ? parseTemporalByType(val, 'Date') : null);
 
             if (parsed !== null) {
@@ -466,7 +480,11 @@ export function convertTemporalData(
                     r[temporalKey] = String(val);
                 }
             } else if (val instanceof Date) {
-                r[temporalKey] = val.toISOString();
+                // A Date at local midnight under a calendar grain names that day, as temporalFieldValue reads it.
+                const localMidnight = !val.getHours() && !val.getMinutes() && !val.getSeconds() && !val.getMilliseconds();
+                r[temporalKey] = calendar && localMidnight && Number.isFinite(val.getTime())
+                    ? `${val.getFullYear()}-${String(val.getMonth() + 1).padStart(2, '0')}-${String(val.getDate()).padStart(2, '0')}`
+                    : val.toISOString();
             } else {
                 // For Year/Decade strings, normalise to 4-digit years so
                 // Vega-Lite parses them unambiguously and doesn't auto-tick
@@ -715,6 +733,11 @@ export function resolveChannelSemantics(
                     const divInfo = resolveDivergingInfo(semanticType, annotation, nums);
                     if (divInfo) {
                         cs.colorScheme.domainMid = divInfo.midpoint;
+                        // A pivot the field always has reads as a neutral zone; one its values cross is a break.
+                        const neutral = typeof annotation.divergingNeutral === 'number' && annotation.divergingNeutral >= 0
+                            ? annotation.divergingNeutral
+                            : annotation.divergingNeutral === undefined && divInfo.inherent ? 'auto' : undefined;
+                        if (neutral !== undefined) cs.colorScheme.neutral = neutral;
                     }
                     // A declared polarity says which end is the bad one: warm (red) goes there.
                     // Themes turn their own ramps to match the scheme named here.

@@ -50,6 +50,20 @@ describe('dates read as snapshots', () => {
         expect(long.encoding.x.type).toBe('temporal');
     });
 
+    it('puts a heatmap over a whole run of months on a time scale, each cell its month', () => {
+        const input = {
+            data: { values: months('2025-01', 12).flatMap((when) => ['A', 'B', 'C'].map((k, i) => ({ when, k, v: i }))) },
+            semantic_types: { when: 'YearMonth', k: 'Category', v: 'Quantity' },
+            chart_spec: { chartType: 'Heatmap', encodings: { x: 'when', y: 'k', color: 'v' }, baseSize: { width: 400, height: 200 } },
+        } as any;
+        const vl = assembleVegaLite(input);
+        expect(vl.encoding.x.type).toBe('temporal');
+        expect(vl.transform).toEqual(expect.arrayContaining([{ calculate: `utcOffset('month', datum["when"], 1)`, as: '__cell_x_end' }]));
+        expect(assembleECharts(input).xAxis.type).toBe('category');
+        // A bar chart over the same run stays a run of time.
+        expect(assembleVegaLite(bars(months('2025-01', 12), 'YearMonth')).encoding.x.type).toBe('temporal');
+    });
+
     it('lets an explicit type win', () => {
         const pinned = assembleVegaLite(bars(['2025-07', '2025-12'], 'YearMonth', 'Bar Chart', { field: 'when', type: 'temporal' }));
         expect(pinned.encoding.x.type).toBe('temporal');

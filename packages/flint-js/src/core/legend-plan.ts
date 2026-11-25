@@ -6,6 +6,8 @@ import type { DesignDecisions } from './theme/types';
 import type { ChannelSemantics, LayoutResult } from './types';
 import { format as formatNumber } from 'd3-format';
 import { niceTicks } from './ruler';
+import { DEFAULT_BASE_SIZE } from './compute-layout';
+import { exactFormat, printFormatted } from './sample-format';
 
 /** A key the chart may draw, and what the plan decides about it. */
 export interface PlannedKey {
@@ -23,6 +25,8 @@ export interface PlannedKey {
     untitled: boolean;
     /** The values a key to values is sampled at. */
     samples?: number[];
+    /** The samples as the key prints them: in the field's format, precise enough for each. */
+    sampleLabels?: string[];
     /** The categories a colour key keeps by name, largest share first, and the entry the rest share. */
     fold?: { kept: unknown[]; others: string };
     /** The labels a key that names categories lists, in order. */
@@ -36,6 +40,8 @@ export interface LegendPlan extends LegendPlacementPlan {
     untitled: boolean;
     /** A horizontal colour ramp the theme leaves to the chart: its length and the block it spans, in px. */
     gradient?: { length: number; block: number };
+    /** How thick a colour ramp is drawn, in px: slimmer on a small plot, as its labels and marks are. */
+    rampThickness?: number;
     /** How much further a top key stands above the plot to clear a flat y title, in px. */
     titleClearance?: number;
     /** What each drawn key needs laid out, by key. */
@@ -76,7 +82,7 @@ const CONNECTED_MARKS = new Set(['line', 'area', 'trail']);
 const NAMING_CHANNELS = new Set<KeyChannel>(['color', 'fill', 'stroke', 'shape', 'size', 'opacity']);
 
 /** A few round numbers spanning what a field holds, spaced quadratically, largest last; none past zero or below. */
-export function roundSample(rows: any[], field: string, count: number): number[] | undefined {
+export function roundSample(rows: any[], field: string, count: number, integersOnly = false): number[] | undefined {
     let max = -Infinity;
     let min = Infinity;
     for (const row of rows ?? []) {
@@ -90,7 +96,11 @@ export function roundSample(rows: any[], field: string, count: number): number[]
     const ladder: number[] = [];
     for (let exp = Math.floor(Math.log10(max)); exp >= Math.floor(Math.log10(max)) - 3; exp--) {
         for (const step of [...NICE_STEPS].reverse()) {
-            const v = step * 10 ** exp;
+            // Rounded off the float the power leaves (0.1 × 3 is not 0.3), so 25 is an integer.
+            const v = Number((step * 10 ** exp).toPrecision(12));
+            // A field that counts (its semantic type whole numbers: a count, a rank) is keyed in whole
+            // numbers: no 2.5 people, no half a ship.
+            if (integersOnly && (v < 1 || !Number.isInteger(v))) continue;
             if (v <= max * 1.0001 && !ladder.includes(v)) ladder.push(v);
         }
     }
@@ -108,7 +118,26 @@ export function roundSample(rows: any[], field: string, count: number): number[]
         out.push(options.reduce((best, v) => (Math.abs(Math.log(v / target)) < Math.abs(Math.log(best / target)) ? v : best)));
     }
     out.reverse();
+    // The smallest value keyed just off the data's least, where that least is itself round, is the
+    // least: what the reader meets in the data (a crew that dwindles to one man keys 1, not 2).
+    if (out.length > 0 && min > 0 && min < out[0] && out[0] / min <= LEAST_SNAP && isRound(min, integersOnly)) out[0] = min;
     return out.length > 1 ? out : undefined;
+}
+
+/** How far above the data's least a key's smallest value may stand and still be moved onto it. */
+const LEAST_SNAP = 3;
+
+/** Whether a value is one of the round values a key lists: 1, 2, 2.5 or 5 of a power of ten. */
+function isRound(value: number, integersOnly: boolean): boolean {
+    if (integersOnly && !Number.isInteger(value)) return false;
+    const exp = Math.floor(Math.log10(value));
+    return NICE_STEPS.some((step) => Number((step * 10 ** exp).toPrecision(12)) === Number(value.toPrecision(12)));
+}
+
+/** Each sampled value as its key prints it: the field's format, raised to the precision the samples need. */
+function sampleLabels(samples: number[], fmt: ChannelSemantics['format']): string[] {
+    const exact = exactFormat(samples, fmt);
+    return samples.map((value) => printFormatted(value, exact));
 }
 
 /** The ticks a key to a field's values lists where none are sampled: a scale's five or so, from zero for a size. */
@@ -155,6 +184,10 @@ export interface LegendInputs {
     rows: any[];
     layout: LayoutResult;
     plot: { width: number; height: number };
+    /** The size the spec asks for, which a colour ramp's thickness follows; none is the default room. */
+    canvas?: { width: number; height: number };
+    /** The size the house lays its charts out at, the room a ramp keeps its full thickness in; Flint's default where unstated. */
+    roomy?: { width: number; height: number };
     composite: boolean;
     /** The width the views of a chart of several views span, which its keys are planned along. */
     viewsWidth?: number;
@@ -213,6 +246,20 @@ function foldedColour(inputs: LegendInputs, field: string, design: DesignDecisio
     return { kept: ordered.slice(0, k), others };
 }
 
+/** A colour ramp's thickness in px: Vega's own on a canvas with the default room, and the least it slims to. */
+const RAMP_THICKNESS = { full: 16, min: 8 } as const;
+
+/**
+ * How much of the room a chart is designed for (the house's own size, else Flint's 400 × 320) a canvas
+ * has, on its tighter side: 1 at that size or more, or where the spec asks for none.
+ */
+export function canvasSqueeze(
+    canvas: { width: number; height: number } | undefined,
+    roomy: { width: number; height: number } = DEFAULT_BASE_SIZE,
+): number {
+    return canvas ? Math.min(1, canvas.width / roomy.width, canvas.height / roomy.height) : 1;
+}
+
 /**
  * The keys a chart draws. Without a theme every key the structure states is drawn as it is. A
  * theme that names series some other way (or not at all) drops the keys that name series and keeps
@@ -220,14 +267,17 @@ function foldedColour(inputs: LegendInputs, field: string, design: DesignDecisio
  * those titles, while a key to values keeps its title, a number naming nothing until it says what
  * it counts, and every key keeps its title where a chart draws several. A size key is sampled at round values, one for every 80 px of the edge it stands on,
  * from three to five, never more than the house allows; an opacity key only where the house says how many. A horizontal ramp the house does not size runs 45% of the
- * block, between 80 and 200 px, and a top key clears a flat y title by its line and 12 px.
+ * block, between 80 and 200 px, and a top key clears a flat y title by its line and 12 px. A colour
+ * ramp keeps Vega's 16 px on a canvas with the house's room (else Flint's 400 × 320) or more, and on a
+ * smaller one slims by the share of that room it has, to 8 px at the least.
  */
 export function planLegend(inputs: LegendInputs): LegendPlan {
     const { placement, structure, design, rows, layout, plot, composite, flatYTitle } = inputs;
     const named = !design || (design.legend.show && placement.placement !== 'seriesEnd' && placement.placement !== 'inline');
     const drafted: PlannedKey[] = (structure.keys ?? []).map((key) => {
-        // A size, an opacity or a colour ramp lists numbers, and a number names nothing until the key says what it counts.
-        const valueKey = (key.channel === 'size' || INK_CHANNELS.has(key.channel)) && key.type === 'quantitative';
+        // A size, a line width, an opacity or a colour ramp lists numbers, and a number names nothing until the key says what it counts.
+        const sized = key.channel === 'size' || key.channel === 'strokeWidth';
+        const valueKey = (sized || INK_CHANNELS.has(key.channel)) && key.type === 'quantitative';
         const governed = Boolean(design) && NAMING_CHANNELS.has(key.channel);
         const show = !governed || named || valueKey;
         // A key the template makes itself — a waterfall's total, increase and decrease — is explained
@@ -238,9 +288,11 @@ export function planLegend(inputs: LegendInputs): LegendPlan {
             structure[axis]?.fields.includes(key.field!) && typeof inputs.axisTitles?.[axis] === 'string' && design?.axes[axis]?.title.show !== false);
         const untitled = Boolean(design) && named && (!design!.legend.title || madeByChart || printedOnAxis) && governed && !valueKey;
         const cap = !named || !key.field || key.type !== 'quantitative' ? undefined
-            : key.channel === 'size' ? Math.min(design?.legend.maxSwatches ?? Infinity, sizeKeySwatches(placement.orient, plot))
+            : sized ? Math.min(design?.legend.maxSwatches ?? Infinity, sizeKeySwatches(placement.orient, plot))
                 : key.channel === 'opacity' ? design?.legend.maxSwatches : undefined;
-        const samples = cap ? roundSample(rows, key.field!, cap) : undefined;
+        const samples = cap
+            ? roundSample(rows, key.field!, cap, inputs.channelSemantics[key.channel]?.tickConstraint?.integersOnly === true)
+            : undefined;
         const fold = design && key.channel === 'color' && key.field && !key.via ? foldedColour(inputs, key.field, design) : undefined;
         const planned: PlannedKey = {
             channel: key.channel,
@@ -248,7 +300,7 @@ export function planLegend(inputs: LegendInputs): LegendPlan {
             ...(key.via ? { via: key.via } : {}),
             ...(key.type ? { type: key.type } : {}),
             valueKey, show, untitled,
-            ...(samples ? { samples } : {}),
+            ...(samples ? { samples, sampleLabels: sampleLabels(samples, inputs.channelSemantics[key.channel]?.format) } : {}),
             ...(fold ? { fold } : {}),
         };
         const entries = show ? keyEntries(planned, key.entries, inputs) : undefined;
@@ -267,6 +319,14 @@ export function planLegend(inputs: LegendInputs): LegendPlan {
         const block = Math.round((inputs.viewsWidth ?? (bands ? layout.xStep * bands : plot.width)) * 1.07);
         if (block) gradient = { length: Math.round(Math.min(200, Math.max(80, block * 0.45))), block };
     }
+    // A ramp keeps Vega's 16 px on a canvas with Flint's default room; on a smaller one it slims as the
+    // canvas does, so a squeezed chart's key does not outweigh its marks. The canvas, unlike the plot,
+    // holds still while the plan lays the chart out again around its keys.
+    const ramped = Boolean(design) && keys.some((key) => key.show && key.valueKey && INK_CHANNELS.has(key.channel) && !key.entries);
+    const squeeze = canvasSqueeze(inputs.canvas, inputs.roomy);
+    const rampThickness = ramped && squeeze < 1
+        ? Math.round(Math.max(RAMP_THICKNESS.min, RAMP_THICKNESS.full * squeeze))
+        : undefined;
     // Names drawn at the ends of lines take the right margin, so the other keys move below the plot.
     const secondaryEdge = design && design.legend.show && (placement.placement === 'seriesEnd' || placement.placement === 'inline')
         && !structure.marks.includes('text') && structure.marks.some((mark) => mark === 'line' || mark === 'trail')
@@ -282,6 +342,7 @@ export function planLegend(inputs: LegendInputs): LegendPlan {
         keys,
         untitled,
         ...(gradient ? { gradient } : {}),
+        ...(rampThickness !== undefined && rampThickness < RAMP_THICKNESS.full ? { rampThickness } : {}),
         ...(titleClearance !== undefined ? { titleClearance } : {}),
         ...(secondaryEdge ? { secondaryEdge } : {}),
     };
@@ -361,6 +422,7 @@ export function keysToLayout(plan: LegendPlan, inputs: KeyLayoutInputs): Array<K
             ...(symbolSize !== undefined ? { symbolSize } : {}),
             padding: corner ? 4 : 0,
             ...(plan.gradient ? { gradientLength: plan.gradient.length } : l?.gradientLength ? { gradientLength: l.gradientLength } : {}),
+            ...(plan.rampThickness !== undefined ? { gradientThickness: plan.rampThickness } : {}),
         };
         // A key to values with none sampled draws its scale's ticks, about five, as the backend does:
         // those are what it lists, not the rows' values.
@@ -372,9 +434,10 @@ export function keysToLayout(plan: LegendPlan, inputs: KeyLayoutInputs): Array<K
         const ranked = styled ? inputs.placements?.filter((placement) => SIDES.has(placement)) : undefined;
         return {
             gradient,
+            ...(stepped && !discrete ? { bar: true } : {}),
             ...(key.entries ? { labels: key.entries } : {}),
             ...(!key.entries && (key.samples || key.field)
-                ? { valueLabels: key.samples?.map(String) ?? drawnTicks ?? [...new Set(inputs.rows.map((row) => String(row?.[key.field!])))] } : {}),
+                ? { valueLabels: key.sampleLabels ?? key.samples?.map(String) ?? drawnTicks ?? [...new Set(inputs.rows.map((row) => String(row?.[key.field!])))] } : {}),
             count: key.samples?.length ?? key.entries?.length ?? drawnTicks?.length ?? 5,
             title,
             style,

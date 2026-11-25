@@ -24,6 +24,26 @@ describe('FlintTable', () => {
         expect(html).toContain('Americas');
     });
 
+    it('scrolls only the rows: the heading and the notes sit outside the scrolling box', () => {
+        const titled = { ...table, heading: { title: 'Countries', style: { title: table.style.header, subtitle: table.style.body } } };
+        const html = renderToStaticMarkup(createElement(FlintTable, { table: titled }));
+        expect(html).toMatch(/<div class="flint-table-heading">.*<\/div><div class="flint-table-scroll"><table>.*<\/table><\/div>/);
+    });
+
+    it('carries the chart\'s theme furniture and source, and draws the source at the foot', () => {
+        const economist = vegaLiteTable({
+            data: { values: [{ region: 'Europe', revenue: 27 }, { region: 'Asia', revenue: 17 }] },
+            theme_spec: 'economist',
+            chart_spec: { chartType: 'Table', title: 'Revenue', source: 'Source: Company ledger', encodings: {} },
+        } as ChartAssemblyInput);
+        expect(economist.furniture?.header?.pieces.length).toBeGreaterThan(0);
+        expect(economist.furniture?.source?.lines.length).toBeGreaterThan(0);
+        const html = renderToStaticMarkup(createElement(FlintTable, { table: economist }));
+        expect(html).toMatch(/<\/div><div class="flint-table-source"[^>]*>.*Company ledger/);
+        expect(html).not.toMatch(/Source:.*Source:/);
+        expect(table.furniture?.header).toBeUndefined();
+    });
+
     it('mutes the rows an emphasis leaves out', () => {
         const html = renderToStaticMarkup(createElement(FlintTable, { table, updates: [emphasize('Asia')] }));
         expect(html.match(/opacity:0\.35/g)).toHaveLength(2);

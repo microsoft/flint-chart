@@ -14,7 +14,7 @@ import type { ChannelSemantics, LayoutResult } from './types';
 /** What a chart draws around its plot that takes room from it. */
 export type ReservePart =
     | 'yLabels' | 'yTitle' | 'sideKeys' | 'seriesEnd'
-    | 'xLabels' | 'xTitle' | 'title' | 'flatYTitle' | 'stackedKeys' | 'facetHeaders';
+    | 'xLabels' | 'xTitle' | 'title' | 'flatYTitle' | 'stackedKeys' | 'facetHeaders' | 'footer';
 
 /** The room a chart's furniture takes beside and above or below its plot, in px. */
 export interface FurnitureReserve {
@@ -41,6 +41,8 @@ export const NO_RESERVE: FurnitureReserve = { width: 0, height: 0, parts: {} };
 export interface ReserveInputs {
     /** The dimensions to measure: the ones a fitted axis runs along. */
     along: { width: boolean; height: boolean };
+    /** The source line's and credit's room at the foot, where the plot is sized round it rather than giving it up after. */
+    footer?: number;
     structure: ChartStructure;
     design: DesignDecisions;
     themed: boolean;
@@ -57,6 +59,11 @@ export interface ReserveInputs {
     /** The headline and deck the chart prints, and how they were fitted where the plan fitted them. */
     title?: { text: string; subtitle?: string[] };
     titlePlan?: TitlePlan;
+    /**
+     * Whether a deck printed with no headline — axis titles a theme moves above the plot — counts its
+     * line. The plot is sized without it; what the drawing measures against a stated canvas counts it.
+     */
+    deckAlone?: boolean;
     rows: any[];
     spacing: FurnitureSpacing;
     measure: TextMeasurer;
@@ -164,11 +171,11 @@ function seriesEndWidth(inputs: ReserveInputs): number {
  */
 function titleHeight(inputs: ReserveInputs): number {
     const { title, titlePlan, design, themed, layout, spacing } = inputs;
-    if (!title?.text) return 0;
-    const headline = titlePlan?.headline?.fontSize ?? (themed ? design.title.headline.fontSize : undefined) ?? layout.titleFontSize;
-    const deck = titlePlan?.deck ?? title.subtitle?.join(' ');
+    const deck = titlePlan?.deck ?? title?.subtitle?.join(' ');
+    if (!title?.text && !(inputs.deckAlone && deck)) return 0;
+    const headline = !title?.text ? 0 : titlePlan?.headline?.fontSize ?? (themed ? design.title.headline.fontSize : undefined) ?? layout.titleFontSize;
     const deckSize = (themed ? design.title.deck.fontSize : undefined) ?? Math.round(layout.titleFontSize * 0.85);
-    const deckRoom = deck ? (themed ? design.title.deckPadding : spacing.deckPadding) + deckSize : 0;
+    const deckRoom = deck ? (headline ? (themed ? design.title.deckPadding : spacing.deckPadding) : 0) + deckSize : 0;
     // Over keys above the plot the title stands at the header's inner gap; its own gap is the keys'.
     return headline + deckRoom + (inputs.legend.layout?.headerGap ?? (themed ? design.title.offset : spacing.titleOffset));
 }
@@ -221,6 +228,7 @@ export function measureReserve(inputs: ReserveInputs): FurnitureReserve {
         if (furniture.yTitle?.top) parts.flatYTitle = furniture.yTitle.top;
         const keys = keyRoom(inputs, ROWS, 'height');
         if (keys) parts.stackedKeys = keys;
+        if (inputs.footer) parts.footer = inputs.footer;
         if (layout.facet && inputs.channelSemantics.column?.field && design.facets.header.show !== false) {
             parts.facetHeaders = Math.round((design.facets.header.fontSize ?? 11) * 1.7);
         }
@@ -233,7 +241,7 @@ export function measureReserve(inputs: ReserveInputs): FurnitureReserve {
     const sum = (names: ReservePart[]) => names.reduce((total, name) => total + (parts[name] ?? 0), 0);
     return {
         width: Math.ceil(sum(['yLabels', 'yTitle', 'sideKeys', 'seriesEnd'])),
-        height: Math.ceil(sum(['xLabels', 'xTitle', 'title', 'flatYTitle', 'stackedKeys', 'facetHeaders'])),
+        height: Math.ceil(sum(['xLabels', 'xTitle', 'title', 'flatYTitle', 'stackedKeys', 'facetHeaders', 'footer'])),
         parts,
         ...(unmeasured.length ? { unmeasured } : {}),
     };

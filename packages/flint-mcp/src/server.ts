@@ -23,6 +23,8 @@ import {
   toAssemblyInput,
   updatesShape,
   viewShape,
+  referencedShape,
+  checkArgs,
   SUPPORTED_BACKENDS,
   type SupportedBackend,
   type AssemblyInputArgs,
@@ -34,8 +36,7 @@ import {
   assembleBoard,
   boardChartShape,
   boardFieldsShape,
-  chartReport,
-  viewReport,
+  chartFindings,
   boardSnapshot,
   fitsInResult,
   gridShape,
@@ -43,16 +44,19 @@ import {
   type BoardChartArgs,
   type BoardSpec,
 } from './board.js';
+import { HELD, reportBody, viewReport } from './report.js';
 export { VERSION };
 
 export const AGENT_SKILL_RESOURCE_URI = 'flint://agent-skill';
 export const THEME_SKILL_RESOURCE_URI = 'flint://theme-skill';
 export const INTERACTION_SKILL_RESOURCE_URI = 'flint://interaction-skill';
 export const BOARD_SKILL_RESOURCE_URI = 'flint://board-skill';
+export const APP_SKILL_RESOURCE_URI = 'flint://app-skill';
 const AGENT_SKILL_ASSET = new URL('../assets/flint-chart-author.SKILL.md', import.meta.url);
 const THEME_SKILL_ASSET = new URL('../assets/flint-theme-author.SKILL.md', import.meta.url);
 const INTERACTION_SKILL_ASSET = new URL('../assets/flint-interaction-author.SKILL.md', import.meta.url);
 const BOARD_SKILL_ASSET = new URL('../assets/flint-board-author.SKILL.md', import.meta.url);
+const APP_SKILL_ASSET = new URL('../assets/flint-app-author.SKILL.md', import.meta.url);
 
 /** URI linking show to its bundled UI resource, the card that draws a chart or a board. */
 export const VIEW_RESOURCE_URI = 'ui://flint-chart/view.html';
@@ -69,6 +73,7 @@ const SKILL_ASSETS = {
   theme: THEME_SKILL_ASSET,
   interaction: INTERACTION_SKILL_ASSET,
   board: BOARD_SKILL_ASSET,
+  app: APP_SKILL_ASSET,
 } as const;
 export type SkillName = keyof typeof SKILL_ASSETS;
 const SKILL_NAMES = Object.keys(SKILL_ASSETS) as [SkillName, ...SkillName[]];
@@ -81,14 +86,17 @@ const readAgentSkill = () => readSkill('chart');
 const readThemeSkill = () => readSkill('theme');
 const readInteractionSkill = () => readSkill('interaction');
 
-/** Top-level `## ` headings of a skill, skipping fenced code blocks. */
-function skillSections(text: string): { heading: string; start: number }[] {
-  const sections: { heading: string; start: number }[] = [];
+/** The `## ` and `### ` headings of a skill, skipping fenced code blocks. */
+function skillSections(text: string): { heading: string; level: number; start: number }[] {
+  const sections: { heading: string; level: number; start: number }[] = [];
   let fenced = false;
   let offset = 0;
   for (const line of text.split('\n')) {
     if (line.startsWith('```')) fenced = !fenced;
-    else if (!fenced && line.startsWith('## ')) sections.push({ heading: line.slice(3).trim(), start: offset });
+    else if (!fenced && /^#{2,3} /.test(line)) {
+      const level = line.startsWith('### ') ? 3 : 2;
+      sections.push({ heading: line.slice(level + 1).trim(), level, start: offset });
+    }
     offset += line.length + 1;
   }
   return sections;
@@ -100,23 +108,31 @@ function headingKey(heading: string): string {
 }
 
 /**
- * One `## ` section of a skill, from its heading up to the next `## ` heading. The heading matches
- * exactly, or else as the start of one heading only, so a shortened name ("Link charts") finds it.
+ * One section of a skill, from its `## ` or `### ` heading up to the next heading of the same or a
+ * higher level. The heading matches exactly; else as the start of one heading only, so a shortened
+ * name ("Link charts") finds it; else as the one heading that holds every word asked for.
  */
 export function skillSection(text: string, heading: string): string {
   const sections = skillSections(text);
   const wanted = headingKey(heading);
+  const only = (test: (key: string) => boolean) => {
+    const found = sections.flatMap((section, at) => (test(headingKey(section.heading)) ? [at] : []));
+    return found.length === 1 ? found[0] : -1;
+  };
   let index = sections.findIndex((section) => headingKey(section.heading) === wanted);
+  if (index < 0 && wanted) index = only((key) => `${key} `.startsWith(`${wanted} `));
   if (index < 0 && wanted) {
-    const starting = sections.flatMap((section, at) => (`${headingKey(section.heading)} `.startsWith(`${wanted} `) ? [at] : []));
-    if (starting.length === 1) index = starting[0];
+    const words = wanted.split(' ');
+    index = only((key) => words.every((word) => key.split(' ').includes(word)));
   }
   if (index < 0) {
     throw new Error(
       `No section "${heading}". Sections: ${sections.map((section) => `"${section.heading}"`).join(', ')}.`,
     );
   }
-  return text.slice(sections[index].start, sections[index + 1]?.start ?? text.length).trimEnd() + '\n';
+  const { level, start } = sections[index];
+  const end = sections.slice(index + 1).find((section) => section.level <= level)?.start ?? text.length;
+  return text.slice(start, end).trimEnd() + '\n';
 }
 
 /** Read the bundled view HTML, tolerating a not-yet-built asset. */
@@ -143,6 +159,11 @@ type JsonContent = { content: { type: 'text'; text: string }[]; isError?: boolea
 
 function jsonResult(value: unknown): JsonContent {
   return { content: [{ type: 'text', text: JSON.stringify(value, null, 2) }] };
+}
+
+/** A result as plain JSON, for a tool's structuredContent. */
+function toStructured(value: unknown): Record<string, unknown> {
+  return JSON.parse(JSON.stringify(value));
 }
 
 function errorResult(err: unknown): JsonContent {
@@ -209,35 +230,24 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
     {
       instructions:
         'Flint compiles one semantic chart spec (ChartAssemblyInput) into ' +
-        'Vega-Lite, ECharts, or Chart.js. By DEFAULT, show a chart whenever the host ' +
-        'supports MCP App UIs: check the spec with validate_chart, fix what its report asks, then call ' +
-        'show with the spec once; the card draws the chart live with an editing panel. ' +
-        'For several charts shown together (a dashboard, a comparison, an overview with its detail), ' +
-        'call get_flint_skill with skill "board", check the board with validate_board, then call show with it once. ' +
-        'The server keeps nothing between calls: to change a chart, change its spec and call show again. ' +
-        'The editing panel is not ' +
-        'interactivity: when the user asks for an interactive chart (hover, ' +
-        'click, brush, zoom), add an interaction_spec. Fall back to render_chart for a static PNG/SVG artifact only ' +
-        'when the host has no App UI support or the user explicitly wants a ' +
-        'static image. Use compile_chart for the backend spec JSON, ' +
-        'validate_chart to check a spec, and list_chart_types to discover chart ' +
-        'types, their channels, and the interaction presets each supports for ' +
-        'interaction_spec. Use list_interaction_presets for what each preset does, ' +
-        'what it needs from the chart, and the options it accepts. ' +
-        'Use list_themes to discover visual themes; ' +
-        'prefer a preset id, and use an `extends` override only when the user ' +
-        'asks to customize it. Before authoring chart specs, call ' +
-        'get_flint_skill with skill "chart" (also the flint://agent-skill ' +
-        'resource and the author_flint_chart prompt). ' +
-        'When the user asks to create, translate, or substantially customize a ' +
-        'ThemeSpec, call get_flint_skill with skill "theme". ' +
-        'When the user asks for behaviour on a chart, names an intent such as ' +
-        'explore or compare, adds behaviour to a chart that already exists, ' +
-        'changes or reads a mounted chart from code or as an agent, passes ' +
-        'updates to a tool, links charts, ' +
-        'or needs an interaction no preset gives, call get_flint_skill with ' +
-        'skill "interaction". Pass `section` with one "## " heading when you ' +
-        'need only that part of a skill.' +
+        'Vega-Lite, ECharts, Chart.js or Plotly. Before your first chart, call get_flint_skill with skill ' +
+        '"chart" once and keep it for the conversation. By DEFAULT, show a chart whenever the host supports ' +
+        'MCP App UIs, with the lightest view that answers: one question is one chart, passed to show as chart; ' +
+        'the card draws it live with an editing panel, and its report says what to fix. An open question ("how ' +
+        'did X do", "what does this data say", "tell me something interesting") gets the one chart that answers ' +
+        'it best, or two side by side only when it has two halves; name in your reply what else you could show, ' +
+        'and draw it when the user asks. One view split by a category (a panel per region, same measure) is ' +
+        'still one chart, with column or row encodings. A board is for when the user asks for one: a dashboard, ' +
+        'an overview, KPI tiles, linked views, or several charts named in one turn: load skill "board", then ' +
+        'call show with it. show checks the ' +
+        'spec itself: no need to validate first; when it returns fixes, nothing was drawn, so fix and call show again. The server keeps nothing between calls: to change a chart, change its spec ' +
+        'and call show again. list_chart_types lists the chart types; pass chartType for one type\'s ' +
+        'guidance, properties and presets. The editing panel is not interactivity: when the user asks for ' +
+        'behaviour on a chart (hover, click, brush, zoom, filter) or for marks on it (notes, emphasis, a ' +
+        'reference line), load skill "interaction". Load skill "theme" to create or substantially customize ' +
+        'a ThemeSpec (list_themes for presets), and skill "app" only when the user asks for code. Use ' +
+        'render_chart for a static PNG/SVG only when the host has no App UI or the user wants an image, and ' +
+        'compile_chart for backend JSON. Pass `section` with a heading to get only part of a skill.' +
         dataAccessNote(options),
     },
   );
@@ -264,11 +274,11 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
       description:
         'Compile a Flint chart spec for a backend and render it to a STATIC image ' +
         '(PNG) or vector (SVG), returned inline. Rendering is local/in-process. ' +
-        'The chartjs backend supports PNG only. Prefer validate_chart and show instead ' +
+        'The chartjs backend supports PNG only. Prefer show instead ' +
         'when the host supports MCP App UIs; use render_chart for a static ' +
         'artifact or when no App UI is available.',
       inputSchema: {
-        ...assemblyInputShape,
+        ...referencedShape(assemblyInputShape, 'chart'),
         backend: backendEnum,
         format: z
           .enum(['png', 'svg'])
@@ -288,7 +298,7 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
     },
     async (args: any) => {
       try {
-        const input = toAssemblyInput(args as AssemblyInputArgs);
+        const input = toAssemblyInput({ ...args, ...checkArgs(assemblyInputShape, args) } as AssemblyInputArgs);
         const res = await renderChart(input, args.backend as RenderBackend, {
           format: args.format,
           scale: args.scale,
@@ -328,11 +338,11 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
         'Compile a Flint chart spec to a backend-native spec object ' +
         '(Vega-Lite / ECharts / Chart.js) without rendering. Returns the spec ' +
         'JSON, assembly warnings, and the computed layout size.',
-      inputSchema: { ...assemblyInputShape, backend: backendEnum },
+      inputSchema: { ...referencedShape(assemblyInputShape, 'chart'), backend: backendEnum },
     },
     async (args: any) => {
       try {
-        const input = toAssemblyInput(args as AssemblyInputArgs);
+        const input = toAssemblyInput({ ...args, ...checkArgs(assemblyInputShape, args) } as AssemblyInputArgs);
         await installFlintTextMeasurer();
         return jsonResult(compileChart(input, args.backend as RenderBackend, { ...dataSourceOptions, roots: await clientRoots() }));
       } catch (err) {
@@ -347,24 +357,33 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
     {
       title: 'Validate chart spec',
       description:
-        'Validate a Flint chart spec for a backend without rendering. Reports ' +
-        'whether it is valid, all warnings/errors, and the computed layout size. ' +
-        'With an interaction_spec it also reports the entries the chart would drop. ' +
-        'With updates it rejects a malformed layer and reports, op by op, whether ' +
-        'each will apply (✓) or why not (✗), in the same report show returns. ' +
-        'Call it before show and fix what it reports; nothing is kept between calls.',
-      inputSchema: { ...assemblyInputShape, ...updatesShape, backend: backendEnum },
+        'Validate a Flint chart spec for a backend without rendering. Every backend returns the validation ' +
+        'result as JSON (also in structuredContent). For vegalite, a second block follows: the report of ' +
+        'what to act on (errors, warnings, interaction_spec entries the chart drops, and update ops that ' +
+        'will not apply, ✗), the same report show returns; "Nothing to fix" when it is clean. For a host ' +
+        'with no card UI; with a card, call show directly, which runs the same check. Nothing is kept ' +
+        'between calls.',
+      inputSchema: { ...referencedShape({ ...assemblyInputShape, ...updatesShape }, 'chart'), backend: backendEnum },
     },
     async (args: any) => {
       try {
-        const { result, input } = validateChart(toAssemblyInput(args as AssemblyInputArgs), args.backend as RenderBackend, {
+        args = { ...args, ...checkArgs({ ...assemblyInputShape, ...updatesShape }, args) };
+        const { result } = validateChart(toAssemblyInput(args as AssemblyInputArgs), args.backend as RenderBackend, {
           ...dataSourceOptions,
           roots: await clientRoots(),
           updates: args.updates,
         });
-        if (!result.valid || args.backend !== 'vegalite') return jsonResult(result);
-        const report = chartReport(input, args.updates, result);
-        return { content: [...jsonResult(result).content, { type: 'text' as const, text: report }] };
+        if (args.backend !== 'vegalite') return { ...jsonResult(result), structuredContent: toStructured(result) };
+        const findings = result.valid ? chartFindings(args.updates, result) : result.errors.map((error) => `✗ ${error.message}`);
+        const chart = { id: 'chart', kind: 'chart' as const, charts: [] };
+        // The JSON result comes first on every backend, for hosts that parse it; the report follows for the agent.
+        return {
+          content: [
+            ...jsonResult(result).content,
+            { type: 'text' as const, text: viewReport(chart, [{ id: 'chart', drawn: result.valid, findings }]) },
+          ],
+          structuredContent: toStructured(result),
+        };
       } catch (err) {
         return errorResult(err);
       }
@@ -377,16 +396,18 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
     {
       title: 'List chart types',
       description:
-        'List the available chart types, their encoding channels, and the ' +
-        'interaction presets each supports in interaction_spec (Vega-Lite only), ' +
-        'for a backend, or for all backends when none is given.',
+        'The chart types, each with its channels and a one-line note on what it is for, for a backend ' +
+        '(or all). Pass `chartType` for one type in full: its guidance (map keys, which bar chart), its ' +
+        'chartProperties with values, defaults and effects, and the interaction presets it supports in ' +
+        'interaction_spec (Vega-Lite).',
       inputSchema: {
         backend: backendEnum.optional(),
+        chartType: z.string().optional().describe('One chart type name, for its guidance, properties and presets.'),
       },
     },
     async (args: any) => {
       try {
-        return jsonResult(listChartTypes(args?.backend as RenderBackend | undefined));
+        return jsonResult(listChartTypes(args?.backend as RenderBackend | undefined, args?.chartType));
       } catch (err) {
         return errorResult(err);
       }
@@ -404,7 +425,7 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
         'accepts under `options`. Pass `chartType` for the presets a Vega-Lite ' +
         'chart type supports, or `type` for one preset. Which presets answer a ' +
         'request and how they combine is in get_flint_skill with skill ' +
-        '"interaction", section "Add interactions to the chart".',
+        '"interaction", section "Add interactions".',
       inputSchema: {
         chartType: z.string().optional().describe('A Vega-Lite chart type name from list_chart_types.'),
         type: z.string().optional().describe('One preset type, for its options alone.'),
@@ -425,20 +446,20 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
     {
       title: 'Get Flint skill',
       description:
-        'Return a bundled Flint skill as markdown. Read it before you write the ' +
+        'Return a bundled Flint skill as markdown. Read it once before you write the ' +
         'matching spec: `chart` for a ChartAssemblyInput, `theme` for a ThemeSpec, ' +
-        '`interaction` for an interaction_spec, ChartUpdate layers, reading a ' +
-        'mounted chart, linking charts, or a bespoke interaction; `board` for a ' +
-        'board spec: headline, chart choice, layout, links. Pass `section` ' +
-        'with one "## " heading to get only that part; an unknown section lists ' +
-        'the headings. The same text is served as the flint://agent-skill, ' +
-        'flint://theme-skill, flint://interaction-skill, and flint://board-skill resources.',
+        '`interaction` for an interaction_spec or ChartUpdate layers (updates), ' +
+        '`board` for a board spec, `app` for code that uses flint-chart in an ' +
+        'application. Pass `section` with a heading to get only that part; an ' +
+        'unknown section lists the headings. The same text is served as the ' +
+        'flint://agent-skill, flint://theme-skill, flint://interaction-skill, ' +
+        'flint://board-skill and flint://app-skill resources.',
       inputSchema: {
-        skill: z.enum(SKILL_NAMES).describe('Which skill: chart, theme, interaction, or board.'),
+        skill: z.enum(SKILL_NAMES).describe('Which skill: chart, theme, interaction, board, or app.'),
         section: z
           .string()
           .optional()
-          .describe('One "## " heading of the skill, e.g. "Update the chart".'),
+          .describe('One heading of the skill, e.g. "Update the chart" or "Muted annotations".'),
       },
       annotations: { readOnlyHint: true },
     },
@@ -503,14 +524,15 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
     {
       title: 'Validate board',
       description:
-        'Check a board of several Flint charts without drawing it: the report gives the layout, each chart ' +
-        '(✓/✗ per update op), what each chart sends and receives under link_spec, and a review of what the ' +
-        'board should still fix. Nothing is kept: fix the spec, check it again if needed, then pass the same ' +
-        'board to show. Before the first board, call get_flint_skill with skill "board".',
-      inputSchema: boardSpec.shape,
+        'Check a board of several Flint charts without drawing it, for a host with no card UI or a static ' +
+        'image; with a card, call show directly, which runs the same check. The report gives the layout in one ' +
+        'line, what to fix before it draws, and what it would draw with. Before the first board, call ' +
+        'get_flint_skill with skill "board".',
+      inputSchema: referencedShape(boardSpec.shape, 'board'),
     },
     async (args: any) => {
       try {
+        args = checkArgs(boardSpec.shape, args);
         const { board, outcomes, notes } = await assemble({ board: args });
         return { content: [{ type: 'text' as const, text: viewReport(board, outcomes, notes) }] };
       } catch (err) {
@@ -525,10 +547,12 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
     {
       title: 'Show chart or board',
       description:
-        'Put a chart or a board on screen: pass the full spec as chart or as board, after validate_chart or ' +
-        'validate_board report nothing left to fix. The card draws it live with an editing panel; the result ' +
-        'is the same report. A spec with errors draws nothing. Nothing is kept: to change what is on screen, ' +
-        'change the spec and call show again; a new card shows it and earlier cards stay as they were.',
+        'Put a chart or a board on screen: pass the full spec as chart or as board; there is no need to ' +
+        'validate first. show checks the spec: one with errors, or with something it must not be drawn with ' +
+        '(rows drawn as slices, a link that joins nothing), draws nothing and returns what to fix, so call show ' +
+        'again with the fixed spec. Otherwise the card draws it live with an editing panel, and the result notes ' +
+        'what it drew with; change nothing for those unless the user asks. Nothing is kept: to change what is on ' +
+        'screen, change the spec and call show again; a new card shows it and earlier cards stay as they were.',
       inputSchema: {
         chart: chartSpec.optional(),
         board: boardSpec.optional(),
@@ -540,12 +564,17 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
         const { board, outcomes, notes } = await assemble(args);
         const failed = outcomes.filter((outcome) => !outcome.drawn);
         if (failed.length > 0) {
-          const text = `Nothing was drawn: ${failed.map((outcome) => `${outcome.id} ${outcome.text}`).join('; ')}. Fix the spec and call show again.`;
+          const text = `Nothing was drawn: ${failed.map((outcome) => `${outcome.id} ${outcome.findings.join('; ')}`).join('; ')}. Fix the spec and call show again.`;
           return { content: [{ type: 'text' as const, text }], _meta: { flint: { error: text } }, isError: true };
+        }
+        // What the board must not be drawn with comes back to the agent; the card says it is being revised.
+        if (reportBody(board, outcomes, notes).fix.length > 0) {
+          const text = viewReport(board, outcomes, notes, 'held');
+          return { content: [{ type: 'text' as const, text }], _meta: { flint: { held: HELD } }, isError: true };
         }
         const snapshot = boardSnapshot(board);
         return {
-          content: [{ type: 'text' as const, text: viewReport(board, outcomes, notes, true) }],
+          content: [{ type: 'text' as const, text: viewReport(board, outcomes, notes, 'shown') }],
           // A small board also rides in structuredContent, which a host keeps when it draws the card again.
           ...(fitsInResult(snapshot) ? { structuredContent: { flint: { board: snapshot } } } : {}),
           _meta: { flint: { board: snapshot } },
@@ -567,7 +596,8 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
           uri: VIEW_RESOURCE_URI,
           mimeType: RESOURCE_MIME_TYPE,
           text: readViewHtml(),
-          _meta: { ui: { permissions: { clipboardWrite: {} } } },
+          // Maps fetch their named boundaries from Flint's site: the view carries none of them.
+          _meta: { ui: { permissions: { clipboardWrite: {} }, csp: { connectDomains: ['https://microsoft.github.io'] } } },
         },
       ],
     }),
@@ -711,7 +741,7 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
     {
       title: 'Flint interaction-author skill',
       description:
-        'Bundled instructions for behaviour on a chart: how an interaction works, presets as one valid interaction_spec, the ChartUpdate an application or an agent applies to a mounted chart, reading the chart state, linking charts, and bespoke interactions.',
+        'Bundled instructions for behaviour and state on a chart: when to add interactions, presets as one valid interaction_spec, and the ChartUpdate layers (updates) an agent leaves on a chart.',
       mimeType: 'text/markdown',
       annotations: { audience: ['assistant'], priority: 1 },
     },
@@ -741,15 +771,30 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
     }),
   );
 
+  server.registerResource(
+    'app-skill',
+    APP_SKILL_RESOURCE_URI,
+    {
+      title: 'Flint app-author skill',
+      description:
+        'Bundled instructions for code that uses flint-chart: install, compile, mount with interactions, read the chart, apply updates, link charts, and bespoke interactions.',
+      mimeType: 'text/markdown',
+      annotations: { audience: ['assistant'], priority: 1 },
+    },
+    async (uri) => ({
+      contents: [{ uri: uri.href, mimeType: 'text/markdown', text: readSkill('app') }],
+    }),
+  );
+
   server.registerPrompt(
     'author_flint_interaction',
     {
       title: 'Author Flint interactions',
       description:
-        'Load the Flint interaction-author skill before adding behaviour to a chart, changing or reading a mounted chart from outside, linking charts, or building a bespoke interaction.',
+        'Load the Flint interaction-author skill before adding behaviour to a chart, or marks and emphasis (updates) on it.',
     },
     async () => ({
-      description: 'Use the bundled Flint interaction-author skill to produce a valid interaction_spec, a ChartUpdate, or code against flint-chart/interactive.',
+      description: 'Use the bundled Flint interaction-author skill to produce a valid interaction_spec or ChartUpdate.',
       messages: [
         {
           role: 'user' as const,
@@ -768,9 +813,9 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
             type: 'text' as const,
             text:
               'Use these Flint instructions for behaviour on a chart. ' +
-              'For presets, use list_chart_types to confirm the ones the chart type supports, ' +
+              'For presets, use list_interaction_presets with chartType to confirm the ones the chart type supports, ' +
               'and return the bare interaction_spec without changing the chart spec. ' +
-              'For a mounted chart, return one ChartUpdate; for code, write against flint-chart/interactive.',
+              'For a chart on screen, return one ChartUpdate.',
           },
         },
       ],

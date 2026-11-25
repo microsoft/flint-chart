@@ -5,6 +5,7 @@ import math
 import re
 
 from ...core import js_round
+from ...core.field_semantics import resolve_display_aggregate
 from ...core.type_registry import get_registry_entry
 
 
@@ -176,7 +177,8 @@ def _bar_table_instantiate(spec, ctx):
 
     show_percent = config.get("showPercent") is True
 
-    use_mean_for_display = (x_cs or {}).get("aggregationDefault") == "average"
+    x_aggregate = ((ctx.get("encodings") or {}).get("x") or {}).get("aggregate")
+    use_mean_for_display = resolve_display_aggregate(x_cs, x_aggregate) == "average"
 
     def agg_value(g):
         return g["sum"] / max(1, g["n"]) if use_mean_for_display else g["sum"]
@@ -325,7 +327,7 @@ def _bar_table_instantiate(spec, ctx):
     value_fmt = (x_cs or {}).get("format")
     pct_pattern = ".1%"
 
-    sort_op = "mean" if (x_cs or {}).get("aggregationDefault") == "average" else "sum"
+    sort_op = "mean" if use_mean_for_display else "sum"
 
     def unique_groupby(fields):
         return _unique_preserve(fields)
@@ -744,7 +746,7 @@ def _bar_table_show_percent_check(ctx: dict) -> dict:
     if (not cs
         or not cs.get("field")
         or cs.get("type") != "quantitative"
-        or cs.get("aggregationDefault") == "average"
+        or resolve_display_aggregate(cs, ((ctx.get("encodings") or {}).get("x") or {}).get("aggregate")) != "sum"
     ):
         return {"applicable": False}
     total = 0.0

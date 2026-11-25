@@ -4,11 +4,11 @@ import { FlintView } from '../components/FlintView';
 import './color-lab.css';
 
 const GAMES = OMNI_VIZ_GAME_ORDER.slice(0, 8) as readonly string[];
-const ROWS = OMNI_VIZ_ROWS
+export const ROWS = OMNI_VIZ_ROWS
   .filter((r) => GAMES.includes(r.game))
   .map(({ period, game, gameType, newUsers }) => ({ period, game, gameType, newUsers }));
 
-type Case = Omit<ChartAssemblyInput, 'data'>;
+export type Case = Omit<ChartAssemblyInput, 'data'>;
 
 const heatmap = (color: Record<string, unknown> = {}, extra: Partial<Case> = {}, newUsers: unknown = 'Profit'): Case => ({
   semantic_types: { period: 'YearMonth', game: 'Category', newUsers } as Case['semantic_types'],
@@ -19,7 +19,7 @@ const heatmap = (color: Record<string, unknown> = {}, extra: Partial<Case> = {},
   ...extra,
 });
 
-const CASES: Case[] = [
+export const CASES: Case[] = [
   heatmap(),
   heatmap({}, { theme_spec: 'economist' }),
   heatmap({ scheme: 'viridis' }),

@@ -8,6 +8,7 @@
 
 import type { ChannelSemantics, InstantiateContext } from '../../core/types';
 import { resolveDiscreteType } from '../../core/axis-detection';
+import { dateCells } from '../../core/decisions';
 
 // ---------------------------------------------------------------------------
 // Discrete-dimension helpers
@@ -299,6 +300,94 @@ export function adjustRectTiling(spec: any, ctx: InstantiateContext): void {
 
         const sizeKey = axis === 'x' ? 'width' : 'height';
         spec.mark = setMarkProp(spec.mark, sizeKey, cellSize);
+    }
+}
+
+/** The working column holding where each cell along a time axis ends. */
+const cellEndField = (axis: 'x' | 'y') => `__cell_${axis}_end`;
+
+/** Whether the cells along this axis span their periods ({@link spanCalendarCells}): its scale takes the data's extent. */
+export function spansCalendarCells(spec: any, axis: 'x' | 'y'): boolean {
+    const units: any[] = [spec, spec.spec, ...(spec.layer ?? []), ...(spec.spec?.layer ?? [])];
+    return units.some((unit) => unit?.encoding?.[`${axis}2`]?.field === cellEndField(axis));
+}
+
+/**
+ * Cells along a time axis span the period each date stands for ({@link dateCells}): its month,
+ * quarter or year where the dates step by months whatever their day (a quarter's end covers the
+ * quarter); the step from it where they keep an exact one (days, weeks, hours); until the next
+ * date where they keep about one (13 or 14 days). Neighbours meet whatever a month's length, and a
+ * missing period stays an empty gap. The fixed pixel
+ * width {@link adjustRectTiling} cuts can only fit the shortest month, leaving the rest of every
+ * other step open. The scale runs from the first date to the last cell's end, the data's own
+ * extent; value labels stand at each cell's middle.
+ */
+export function spanCalendarCells(spec: any, ctx: InstantiateContext): void {
+    const units: any[] = Array.isArray(spec.layer) ? spec.layer : [spec];
+    const shared = spec.encoding ?? {};
+    const markOf = (unit: any) => (typeof unit.mark === 'string' ? unit.mark : unit.mark?.type);
+    const cells = units.filter((unit) => markOf(unit) === 'rect');
+    if (cells.length === 0) return;
+    for (const axis of ['x', 'y'] as const) {
+        const count = axis === 'x' ? ctx.layout.xContinuousAsDiscrete : ctx.layout.yContinuousAsDiscrete;
+        if (count <= 0) continue;
+        const enc = cells[0].encoding?.[axis] ?? shared[axis];
+        if (enc?.type !== 'temporal' || !enc.field || enc.bin || enc.timeUnit || enc.aggregate) continue;
+        const values = ctx.table.map((row: any) => row[enc.field]);
+        const read = dateCells(values);
+        if (!read) continue;
+        const { cadence, cells: periods } = read;
+        const value = `datum[${JSON.stringify(enc.field)}]`;
+        // A date off its period's start (a quarter's end, the 5th of a month) moves to the start, so
+        // its cell covers the period it stands for.
+        const moved = [...periods].some(([time, [start]]) => start !== time);
+        const months = cadence.months;
+        const startExpr = months && 12 % months === 0 ? `utc(utcyear(${value}), floor(utcmonth(${value}) / ${months}) * ${months}, 1)`
+            : `utc(utcyear(${value}), utcmonth(${value}), 1)`;
+        let endExpr: string;
+        if (months) endExpr = `utcOffset('month', ${value}, ${months})`;
+        else if (cadence.exact) {
+            const days = cadence.ms! / 86_400_000;
+            endExpr = Number.isInteger(days) ? `utcOffset('day', ${value}, ${days})` : `time(${value}) + ${cadence.ms}`;
+        }
+        else {
+            // About one step: each date's cell runs to the next, looked up by the date.
+            const index = `indexof(${JSON.stringify([...periods.keys()])}, time(${value}))`;
+            endExpr = `${index} < 0 ? time(${value}) + ${cadence.ms} : ${JSON.stringify([...periods.values()].map(([, to]) => to))}[${index}]`;
+        }
+        const end = cellEndField(axis), mid = `__cell_${axis}_mid`;
+        const sizeKey = axis === 'x' ? 'width' : 'height';
+        const labelled = units.some((unit) => unit.encoding?.[axis] && markOf(unit) !== 'rect');
+        spec.transform = [
+            ...(months && moved ? [{ calculate: startExpr, as: enc.field }] : []),
+            { calculate: endExpr, as: end },
+            ...(labelled ? [{ calculate: `(time(${value}) + time(${endExpr})) / 2`, as: mid }] : []),
+            ...(spec.transform ?? []),
+        ];
+        // No domain: the data's own extent, dates to period ends, is the first date to the last cell's
+        // end. A stated one would also stop the temporal ticks being planned.
+        const spanned = (target: any) => {
+            const { domain: _padded, ...scale } = target.scale ?? {};
+            return { ...target, scale: { ...scale, nice: false } };
+        };
+        for (const unit of units) {
+            const own = unit.encoding?.[axis];
+            if (markOf(unit) === 'rect') {
+                if (own) unit.encoding[axis] = spanned(own);
+                else shared[axis] = spanned(shared[axis]);
+                // Vega-Lite joins the end field's name into the axis title; this one is a working column.
+                const position = own ?? shared[axis];
+                unit.encoding = { ...(unit.encoding ?? {}), [`${axis}2`]: { field: end, title: 'title' in position ? position.title : position.field } };
+                if (unit.mark && typeof unit.mark === 'object') {
+                    const { [sizeKey]: _cut, ...mark } = unit.mark;
+                    unit.mark = mark;
+                }
+            } else if (own) {
+                // A label stands at its cell's middle, on the cells' scale and axis. It keeps the axis
+                // (dropping it in one layer drops the shared axis) and the cells' title, not its own field's.
+                unit.encoding[axis] = { ...spanned(own), field: mid, title: 'title' in own ? own.title : own.field };
+            }
+        }
     }
 }
 

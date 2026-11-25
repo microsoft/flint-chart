@@ -22,11 +22,11 @@ const funnelArtifact: ExcelNativeChartSpec = {
 
 describe('Excel Office.js artifacts', () => {
     it.each([
-        { values: [-970, 580], minimum: -1047.5 },
+        { values: [-970, 580], minimum: -1000 },
         { values: [-970, -370], minimum: -1000 },
-        { values: [10, 20], minimum: 9.5 },
+        { values: [10, 20], minimum: 0 },
         { values: [0, 20], minimum: 0 },
-    ])('keeps line values visible for $values', ({ values, minimum }) => {
+    ])('keeps line values visible on round bounds for $values', ({ values, minimum }) => {
         const artifact = assembleExcel({
             data: { values: values.map((amount, index) => ({ year: 2020 + index, amount })) },
             semantic_types: { year: 'Date', amount: 'Quantity' },

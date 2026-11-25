@@ -1,0 +1,57 @@
+{
+  "semantic_types": {
+    "Decade": "Category",
+    "Anomaly (°C)": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Bar Chart",
+    "encodings": {
+      "x": "Decade",
+      "y": "Anomaly (°C)"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Decade": "1880s",
+        "Anomaly (°C)": -0.17
+      },
+      {
+        "Decade": "1900s",
+        "Anomaly (°C)": -0.16
+      },
+      {
+        "Decade": "1920s",
+        "Anomaly (°C)": -0.27
+      },
+      {
+        "Decade": "1940s",
+        "Anomaly (°C)": 0.12
+      },
+      {
+        "Decade": "1960s",
+        "Anomaly (°C)": -0.03
+      },
+      {
+        "Decade": "1980s",
+        "Anomaly (°C)": 0.26
+      },
+      {
+        "Decade": "2000s",
+        "Anomaly (°C)": 0.4
+      },
+      {
+        "Decade": "2010s",
+        "Anomaly (°C)": 0.72
+      },
+      {
+        "Decade": "2020s",
+        "Anomaly (°C)": 1.02
+      }
+    ]
+  }
+}

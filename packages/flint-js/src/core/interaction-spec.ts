@@ -202,4 +202,20 @@ export interface InteractionSpec {
     /** Presets assist by default; false requires direct hits, maxDistance overrides eligible presets. */
     assistedTargeting?: boolean | AssistedTargetingOptions;
     keyboardTargeting?: boolean;
+    /**
+     * The behaviour every mounted chart has without an entry: a tooltip that reads the nearest mark,
+     * a legend click that dims a group, and on a dense chart a Ctrl/⌘-wheel zoom and drag pan.
+     * `false` turns all three off; an object turns each off by name. Defaults to on.
+     */
+    defaults?: InteractionDefaults;
+}
+
+/** The baseline behaviours, all on unless turned off (`false`, or `{ tooltip: false }` and so on). */
+export type InteractionDefaults = boolean | { tooltip?: boolean; legend?: boolean };
+
+/** Whether one baseline behaviour is on. */
+export function baselineOn(defaults: InteractionDefaults | undefined, behaviour: 'tooltip' | 'legend'): boolean {
+    if (defaults === undefined || defaults === true) return true;
+    if (defaults === false) return false;
+    return defaults[behaviour] !== false;
 }

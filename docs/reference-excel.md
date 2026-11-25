@@ -40,7 +40,7 @@ const artifact = assembleExcel(input);
 const result = await renderExcelChart(Excel, artifact);
 ```
 
-`renderExcelChart` must run in an Excel host that provides Office.js `Excel.run` and `Excel.ImageFittingMode.fit`. It creates a native chart on the active worksheet and returns a PNG captured through `Chart.getImage()`.
+`renderExcelChart` must run in an Excel host that provides Office.js `Excel.run` and `Excel.ImageFittingMode.fit`. It creates a native chart beside its data on the active worksheet (or on the sheet named by `worksheetName`) and returns a PNG captured through `Chart.getImage()`.
 
 Call `generateOfficeJs(artifact)` when you need portable Office.js source instead of immediate execution.
 
@@ -48,6 +48,6 @@ Call `generateOfficeJs(artifact)` when you need portable Office.js source instea
 
 - A single native Excel chart does not support Flint `column` or `row` facets.
 - Chart types without a native Excel equivalent, such as Heatmap, are rejected before rendering.
-- Some charts impose stricter data requirements. For example, scatter charts require quantitative `x` and `y`, while candlesticks require `open`, `high`, `low`, and `close`. The assembler reports a specific validation error.
+- Some charts impose stricter data requirements. For example, scatter charts require a quantitative or temporal `x` and a quantitative `y`, while candlesticks require `open`, `high`, `low`, and `close`. The assembler reports a specific validation error.
 
 Use `excelGetTemplateDef(chartType)` or `excelGetTemplateChannels(chartType)` to check support before compiling.

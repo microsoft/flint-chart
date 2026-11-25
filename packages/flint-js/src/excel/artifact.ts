@@ -22,6 +22,7 @@ export const SUPPORTED_EXCEL_CHART_TYPES = [
     'Waterfall',
     'XYScatter',
     'XYScatterLines',
+    'XYScatterLinesNoMarkers',
 ] as const;
 
 const supportedChartTypes = new Set<string>(SUPPORTED_EXCEL_CHART_TYPES);

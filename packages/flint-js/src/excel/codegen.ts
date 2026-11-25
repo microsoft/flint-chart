@@ -25,7 +25,7 @@ export interface GeneratedOfficeJs {
     };
 }
 
-function axisCode(axisName: 'categoryAxis' | 'valueAxis', axis: ExcelAxisSpec): string[] {
+function axisCode(axisName: 'categoryAxis' | 'valueAxis', axis: ExcelAxisSpec, fonts: ExcelNativeChartSpec['fontSizes'] = {}): string[] {
     const target = `chart.axes.${axisName}`;
     const lines: string[] = [];
     if (axis.categoryType) lines.push(`  ${target}.categoryType = ${JSON.stringify(axis.categoryType)};`);
@@ -34,15 +34,18 @@ function axisCode(axisName: 'categoryAxis' | 'valueAxis', axis: ExcelAxisSpec): 
     if (axis.title) {
         lines.push(`  ${target}.title.text = ${JSON.stringify(axis.title)};`);
         lines.push(`  ${target}.title.visible = true;`);
-        lines.push(`  ${target}.title.format.font.size = ${EXCEL_AXIS_TITLE_FONT_SIZE};`);
+        lines.push(`  ${target}.title.format.font.size = ${fonts.axisTitle ?? EXCEL_AXIS_TITLE_FONT_SIZE};`);
     }
     if (axis.numberFormat) lines.push(`  ${target}.numberFormat = ${JSON.stringify(axis.numberFormat)};`);
-    lines.push(`  ${target}.format.font.size = ${axis.labelFontSize ?? EXCEL_LABEL_FONT_SIZE};`);
+    lines.push(`  ${target}.format.font.size = ${axis.labelFontSize ?? fonts.label ?? EXCEL_LABEL_FONT_SIZE};`);
     if (axis.tickLabelSpacing !== undefined) lines.push(`  ${target}.tickLabelSpacing = ${axis.tickLabelSpacing};`);
     if (axis.reversePlotOrder !== undefined) lines.push(`  ${target}.reversePlotOrder = ${axis.reversePlotOrder};`);
+    if (axis.logBase !== undefined) lines.push(`  ${target}.logBase = ${axis.logBase};`);
     if (axis.minimumScale !== undefined) lines.push(`  ${target}.minimum = ${axis.minimumScale};`);
     if (axis.maximumScale !== undefined) lines.push(`  ${target}.maximum = ${axis.maximumScale};`);
     if (axis.majorUnit !== undefined) lines.push(`  ${target}.majorUnit = ${axis.majorUnit};`);
+    if (axis.position) lines.push(`  ${target}.position = ${JSON.stringify(axis.position)};`);
+    if (axis.tickLabelPosition) lines.push(`  ${target}.tickLabelPosition = ${JSON.stringify(axis.tickLabelPosition)};`);
     return lines;
 }
 
@@ -87,6 +90,7 @@ export function generateOfficeJs(value: unknown, options: OfficeJsCodegenOptions
         '  );',
         '  dataRange.values = values;',
         `  const chart = sheet.charts.add(${JSON.stringify(prepared.chartType)}, dataRange, ${JSON.stringify(spec.seriesBy)});`,
+        `  chart.setPosition(sheet.getCell(0, ${prepared.columns + 1}));`,
     );
 
     if (spec.series?.length) {
@@ -115,7 +119,7 @@ export function generateOfficeJs(value: unknown, options: OfficeJsCodegenOptions
         lines.push(
             `  chart.title.text = ${JSON.stringify(spec.title)};`,
             '  chart.title.visible = true;',
-            `  chart.title.format.font.size = ${EXCEL_CHART_TITLE_FONT_SIZE};`,
+            `  chart.title.format.font.size = ${spec.fontSizes?.title ?? EXCEL_CHART_TITLE_FONT_SIZE};`,
         );
     }
     if (spec.legend) {
@@ -123,18 +127,24 @@ export function generateOfficeJs(value: unknown, options: OfficeJsCodegenOptions
         if (spec.legend.visible && spec.legend.position) {
             lines.push(`  chart.legend.position = ${JSON.stringify(spec.legend.position)};`);
         }
-        if (spec.legend.visible) lines.push(`  chart.legend.format.font.size = ${EXCEL_LEGEND_FONT_SIZE};`);
+        if (spec.legend.visible) lines.push(`  chart.legend.format.font.size = ${spec.fontSizes?.legend ?? EXCEL_LEGEND_FONT_SIZE};`);
+    }
+    if (/^Funnel$/.test(prepared.chartType)) {
+        lines.push(`  chart.axes.categoryAxis.format.font.size = ${spec.fontSizes?.label ?? EXCEL_LABEL_FONT_SIZE};`);
+    }
+    if (/^(Treemap|Sunburst)$/.test(prepared.chartType) && !spec.dataLabels) {
+        lines.push(`  chart.dataLabels.format.font.size = ${spec.fontSizes?.dataLabel ?? EXCEL_DATA_LABEL_FONT_SIZE};`);
     }
     if (spec.dataLabels) {
         lines.push(`  chart.dataLabels.visible = ${spec.dataLabels.visible};`);
         if (spec.dataLabels.position) lines.push(`  chart.dataLabels.position = ${JSON.stringify(spec.dataLabels.position)};`);
         if (spec.dataLabels.numberFormat) lines.push(`  chart.dataLabels.numberFormat = ${JSON.stringify(spec.dataLabels.numberFormat)};`);
         if (spec.dataLabels.fontColor) lines.push(`  chart.dataLabels.format.font.color = ${JSON.stringify(spec.dataLabels.fontColor)};`);
-        lines.push(`  chart.dataLabels.format.font.size = ${spec.dataLabels.fontSize ?? EXCEL_DATA_LABEL_FONT_SIZE};`);
+        lines.push(`  chart.dataLabels.format.font.size = ${spec.dataLabels.fontSize ?? spec.fontSizes?.dataLabel ?? EXCEL_DATA_LABEL_FONT_SIZE};`);
     }
     if (prepared.hasAxes) {
-        if (spec.categoryAxis) lines.push(...axisCode('categoryAxis', spec.categoryAxis));
-        if (spec.valueAxis) lines.push(...axisCode('valueAxis', spec.valueAxis));
+        if (spec.categoryAxis) lines.push(...axisCode('categoryAxis', spec.categoryAxis, spec.fontSizes));
+        if (spec.valueAxis) lines.push(...axisCode('valueAxis', spec.valueAxis, spec.fontSizes));
     }
 
     lines.push(`  const seriesFormats = ${JSON.stringify(spec.seriesFormats ?? [])};`);

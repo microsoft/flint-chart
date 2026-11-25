@@ -1,4 +1,4 @@
-import { snapToBoundHeuristic, type DomainConstraint } from './field-semantics';
+import { percentRepresentation, snapToBoundHeuristic, type DomainConstraint } from './field-semantics';
 import type { AxisDescription } from './structure';
 import type { ChannelSemantics } from './types';
 
@@ -168,8 +168,7 @@ function intrinsicDomain(cs: ChannelSemantics, rows: any[], field: string): [num
     if (semanticType === 'Percentage') {
         const nums = rows.map((r) => r[field]).filter((v: any) => typeof v === 'number' && !isNaN(v));
         if (nums.length > 0) {
-            const fractional = nums.filter((v) => Math.abs(v) <= 1).length / nums.length >= 0.8;
-            return fractional ? [0, 1] : [0, 100];
+            return percentRepresentation(cs.semanticAnnotation, nums) === '0-1' ? [0, 1] : [0, 100];
         }
     }
     return undefined;

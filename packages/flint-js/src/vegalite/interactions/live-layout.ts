@@ -264,6 +264,14 @@ export function bindTemporalAxisTicks(
             if (text && typeof text === 'object' && 'signal' in text) {
                 text.signal = `${signal}.labels[toString(toNumber(datum.value))] || ''`;
             }
+            // A stacked axis sets its labels from their left edge, as planned with them.
+            if (inputs.timeContext === 'stacked') {
+                const offset = `${signal}.offsets[toString(toNumber(datum.value))]`;
+                axis.labelOffset = { signal: `${offset} || 0` };
+                axis.encode = { ...axis.encode, labels: { ...axis.encode?.labels, update: {
+                    ...axis.encode?.labels?.update, align: { signal: `${offset} != null ? 'left' : 'center'` },
+                } } };
+            }
         }
     });
 }

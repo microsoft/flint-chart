@@ -1,13 +1,12 @@
-import { useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { SiteNavBar, MicrosoftDisclosures } from '../components/SiteShell';
 import { LocaleLink } from '../i18n/LocaleLink';
 import { GITHUB_REPO, siteTheme } from '../shared/theme';
+import { MCP_SETUP_PROMPT } from '../shared/mcp-setup';
+import { PromptBlock } from '../components/PromptBlock';
 import chartPreview from '../assets/mcp-chart-preview.svg';
 import { McpExperience } from './McpExperience';
-
-const HOSTED_MCP_URL = 'https://flint.data-formulator.ai/mcp';
 
 const SURFACE_GROUPS = [
   { key: 'chart', tools: ['validate_chart', 'show'] },
@@ -26,7 +25,6 @@ export function McpServer() {
 
   return (
     <div style={pageStyle}>
-      <style>{interactiveStyles}</style>
       <SiteNavBar flush />
 
       <main style={mainStyle}>
@@ -57,9 +55,7 @@ export function McpServer() {
             .
           </p>
 
-          <div className="mcp-setup-grid">
-            <CodeBlock copyable>{setupPrompt}</CodeBlock>
-          </div>
+          <PromptBlock copyable>{MCP_SETUP_PROMPT}</PromptBlock>
 
           <p style={skillNoteStyle}>
             <Trans
@@ -128,7 +124,7 @@ export function McpServer() {
             </p>
           </Prose>
 
-          <CodeBlock>{clientConfig}</CodeBlock>
+          <PromptBlock>{clientConfig}</PromptBlock>
 
           <Prose>
             <p style={pStyle}>
@@ -139,7 +135,7 @@ export function McpServer() {
             </p>
           </Prose>
 
-          <CodeBlock>{disableFileReferenceConfig}</CodeBlock>
+          <PromptBlock>{disableFileReferenceConfig}</PromptBlock>
 
           {/* ---- Next ------------------------------------------------- */}
           <Prose>
@@ -286,36 +282,6 @@ function SurfaceCard(props: { title: string; desc: string; tools: readonly strin
   );
 }
 
-function CodeBlock({ children, copyable = false }: { children: string; copyable?: boolean }) {
-  const [copied, setCopied] = useState(false);
-
-  async function copyCode() {
-    await navigator.clipboard.writeText(children);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1600);
-  }
-
-  return (
-    <div style={codeBlockWrapStyle}>
-      {copyable ? (
-        <button type="button" style={copyButtonStyle} onClick={copyCode}>
-          <span aria-hidden="true" style={copyIconStyle}>{copied ? '✓' : '⧉'}</span>
-          {copied ? 'Copied' : 'Copy prompt'}
-        </button>
-      ) : null}
-      <pre style={{ ...codeBlockStyle, ...(copyable ? codeBlockCopyableStyle : null) }}>{children}</pre>
-    </div>
-  );
-}
-
-const setupPrompt = `Help me set up Flint as an MCP server named "flint"!
-
-1. Add it to my client config, using whichever option my client supports:
-   - a local (stdio) server: npx -y flint-chart-mcp
-   - the hosted server over HTTP: ${HOSTED_MCP_URL}
-2. Verify the setup by listing the available Flint chart types.
-3. Show me a fun first chart: how many moons each planet has, in a Flint theme you like.`;
-
 const clientConfig = `{
   "mcpServers": {
     "flint": {
@@ -349,22 +315,7 @@ const GRID_LINE = 'rgba(0, 0, 0, 0.02)';
 
 const READING_WIDTH = 880;
 
-const interactiveStyles = `
-  /* The copy button floats over the block's top-right corner, beside the short first line. */
-  .mcp-setup-grid pre {
-    padding: 14px 14px 12px !important;
-    font-size: 12px !important;
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
-  }
 
-  @media (max-width: 520px) {
-    /* Too narrow for the button beside the first line: it keeps a row of its own. */
-    .mcp-setup-grid pre {
-      padding-top: 42px !important;
-    }
-  }
-`;
 
 const pageStyle: CSSProperties = {
   minHeight: '100vh',
@@ -854,53 +805,6 @@ const cardDescStyle: CSSProperties = {
   lineHeight: 1.55,
   color: siteTheme.textMuted,
   margin: 0,
-};
-
-/* ---- code blocks ---- */
-
-const codeBlockWrapStyle: CSSProperties = {
-  margin: '4px 0 8px',
-  border: `1px solid ${HAIRLINE}`,
-  borderRadius: 8,
-  background: 'rgba(0,0,0,0.025)',
-  overflow: 'auto',
-  position: 'relative',
-};
-
-const codeBlockStyle: CSSProperties = {
-  margin: 0,
-  padding: '14px 16px',
-  fontFamily: siteTheme.fontMono,
-  fontSize: 13,
-  lineHeight: 1.6,
-  color: siteTheme.text,
-};
-
-const codeBlockCopyableStyle: CSSProperties = {
-  paddingRight: 128,
-};
-
-const copyButtonStyle: CSSProperties = {
-  position: 'absolute',
-  top: 8,
-  right: 8,
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: 6,
-  border: `1px solid rgba(0, 102, 204, 0.24)`,
-  borderRadius: 7,
-  background: 'rgba(0, 102, 204, 0.08)',
-  color: siteTheme.accent,
-  fontFamily: siteTheme.fontSans,
-  fontSize: 12.5,
-  fontWeight: 600,
-  padding: '5px 10px',
-  cursor: 'pointer',
-};
-
-const copyIconStyle: CSSProperties = {
-  fontSize: 13,
-  lineHeight: 1,
 };
 
 /* ---- next actions ---- */

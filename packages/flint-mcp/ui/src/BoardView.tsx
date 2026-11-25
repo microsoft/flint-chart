@@ -14,8 +14,8 @@ import type { App, McpUiHostContext } from '@modelcontextprotocol/ext-apps';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react';
 import type { ChartAssemblyInput, ChartTable, ChartUpdate, ChartWarning, ClosingRule, UpdateCheck } from 'flint-chart';
 import { assembleVegaLite, canvasFurnitureMarkup, drawsAsTable, headerFurnitureItems, planFrameFurniture, validateChart } from 'flint-chart';
-import type { ChartChange, ChartState, InteractiveChartSurface } from 'flint-chart/interactive';
-import { FlintChart, FlintTable } from 'flint-chart/react';
+import type { ChartChange, ChartState, InteractiveChartSurface } from 'flint-chart/interactive/vegalite';
+import { FlintChart, FlintTable } from 'flint-chart/react/vegalite';
 import { expressionInterpreter } from 'vega-interpreter';
 
 import {
@@ -39,13 +39,13 @@ import {
   type ChartLayout,
 } from '../../src/board-layout';
 import { chartContext, type ChartGesture } from '../../src/chart-context';
-import { APP_PREVIEW_CANVAS_SIZE, usesAutoPreviewSize, withAppPreviewDefaults } from './render';
+import { APP_PREVIEW_CANVAS_SIZE, withAppPreviewDefaults } from './render';
 import { boardPng } from './board-export';
 import { SelectionChips, chipText, impliedParts, partText } from './selection-chips';
 import { ViewSwitch, useCellViews, useChartTable, type CellView } from './chart-table-view';
 import { ActionButton, ThemeControl } from './controls';
 import { usePageScroll } from './page-scroll';
-import { LINK_LAYER, conditionUpdates, gestureParts, shownFields, type ChartLink, type LinkCondition, type LinkSpec } from 'flint-chart/interactive';
+import { LINK_LAYER, conditionUpdates, gestureParts, shownFields, type ChartLink, type LinkCondition, type LinkSpec } from 'flint-chart/interactive/vegalite';
 
 export interface BoardChart {
   id: string;
@@ -183,9 +183,17 @@ function ruleStyle(rule: ClosingRule, ink: string): CSSProperties {
   return { height: rule.height, background: rule.color ?? ink, ...(rule.stated ? { width: rule.width } : {}) };
 }
 
+/** A chart on a board takes its size from the board's layout (span and height), not its own. */
+function laidOut(input: ChartAssemblyInput): ChartAssemblyInput {
+  const { baseSize: _base, canvasSize: _canvas, ...chartSpec } = input.chart_spec;
+  void _base;
+  void _canvas;
+  return _base === undefined && _canvas === undefined ? input : { ...input, chart_spec: chartSpec };
+}
+
 /** The chart as the chart card plans it for a room up to `height` tall. */
 function roomSpec(input: ChartAssemblyInput, height: number): ChartAssemblyInput {
-  return withAppPreviewDefaults(input, { width: APP_PREVIEW_CANVAS_SIZE.width, height });
+  return withAppPreviewDefaults(laidOut(input), { width: APP_PREVIEW_CANVAS_SIZE.width, height });
 }
 
 /** The widest a KPI tile is planned, so a tile alone in a wide cell stays a tile. */
@@ -196,10 +204,7 @@ function cellSpec(input: ChartAssemblyInput, width: number, height: number): Cha
   const size = { width: isKpi(input.chart_spec.chartType) ? Math.min(width, MAX_TILE_WIDTH) : width, height };
   return {
     ...input,
-    chart_spec: {
-      ...input.chart_spec,
-      ...(input.chart_spec.baseSize ? {} : { baseSize: size, canvasSize: size }),
-    },
+    chart_spec: { ...input.chart_spec, baseSize: size, canvasSize: size },
     options: { ...input.options, bandStepFit: input.options?.bandStepFit ?? 1 },
   };
 }
@@ -300,7 +305,7 @@ function BoardCell({
             expressionInterpreter={expressionInterpreter}
             chartId={`flint-board-${chart.id}`}
             width="100%"
-            fit={!kpi && usesAutoPreviewSize(input) ? 'relayout' : 'scale-down'}
+            fit={kpi ? 'scale-down' : 'relayout'}
             fallback={<span className="chart-pending">Rendering…</span>}
             onRender={handleRender}
             onChange={handleChange}

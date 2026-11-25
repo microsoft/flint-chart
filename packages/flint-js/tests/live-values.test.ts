@@ -39,6 +39,22 @@ async function svgOf(view: View): Promise<string> {
             (run.match(/<(?:line|path|text) [^>]*\/>|<text [^>]*>[^<]*<\/text>/g) ?? []).sort().join(''));
 }
 
+/**
+ * The SVG's root frame — its size and the origin of the chart in it — apart from what it frames.
+ * A pushed view lays out its origin by its guides' bounds before the pushed values re-encode some of
+ * them (Vega reruns that layout only on a size change), so where a guide shrinks the frame may stand a
+ * pixel wider than a fresh view's — the drawing within it the same.
+ */
+function framed(svg: string): { frame: number[]; within: string } {
+    const frame: number[] = [];
+    const within = svg.replace(/^(<svg [^>]*?)width="([\d.]+)" height="([\d.]+)" viewBox="0 0 [\d.]+ [\d.]+"><rect width="[\d.]+" height="[\d.]+"( [^>]*\/>)(<g [^>]*?)transform="translate\((-?[\d.]+),(-?[\d.]+)\)"/,
+        (_, svgOpen, width, height, rect, group, x, y) => {
+            frame.push(Number(width), Number(height), Number(x), Number(y));
+            return `${svgOpen}<rect${rect}${group}`;
+        });
+    return { frame, within };
+}
+
 const BASE = { width: 400, height: 320 };
 
 describe('live values', () => {
@@ -64,11 +80,16 @@ describe('live values', () => {
                     // Vega's typings omit runAsync's optional encode-set argument.
                     await (view as View & { runAsync(encode?: string): Promise<View> }).runAsync('enter');
                     const fresh = new View(parse(structuredClone(next)), { renderer: 'none' });
-                    const drawn = await svgOf(view);
-                    const expected = await svgOf(fresh);
+                    const pushedSvg = framed(await svgOf(view));
+                    const freshSvg = framed(await svgOf(fresh));
+                    const label = `${type} ${testCase.title ?? ''} ${theme ?? ''}`;
+                    expect(pushedSvg.frame.length, label).toBe(4);
+                    pushedSvg.frame.forEach((value, index) => expect(Math.abs(value - freshSvg.frame[index]!), label).toBeLessThanOrEqual(1));
+                    const drawn = pushedSvg.within;
+                    const expected = freshSvg.within;
                     let at = 0;
                     while (at < drawn.length && drawn[at] === expected[at]) at += 1;
-                    expect(drawn.slice(at - 120, at + 120), `${type} ${testCase.title ?? ''} ${theme ?? ''}`)
+                    expect(drawn.slice(at - 120, at + 120), label)
                         .toBe(expected.slice(at - 120, at + 120));
                     view.finalize();
                     fresh.finalize();

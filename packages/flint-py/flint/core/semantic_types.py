@@ -56,7 +56,7 @@ SemanticTypes: dict[str, str] = {
 
 measureTypes: set[str] = {
     t for t in get_registered_types()
-    if get_registry_entry(t)["aggRole"] in ("additive", "intensive", "signed-additive")
+    if get_registry_entry(t)["aggRole"] in ("additive", "intensive", "signed-additive", "measure")
     and get_registry_entry(t)["t1"] != "Score"
 }
 

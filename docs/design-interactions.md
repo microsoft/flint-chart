@@ -92,7 +92,7 @@ applies it:
 | Op | Effect |
 |---|---|
 | `set-style` | emphasise or mute targets, hide a series |
-| `set-annotation` | pin or clear an annotation on a target |
+| `annotate-text` | pin or clear an annotation on a target |
 | `set-viewport` | move a continuous domain or a projection |
 | `set-order` | reorder a discrete domain |
 | `set-overlay`, `set-freeform-overlay` | draw a guide or a free path |

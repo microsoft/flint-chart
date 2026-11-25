@@ -87,12 +87,24 @@
   opacity: 0.7;
 }
 
+/* The positioned box starts at the button's bottom edge and holds the spacing as its own padding, so the
+   pointer never leaves the group between the button and the panel. */
 .dev-nav-dropdown {
   position: absolute;
-  top: calc(100% + 4px);
+  top: 100%;
   left: 0;
   z-index: 200;
   display: none;
+  padding-top: 4px;
+}
+
+.dev-nav-group:hover .dev-nav-dropdown,
+.dev-nav-group:focus-within .dev-nav-dropdown {
+  display: block;
+}
+
+.dev-nav-dropdown-panel {
+  display: flex;
   flex-direction: column;
   min-width: 150px;
   padding: 6px;
@@ -103,22 +115,56 @@
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
 }
 
-.dev-nav-dropdown::before {
-  position: absolute;
-  right: 0;
-  bottom: 100%;
-  left: 0;
-  height: 5px;
-  content: "";
-}
-
-.dev-nav-group:hover .dev-nav-dropdown,
-.dev-nav-group:focus-within .dev-nav-dropdown {
-  display: flex;
-}
-
 .dev-nav-dropdown .dev-nav-link {
   white-space: nowrap;
+}
+
+.dev-nav-heading {
+  margin-top: 6px;
+  padding: 8px 10px 2px;
+  border-top: 1px solid rgba(0, 0, 0, 0.07);
+  color: #8a9199;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.dev-nav-heading:first-child {
+  margin-top: 0;
+  padding-top: 2px;
+  border-top: none;
+}
+
+.dev-lab-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: -8px 0 20px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.dev-lab-tabs button {
+  padding: 5px 12px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dev-muted);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.dev-lab-tabs button:hover {
+  color: var(--dev-text);
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.dev-lab-tabs button.is-on {
+  border-color: rgba(0, 0, 0, 0.12);
+  background: #fff;
+  color: var(--dev-text);
+  font-weight: 600;
 }
 
 .dev-content {

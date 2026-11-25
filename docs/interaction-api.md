@@ -42,6 +42,10 @@ import { clickHighlight } from 'flint-chart/interactive';
 />;
 ```
 
+`flint-chart` comes with every backend's library, so any `backend` draws as installed. An app that bundles into one file (no code splitting) can import a backend's own entry, `flint-chart/react/vegalite`, `/echarts`, `/chartjs` or `/plotly` (and `flint-chart/interactive/<backend>` for `mountChart`), which reaches no other backend's library; the exports are the same. To draw a second backend from such an entry, pass its factory from `flint-chart/<backend>/interactive` in `renderers`, e.g. `renderers={{ echarts: createEChartsInteractiveRenderer }}`.
+
+A chart loads its backend's renderer on its first draw, from the package's own files, so it draws with a bundler or without one: from a CDN, through an import map, in Deno or in Node. One exception: vega, which Vega-Lite charts draw with, ships only as ES modules, so a CommonJS program that mounts Vega-Lite charts outside a bundler (a Node test on jsdom, say) loads `flint-chart/interactive` with `import()`.
+
 A spec with no interactions renders a static chart; a chart is interactive only if its spec or the `interactions` prop declares an interaction. A static chart mounts no interaction runtime, so it costs about the same as a plain Vega-Lite embed. To drive a chart without interactions from the host, pass `updates`; even `updates={[]}` mounts the runtime so the ref's `applyUpdate` works. On a static chart `applyUpdate` warns and returns `null`. `interactions` takes preset factories, never JSON entries: an array adds to the spec's `interaction_spec`, and a function `(fromSpec) => definitions` receives the spec's definitions and returns the full list. A preset rebuilt with the same id and options keeps the mounted chart, so inline factory calls are fine; changing an option remounts it. Function-valued options, such as `clickAnnotate`'s `format`, are read at mount.
 
 | Prop | Purpose |
@@ -55,6 +59,7 @@ A spec with no interactions renders a static chart; a chart is interactive only 
 | `onError` | The chart failed: a compile error, a malformed `interaction_spec`, or a code interaction the chart cannot honour. The box shows a muted error in place of the chart |
 | `fallback` | Shown until the chart mounts, including in server rendering |
 | `ariaLabel`, `chartId` | `ariaLabel` applies in place; a new `chartId` remounts the chart. `expressionInterpreter` is read at mount |
+| `backend`, `renderers` | The backend to draw with (default `vegalite`), and renderer factories by backend for backends the entry does not load. Read at mount |
 
 A ref gives a `FlintChartHandle` with `surface` (the mounted `InteractiveChartSurface`, or `null`), `applyUpdate`, `clearUpdate`, `dispatch`, `getState`, and `refresh`. The `selectionUpdate(id, selection)` and `viewportUpdate(id, viewport)` helpers build the updates a selection or navigation preset writes: `selection` takes elements or a field key, and `viewport` takes `[start, end]` per axis or a `ChartState.viewport`. `null` clears the selection or returns the viewport home.
 
@@ -114,7 +119,7 @@ const countryDetails: CanvasInteractionDef = {
           targets: [target],
           value: { state: 'emphasized', mutedOpacity: 0.25 },
         },
-        { op: 'set-annotation', target, value: { text: country } },
+        { op: 'annotate-text', target, value: { text: country } },
       ],
     };
   },
@@ -156,7 +161,7 @@ const countrySelection = externalInteraction<{ Country: string }>({
           targets: [target],
           value: { state: 'emphasized', mutedOpacity: 0.25 },
         },
-        { op: 'set-annotation', target, value: { text: Country } },
+        { op: 'annotate-text', target, value: { text: Country } },
       ],
     };
   },
@@ -220,7 +225,7 @@ container.addEventListener('flint-interaction', (event) => {
 
 ## Update operators and host responses
 
-`set-style` controls emphasis or visibility, `set-annotation` adds or clears a label, and `set-viewport` changes the visible domains. Other operators reorder categories, add overlays, or replace data. A single handler can return multiple operators in one update.
+`set-style` controls emphasis or visibility, `annotate-text` adds or clears a label, and `set-viewport` changes the visible domains. Other operators reorder categories, add overlays, or replace data. A single handler can return multiple operators in one update.
 
 The container emits `flint-interaction` events with the interaction id and semantic target. Your application can listen to those events to filter a table or update other widgets; Flint renders only the canvas updates. Applications can also submit operators directly through `surface.applyUpdate()` or `surface.setUpdates()`. See [Components](interaction-components.md) for the event envelope, action families, listener examples, and chart update API.
 

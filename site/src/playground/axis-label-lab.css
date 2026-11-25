@@ -28,6 +28,7 @@
 .accessibility-showcase { margin-bottom: 24px; }
 .release-demo-heading { margin-bottom: 10px; }
 .release-demo-heading h2 { font-size: 18px; margin: 0 0 4px; letter-spacing: 0; }
+.release-demo-heading h3 { font-size: 15px; margin: 0 0 4px; letter-spacing: 0; }
 .release-demo-heading p { margin: 0; max-width: 72ch; font-size: 13px; line-height: 1.5; color: #61676d; }
 .accessibility-actions { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
 .wrapping-tabs { display: flex; flex-wrap: wrap; gap: 4px; }

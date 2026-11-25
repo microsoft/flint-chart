@@ -29,4 +29,22 @@ describe('a ramp beside a short plot', () => {
         expect(legend.y2 - legend.y1).toBeLessThanOrEqual(view.height() + 1);
         view.finalize();
     });
+
+    it('labels the shortened ramp at round values, not at its two raw ends', async () => {
+        const { spec } = vegaLiteStages({
+            data: { values: ROWS.map((row, i) => ({ ...row, Sales: row.Sales + (i % 7) * 13 })) },
+            semantic_types: { Month: 'Month', Product: 'Category', Sales: 'Quantity' },
+            chart_spec: { chartType: 'Heatmap', encodings: { x: 'Month', y: 'Product', color: 'Sales' }, canvasSize: { width: 800, height: 800 } },
+        } as any);
+        const { _theme, _canvasFit, _legendLayout, ...vl } = spec;
+        expect(vl.encoding.color.legend.gradientLength).toBeLessThan(200);
+        const view = new View(parse(compile(vl).spec), { renderer: 'none' });
+        await view.runAsync();
+        const labels: string[] = [];
+        const walk = (item: any) => { if (!item) return; for (const child of item.items ?? []) walk(child); if (item.role === 'legend-label') labels.push(...(item.items ?? []).map((t: any) => t.text)); };
+        walk((view as any).scenegraph().root);
+        view.finalize();
+        expect(labels.length).toBeGreaterThan(2);
+        for (const label of labels) expect(Number(String(label).replace(/,/g, '')) % 100).toBe(0);
+    });
 });

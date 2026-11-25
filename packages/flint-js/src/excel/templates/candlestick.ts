@@ -3,6 +3,7 @@
 
 import { formatSpecToExcel } from '../chart-types';
 import { excelDateAxis, excelDateSerial } from '../date-axis';
+import { EXCEL_LABEL_FONT_SIZE } from '../typography';
 import type { ExcelTemplateDef } from './types';
 
 const PRICE_CHANNELS = ['open', 'high', 'low', 'close'] as const;
@@ -84,7 +85,7 @@ export const excelCandlestickDef: ExcelTemplateDef = {
             ],
             categoryAxis: {
                 title: xField,
-                ...excelDateAxis(table.map((row) => row[xField]), base.width),
+                ...excelDateAxis(table.map((row) => row[xField]), { plotWidth: base.width - 90, fontSize: EXCEL_LABEL_FONT_SIZE }),
             },
             valueAxis: {
                 title: 'Price',

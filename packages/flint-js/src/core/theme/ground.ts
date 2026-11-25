@@ -46,6 +46,7 @@ import {
     readableTextInk,
     isDarkSurface,
     isPaintedSurface,
+    lightness,
     mixHex,
     parseColor,
     presenceWidth,
@@ -828,7 +829,10 @@ function bindRoles(ctx: GroundingContext): Bindings {
     });
     const { measureChannels, categoricalChannel } = axisRoles({ x: fieldFacts('x'), y: fieldFacts('y') });
 
-    const seriesChannel = SERIES_CHANNELS.find((c) => ctx.channelSemantics?.[c]?.field)
+    // On a bar, `detail` splits each bar into segments that read as one (`sealDetailSegments`); it is
+    // a series only where marks are drawn apart (a line, a ranged bar).
+    const segmentsOnly = ctx.markTypes.includes('bar') && !ctx.channelSemantics?.x2?.field && !ctx.channelSemantics?.y2?.field;
+    const seriesChannel = SERIES_CHANNELS.find((c) => ctx.channelSemantics?.[c]?.field && !(c === 'detail' && segmentsOnly))
         ?? (ctx.positional?.color?.field ? 'color' : undefined);
     const facetChannel = FACET_CHANNELS.find((c) => ctx.channelSemantics?.[c]?.field);
     return { measureChannels, categoricalChannel, seriesChannel, facetChannel };
@@ -2143,6 +2147,14 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
                 haloWidth: Math.max(0, selectionBoundary?.haloWidth ?? 2.5),
                 haloOpacity: clamp(selectionBoundary?.haloOpacity ?? 0.35, 0, 1),
             },
+            annotation: {
+                ...(theme.ink?.accent ? { accent: theme.ink.accent } : {}),
+                ...(theme.ink?.series?.categorical?.length ? { palette: [...theme.ink.series.categorical] } : {}),
+                ...(theme.type?.annotation ? { text: resolveType(theme.type.annotation, (axisLabelText.fontSize ?? 10) + 1, text.primary) } : {}),
+                ink: text.primary,
+                background: plot,
+                ...(theme.interaction?.highlight ? { highlight: { ...theme.interaction.highlight } } : {}),
+            },
         },
         facets,
         layout: {
@@ -2368,6 +2380,7 @@ function groundSeriesInkChoice(
         const signedSequential = seriesSigned && selection.signed === 'sequential';
         const diverging = seriesSigned && !signedSequential && Boolean(s.diverging);
         const ramp: Ramp | undefined = offSurface(diverging ? s.diverging : s.sequential, surfaceColour);
+        if (diverging && ramp?.stops?.length) reportUnbalancedRamp(ramp.stops, say);
         if (ramp?.stops?.length) {
             const consumption = ramp.consumption ?? 'interpolate';
             const quantize = consumption === 'quantize' ? (ramp.quantizeCount ?? 5) : undefined;
@@ -2548,6 +2561,36 @@ function forMarkFamily(s: NonNullable<ThemeInk['series']>, family: SeriesMarkFam
  * regions that each net a gain or a loss). Months on a ridgeline of temperatures do not, however
  * cold the winter.
  */
+/** How far apart in L* the two arms of a diverging ramp may stand at mirrored points before they read as unequal. */
+const RAMP_ARM_TOLERANCE = 3;
+
+/**
+ * A diverging ramp reads equal distances from its midpoint as equal only where its two arms are
+ * equally light at mirrored points (ColorBrewer's diverging schemes; Moreland, "Diverging Color
+ * Maps for Scientific Visualization", 2009). Reports the widest gap, from the ends to near the
+ * middle, where it passes {@link RAMP_ARM_TOLERANCE}.
+ */
+function reportUnbalancedRamp(stops: string[], say: ReportDeparture): void {
+    if (stops.length < 3) return;
+    const at = (t: number): number | undefined => {
+        const x = t * (stops.length - 1);
+        const k = Math.min(stops.length - 2, Math.floor(x));
+        const c = parseColor(mixHex(stops[k], stops[k + 1], x - k, stops[k]));
+        return c ? lightness(c) : undefined;
+    };
+    let widest = { gap: 0, t: 0, low: 0, high: 0 };
+    for (const t of [0, 0.1, 0.2, 0.3, 0.4]) {
+        const low = at(t);
+        const high = at(1 - t);
+        if (low === undefined || high === undefined) return;
+        if (Math.abs(low - high) > widest.gap) widest = { gap: Math.abs(low - high), t, low, high };
+    }
+    if (widest.gap <= RAMP_ARM_TOLERANCE) return;
+    say('ink.series.diverging', 'diverging-ramp-unbalanced',
+        `the diverging ramp's arms differ by ${widest.gap.toFixed(1)} L* ${widest.t === 0 ? 'at its ends' : `${Math.round(widest.t * 100)}% in from its ends`} `
+        + `(${widest.low.toFixed(1)} against ${widest.high.toFixed(1)}), so equal distances from the midpoint do not read as equal`);
+}
+
 function seriesCarriesSign(ctx: GroundingContext, field: string | undefined, type: string | undefined): boolean {
     if (!field) return false;
     // A field this stage cannot see (a template derives it) keeps the chart's sign.

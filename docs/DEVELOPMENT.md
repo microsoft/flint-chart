@@ -4,7 +4,7 @@ Use this page to set up **flint-chart** locally, run the common checks, and find
 
 ## Prerequisites
 
-- Node 18+ (see [`packages/flint-js/.nvmrc`](../packages/flint-js/.nvmrc); run `nvm use` if you use nvm)
+- Node 20.19+ or 22.12+, which the site's and the MCP view's Vite builds need (see [`packages/flint-js/.nvmrc`](../packages/flint-js/.nvmrc); run `nvm use` if you use nvm). The published packages themselves run on Node 18+.
 - npm 9+ (workspaces)
 
 ## First-time setup

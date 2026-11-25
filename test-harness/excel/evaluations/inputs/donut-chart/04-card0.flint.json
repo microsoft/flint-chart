@@ -1,0 +1,33 @@
+{
+  "semantic_types": {
+    "OS": "Category",
+    "Share": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Donut Chart",
+    "encodings": {
+      "size": "Share",
+      "color": "OS"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "OS": "Android",
+        "Share": 71
+      },
+      {
+        "OS": "iOS",
+        "Share": 28
+      },
+      {
+        "OS": "Other",
+        "Share": 1
+      }
+    ]
+  }
+}

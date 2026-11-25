@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { formatSpecToExcel } from '../chart-types';
+import { niceScale } from '../scale';
 import type { ExcelTemplateDef } from './types';
 
 export const excelBoxplotDef: ExcelTemplateDef = {
@@ -26,7 +26,7 @@ export const excelBoxplotDef: ExcelTemplateDef = {
         }
         return undefined;
     },
-    instantiate: ({ input, table, semantics, fieldOf }) => {
+    instantiate: ({ input, table, fieldOf }) => {
         const categoryField = fieldOf('x')!;
         const valueField = fieldOf('y')!;
         const rows = table.filter((row) => row[categoryField] != null && Number.isFinite(Number(row[valueField])));
@@ -44,10 +44,13 @@ export const excelBoxplotDef: ExcelTemplateDef = {
                 ...rows.map((row) => [String(row[categoryField]), Number(row[valueField])]),
             ],
             categoryAxis: { title: categoryField },
-            valueAxis: {
-                title: valueField,
-                numberFormat: formatSpecToExcel(semantics.y?.format),
-            },
+            valueAxis: (() => {
+                // A distribution is read by its spread: the axis fits the values, as Flint's boxplots do.
+                const values = rows.map((row) => Number(row[valueField]));
+                const scale = niceScale(values, Math.min(...values) <= 0, base.height - 80);
+                // Box & Whisker (a newer Excel chart family) takes bounds, but rejects a number format or major unit.
+                return { title: valueField, minimumScale: scale.minimumScale, maximumScale: scale.maximumScale };
+            })(),
             legend: { visible: false },
             boxWhiskerOptions: {
                 quartileCalculation: 'Inclusive',

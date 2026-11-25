@@ -4,6 +4,7 @@ import type { LegendPlan } from '../core/legend-plan';
 import { KEY_CHANNELS } from '../core/structure';
 import { rendererTextMeasurer } from '../core/text-width';
 import { caseLabelExpr } from '../core/text-case';
+import { exactLegendLabels } from './exact-labels';
 import { plannedKeyFor } from './theme';
 
 
@@ -20,12 +21,16 @@ function keyLegend(legend: any, layout: KeyLayout, labels: string[] | undefined,
     const out = { ...(legend ?? {}) };
     // The key's air to the plot, as planned; an author's offset stands.
     if (offset !== undefined && out.offset === undefined) out.offset = offset;
-    if (layout.moved) {
+    // A key moved off its edge, or pinned to one by its author (`legend.orient` on a Flint encoding,
+    // which the encoding Vega-Lite reads does not carry), stands on the edge planned for it; Vega-Lite
+    // would otherwise draw it on the right.
+    if (layout.moved || (out.orient === undefined && layout.orient !== 'right')) {
         out.orient = layout.orient;
         if (out.direction === undefined) out.direction = ['top', 'bottom'].includes(layout.orient) ? 'horizontal' : 'vertical';
         if (out.titleOrient === undefined) out.titleOrient = 'top';
     }
     if (layout.gradientLength !== undefined) out.gradientLength = layout.gradientLength;
+    if (layout.gradientThickness !== undefined) out.gradientThickness = layout.gradientThickness;
     if (layout.inlineTitle) {
         out.titleOrient = 'left';
         if (layout.titlePadding !== undefined && out.titlePadding === undefined) out.titlePadding = layout.titlePadding;
@@ -68,6 +73,42 @@ function keyLegend(legend: any, layout: KeyLayout, labels: string[] | undefined,
         };
     }
     return out;
+}
+
+/** Colour scales whose key Vega-Lite draws as a stepped ramp, dropping the key's own `gradientLength`. */
+const BINNED_SCALES = new Set(['quantize', 'quantile', 'threshold', 'bin-ordinal']);
+
+/**
+ * A stepped ramp standing up beside the plot runs the length the plan gave it, or where the plan
+ * gave none — it lays a stepped key out as a list of swatches — no longer than the plot is tall. Vega-Lite drops a
+ * binned key's own `gradientLength` and reads the config's, which a theme sizes for a row of bins
+ * above the plot ({@link fitBinnedKeyLength}): a ramp twice the height of a short plot, running past
+ * it. Only an upright one is held here, never shorter than a line of label per bin.
+ */
+function holdBinnedKeyLength(spec: any, encoding: any, layout: KeyLayout, plot: { width: number; height: number }): void {
+    if (!BINNED_SCALES.has(encoding.scale?.type)) return;
+    const config = (spec.config ??= {});
+    const legendConfig = (config.legend ??= {});
+    const direction = encoding.legend?.direction ?? legendConfig.direction ?? (['top', 'bottom'].includes(layout.orient) ? 'horizontal' : 'vertical');
+    if (direction !== 'vertical') return;
+    const bins = Array.isArray(encoding.scale.range) ? encoding.scale.range.length
+        : encoding.scale.type === 'threshold' && Array.isArray(encoding.scale.domain) ? encoding.scale.domain.length + 1
+            : encoding.scale.scheme?.count ?? 0;
+    const fontSize = encoding.legend?.labelFontSize ?? legendConfig.labelFontSize ?? 10;
+    const planned = encoding.legend?.gradientLength;
+    let length: number;
+    if (typeof planned === 'number') length = planned;
+    else {
+        // The plot's height, less the key's title above the ramp.
+        const titled = encoding.legend?.title !== null;
+        const titleSize = encoding.legend?.titleFontSize ?? legendConfig.titleFontSize ?? 11;
+        const lines = Array.isArray(encoding.legend?.title) ? encoding.legend.title.length : 1;
+        const title = titled ? lines * Math.ceil(titleSize * 1.2) + (encoding.legend?.titlePadding ?? legendConfig.titlePadding ?? 5) : 0;
+        length = Math.min(legendConfig.gradientLength ?? 200, plot.height - title);
+    }
+    const held = Math.round(Math.max(length, bins * (fontSize + 2)));
+    // Keys share the config's length: an upright stepped ramp holds the shortest any of them asks for.
+    legendConfig.gradientLength = Math.min(legendConfig.gradientLength ?? Infinity, held);
 }
 
 /** Stack keys that share an edge as the plan says: one row each, or side by side. */
@@ -123,8 +164,17 @@ export function vlWriteKeyLayout(
             const keyLayout = index >= 0 ? layout.keys[index] : undefined;
             if (!key || !keyLayout) continue;
             encoding.legend = keyLegend(encoding.legend, keyLayout, key.entries, layout.offsets?.[keyLayout.orient as 'top']);
+            // Vega-Lite labels a continuous ramp given a length under 200 px at its two raw ends
+            // (−53,901 and 43,635); a ramp shortened to the plot keeps round values, one per 40 px.
+            if (keyLayout.gradientLength !== undefined && !BINNED_SCALES.has(encoding.scale?.type)
+                && encoding.legend.values === undefined && encoding.legend.tickCount === undefined) {
+                encoding.legend = { ...encoding.legend, tickCount: Math.max(2, Math.round(keyLayout.gradientLength / 40)) };
+            }
             // A key to values lists the round values the plan sampled, with or without a theme.
-            if (key.samples && encoding.legend.values === undefined) encoding.legend = { ...encoding.legend, values: key.samples };
+            if (key.samples && encoding.legend.values === undefined) {
+                encoding.legend = { ...encoding.legend, values: key.samples, ...exactLegendLabels(encoding.legend, key.samples) };
+            }
+            holdBinnedKeyLength(spec, encoding, keyLayout, layout.plot);
         }
     });
     writeEdges(spec, layout.edges);
@@ -185,6 +235,9 @@ function keyFromSpec(spec: any, channel: string, encoding: any, table: any[], la
     const font = spec.config?.font ?? 'sans-serif';
     return {
         gradient: numericGradient,
+        // A stepped scale's bins are drawn side by side as one bar.
+        ...(!discrete && ['color', 'fill', 'stroke', 'opacity'].includes(channel) && settings.type !== 'symbol'
+            && ['quantize', 'quantile', 'threshold'].includes(encoding.scale?.type) ? { bar: true } : {}),
         ...(labels ? { labels } : { valueLabels: (values ?? tableValues).map((value: any) => String(value)) }),
         count: Array.isArray(values) ? values.length : discrete ? new Set(tableValues).size : 5,
         title: typeof title === 'string' ? title : null,

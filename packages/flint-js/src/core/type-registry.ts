@@ -39,7 +39,15 @@ export type T1Category =
     | 'ID';
 
 export type DomainShape = 'open' | 'bounded' | 'fixed' | 'cyclic';
-export type AggRole = 'additive' | 'intensive' | 'signed-additive' | 'dimension' | 'identifier';
+/**
+ * How a type's values combine across rows.
+ *
+ * - `additive` / `signed-additive`: parts add up to a total (sum).
+ * - `intensive`: a rate or level; combined by averaging.
+ * - `measure`: a measure whose additivity is unknown, so it carries no default aggregation.
+ * - `dimension` / `identifier`: not aggregated.
+ */
+export type AggRole = 'additive' | 'intensive' | 'signed-additive' | 'measure' | 'dimension' | 'identifier';
 export type DivergingClass = 'none' | 'inherent' | 'conditional';
 export type FormatClass = 'currency' | 'percent'
     | 'unit-suffix' | 'integer' | 'decimal' | 'plain';
@@ -119,7 +127,8 @@ const TYPE_REGISTRY: Record<string, TypeRegistryEntry> = {
 
     // --- Measure: GenericMeasure ---
     Count:         { t0: 'Measure', t1: 'GenericMeasure', visEncodings: ['quantitative'],  aggRole: 'additive',   domainShape: 'open',    diverging: 'none',        formatClass: 'integer',    zeroBaseline: 'meaningful', zeroPad: 0 },
-    Number:        { t0: 'Measure', t1: 'GenericMeasure', visEncodings: ['quantitative'],  aggRole: 'additive',   domainShape: 'open',    diverging: 'none',        formatClass: 'decimal',    zeroBaseline: 'meaningful', zeroPad: 0 },
+    // A measure whose values should not be added up (or whose additivity is unknown); use Count, Amount, Quantity or Profit for totals.
+    Number:        { t0: 'Measure', t1: 'GenericMeasure', visEncodings: ['quantitative'],  aggRole: 'measure',    domainShape: 'open',    diverging: 'none',        formatClass: 'decimal',    zeroBaseline: 'meaningful', zeroPad: 0 },
 
     // --- Discrete ---
     Rank:          { t0: 'Discrete', t1: 'Rank',  visEncodings: ['ordinal'],               aggRole: 'dimension',  domainShape: 'open',    diverging: 'none',        formatClass: 'integer',    zeroBaseline: 'arbitrary', zeroPad: 0.08 },

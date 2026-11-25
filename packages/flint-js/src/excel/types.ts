@@ -44,6 +44,21 @@ export interface ExcelAxisSpec {
     maximumScale?: number;
     /** Interval between major ticks on a numeric axis. */
     majorUnit?: number;
+    /** Where the other axis crosses this one (`Maximum` keeps a reversed bar chart's values at the bottom). */
+    position?: 'Automatic' | 'Maximum' | 'Minimum';
+    /** Logarithmic scale base (10), from Flint's log scale decision. */
+    logBase?: number;
+    /** Where tick labels sit relative to the axis (`Low` keeps names clear of negative bars). */
+    tickLabelPosition?: 'NextToAxis' | 'Low' | 'High';
+}
+
+/** Font sizes in points for the chart's text, chosen with its size. */
+export interface ExcelFontSizes {
+    title: number;
+    axisTitle: number;
+    label: number;
+    legend: number;
+    dataLabel: number;
 }
 
 export interface ExcelLegendSpec {
@@ -97,6 +112,8 @@ interface ExcelRenderSpecBase {
     /** Target width/height in points (from Flint layout / baseSize). */
     width?: number;
     height?: number;
+    /** Font sizes for titles, labels and legend; Excel defaults of the backend when absent. */
+    fontSizes?: Partial<ExcelFontSizes>;
     /** Flint assembler warnings (overflow, etc.). */
     warnings?: ChartWarning[];
     /** Provenance for debugging (not consumed by the renderer). */

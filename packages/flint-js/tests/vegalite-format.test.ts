@@ -429,6 +429,83 @@ describe('Vega-Lite semantic formatting', () => {
         );
     });
 
+    describe('time context beside facet panels', () => {
+        const week = (cities: number, timeContext?: 'inline' | 'stacked') => assembleVegaLite({
+            data: { values: Array.from({ length: cities }, (_, city) => Array.from({ length: 7 }, (_, day) => ({
+                city: `City ${city}`, date: `2026-11-${21 + day}`, high: 50 + city + day,
+            }))).flat() },
+            semantic_types: { city: 'City', date: 'Date', high: 'Temperature' },
+            theme_spec: timeContext ? { extends: 'datawrapper', labels: { timeContext } } : 'datawrapper',
+            chart_spec: {
+                chartType: 'Line Chart', encodings: { x: 'date', y: 'high', ...(cities > 1 ? { column: 'city' } : {}) },
+                baseSize: { width: 600, height: 300 },
+            },
+        } as never);
+
+        /** Each panel's date labels in page coordinates, panels left to right: a panel starts where the dates start over. */
+        async function panelLabels(spec: any): Promise<Array<Array<{ text: string | string[]; x1: number; x2: number }>>> {
+            const view = new View(parse(compile(spec).spec), { renderer: 'none' });
+            await view.runAsync();
+            const labels: Array<{ text: string | string[]; x1: number; x2: number; value: number }> = [];
+            const visit = (node: any, x: number): void => {
+                if (node.mark?.role === 'axis-label' && node.opacity !== 0 && node.datum?.value instanceof Date
+                    && node.text != null && String(node.text) !== '') labels.push({ text: node.text, x1: x + node.bounds.x1, x2: x + node.bounds.x2, value: +node.datum.value });
+                const offset = node.mark?.marktype === 'group' ? x + (node.x ?? 0) : x;
+                for (const child of node.items ?? []) visit(child, offset);
+            };
+            visit((view.scenegraph() as any).root, 0);
+            view.finalize();
+            const panels: Array<Array<{ text: string | string[]; x1: number; x2: number }>> = [];
+            let last = Infinity;
+            for (const label of labels.sort((a, b) => a.x1 - b.x1)) {
+                if (label.value <= last) panels.push([]);
+                panels.at(-1)!.push(label);
+                last = label.value;
+            }
+            return panels;
+        }
+
+        it('names the month and year on a second row where the opening date would reach the next panel', async () => {
+            const panels = await panelLabels(week(6));
+            expect(panels).toHaveLength(6);
+            for (const [index, labels] of panels.entries()) {
+                expect(labels[0].text).toEqual(['21', expect.stringMatching(/^Nov(ember)? 2026$/)]);
+                expect(labels.slice(1).every(label => typeof label.text === 'string' && /^\d+$/.test(label.text))).toBe(true);
+                if (index > 0) expect(panels[index - 1].at(-1)!.x2).toBeLessThanOrEqual(labels[0].x1);
+            }
+        });
+
+        it('keeps one row beside panels where the end labels leave the seam clear', async () => {
+            const spec: any = assembleVegaLite({
+                data: { values: ['North', 'South'].flatMap(region => Array.from({ length: 261 }, (_, index) => ({
+                    region, date: new Date(Date.UTC(2020, 0, 1) + index * 7 * 86400000).toISOString().slice(0, 10), value: index,
+                }))) },
+                semantic_types: { date: 'Date', value: 'Quantity', region: 'Category' },
+                chart_spec: { chartType: 'Line Chart', encodings: { x: 'date', y: 'value', column: 'region' }, baseSize: { width: 480, height: 280 } },
+            } as never);
+            const panels = await panelLabels(spec);
+            expect(panels.map(labels => labels[0].text)).toEqual(['2020', '2020']);
+            expect(panels.flat().every(label => typeof label.text === 'string')).toBe(true);
+        });
+
+        it('follows a theme that keeps the context inline, letting the opening label give way', async () => {
+            const panels = await panelLabels(week(6, 'inline'));
+            for (const [index, labels] of panels.entries()) {
+                expect(labels.every(label => typeof label.text === 'string')).toBe(true);
+                expect(labels.filter(label => String(label.text).includes('2026'))).toHaveLength(1);
+                if (index > 0) expect(panels[index - 1].at(-1)!.x2).toBeLessThanOrEqual(labels[0].x1);
+            }
+        });
+
+        it('stacks a single chart whose theme asks for it, the plot giving the row its height', async () => {
+            const inline: any = week(1);
+            const stacked: any = week(1, 'stacked');
+            expect((await temporalLabels(stacked))[0].text).toEqual(['21', expect.stringMatching(/^Nov(ember)? 2026$/)]);
+            const height = (spec: any) => spec.height ?? spec.spec?.height ?? spec.config?.view?.continuousHeight;
+            expect(height(inline) - height(stacked)).toBeGreaterThan(0);
+        });
+    });
+
     it('ticks date-only data on its own calendar, so the last month keeps its label', async () => {
         const spec: any = assembleVegaLite({
             data: { values: ['2026-02', '2026-03', '2026-04', '2026-05', '2026-06']

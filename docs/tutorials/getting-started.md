@@ -18,11 +18,13 @@ Install Flint:
 npm install flint-chart
 ```
 
-If you want to render Vega-Lite charts in the browser, also install the renderer
-stack:
+`flint-chart` comes with every backend it draws with (Vega-Lite, ECharts,
+Chart.js, Plotly), so `<FlintChart>` from `flint-chart/react` (with React) and
+`mountChart` from `flint-chart/interactive` work on any backend as installed. To
+embed a compiled Vega-Lite spec with your own code instead, add `vega-embed`:
 
 ```bash
-npm install vega vega-lite vega-embed
+npm install vega-embed
 ```
 
 ### Python planned

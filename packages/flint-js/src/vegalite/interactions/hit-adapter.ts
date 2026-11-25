@@ -16,6 +16,7 @@ import type {
     RegionOperation,
 } from '../../interactive/language/events';
 import { angularSegments } from '../../interactive/geometry/angular';
+import { ROUTE_PART } from '../templates/map-routes';
 import {
     constrainCartesianRegion,
     type CartesianRegionAxis,
@@ -151,7 +152,55 @@ export function pathHoverPresentationKey(items: readonly any[], semanticKey: str
     return pathKey ? `${pathKey}${PATH_KEY_SUFFIX}` : semanticKey;
 }
 
+/** Whether an item is a map route's leg: a shape that is a path, as a line's segment is. */
+export function isRouteLeg(item: any): boolean {
+    return item?.mark?.marktype === 'shape' && item?.datum?.[ROUTE_PART] === 'leg';
+}
+
+/** A route's casing or head: drawn with its leg and receding with it, but no target of its own. */
+function isRouteAccessory(item: any): boolean {
+    const part = item?.datum?.[ROUTE_PART];
+    return part === 'casing' || part === 'head';
+}
+
+/** The polyline a leg is drawn as, replayed from its own shape, cached until its drawing moves. */
+const LEG_POINTS = new WeakMap<object, { bounds: string; points: PlotPoint[] }>();
+
+/**
+ * A route leg's drawn line, as the projection draws it now: its shape replayed into a recorder.
+ * Where the projection cuts the line (at the antimeridian, a globe's horizon), the longest piece
+ * stands for it.
+ */
+export function legPoints(item: any): PlotPoint[] {
+    const bounds = item.bounds ? `${item.bounds.x1},${item.bounds.y1},${item.bounds.x2},${item.bounds.y2}` : '';
+    const cached = LEG_POINTS.get(item);
+    if (cached && cached.bounds === bounds) return cached.points;
+    const pieces: PlotPoint[][] = [];
+    const shape = item.shape;
+    if (typeof shape?.context === 'function') {
+        const recorder = {
+            moveTo: (x: number, y: number) => { pieces.push([{ x, y }]); },
+            lineTo: (x: number, y: number) => { (pieces[pieces.length - 1] ?? pieces[pieces.push([]) - 1]).push({ x, y }); },
+            closePath: () => {}, beginPath: () => {}, arc: () => {}, rect: () => {},
+        };
+        try {
+            shape.context(recorder)(item);
+        } finally {
+            shape.context(null);
+        }
+    }
+    const length = (piece: PlotPoint[]) => piece.slice(1).reduce((sum, point, index) => sum + Math.hypot(point.x - piece[index].x, point.y - piece[index].y), 0);
+    const points = pieces.reduce<PlotPoint[]>((longest, piece) => (length(piece) > length(longest) ? piece : longest), []);
+    LEG_POINTS.set(item, { bounds, points });
+    return points;
+}
+
 function pathGeometry(item: any, offsetX: number, offsetY: number, siblingIndex?: number): PathGeometry | null {
+    if (isRouteLeg(item)) {
+        const points = legPoints(item).map((point) => ({ x: point.x + offsetX, y: point.y + offsetY }));
+        if (points.length < 2) return null;
+        return { kind: 'segment', points, annotationPoints: points, offset: { x: offsetX, y: offsetY } };
+    }
     const items = item?.mark?.items;
     if (!Array.isArray(items)) return null;
     const index = siblingIndex ?? items.indexOf(item);
@@ -242,13 +291,13 @@ export function sceneItems(view: any): any[] {
     const pathDataByMark = new Map<object, Record<string, unknown>[]>();
     const visit = (item: any, offsetX: number, offsetY: number, siblingIndex?: number, clip?: SelectionRect): void => {
         if (!item) return;
-        if (SUPPORTED_RENDER_MARKS.has(item.mark?.marktype) && keyOfDatum(item.datum) && item.bounds) {
+        if (SUPPORTED_RENDER_MARKS.has(item.mark?.marktype) && keyOfDatum(item.datum) && item.bounds && !isRouteAccessory(item)) {
             const interactionGeometry = pathGeometry(item, offsetX, offsetY, siblingIndex);
-            const isPath = item.mark.marktype === 'line' || item.mark.marktype === 'area';
+            const isPath = item.mark.marktype === 'line' || item.mark.marktype === 'area' || isRouteLeg(item);
             if (isPath && !interactionGeometry) return;
             const points = interactionGeometry?.points;
             let interactionPathData: Record<string, unknown>[] | undefined;
-            if (isPath) {
+            if (isPath && !isRouteLeg(item)) {
                 interactionPathData = pathDataByMark.get(item.mark);
                 if (!interactionPathData) {
                     interactionPathData = pathDataOf(item.mark);
@@ -401,10 +450,9 @@ export function pickBounds(item: any): SelectionRect {
     return item.visibleBounds ?? item.bounds;
 }
 
-export function facetPlotFrameAt(view: any, point: PlotPoint, fallback: PlotFrame): PlotFrame | undefined {
+/** Every Vega facet cell's plot frame, in plot px; empty on a chart that draws one plot. */
+export function facetPlotFrames(view: any): PlotFrame[] {
     const frames: PlotFrame[] = [];
-    const containsPoint = (frame: PlotFrame): boolean => point.x >= frame.x && point.x <= frame.x + frame.width
-        && point.y >= frame.y && point.y <= frame.y + frame.height;
     const visit = (item: any, offsetX: number, offsetY: number): void => {
         if (!item) return;
         const isGroup = item.mark?.marktype === 'group';
@@ -417,25 +465,20 @@ export function facetPlotFrameAt(view: any, point: PlotPoint, fallback: PlotFram
         if (Array.isArray(item.items)) item.items.forEach((child: any) => visit(child, x, y));
     };
     visit(view.scenegraph()?.root, 0, 0);
+    return frames;
+}
+
+export function facetPlotFrameAt(view: any, point: PlotPoint, fallback: PlotFrame): PlotFrame | undefined {
+    const containsPoint = (frame: PlotFrame): boolean => point.x >= frame.x && point.x <= frame.x + frame.width
+        && point.y >= frame.y && point.y <= frame.y + frame.height;
+    const frames = facetPlotFrames(view);
     if (frames.length) return frames.filter(containsPoint).sort((left, right) => left.width * left.height - right.width * right.height)[0];
     return containsPoint(fallback) ? fallback : undefined;
 }
 
 /** Bounding plot frame of all Vega facet cells, or the root plot for a unit chart. */
 export function facetPlotBounds(view: any, fallback: PlotFrame): PlotFrame {
-    const frames: PlotFrame[] = [];
-    const visit = (item: any, offsetX: number, offsetY: number): void => {
-        if (!item) return;
-        const isGroup = item.mark?.marktype === 'group';
-        const x = offsetX + (isGroup && typeof item.x === 'number' ? item.x : 0);
-        const y = offsetY + (isGroup && typeof item.y === 'number' ? item.y : 0);
-        if (isGroup && (item.mark?.role === 'cell' || item.mark?.name === 'cell')
-            && typeof item.width === 'number' && typeof item.height === 'number') {
-            frames.push({ x, y, width: item.width, height: item.height });
-        }
-        if (Array.isArray(item.items)) item.items.forEach((child: any) => visit(child, x, y));
-    };
-    visit(view.scenegraph()?.root, 0, 0);
+    const frames = facetPlotFrames(view);
     if (frames.length === 0) return fallback;
     const x1 = Math.min(...frames.map((frame) => frame.x));
     const y1 = Math.min(...frames.map((frame) => frame.y));
@@ -796,6 +839,23 @@ export function normalizeVegaAngularRegionEvent(
         match,
         modifiers,
     };
+}
+
+/**
+ * The hits one mark is chosen from. A line or area drawn with points draws each row twice, as the
+ * point and as the segment that starts at it, so a key naming one row hits both. This keeps the
+ * point, or the segment when `preferPath`; hits on different rows are left for the caller to judge.
+ */
+export function oneMarkHits(hits: readonly RenderHit[], preferPath = false): RenderHit[] {
+    const isPath = (hit: RenderHit): boolean => hit.markType === 'line' || hit.markType === 'area'
+        || (hit.markType === 'shape' && hit.datum?.[ROUTE_PART] === 'leg');
+    const rowKey = (hit: RenderHit): string => {
+        const key = String(hit.datum[INTERACTION_KEY]);
+        return isPath(hit) && key.endsWith(PATH_KEY_SUFFIX) ? key.slice(0, -PATH_KEY_SUFFIX.length) : key;
+    };
+    const pathRows = new Set(hits.filter(isPath).map(rowKey));
+    const drawnTwice = new Set(hits.filter((hit) => !isPath(hit)).map(rowKey).filter((key) => pathRows.has(key)));
+    return hits.filter((hit) => !drawnTwice.has(rowKey(hit)) || isPath(hit) === preferPath);
 }
 
 export function renderHit(item: any): RenderHit | null {
@@ -1187,7 +1247,7 @@ export function normalizeVegaElementEvent(
 export function sceneItemsUnder(view: any, plotPoint: PlotPoint): any[] {
     return sceneItems(view).filter((item) => {
         if (!item?.bounds || !isPickable(item) || item.datum?.[INTERACTION_ROLE] === 'legend-label') return false;
-        const path = item.mark?.marktype === 'line' || item.mark?.marktype === 'area';
+        const path = item.mark?.marktype === 'line' || item.mark?.marktype === 'area' || isRouteLeg(item);
         const reach = path ? Math.max(1, (typeof item.strokeWidth === 'number' ? item.strokeWidth : 1) / 2) : 0.5;
         return distanceToItem(plotPoint, item) <= reach;
     });
@@ -1257,6 +1317,28 @@ function distanceToItem(point: PlotPoint, item: any): number {
 
 export function nearestSceneItem(view: any, point: PlotPoint, maxDistance: number): any | undefined {
     return nearestItemByBounds(sceneItems(view), point, maxDistance);
+}
+
+const THIN_MARKS = new Set(['line', 'trail', 'rule', 'symbol']);
+
+/**
+ * The nearest line, rule or point within `tolerance` px of its drawn edge (a stroke's half
+ * width counts as on it). Filled marks are left to Vega's exact pick.
+ */
+export function nearestThinItem(view: any, point: PlotPoint, tolerance: number): any | undefined {
+    let best: { item: any; distance: number } | undefined;
+    for (const item of sceneItems(view)) {
+        if (!THIN_MARKS.has(item.mark?.marktype) || !item.bounds || !isPickable(item)) continue;
+        if (item.datum?.[INTERACTION_ROLE] === 'legend-label') continue;
+        const stroke = item.mark.marktype === 'symbol' ? 0 : (typeof item.strokeWidth === 'number' ? item.strokeWidth : 1) / 2;
+        const distance = Math.max(0, distanceToItem(point, item) - stroke);
+        if (distance > tolerance) continue;
+        // A line's point markers win a tie with the line: the marker is what is read.
+        const closer = !best || distance < best.distance
+            || (distance === best.distance && item.mark.marktype === 'symbol' && best.item.mark?.marktype !== 'symbol');
+        if (closer) best = { item, distance };
+    }
+    return best?.item;
 }
 
 export type SpatialDirection = 'left' | 'right' | 'up' | 'down';

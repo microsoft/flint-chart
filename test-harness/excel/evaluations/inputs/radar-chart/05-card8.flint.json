@@ -21,82 +21,82 @@
       {
         "App": "Frontend",
         "KPI": "Overall User Experience",
-        "Rating": 56
+        "Rating": 88
       },
       {
         "App": "Backend",
         "KPI": "Overall User Experience",
-        "Rating": 87
+        "Rating": 71
       },
       {
         "App": "Frontend",
         "KPI": "First Contentful Paint",
-        "Rating": 76
+        "Rating": 89
       },
       {
         "App": "Backend",
         "KPI": "First Contentful Paint",
-        "Rating": 50
+        "Rating": 74
       },
       {
         "App": "Frontend",
         "KPI": "Time to Interactive",
-        "Rating": 72
+        "Rating": 74
       },
       {
         "App": "Backend",
         "KPI": "Time to Interactive",
-        "Rating": 100
-      },
-      {
-        "App": "Frontend",
-        "KPI": "Cumulative Layout Shift",
-        "Rating": 99
-      },
-      {
-        "App": "Backend",
-        "KPI": "Cumulative Layout Shift",
         "Rating": 68
       },
       {
         "App": "Frontend",
+        "KPI": "Cumulative Layout Shift",
+        "Rating": 60
+      },
+      {
+        "App": "Backend",
+        "KPI": "Cumulative Layout Shift",
+        "Rating": 94
+      },
+      {
+        "App": "Frontend",
         "KPI": "Server Response Time",
-        "Rating": 53
+        "Rating": 88
       },
       {
         "App": "Backend",
         "KPI": "Server Response Time",
-        "Rating": 87
+        "Rating": 60
       },
       {
         "App": "Frontend",
         "KPI": "Error Rate per Minute",
-        "Rating": 57
+        "Rating": 66
       },
       {
         "App": "Backend",
         "KPI": "Error Rate per Minute",
-        "Rating": 89
+        "Rating": 79
       },
       {
         "App": "Frontend",
         "KPI": "Database Query Latency",
-        "Rating": 51
+        "Rating": 64
       },
       {
         "App": "Backend",
         "KPI": "Database Query Latency",
-        "Rating": 76
+        "Rating": 83
       },
       {
         "App": "Frontend",
         "KPI": "API Throughput",
-        "Rating": 93
+        "Rating": 65
       },
       {
         "App": "Backend",
         "KPI": "API Throughput",
-        "Rating": 53
+        "Rating": 46
       }
     ]
   }

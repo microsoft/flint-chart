@@ -1,24 +1,31 @@
 ---
 name: flint-board-author
-description: "Use when: several Flint charts should be read together in one view: a dashboard, KPI tiles over a trend, a side-by-side comparison, an overview with its detail; or a board on screen should change (add, retitle, resize, reconnect a chart). Produce one board spec whose headline, chart choice, layout and connected fields are decided, check and refine it with validate_board, then put it on screen once with show."
+description: "Use when: several Flint charts should be read together in one view: a dashboard, KPI tiles over a trend, a side-by-side comparison, an overview with its detail; or a board on screen should change (add, retitle, resize, reconnect a chart). Produce one board spec whose headline, chart choice, layout and connected fields are decided, and put it on screen with show, which checks it and returns any fixes before drawing."
 ---
 
 # flint-board: several charts, one view
 
 A board holds several Flint charts under one headline. The agent writes it as
-one board spec, checks it with `validate_board`, which draws nothing, and puts
-it on screen with `show({ "board": … })`, which opens a new card below the
-conversation's latest message. The server keeps nothing between calls: the spec
-in the conversation is the board. So call `show` once a turn, after the board
-is right; to change it later, change the spec and call `show` again.
+one board spec and puts it on screen with `show({ "board": … })`, which opens a
+new card below the conversation's latest message. `show` checks the spec
+first: when something must be fixed it draws nothing and returns the fixes, so
+there is no need to validate first. The server keeps nothing between calls:
+the spec in the conversation is the board; to change it later, change the
+spec and call `show` again.
+
+A board is for when the user asks for several views read together: a
+dashboard, an overview, KPI tiles, linked charts, or several charts named in
+one turn. An open question is not a request for a board: it gets one chart
+(the `flint-chart-author` skill), and the reply offers the next views. One view split by a category
+(a panel per region, same measure) is one chart with `column` or `row`, not a
+board. Two charts side by side need only a title; the headline, deck, KPI
+tiles and links below are for a fuller board, used as far as it helps.
 
 Each chart on a board is a full chart spec (`flint-chart-author`), plus an
 `id` and a `layout`. This skill covers what a board adds: the headline, which
 charts, where they sit, how they connect, and how they look as one piece.
 
-Work through the steps in order. A board is ready to show when its latest
-report shows no `✗` and its `Review:` section is empty or says only that a
-colour field is shared.
+Work through the steps in order, then call `show` once.
 
 ## Step 1 — write the headline
 
@@ -41,6 +48,18 @@ first thing read; every board gets one.
 Start from the questions the reader brings, one chart per question, and keep
 the board to the charts that answer them: three to five KPI tiles and up to
 six charts. More than that is two boards.
+
+Each card has to answer something no other card on the board answers:
+
+- Two charts of the same fields (the same measure by the same category, in
+  another form or sort) are one chart.
+- A KPI tile is for a number the reader steers by and no chart prints. A
+  count of the rows ("12 albums") or a number a chart already shows at a
+  glance is not a tile.
+- Small data holds few questions. A table of a few dozen rows or less makes
+  one or two charts, and tiles only where the user asked for them.
+- An open request ("an overview", "a dashboard on …") takes the three or four
+  questions the data answers best, not every one it can.
 
 | The reader asks | Chart |
 |---|---|
@@ -104,19 +123,31 @@ not KPI tiles). Charts fill rows in the order given:
 | Many small series | one `Sparkline` chart, `height: compact` or `standard` |
 
 On a narrow card each chart takes its own row; the layout needs no second version.
+`layout` is the only size a board chart takes: leave `baseSize` and `canvasSize`
+out of its `chart_spec`, which the board does not use.
 
 **`view: "table"`** on a chart opens its cell on the table of the rows the chart
 draws; the reader can switch it back. Use it when the numbers matter more than
 the shape.
 A `Table` is a table either way.
 
-## Step 5 — connect them
+## Step 5 — connect them, where it helps
 
-Connect the charts by the fields they share, not chart by chart:
+Link charts when a selection in one should show up in the others: the user
+asks to filter or explore across them, or the board is a dashboard on shared
+dimensions. Charts that only sit side by side need no `link_spec`, and no
+interactions either: on a board, a chart's `interaction_spec` is what sends a
+selection, so add one only to a linked chart, or where the user asked for that
+behaviour on that chart. Connect by the fields they share, not chart by chart:
 
 ```json
 "link_spec": { "fields": ["product", "region"] }
 ```
+
+A link emphasises; it never filters. The matching marks stay at full ink and
+the rest recede, while every total, axis and KPI tile stays as drawn. When the
+user asks for a click to filter the other charts, link them and say in the
+reply that the other charts highlight the selection rather than recompute.
 
 The board holds one selection that every chart shares, a part per field: a
 click on Asia sets `region` to Asia, a brush over March to June then adds
@@ -139,14 +170,18 @@ far as it can:
 
 - **It receives a field** when its marks carry it. Marks carry the fields the
   chart encodes; when a chart shows the field nowhere else, encode it on
-  `detail` (`encodings.detail: "product"`).
+  `detail` (`encodings.detail: "product"`). A bar chart of another category
+  then splits each bar into segments of its colour, one per value, so a
+  selection lights up that value's share of every bar; never move the field to
+  `color` for this. Titles and subtitles say what a chart shows, never how it
+  links.
 - **It sends** when it also has an interaction that selects, in its
   `interaction_spec`; pick the one whose subject is what the reader will ask
   about:
 
   | Chart | Interaction |
   |---|---|
-  | Bar, Stacked Bar, Pie, Heatmap | `click-highlight` |
+  | Bar, Stacked Bar, Pie, Heatmap, Choropleth, Map | `click-highlight` |
   | Line | `click-group-focus` (a series), `brush-x` (a period), `hover-group-focus` (a series, on hover) |
   | Scatter Plot | `select` (drag a region) |
 
@@ -159,10 +194,11 @@ why a field is left out.
 
 Colour does the quiet linking: charts that colour by the same field (on
 `color`, or `group` on a grouped bar chart) get one value order, so a value
-keeps one colour across the board. Colour each chart
-by the same field as the others when it shows the same categories, and give
-it the same set of values, since a chart missing a value shifts the colours
-after it.
+keeps one colour across the board. To fix the colours themselves, set `colors`
+on the board, per field: `"colors": { "Category": { "Jewelry": "#c0392b" } }`.
+Every chart that colours by the field takes them, whatever theme the board or
+the reader picks; values left out take the palette. Pass the same map again in
+a later turn so the next card keeps them.
 
 ## Step 6 — theme the board once
 
@@ -171,21 +207,25 @@ draws its own furniture (the Economist's red tab); the board's headline and
 footer take its paper, ink and fonts, with the furniture above the headline.
 Pick it with `list_themes` as for one chart.
 
-## Step 7 — read the report and refine
+## Step 7 — read the report
 
-`validate_board` returns the board as the model must judge it, and `show`
-returns the same report:
+`show` returns the layout in one line, then at most two sections. It does not
+repeat the spec.
 
-- `Layout:` the rows as the card draws them. Check that the lead chart sits
-  where the headline points and no row holds an orphan.
-- `## <id>` per chart: its encodings and each update op, `✓` or `✗`.
-- `Links:` what each chart sends and receives, `✓`, or `✗` when it joins no field, with the fix.
-- `Review:` what the board should still fix: a missing headline, deck or chart
-  title, too many tiles or charts, themes set per chart.
+- **Fix before it draws.** Nothing is on screen: errors (a chart that does
+  not compile), rows drawn as slices (sum them first), a chart that has a
+  linked field in its data but does not carry it, a link field fewer than two
+  charts carry. Fix each in the spec and call `show` again with the whole
+  spec. An item you cannot fix, such as an interaction a chart cannot take, is
+  something to tell the user.
+- **Noted.** The board is on screen and draws with these: warnings, update
+  ops that will not apply, what linked charts leave out, and a review (a
+  missing deck or chart title, more tiles or charts than a board reads well
+  with). Change nothing now unless the user asks; mention what matters in the
+  reply, and fix the rest the next time the spec changes.
 
-Fix each `✗` and each review note in the spec, check it again if the fix was
-large, then call `show` once with the same spec. A chart with errors is left
-off the report's board, and `show` draws nothing until every chart is valid.
+`validate_board` gives the same report without drawing, for a host with no
+card UI.
 
 What the reader then does on the card reaches the model with their next
 message: selections and link emphasis, one section per chart. The reader's
@@ -196,7 +236,7 @@ the next `show`:
   `theme_spec` on the board and leave it out of the charts.
 - **An arrangement** made with **Edit layout** (moving, swapping, resizing
   charts on a 12-column grid). To keep it, pass the `grid` the context gives.
-  `Layout:` then reads "Arranged on a 12-column grid". A chart added to the
+  `Layout:` then reads "the reader's grid". A chart added to the
   spec takes a place below the rest and a chart left out drops its place;
   leave `grid` out to lay the board out in rows again, only when the user asks
   for a new layout.
@@ -206,7 +246,7 @@ them gives the reader back the agent's theme and rows.
 
 ## Worked example
 
-The board spec, passed as it is to `validate_board`, then as `board` to `show`:
+The board spec, passed as it is as `board` to `show`:
 
 ```json
 {
@@ -248,9 +288,9 @@ on a region's line lights that region on the bars and the scatter.
 
 - [ ] `title` says the finding or the purpose; `subtitle` says data, scope, period, units; `source` is set.
 - [ ] Three to five KPI tiles at most, up to six charts, the lead chart first after the tiles.
-- [ ] Every chart but a KPI tile has a one-line `title` and a units `subtitle`.
+- [ ] On a board of three or more charts or with KPI tiles, every chart but a tile has a one-line `title` and a units `subtitle`.
 - [ ] `layout` set where the default is wrong: the lead chart wide, a comparison at equal spans and heights.
-- [ ] `link_spec.fields` names the shared dimensions; each chart that should take part encodes them and, to send, has the interaction whose subject the reader asks about.
+- [ ] If the charts are linked: `link_spec.fields` names the shared dimensions; each chart that should take part encodes them and, to send, has the interaction whose subject the reader asks about.
 - [ ] `theme_spec` on the board only.
-- [ ] `validate_board` reports no `✗` and no review note left but the shared colour field.
+- [ ] `show` drew the board; what it noted is in the reply where it matters.
 - [ ] In a later turn: the reader's theme and `grid` from the context are kept unless the user asked to change them.

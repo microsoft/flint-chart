@@ -258,8 +258,8 @@ function measure(svg: SVGSVGElement, view: View, box: { width: number; height: n
  * How the host sizes the chart: every chart gets the same base size and an allowance to grow under
  * pressure, so its box is the base times the allowance.
  */
-interface Setup { id: string; base: { width: number; height: number }; stretch: number }
-const SETUPS: Setup[] = [
+export interface Setup { id: string; base: { width: number; height: number }; stretch: number }
+export const SETUPS: Setup[] = [
   { id: '300x300x1.5', base: { width: 300, height: 300 }, stretch: 1.5 },
   { id: '200x200x1.2', base: { width: 200, height: 200 }, stretch: 1.2 },
   { id: '300x300x1', base: { width: 300, height: 300 }, stretch: 1 },
@@ -267,10 +267,10 @@ const SETUPS: Setup[] = [
   // The Theme Lab's chart wall: a wide base in a narrow card.
   { id: '300x200x1.5', base: { width: 300, height: 200 }, stretch: 1.5 },
 ];
-const setupLabel = (setup: Setup) => `${setup.base.width} × ${setup.base.height}, ×${setup.stretch}`;
+export const setupLabel = (setup: Setup) => `${setup.base.width} × ${setup.base.height}, ×${setup.stretch}`;
 
 /** The box the chart has to fit, which it is measured against. */
-const boxOf = (setup: Setup) => ({ width: Math.round(setup.base.width * setup.stretch), height: Math.round(setup.base.height * setup.stretch) });
+export const boxOf = (setup: Setup) => ({ width: Math.round(setup.base.width * setup.stretch), height: Math.round(setup.base.height * setup.stretch) });
 
 /** The chart as planned, or as the canvas fit lays it out (`options.canvasFit`). */
 type Layout = 'off' | 'auto';
@@ -469,9 +469,9 @@ export function CanvasSqueeze() {
           <h3>How it decides</h3>
           <ol>
             <li><b>Put each problem down to its parts.</b> Too wide: the keys beside the plot. Too tall: the keys stacked above or below, and the title only where it is most of what stands there. A title and a row of keys above a plot are the theme's design, allowed for: only a header much larger than that bends the shape.</li>
-            <li><b>The least edit a reader would notice, one at a time:</b> keys in one row on their edge; names wrapped — a key's, or, where the chart area itself is too wide, the names down the y axis; the title a size down; one of several keys on an edge moved to another; every key to another edge; the title two sizes down. Never an edit that makes text already too small smaller still. Only the culprit's edits, each priced on one scale; of those that clear, the cheapest is kept, and how its result reads only tells edits alike apart. Two together only where none clears alone.</li>
+            <li><b>The least edit a reader would notice, one at a time:</b> keys in one row on their edge; names wrapped — a key's, or, where the chart area itself is too wide, the names down the y axis; the title a size down; one of several keys on an edge moved to another; every key to another edge; the title two sizes down; names wrapped down the y axis a size or two smaller, where their two-line rows make the chart too tall. Never an edit that makes text already too small smaller still. Only the culprit's edits, each priced on one scale; of those that clear, the cheapest is kept, and how its result reads only tells edits alike apart. Two together only where none clears alone.</li>
             <li><b>Then the plot.</b> Where the box cannot hold the chart legibly as it is, the plot comes down, keeping its shape. The fit never lays a chart out larger for the host to shrink: one that still overflows is drawn at its size, for the reader to scroll or the host to scale.</li>
-            <li><b>A chart drawn a little past its box</b> (a warning) gets only the gentlest edits — keys in a row on their edge, or names wrapped — kept where they bring it at least 3 points nearer its box with nothing going wrong.</li>
+            <li><b>A chart drawn a little past its box</b> (a warning) gets only the gentlest edits — keys in a row on their edge, names wrapped, or names wrapped down the y axis a size or two smaller — kept where they bring it at least 3 points nearer its box with nothing going wrong.</li>
             <li><b>Then the plot, once more.</b> With the title and keys settled, the plot is laid out again, once, in the room the box leaves it at the scale it is shown: a continuous side grows into it, never past its stretch cap, the chart area staying within the looser range of its own shapes. Kept only where the text is no smaller, nothing new goes wrong, and the drawing reads better.</li>
             <li><b>The title spans the drawing.</b> A headline and deck may run over keys beside the plot, not just over the plot and its labels.</li>
           </ol>

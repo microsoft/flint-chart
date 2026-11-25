@@ -166,3 +166,15 @@ describe('house styling survives the render', () => {
     expect(themed.buffer!.length).toBeGreaterThan(1000);
   });
 });
+
+describe('static maps', () => {
+  it('draws a choropleth\'s regions from the bundled boundaries, fetching nothing', async () => {
+    const res = await renderChart({
+      data: { values: [{ state: 'TX', count: 9 }, { state: 'CA', count: 3 }] },
+      semantic_types: { state: 'State', count: 'Quantity' },
+      chart_spec: { chartType: 'Choropleth', encodings: { id: 'state', color: 'count' }, chartProperties: { region: 'us' } },
+    } as ChartAssemblyInput, 'vegalite', { format: 'svg' });
+    // Fifty states and DC, not just the legend.
+    expect((res.svg as string).match(/<path/g)?.length ?? 0).toBeGreaterThan(50);
+  });
+});

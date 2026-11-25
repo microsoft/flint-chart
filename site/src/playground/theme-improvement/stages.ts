@@ -1,7 +1,7 @@
 /**
  * The colour-system improvements, stage by stage: what each rule says, why, how it was built, what it
  * changes by default and what is opt-in, the API it adds, the code and tests behind it, and what it
- * does to existing themes. Measured against the theme matrix (scripts/theme-matrix): 1,857 charts —
+ * does to existing themes. Measured against the theme matrix: 1,857 charts —
  * every preview case with no theme and under every shipped preset, plus every new-theme-test house's
  * gallery and gap charts — compiled before and after each stage and compared as rendered SVG.
  */
@@ -540,7 +540,7 @@ y=0 ┌────────────────────────�
 
 **API.** \`ThemeFurniture\`: \`kind\`, \`at\`, \`frame\`, \`align\`, \`width\`, \`height\`, \`color\`, \`text\`, \`type\`, \`svg\`, \`src\`, \`href\`, \`alt\`; types \`FurnitureZone\`, \`FurnitureFrame\`. \`CanvasFurnitureItem\` gains \`left\`/\`right\`, text, image and link fields; \`placeCanvasFurniture\`, \`appendCanvasFurniture\`, \`svgDataUri\`.
 
-**Code.** \`core/header-plan.ts\` (new); \`core/plan.ts\` (header before the title, its room out of the plot); \`core/rule-plan.ts\`; \`vegalite/theme.ts\` (\`applyHeaderFurniture\`); \`vegalite/canvas-furniture.ts\`; \`vegalite/assemble.ts\`; \`vegalite/interactive.ts\`; MCP app (\`ui/src/render.ts\`); site \`VegaLiteView\`; theme-matrix \`lib.mjs\`.
+**Code.** \`core/header-plan.ts\` (new); \`core/plan.ts\` (header before the title, its room out of the plot); \`core/rule-plan.ts\`; \`vegalite/theme.ts\` (\`applyHeaderFurniture\`); \`vegalite/canvas-furniture.ts\`; \`vegalite/assemble.ts\`; \`vegalite/interactive.ts\`; MCP app (\`ui/src/render.ts\`); site \`VegaLiteView\`.
 
 **Tests.** \`tests/theme-header.test.ts\` — F1: a rule on the edge spans the canvas and a tab hangs from it flush with the headline; the band comes out of the plot; the earlier masthead tab keeps its place; a span resolves to any canvas width.
 

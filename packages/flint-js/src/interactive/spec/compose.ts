@@ -7,22 +7,26 @@ import { resolveInteractionSpec } from './resolve';
 export interface ComposedInteractiveOptions {
     /** Spec interactions first, then the code's, with no id shared between the two. */
     readonly interactions: readonly InteractionDef[];
-    /** From the code only. The spec carries behaviour, not state. */
+    /** The spec's (`input.updates`) first, then the code's; a code update with a spec update's id replaces it. */
     readonly updates: readonly ChartUpdate[];
     readonly assistedTargeting: BuildInteractiveChartOptions['assistedTargeting'];
     readonly keyboardTargeting: boolean | undefined;
+    readonly defaults: BuildInteractiveChartOptions['defaults'];
     /** Warnings known before the mount, such as a spec a static backend ignores. */
     readonly warnings: readonly ChartWarning[];
 }
 
-type ComposeInput = Pick<ChartAssemblyInput, 'interaction_spec'>;
+type ComposeInput = Pick<ChartAssemblyInput, 'interaction_spec' | 'updates'>;
 type ComposeOptions = Pick<
     BuildInteractiveChartOptions,
-    'backend' | 'interactions' | 'updates' | 'assistedTargeting' | 'keyboardTargeting'
+    'backend' | 'interactions' | 'updates' | 'assistedTargeting' | 'keyboardTargeting' | 'defaults'
 >;
 
 /**
  * Merge `input.interaction_spec` with what the code passed to `mountChart()`.
+ *
+ * The spec's updates (`input.updates`) are applied first and the code's after; a code update with
+ * the id of one of the spec's replaces it.
  *
  * The spec's interactions come first and the code's follow. A code definition
  * with a spec entry's id replaces that entry, with an `info` warning. The
@@ -56,9 +60,13 @@ export function composeInteractiveOptions(input: ComposeInput, options: ComposeO
     }
     return {
         interactions: normalizeInteractions([...specInteractions, ...code]),
-        updates: options.updates ?? [],
+        updates: [
+            ...(input.updates ?? []).filter((update) => !(options.updates ?? []).some((own) => own.id === update.id)),
+            ...(options.updates ?? []),
+        ],
         assistedTargeting: options.assistedTargeting ?? resolved.surface.assistedTargeting,
         keyboardTargeting: options.keyboardTargeting ?? resolved.surface.keyboardTargeting,
+        defaults: options.defaults ?? resolved.surface.defaults,
         warnings,
     };
 }

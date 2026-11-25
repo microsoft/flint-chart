@@ -54,6 +54,12 @@ describe('explicit unit display policy', () => {
             .toEqual({ text: '$', placement: 'value', position: 'prefix' });
     });
 
+    it('keeps the case of a one-letter unit: `M` is millions, not metres', () => {
+        expect(resolveDisplayUnit({ semanticType: 'Count', unit: 'M' }))
+            .toEqual({ text: 'M', placement: 'field', position: 'suffix' });
+        expect(resolveDisplayUnit({ semanticType: 'Distance', unit: 'KM' })?.text).toBe('km');
+    });
+
     it('places a declared lexical unit beside the field name', () => {
         const axis = bars('years')._theme.decisions.axes.y;
         expect(axis.unit).toBeUndefined();

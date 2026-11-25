@@ -34,6 +34,7 @@ function createMockExcel() {
     };
     const chart = {
         load: vi.fn(),
+        setPosition: vi.fn(),
         series: {
             items: [series],
             load: vi.fn((properties: string) => {
@@ -108,6 +109,7 @@ function createMockExcel() {
         },
         getRangeByIndexes: (row: number, column: number, rowCount: number, columnCount: number) =>
             ({ row, column, rowCount, columnCount }),
+        getCell: (row: number, column: number) => ({ row, column }),
     };
     const run = vi.fn(async (callback: (context: unknown) => Promise<unknown>) => callback({
         workbook: { worksheets: { getActiveWorksheet: () => sheet } },

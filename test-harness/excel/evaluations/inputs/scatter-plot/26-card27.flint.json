@@ -1,0 +1,188 @@
+{
+  "semantic_types": {
+    "Species": "Category",
+    "Flipper length (mm)": "Quantity",
+    "Body mass (g)": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Scatter Plot",
+    "encodings": {
+      "x": "Flipper length (mm)",
+      "y": "Body mass (g)",
+      "color": "Species"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Species": "Adelie",
+        "Flipper length (mm)": 181,
+        "Body mass (g)": 3750
+      },
+      {
+        "Species": "Adelie",
+        "Flipper length (mm)": 186,
+        "Body mass (g)": 3800
+      },
+      {
+        "Species": "Adelie",
+        "Flipper length (mm)": 195,
+        "Body mass (g)": 3250
+      },
+      {
+        "Species": "Adelie",
+        "Flipper length (mm)": 193,
+        "Body mass (g)": 3450
+      },
+      {
+        "Species": "Adelie",
+        "Flipper length (mm)": 190,
+        "Body mass (g)": 3650
+      },
+      {
+        "Species": "Adelie",
+        "Flipper length (mm)": 181,
+        "Body mass (g)": 3625
+      },
+      {
+        "Species": "Adelie",
+        "Flipper length (mm)": 195,
+        "Body mass (g)": 4675
+      },
+      {
+        "Species": "Adelie",
+        "Flipper length (mm)": 182,
+        "Body mass (g)": 3200
+      },
+      {
+        "Species": "Adelie",
+        "Flipper length (mm)": 191,
+        "Body mass (g)": 3800
+      },
+      {
+        "Species": "Adelie",
+        "Flipper length (mm)": 198,
+        "Body mass (g)": 4400
+      },
+      {
+        "Species": "Adelie",
+        "Flipper length (mm)": 185,
+        "Body mass (g)": 3700
+      },
+      {
+        "Species": "Chinstrap",
+        "Flipper length (mm)": 192,
+        "Body mass (g)": 3500
+      },
+      {
+        "Species": "Chinstrap",
+        "Flipper length (mm)": 196,
+        "Body mass (g)": 3900
+      },
+      {
+        "Species": "Chinstrap",
+        "Flipper length (mm)": 193,
+        "Body mass (g)": 3650
+      },
+      {
+        "Species": "Chinstrap",
+        "Flipper length (mm)": 188,
+        "Body mass (g)": 3525
+      },
+      {
+        "Species": "Chinstrap",
+        "Flipper length (mm)": 197,
+        "Body mass (g)": 3950
+      },
+      {
+        "Species": "Chinstrap",
+        "Flipper length (mm)": 198,
+        "Body mass (g)": 3800
+      },
+      {
+        "Species": "Chinstrap",
+        "Flipper length (mm)": 178,
+        "Body mass (g)": 3300
+      },
+      {
+        "Species": "Chinstrap",
+        "Flipper length (mm)": 207,
+        "Body mass (g)": 4800
+      },
+      {
+        "Species": "Chinstrap",
+        "Flipper length (mm)": 201,
+        "Body mass (g)": 4050
+      },
+      {
+        "Species": "Chinstrap",
+        "Flipper length (mm)": 191,
+        "Body mass (g)": 3550
+      },
+      {
+        "Species": "Gentoo",
+        "Flipper length (mm)": 211,
+        "Body mass (g)": 4500
+      },
+      {
+        "Species": "Gentoo",
+        "Flipper length (mm)": 230,
+        "Body mass (g)": 5700
+      },
+      {
+        "Species": "Gentoo",
+        "Flipper length (mm)": 210,
+        "Body mass (g)": 4450
+      },
+      {
+        "Species": "Gentoo",
+        "Flipper length (mm)": 218,
+        "Body mass (g)": 5700
+      },
+      {
+        "Species": "Gentoo",
+        "Flipper length (mm)": 215,
+        "Body mass (g)": 5400
+      },
+      {
+        "Species": "Gentoo",
+        "Flipper length (mm)": 219,
+        "Body mass (g)": 5550
+      },
+      {
+        "Species": "Gentoo",
+        "Flipper length (mm)": 209,
+        "Body mass (g)": 4800
+      },
+      {
+        "Species": "Gentoo",
+        "Flipper length (mm)": 215,
+        "Body mass (g)": 5000
+      },
+      {
+        "Species": "Gentoo",
+        "Flipper length (mm)": 214,
+        "Body mass (g)": 4650
+      },
+      {
+        "Species": "Gentoo",
+        "Flipper length (mm)": 216,
+        "Body mass (g)": 5550
+      },
+      {
+        "Species": "Gentoo",
+        "Flipper length (mm)": 221,
+        "Body mass (g)": 5950
+      },
+      {
+        "Species": "Gentoo",
+        "Flipper length (mm)": 217,
+        "Body mass (g)": 5250
+      }
+    ]
+  }
+}

@@ -8,7 +8,7 @@ import {
     resolveSeriesTarget,
 } from '../../core/interaction-semantics';
 import {
-    annotationCandidates,
+    valueEndAnnotationCandidates,
     comparisonAnnotationText,
     presentAnnotationUpdate,
 } from '../../interactive/presentation/annotation';
@@ -94,13 +94,7 @@ export const bulletChartDef: ChartTemplateDef = {
             },
             resolve: (event, context) => resolveSeriesTarget(event, context, seriesField),
             presentUpdate: presentAnnotationUpdate(
-                () => annotationCandidates('right', 'left', 'top', 'bottom', 'center').map((candidate) => ({
-                    ...candidate,
-                    connectorAnchors: [
-                        { role: 'bullet-actual', connection: 'value-end' as const, valueAxis: 'x' as const },
-                        { role: 'bullet-expected', connection: 'center' as const },
-                    ],
-                })),
+                () => valueEndAnnotationCandidates('x'),
                 comparisonAnnotationText(actualField, expectedField),
             ),
         };

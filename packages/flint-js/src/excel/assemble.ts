@@ -19,18 +19,20 @@
  */
 
 import type {
+    AssembleOptions,
+    ChannelSemantics,
     ChartAssemblyInput,
     ChartEncoding,
     ChartWarning,
-    LayoutDeclaration,
     SemanticResult,
 } from '../core/types';
 import { resolveChannelSemantics, convertTemporalData } from '../core/resolve-semantics';
-import { detectBandedAxisFromSemantics } from '../core/axis-detection';
-import { computeChannelBudgets, deriveStretchCaps, resolveBaseSize } from '../core/compute-layout';
+import { resolvePivotAggregate } from '../core/field-semantics';
+import { categoryOrder, type CategoryOrder } from '../core/channel-decisions';
+import { computeChannelBudgets, computeLayout, deriveStretchCaps, resolveBaseSize } from '../core/compute-layout';
+import { computeZeroDecision } from '../core/semantic-types';
 import { filterOverflow } from '../core/filter-overflow';
 import { normalizeChartEncodingAliases } from '../core/static-series';
-import { formatSpecToExcel } from './chart-types';
 import { excelGetTemplateDef } from './templates';
 import type {
     ExcelAxisSpec,
@@ -39,51 +41,74 @@ import type {
     ExcelNativeSeriesSpec,
     ExcelSeriesBy,
 } from './types';
-import { excelDateAxis, excelDateSerial } from './date-axis';
+import { excelDateAxis, excelDateSerial, excelTextWidth, excelTimeScale, excelWallClock, formatWallClock, temporalGrain } from './date-axis';
+import { excelChartSize, excelFontSizes, excelLayoutDeclaration } from './layout';
+import { axisNumberFormat, logScale, niceScale, sampleNumber } from './scale';
 
 type Cell = string | number | null;
 
 const EXCEL_SERIES_COLORS = ['#4472C4', '#ED7D31', '#70AD47', '#FFC000', '#5B9BD5', '#A5A5A5'];
 
-function niceStep(span: number, targetTicks = 5): number {
-    if (!(span > 0)) return 1;
-    const rough = span / targetTicks;
-    const power = 10 ** Math.floor(Math.log10(rough));
-    const fraction = rough / power;
-    const niceFraction = fraction <= 1 ? 1 : fraction <= 2 ? 2 : fraction <= 5 ? 5 : 10;
-    return niceFraction * power;
+/** The mark each family's overflow is filtered as (the shared overflow pass). */
+const OVERFLOW_MARK: Record<string, string> = {
+    'Bar Chart': 'bar',
+    'Grouped Bar Chart': 'bar',
+    'Stacked Bar Chart': 'bar',
+    'Line Chart': 'line',
+    'Area Chart': 'area',
+};
+
+function compareOrder(left: unknown, right: unknown): number {
+    const leftNumber = Number(left);
+    const rightNumber = Number(right);
+    if (Number.isFinite(leftNumber) && Number.isFinite(rightNumber)) return leftNumber - rightNumber;
+    const leftTime = excelWallClock(left);
+    const rightTime = excelWallClock(right);
+    if (Number.isFinite(leftTime) && Number.isFinite(rightTime)) return leftTime - rightTime;
+    return String(left).localeCompare(String(right), undefined, { numeric: true });
 }
 
-function focusedNumericAxis(values: number[]): Partial<Pick<ExcelAxisSpec, 'minimumScale' | 'maximumScale' | 'majorUnit'>> {
-    const finite = values.filter(Number.isFinite);
-    if (finite.length === 0) return {};
-    const dataMinimum = Math.min(...finite);
-    const dataMaximum = Math.max(...finite);
-    const dataSpan = dataMaximum - dataMinimum;
-    const referenceSpan = dataSpan > 0 ? dataSpan : Math.max(1, Math.abs(dataMaximum) * 0.1);
-    const majorUnit = niceStep(referenceSpan);
-    const precision = 10 ** Math.max(0, -Math.floor(Math.log10(majorUnit)) + 1);
-    const round = (value: number) => Math.round(value * precision) / precision;
-    if (dataSpan === 0) {
-        return {
-            minimumScale: round(dataMinimum - majorUnit),
-            maximumScale: round(dataMaximum + majorUnit),
-            majorUnit,
-        };
+/** Categories in the order Flint's shared category-order decision gives them. */
+function orderCategories(
+    values: Cell[],
+    order: CategoryOrder | undefined,
+    rows: any[],
+    field: string,
+    fieldOf: (channel: string) => string | undefined,
+): Cell[] {
+    if (!order || order.by === 'data') return values;
+    const sorted = [...values];
+    if (order.by === 'values') {
+        const rank = new Map(order.values.map((value, index) => [String(value), index]));
+        const last = order.values.length;
+        return sorted.sort((a, b) => (rank.get(String(a)) ?? last) - (rank.get(String(b)) ?? last));
     }
-    const onMajorTick = (value: number) => Math.abs(value / majorUnit - Math.round(value / majorUnit)) < 1e-9;
-    const minimumScale = dataMinimum >= 0 && dataMinimum <= referenceSpan * 0.1
-        ? 0
-        : round(Math.floor(dataMinimum / majorUnit) * majorUnit);
-    const nextMajorTick = Math.ceil(dataMaximum / majorUnit) * majorUnit;
-    const maximumScale = onMajorTick(dataMaximum)
-        ? dataMaximum + majorUnit * 0.25
-        : nextMajorTick;
-    return {
-        minimumScale,
-        maximumScale: round(maximumScale),
-        majorUnit,
-    };
+    const direction = order.descending ? -1 : 1;
+    if (order.by === 'value') return sorted.sort((a, b) => direction * compareOrder(a, b));
+    const keyField = order.by === 'channel' ? fieldOf(order.channel) : order.field;
+    if (!keyField) return values;
+    const keys = new Map<string, number>();
+    for (const row of rows) {
+        const value = Number(row[keyField]);
+        if (!Number.isFinite(value)) continue;
+        const key = String(row[field]);
+        const previous = keys.get(key);
+        keys.set(key, order.by === 'channel' ? (previous ?? 0) + value : Math.min(previous ?? Infinity, value));
+    }
+    return sorted.sort((a, b) => direction * ((keys.get(String(a)) ?? 0) - (keys.get(String(b)) ?? 0)));
+}
+
+/** Whether a measure axis keeps zero in view, as Flint decides it for this mark. */
+function includesZero(cs: ChannelSemantics | undefined, channel: string, mark: string, values: number[]): boolean {
+    if (mark === 'bar' || mark === 'area') return true;
+    const semanticType = cs?.semanticAnnotation?.semanticType;
+    if (!semanticType) return mark !== 'point';
+    return computeZeroDecision(semanticType, channel === 'x' ? 'x' : 'y', mark, values).zero;
+}
+
+/** A representative date label for a date number format. */
+function sampleLabelFor(format: string | undefined): string {
+    return (format ?? 'yyyy-mm-dd').replace('yyyy', '2024').replace('mmm', 'Sep').replace(/d+/, '28').replace('hh', '12').replace(/mm$/, '00');
 }
 
 /** Normalize shorthand (`"x": "field"`) to `{ field }`. */
@@ -219,43 +244,63 @@ export function assembleExcel(input: ChartAssemblyInput): ExcelChartSpec {
         throw new Error(`Excel backend ${unsupportedReason}: "${flintType}".`);
     }
 
+    const baseSize = resolveBaseSize(input.chart_spec.baseSize, input.chart_spec.canvasSize);
+
     if (chartTemplate.instantiate) {
+        const instantiated = chartTemplate.instantiate(templateContext);
         return applyFieldDisplayNames(
             {
-                ...chartTemplate.instantiate(templateContext),
+                fontSizes: excelFontSizes({ width: instantiated.width ?? baseSize.width, height: instantiated.height ?? baseSize.height }),
+                ...instantiated,
                 ...(input.chart_spec.title !== undefined ? { title: input.chart_spec.title } : {}),
             },
             input.field_display_names,
         );
     }
 
-    if (flintType === 'Bar Chart' || flintType === 'Grouped Bar Chart' || flintType === 'Stacked Bar Chart') {
-        const detected = detectBandedAxisFromSemantics(sem, convertedData, { preferAxis: 'x' });
-        const declaration: LayoutDeclaration = {
-            axisFlags: detected ? { [detected.axis]: { banded: true } } : { x: { banded: true } },
-            resolvedTypes: detected?.resolvedTypes,
-        };
-        const baseSize = resolveBaseSize(input.chart_spec.baseSize, input.chart_spec.canvasSize);
-        const options = {
-            facetFixedPadding: { width: 50, height: 40 },
-            facetGap: 10,
-            targetBandAR: 10,
-            ...deriveStretchCaps(baseSize, input.chart_spec.canvasSize, {}),
-        };
-        const budgets = computeChannelBudgets(sem, declaration, convertedData, baseSize, options);
-        const overflowResult = filterOverflow(
-            sem,
-            declaration,
-            encodings,
-            convertedData,
-            budgets,
-            new Set(['bar']),
-        );
+    const fonts = excelFontSizes(baseSize);
+    const chartProperties = input.chart_spec.chartProperties as Record<string, any> | undefined;
+    // The author's log-scale toggle (as core/analyze applies it on position axes) wins over the recommendation.
+    for (const axis of ['x', 'y'] as const) {
+        const choice = chartProperties?.[`logScale_${axis}`];
+        if (choice !== undefined && sem[axis]?.type === 'quantitative') sem[axis].scaleType = choice === false ? undefined : 'log';
+    }
+
+    // ── Phase 1 (reused core): layout declaration, budgets, overflow, layout ─
+    const declaration = excelLayoutDeclaration(flintType, sem, convertedData, chartProperties);
+    const layoutOptions: AssembleOptions = {
+        facetFixedPadding: { width: 50, height: 40 },
+        facetGap: 10,
+        targetBandAR: 10,
+        ...(input.options ?? {}),
+        ...(declaration.paramOverrides ?? {}),
+    };
+    Object.assign(layoutOptions, deriveStretchCaps(baseSize, input.chart_spec.canvasSize, layoutOptions));
+    const budgets = computeChannelBudgets(sem, declaration, convertedData, baseSize, layoutOptions);
+    const markType = OVERFLOW_MARK[flintType];
+    if (markType) {
+        const overflowResult = filterOverflow(sem, declaration, encodings, convertedData, budgets, new Set([markType]));
         convertedData = overflowResult.filteredData;
         overflowResult.truncations.forEach((truncation) => {
             overflowOrder.set(truncation.field, truncation.keptValues as Cell[]);
         });
     }
+    const layout = computeLayout(sem, declaration, convertedData, baseSize, layoutOptions, budgets.facetGrid);
+    // A banded axis spans its step times its bands (per group where the bars dodge), as Flint draws it.
+    const bandedLength = (axis: 'x' | 'y', fallback: number) => {
+        const step = axis === 'x' ? layout.xStep : layout.yStep;
+        const continuous = axis === 'x' ? layout.xContinuousAsDiscrete : layout.yContinuousAsDiscrete;
+        const nominal = axis === 'x' ? layout.xNominalCount : layout.yNominalCount;
+        const unit = axis === 'x' ? layout.xStepUnit : layout.yStepUnit;
+        const field = sem[axis]?.field;
+        const bands = continuous > 0
+            ? continuous
+            : nominal > 0
+                ? (unit === 'group' && field ? distinct(convertedData, field).length : nominal)
+                : 0;
+        return bands > 0 && step > 0 ? Math.round(step * bands) : fallback;
+    };
+    const plot = { width: bandedLength('x', layout.subplotWidth), height: bandedLength('y', layout.subplotHeight) };
 
     const mapping = chartTemplate.typeMapping;
 
@@ -272,7 +317,6 @@ export function assembleExcel(input: ChartAssemblyInput): ExcelChartSpec {
         : encodings.color && !isMeasure('color')
             ? 'color'
             : undefined;
-    const seriesField0 = seriesCand;
 
     if (mapping.noAxes) {
         // pie/doughnut: color = slices (category), size/theta/y = value
@@ -280,11 +324,11 @@ export function assembleExcel(input: ChartAssemblyInput): ExcelChartSpec {
         measCh = encodings.size ? 'size' : encodings.theta ? 'theta' : encodings.y ? 'y' : undefined;
         seriesCh = undefined;
     } else if (mapping.xy) {
-        catCh = 'x'; measCh = 'y'; isXY = true; seriesCh = seriesField0;
+        catCh = 'x'; measCh = 'y'; isXY = true; seriesCh = seriesCand;
     } else if (isMeasure('x') && !isMeasure('y')) {
-        catCh = 'y'; measCh = 'x'; orientation = 'horizontal'; seriesCh = seriesField0;
+        catCh = 'y'; measCh = 'x'; orientation = 'horizontal'; seriesCh = seriesCand;
     } else {
-        catCh = 'x'; measCh = 'y'; seriesCh = seriesField0;
+        catCh = 'x'; measCh = 'y'; seriesCh = seriesCand;
     }
 
     const catField = catCh ? fieldOf(catCh) : undefined;
@@ -293,9 +337,8 @@ export function assembleExcel(input: ChartAssemblyInput): ExcelChartSpec {
     const dashField = fieldOf('strokeDash');
     const orderField = fieldOf('order');
     const sizeField = fieldOf('size');
-    const base = input.chart_spec.baseSize ?? { width: 480, height: 320 };
     const bubbleSizes = sizeField
-        ? normalizedBubbleSizes(convertedData, sizeField, typeOf('size'), base.width, base.height)
+        ? normalizedBubbleSizes(convertedData, sizeField, typeOf('size'), plot.width, plot.height)
         : undefined;
     const warnings: ChartWarning[] = [];
 
@@ -306,37 +349,43 @@ export function assembleExcel(input: ChartAssemblyInput): ExcelChartSpec {
         );
     }
 
-    const numericXLine = flintType === 'Line Chart' && isMeasure('x') && isMeasure('y');
+    // Times of day cannot sit on a native date axis (its finest unit is a day): a line through them
+    // is drawn on a numeric axis of serial dates; bars and areas name each time as a category.
+    const catTemporal = typeOf(catCh!) === 'temporal';
+    const catGrain = catTemporal
+        ? temporalGrain(convertedData.map((row) => excelWallClock(row[catField])))
+        : undefined;
+    const numericXLine = flintType === 'Line Chart' && (isMeasure('x') || (catTemporal && catGrain === 'time')) && isMeasure('y');
     if (numericXLine) {
         isXY = true;
         catCh = 'x';
         measCh = 'y';
     }
+    const xValue = (value: unknown): Cell => (typeOf('x') === 'temporal' ? excelDateSerial(value) : Number(value));
+    const timeFormat = sem[catCh!]?.temporalFormat ?? '%b %d %H:%M';
+    const timeLabel = catTemporal && catGrain === 'time' && !isXY
+        ? (time: number) => formatWallClock(time, timeFormat)
+        : undefined;
 
     // ── Stage 3: pivot long → wide matrix ───────────────────────────────────
     const data: Array<Array<Cell>> = [];
     let explicitSeries: ExcelNativeSeriesSpec[] | undefined;
     let seriesFormats: ExcelNativeChartSpec['seriesFormats'];
+    let categories: Cell[] = [];
+    let legendLabels: string[] = [];
+    let stackExtents: number[] = [];
+    const sortRows = (rows: any[]) => (orderField ? [...rows].sort((left, right) => compareOrder(left[orderField], right[orderField])) : rows);
     if (isXY) {
         const seriesKeys = seriesField ? distinct(convertedData, seriesField) : [measField];
+        const sortByX = numericXLine && !orderField;
+        const groupRows = (rows: any[]) => (sortByX
+            ? [...rows].sort((left, right) => Number(xValue(left[catField])) - Number(xValue(right[catField])))
+            : sortRows(rows));
         const needsExplicitSeries = Boolean(seriesField || sizeField);
         if (needsExplicitSeries) {
             const columnsPerSeries = sizeField ? 3 : 2;
-            const groupedRows = seriesKeys.map((seriesKey) => {
-                const rows = convertedData.filter((row) => !seriesField || row[seriesField] === seriesKey);
-                if (!orderField) return rows;
-                return [...rows].sort((left, right) => {
-                    const leftValue = left[orderField];
-                    const rightValue = right[orderField];
-                    const leftNumber = Number(leftValue);
-                    const rightNumber = Number(rightValue);
-                    if (Number.isFinite(leftNumber) && Number.isFinite(rightNumber)) return leftNumber - rightNumber;
-                    const leftTime = new Date(String(leftValue)).getTime();
-                    const rightTime = new Date(String(rightValue)).getTime();
-                    if (Number.isFinite(leftTime) && Number.isFinite(rightTime)) return leftTime - rightTime;
-                    return String(leftValue).localeCompare(String(rightValue), undefined, { numeric: true });
-                });
-            });
+            const groupedRows = seriesKeys.map((seriesKey) =>
+                groupRows(convertedData.filter((row) => !seriesField || row[seriesField] === seriesKey)));
             const rowCount = Math.max(0, ...groupedRows.map((rows) => rows.length));
             explicitSeries = seriesKeys.map((seriesKey, index) => ({
                 name: String(seriesKey),
@@ -355,47 +404,42 @@ export function assembleExcel(input: ChartAssemblyInput): ExcelChartSpec {
                     const row = rows[rowIndex];
                     if (!row) return new Array(columnsPerSeries).fill(null);
                     return [
-                        row[catField] as Cell,
+                        xValue(row[catField]),
                         Number(row[measField]),
                         ...(sizeField ? [bubbleSizes?.get(row[sizeField]) ?? 9] : []),
                     ];
                 }));
             }
+            legendLabels = seriesField ? seriesKeys.map(String) : [];
         } else {
             data.push([catField, measField]);
-            const rows = orderField
-                ? [...convertedData].sort((left, right) => {
-                    const leftValue = left[orderField];
-                    const rightValue = right[orderField];
-                    const leftNumber = Number(leftValue);
-                    const rightNumber = Number(rightValue);
-                    if (Number.isFinite(leftNumber) && Number.isFinite(rightNumber)) return leftNumber - rightNumber;
-                    const leftTime = new Date(String(leftValue)).getTime();
-                    const rightTime = new Date(String(rightValue)).getTime();
-                    if (Number.isFinite(leftTime) && Number.isFinite(rightTime)) return leftTime - rightTime;
-                    return String(leftValue).localeCompare(String(rightValue), undefined, { numeric: true });
-                })
-                : convertedData;
-            for (const r of rows) {
+            for (const r of groupRows(convertedData)) {
                 const x = r[catField];
                 const y = r[measField];
                 if (x == null || y == null) continue;
-                data.push([x as Cell, Number(y)]);
+                data.push([xValue(x), Number(y)]);
             }
         }
     } else {
-        let categories = distinct(convertedData, catField);
+        categories = distinct(convertedData, catField);
         const rankedCategories = overflowOrder.get(catField);
-        if (rankedCategories) categories = rankedCategories;
-        if (flintType === 'Line Chart' || flintType === 'Area Chart') {
-            if (typeOf(catCh!) === 'temporal') {
-                categories = [...categories].sort((a, b) => new Date(String(a)).getTime() - new Date(String(b)).getTime());
-            } else if (typeOf(catCh!) === 'quantitative') {
-                categories = [...categories].sort((a, b) => Number(a) - Number(b));
-            }
+        if (rankedCategories) {
+            categories = rankedCategories;
+        } else if (catTemporal) {
+            categories = [...categories].sort((a, b) => excelWallClock(a) - excelWallClock(b));
+        } else if (typeOf(catCh!) === 'quantitative') {
+            categories = [...categories].sort((a, b) => Number(a) - Number(b));
+        } else {
+            const order = categoryOrder({
+                channel: catCh!, encoding: encodings[catCh!], encodings, cs: sem[catCh!], data: rawData, semanticTypes,
+            });
+            categories = orderCategories(categories, order, convertedData, catField, fieldOf);
         }
         let seriesKeys = seriesField ? distinct(convertedData, seriesField) : [measField];
-        if (seriesField && (flintType === 'Stacked Bar Chart' || flintType === 'Bar Chart')) {
+        if (seriesField && sem[seriesCh!]?.ordinalSortOrder?.length) {
+            seriesKeys = orderCategories(seriesKeys, { by: 'values', values: sem[seriesCh!]!.ordinalSortOrder! }, convertedData, seriesField, fieldOf);
+        }
+        if (seriesField && (flintType === 'Stacked Bar Chart' || flintType === 'Bar Chart') && !sem[seriesCh!]?.ordinalSortOrder) {
             seriesKeys = [...seriesKeys].sort((a, b) => String(a).localeCompare(String(b), undefined, { numeric: true }));
             if (orientation === 'vertical') seriesKeys.reverse();
         }
@@ -435,7 +479,7 @@ export function assembleExcel(input: ChartAssemblyInput): ExcelChartSpec {
                 : 0.5;
             return interpolateColor('#D9E2F3', '#2F5597', t);
         };
-        if (orderedSeries) {
+        if (orderedSeries && numericSeriesValues.length === seriesKeys.length) {
             seriesFormats = seriesDescriptors.map((descriptor) => ({
                 color: orderedSeriesColor(descriptor.seriesValue),
             }));
@@ -447,8 +491,8 @@ export function assembleExcel(input: ChartAssemblyInput): ExcelChartSpec {
             }));
         }
 
-        // aggregate duplicates per (category × series) using the measure's default
-        const agg = sem[measCh!]?.aggregationDefault ?? 'sum';
+        // aggregate duplicates per (category × series): the encoding's own aggregate, else the measure's default
+        const agg = resolvePivotAggregate(encodings[measCh!]?.aggregate, sem[measCh!]?.aggregationDefault);
         const acc = new Map<string, { sum: number; count: number }>();
         for (const r of convertedData) {
             const cv = r[catField];
@@ -466,7 +510,7 @@ export function assembleExcel(input: ChartAssemblyInput): ExcelChartSpec {
         const valueAt = (cv: Cell, sv: Cell): Cell => {
             const e = acc.get(`${String(cv)}\u0000${String(sv)}`);
             if (!e) return null;
-            return agg === 'average' ? e.sum / e.count : e.sum;
+            return agg === 'average' ? e.sum / e.count : agg === 'count' ? e.count : e.sum;
         };
 
         let seriesValues = seriesDescriptors.map((descriptor) => categories.map((category) => valueAt(category, descriptor.key)));
@@ -505,12 +549,23 @@ export function assembleExcel(input: ChartAssemblyInput): ExcelChartSpec {
             ));
             categories = targetX.map((_value, index) => tickLabels.get(index) ?? '');
         }
+        const stacked = /Stacked/.test(flintType) || (flintType === 'Bar Chart' && Boolean(seriesField)) || (flintType === 'Area Chart' && Boolean(seriesField));
+        stackExtents = stacked
+            ? categories.flatMap((_category, index) => {
+                const column = seriesValues.map((values) => Number(values[index])).filter(Number.isFinite);
+                return [column.filter((v) => v > 0).reduce((s, v) => s + v, 0), column.filter((v) => v < 0).reduce((s, v) => s + v, 0)];
+            })
+            : seriesValues.flat().map(Number).filter(Number.isFinite);
+        legendLabels = seriesField || dashField ? seriesDescriptors.map((descriptor) => descriptor.label) : [];
         data.push([catField, ...seriesDescriptors.map((descriptor) => descriptor.label)]);
         for (let categoryIndex = 0; categoryIndex < categories.length; categoryIndex += 1) {
+            const category = categories[categoryIndex];
             data.push([
-                typeOf(catCh!) === 'temporal'
-                    ? excelDateSerial(categories[categoryIndex])
-                    : String(categories[categoryIndex]),
+                timeLabel
+                    ? timeLabel(excelWallClock(category))
+                    : catTemporal
+                        ? excelDateSerial(category)
+                        : String(category),
                 ...seriesValues.map((values) => values[categoryIndex]),
             ]);
         }
@@ -520,7 +575,7 @@ export function assembleExcel(input: ChartAssemblyInput): ExcelChartSpec {
     let excelChartType = orientation === 'horizontal' && mapping.horizontal
         ? mapping.horizontal
         : mapping.vertical;
-    if (numericXLine) excelChartType = 'XYScatterLines';
+    if (numericXLine) excelChartType = 'XYScatterLinesNoMarkers';
     if (flintType === 'Connected Scatter Plot') excelChartType = 'XYScatterLines';
     if (flintType === 'Scatter Plot' && sizeField) excelChartType = 'Bubble';
     if (flintType === 'Area Chart' && seriesField) excelChartType = 'AreaStacked';
@@ -529,7 +584,6 @@ export function assembleExcel(input: ChartAssemblyInput): ExcelChartSpec {
     }
     const isBarFamily = /Column|Bar/.test(excelChartType);
     const hasNumericAxes = /XYScatter|Bubble/.test(excelChartType);
-    const numberFormat = formatSpecToExcel(measCh ? sem[measCh]?.format : undefined);
     const seriesBy: ExcelSeriesBy = 'Columns';
 
     const spec: ExcelNativeChartSpec = {
@@ -542,60 +596,133 @@ export function assembleExcel(input: ChartAssemblyInput): ExcelChartSpec {
         seriesFormats,
         bubbleScale: flintType === 'Scatter Plot' && sizeField ? 20 : undefined,
         doughnutHoleSize: flintType === 'Donut Chart'
-            ? Math.max(10, Math.min(90, Number(input.chart_spec.chartProperties?.innerRadius ?? 50)))
+            ? Math.max(10, Math.min(90, Number(chartProperties?.innerRadius ?? 50)))
             : undefined,
         data,
-        width: base.width,
-        height: base.height,
+        width: baseSize.width,
+        height: baseSize.height,
+        fontSizes: fonts,
         warnings,
-        _flint: { flintType, catField, measField, seriesField, orientation, isXY },
+        _flint: { flintType, catField, measField, seriesField, orientation, isXY, plot, xStep: layout.xStep, yStep: layout.yStep },
     };
 
+    // Few bands make a narrow plot as tall as the canvas. Native Excel spreads its bands over the plot
+    // area, so a column chart is widened toward a landscape plot, never past bars of 56 pt.
+    const bandedCategories = isBarFamily && !(catTemporal && !timeLabel) && categories.length > 0;
+    if (bandedCategories && orientation === 'vertical') {
+        const lanes = flintType === 'Grouped Bar Chart' ? Math.max(1, data[0].length - 1) : 1;
+        const widest = (categories.length * lanes * 56) / 0.7;
+        plot.width = Math.round(Math.max(plot.width, Math.min(plot.height * 1.3, widest)));
+    }
+
+    let categoryLabels: string[] = [];
+    let valueLabels: string[] = [];
     if (!mapping.noAxes) {
-        const measureValues = convertedData
-            .map((row) => Number(row[measField]))
-            .filter(Number.isFinite);
-        const measureMinimum = measureValues.length > 0 ? Math.min(...measureValues) : undefined;
-        const measureMaximum = measureValues.length > 0 ? Math.max(...measureValues) : undefined;
-        const focusedLineMinimum = flintType === 'Line Chart' && measureMinimum !== undefined && measureMaximum !== undefined
-            ? Math.max(measureMinimum < 0 ? -Infinity : 0, measureMinimum - (measureMaximum - measureMinimum) * 0.05)
-            : undefined;
-        const numericXScale = hasNumericAxes
-            ? focusedNumericAxis(convertedData.map((row) => Number(row[catField])))
-            : {};
-        const numericYScale = hasNumericAxes
-            ? focusedNumericAxis(measureValues)
-            : {};
-        spec.categoryAxis = {
-            title: catField,
-            ...(orientation === 'vertical' && typeOf(catCh!) === 'temporal'
-                ? excelDateAxis(convertedData.map((row) => row[catField]), base.width)
-                : {}),
-            labelFontSize: orientation === 'horizontal' && data.length > 25
-                ? Math.max(8, Math.min(13, ((base.height - 80) / (data.length - 1)) * 0.9))
-                : undefined,
-            reversePlotOrder: orientation === 'horizontal' && typeOf(catCh!) !== 'temporal',
-            ...numericXScale,
-        };
+        const categoryLength = orientation === 'horizontal' ? plot.height : plot.width;
+        const valueLength = orientation === 'horizontal' ? plot.width : plot.height;
+        const measureValues = isXY
+            ? convertedData.map((row) => Number(row[measField])).filter(Number.isFinite)
+            : stackExtents;
+        const valueMark = isBarFamily ? 'bar' : /Area/.test(excelChartType) ? 'area' : hasNumericAxes && !numericXLine ? 'point' : 'line';
+        const valueLog = hasNumericAxes && sem[measCh!]?.scaleType === 'log' ? logScale(measureValues) : undefined;
+        const valueScale: Pick<ExcelAxisSpec, 'minimumScale' | 'maximumScale' | 'majorUnit' | 'logBase'> = valueLog ?? niceScale(
+            measureValues,
+            includesZero(sem[measCh!], measCh!, valueMark, measureValues),
+            valueLength,
+        );
+        const valueFormat = axisNumberFormat(sem[measCh!]?.format, valueScale.majorUnit);
+        valueLabels = valueScale.minimumScale !== undefined && valueScale.maximumScale !== undefined
+            ? [valueScale.minimumScale, valueScale.maximumScale].map((value) => sampleNumber(value, valueFormat))
+            : [];
+
+        let categoryAxis: ExcelAxisSpec = { title: catField };
+        if (hasNumericAxes) {
+            const xValues = convertedData.map((row) => row[catField]);
+            categoryAxis = typeOf('x') === 'temporal'
+                ? { ...categoryAxis, ...excelTimeScale(xValues, { plotWidth: categoryLength, fontSize: fonts.label }) }
+                : (() => {
+                    const numbers = xValues.map(Number).filter(Number.isFinite);
+                    const xMark = numericXLine ? 'line' : 'point';
+                    const xLog = sem.x?.scaleType === 'log' ? logScale(numbers) : undefined;
+                    if (xLog) return { ...categoryAxis, ...xLog, numberFormat: axisNumberFormat(sem.x?.format, 1) };
+                    const xScale = niceScale(numbers, includesZero(sem.x, 'x', xMark, numbers), categoryLength);
+                    return { ...categoryAxis, ...xScale, numberFormat: axisNumberFormat(sem.x?.format, xScale.majorUnit) };
+                })();
+            categoryLabels = [categoryAxis.minimumScale, categoryAxis.maximumScale]
+                .filter((value): value is number => value !== undefined)
+                .map((value) => (typeOf('x') === 'temporal' ? sampleLabelFor(categoryAxis.numberFormat) : sampleNumber(value, categoryAxis.numberFormat)));
+        } else if (catTemporal && !timeLabel) {
+            categoryAxis = {
+                ...categoryAxis,
+                ...excelDateAxis(categories, {
+                    plotWidth: categoryLength,
+                    fontSize: fonts.label,
+                    alignStart: !isBarFamily,
+                    labelExtent: orientation === 'horizontal' ? fonts.label * 1.6 : undefined,
+                }),
+            };
+            categoryLabels = [sampleLabelFor(categoryAxis.numberFormat)];
+        } else {
+            categoryLabels = categories.map(String);
+            if (timeLabel) {
+                const labelWidth = Math.max(...categoryLabels.map((label) => excelTextWidth(label, fonts.label))) + fonts.label;
+                const spacing = Math.ceil((labelWidth * categories.length) / Math.max(1, categoryLength));
+                if (spacing > 1) categoryAxis.tickLabelSpacing = spacing;
+            }
+        }
+        if (orientation === 'horizontal') {
+            const step = categoryLength / Math.max(1, categories.length);
+            // Names shrink only as far as their bands require, never below 8 pt; thinner bands name every other one.
+            if (step < fonts.label * 1.3) {
+                categoryAxis.labelFontSize = Math.max(8, Math.floor((step / 1.25) * 2) / 2);
+                if (step < 8 * 1.2) categoryAxis.tickLabelSpacing = Math.ceil((8 * 1.2) / step);
+            }
+            if (typeOf(catCh!) !== 'temporal') {
+                // Excel lists a bar chart's categories bottom-up; reversed, the first one is at the top
+                // and the value axis crosses at the (now bottom) last category.
+                categoryAxis.reversePlotOrder = true;
+                categoryAxis.position = 'Maximum';
+            }
+        }
+        if (!hasNumericAxes && measureValues.some((value) => value < 0)) categoryAxis.tickLabelPosition = 'Low';
+
+        spec.categoryAxis = categoryAxis;
         spec.valueAxis = {
             title: measField,
-            numberFormat,
-            minimumScale: flintType === 'Area Chart' ? 0 : focusedLineMinimum,
-            ...numericYScale,
+            numberFormat: valueFormat,
+            ...valueScale,
         };
     }
-    spec.legend = mapping.noAxes
-        ? { visible: true, position: 'Right' }
-        : seriesField || dashField
-            ? { visible: true, position: 'Bottom' }
-            : { visible: false };
-    if (isBarFamily) spec.gapWidth = 60;
-    if (flintType === 'Grouped Bar Chart') {
-        const seriesCount = Math.max(1, data[0].length - 1);
-        spec.gapWidth = Math.min(500, (excelChartType.startsWith('Column') ? 60 : 40) * seriesCount);
-        spec.overlap = 0;
+    const legendVisible = mapping.noAxes || Boolean(seriesField || dashField);
+    const legendPosition = mapping.noAxes || legendLabels.length > 6 ? 'Right' : 'Bottom';
+    spec.legend = legendVisible ? { visible: true, position: legendPosition } : { visible: false };
+    if (isBarFamily) {
+        // Excel's gap width is a percentage of one bar; aim for a gap that is a share of the whole band
+        // (a little less where bands are narrow), so single, dense and dodged bars keep one rhythm.
+        const lanes = flintType === 'Grouped Bar Chart' ? Math.max(1, data[0].length - 1) : 1;
+        const bandLength = (orientation === 'horizontal' ? plot.height : plot.width) / Math.max(1, categories.length);
+        const gapShare = bandLength < 12 ? 0.2 : flintType === 'Grouped Bar Chart' ? 0.25 : 0.3;
+        spec.gapWidth = Math.round((100 * lanes * gapShare) / (1 - gapShare));
+        if (flintType === 'Grouped Bar Chart') spec.overlap = 0;
     }
 
     if (input.chart_spec.title !== undefined) spec.title = input.chart_spec.title;
-    return applyFieldDisplayNames(spec, input.field_display_names);
+    const displayed = applyFieldDisplayNames(spec, input.field_display_names);
+    if (!mapping.noAxes) {
+        const size = excelChartSize({
+            plot,
+            fonts,
+            title: displayed.title,
+            orientation,
+            categoryTitle: displayed.categoryAxis?.title,
+            valueTitle: displayed.valueAxis?.title,
+            categoryLabels,
+            valueLabels,
+            banded: isBarFamily && !(catTemporal && !timeLabel),
+            legend: legendVisible ? { position: legendPosition, labels: legendLabels } : undefined,
+        });
+        displayed.width = size.width;
+        displayed.height = size.height;
+    }
+    return displayed;
 }

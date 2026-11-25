@@ -1,3 +1,5 @@
+import { DISPUTED_FEATURE } from '../../chart-types/boundaries';
+import { ROUTE_DATUM } from '../templates/map-routes';
 import type { ChartInteractionResolver } from '../../core/interaction-semantics';
 import type { InteractionCapability } from '../../core/interaction-spec';
 import {
@@ -12,6 +14,7 @@ import { INTERACTION_ROW } from '../../core/interaction-semantics';
 import { affordsTarget } from '../../interactive/affordances';
 import { DEFAULT_DIM_OPACITY } from '../../interactive/presets/utils';
 import { INTERACTION_PROVENANCE, type InteractionProvenance } from '../interaction-provenance';
+import type { AnnotationDesign } from '../../core/theme/types';
 import type {
     HoverStyle,
     SelectionBoundaryStyle,
@@ -35,7 +38,10 @@ import {
     AXIS_HOVER_STORE,
     LEGEND_SELECTION_STORE,
     STYLE_SIGNAL,
+    DIM_SIGNAL,
+    DIM_RELATIVE_SIGNAL,
 } from './stores';
+import { isDarkPage } from '../../core/annotation/color';
 import type { TemporalAxisPlanInputs } from '../instantiate-spec';
 import { bindTemporalAxisTicks, navigationDomainSignal, walkVegaGroups } from './live-layout';
 import {
@@ -81,6 +87,7 @@ interface TemplateInteractionSemantics {
     renderSelectionStyles?: Record<string, SelectionStyle>;
     selectionBoundary?: SelectionBoundaryStyle;
     continuousColorFocus?: ContinuousColorFocusStyle;
+    annotationDesign?: AnnotationDesign;
     neutralizeContinuousColor?: boolean;
     resolve?: ChartInteractionResolver;
     presentUpdate?: ChartUpdatePresenter;
@@ -105,7 +112,8 @@ function expandInteractiveLinePoints(spec: Record<string, any>): void {
     if (type === 'line' && typeof spec.mark === 'object' && spec.mark.point) {
         const lineMark = { ...spec.mark };
         const point = lineMark.point;
-        delete lineMark.point;
+        // The dots move to their own layer; `false` keeps a house's `config.line.point` from drawing them again.
+        lineMark.point = false;
         spec.layer = [
             { mark: lineMark },
             { mark: typeof point === 'object' ? { type: 'point', ...point } : { type: 'point', filled: true } },
@@ -179,6 +187,14 @@ function isSelectable(type: string, selectableMarks: ReadonlySet<string>): boole
     return DOT_MARKS.has(type) && [...DOT_MARKS].some((dot) => selectableMarks.has(dot));
 }
 
+/**
+ * The opacity a mark recedes to outside an emphasis: an emphasis level scales the mark's own
+ * opacity (a dot drawn at 0.7 recedes from 0.7, not from 1), a stated opacity replaces it.
+ */
+function recededOpacity(authored: number): string {
+    return `${DIM_RELATIVE_SIGNAL} ? ${authored} * ${DIM_SIGNAL} : min(${DIM_SIGNAL}, ${authored})`;
+}
+
 function instrumentNode(
     node: Record<string, any>,
     inherited: Record<string, any>,
@@ -187,6 +203,7 @@ function instrumentNode(
     continuousColorFocus: ContinuousColorFocusStyle | undefined,
     selectableMarks: ReadonlySet<string>,
     config: Record<string, any> | undefined,
+    pageInk?: string,
 ): boolean {
     const type = markType(node.mark);
     const selectable = !!type && SUPPORTED_SPEC_MARKS.has(type) && isSelectable(type, selectableMarks);
@@ -215,14 +232,33 @@ function instrumentNode(
         ];
     }
     const encoding = { ...inherited, ...(node.encoding ?? {}) };
-    const encodedOpacity = encoding.opacity;
+    // Value conditions the template put on the opacity — a globe hiding what stands behind its
+    // horizon — are gates focus must not lift: they stay first, and focus manages the rest.
+    const opacityGates = opacityValueGates(encoding.opacity);
+    const encodedOpacity = opacityGates ? undefined : encoding.opacity;
     const encodedColor = encoding.color;
     const continuousColor = continuousColorFocus
         && encodedColor?.field
         && (encodedColor.type === 'quantitative' || encodedColor.type === 'temporal')
         && !encodedColor.condition;
     const dataDrivenOpacity = encodedOpacity?.field && !encodedOpacity.condition;
-    if ((textLabel || legendLabel) && provenance.presentation === 'on-mark') return true;
+    const receded = `length(data('${INTERACTION_STORE}')) && !indata('${INTERACTION_STORE}', 'key', datum.${INTERACTION_KEY})`;
+    if ((textLabel || legendLabel) && provenance.presentation === 'on-mark') {
+        // A label drawn on its mark was inked against the mark's fill; as the mark recedes toward
+        // the page, the label takes the page's ink so it stays readable.
+        if (textLabel && pageInk) {
+            const markColor = typeof node.mark === 'object' ? node.mark?.color ?? node.mark?.fill : undefined;
+            const existing = node.encoding?.color;
+            const recededInk = { test: receded, value: pageInk };
+            node.encoding = {
+                ...(node.encoding ?? {}),
+                color: existing && typeof existing === 'object'
+                    ? { ...existing, condition: [recededInk, ...(existing.condition ? (Array.isArray(existing.condition) ? existing.condition : [existing.condition]) : [])] }
+                    : { condition: recededInk, ...(typeof markColor === 'string' ? { value: markColor } : {}) },
+            };
+        }
+        return true;
+    }
     if ((encodedOpacity && typeof encodedOpacity.value !== 'number' && !dataDrivenOpacity)
         || encoding.fillOpacity || encoding.strokeOpacity) return false;
     const authoredOpacity = typeof encodedOpacity?.value === 'number'
@@ -238,6 +274,11 @@ function instrumentNode(
     const selectionTest = isPath
         ? `!length(data('${INTERACTION_STORE}'))`
         : `!length(data('${INTERACTION_STORE}')) || indata('${INTERACTION_STORE}', 'key', datum.${INTERACTION_KEY})`;
+    const gated = (opacity: Record<string, any>): Record<string, any> => {
+        if (!opacityGates) return opacity;
+        const own = opacity.condition === undefined ? [] : Array.isArray(opacity.condition) ? opacity.condition : [opacity.condition];
+        return { ...opacity, condition: [...opacityGates, ...own] };
+    };
     node.encoding = {
         ...(node.encoding ?? {}),
         ...(isPath ? {} : {
@@ -255,18 +296,38 @@ function instrumentNode(
                 value: continuousColorFocus.mutedFill,
             },
         } : {}),
-        opacity: continuousColor ? { value: authoredOpacity } : dataDrivenOpacity ? {
+        // The receded opacity follows the emphasis level each render (DIM_SIGNAL); a label recedes
+        // less than its mark, so the values of the marks set back can still be read.
+        opacity: gated(continuousColor ? { value: authoredOpacity } : dataDrivenOpacity ? {
             condition: { test: selectionTest, ...encodedOpacity },
-            value: dimOpacity,
+            value: { expr: DIM_SIGNAL },
         } : {
             condition: {
                 test: `${selectionTest} || ${hoverTest}`,
                 value: authoredOpacity,
             },
-            value: Math.min(dimOpacity, authoredOpacity),
-        },
+            value: { expr: textLabel ? `min(${authoredOpacity}, max(${recededOpacity(authoredOpacity)}, 0.5))` : recededOpacity(authoredOpacity) },
+        }),
     };
     return true;
+}
+
+/**
+ * The value conditions of an opacity that states nothing else — no field, no value of its own —
+ * which a template set to hide marks under a test; undefined for any other opacity.
+ */
+function opacityValueGates(opacity: any): Record<string, any>[] | undefined {
+    if (!opacity || typeof opacity !== 'object' || opacity.field !== undefined || opacity.value !== undefined) return undefined;
+    const conditions = Array.isArray(opacity.condition) ? opacity.condition : opacity.condition ? [opacity.condition] : [];
+    if (!conditions.length || !conditions.every((condition: any) => typeof condition?.test === 'string' && typeof condition.value === 'number')) return undefined;
+    return conditions;
+}
+
+/** The ink text reads in on the chart's page, for a label whose mark recedes into it. */
+function pageTextInk(spec: Record<string, any>): string {
+    const background = typeof spec.background === 'string' ? spec.background
+        : typeof spec.config?.background === 'string' ? spec.config.background : '#ffffff';
+    return isDarkPage(background) ? '#e6e6e6' : '#333333';
 }
 
 function instrumentMarks(
@@ -277,6 +338,7 @@ function instrumentMarks(
     continuousColorFocus: ContinuousColorFocusStyle | undefined,
     selectableMarks: ReadonlySet<string>,
     config: Record<string, any> | undefined,
+    pageInk?: string,
 ): boolean {
     const encoding = { ...inherited, ...(spec.encoding ?? {}) };
     let instrumented = instrumentNode(
@@ -287,6 +349,7 @@ function instrumentMarks(
         continuousColorFocus,
         selectableMarks,
         config,
+        pageInk,
     );
     for (const property of ['layer', 'hconcat', 'vconcat', 'concat'] as const) {
         if (!Array.isArray(spec[property])) continue;
@@ -299,6 +362,7 @@ function instrumentMarks(
                 continuousColorFocus,
                 selectableMarks,
                 config,
+                pageInk,
             ) || instrumented;
         }
     }
@@ -311,6 +375,7 @@ function instrumentMarks(
             continuousColorFocus,
             selectableMarks,
             config,
+            pageInk,
         ) || instrumented;
     }
     return instrumented;
@@ -392,7 +457,8 @@ function pinChannelDomain(
             };
             const direction = sort.order === 'ascending' ? 1 : -1;
             values.sort((left, right) => direction * (aggregate(left) - aggregate(right)));
-        } else {
+        } else if (sort !== null) {
+            // `sort: null` is the order the rows give, which `values` already holds.
             values.sort((left, right) => (left as any) < (right as any) ? -1 : (left as any) > (right as any) ? 1 : 0);
             if (sort === 'descending') values.reverse();
         }
@@ -423,7 +489,10 @@ function pinLegendDomains(
         if (channel === 'size' || channel === 'opacity') continue;
         const values = [...new Set(rows.map((row) => row?.[field]).filter((value) => value !== undefined))];
         if (values.length === 0 || values.some((value) => typeof value !== 'string' && typeof value !== 'number')) continue;
-        pinChannelDomain(spec, channel === 'color' ? 'color' : channel, field, rows);
+        pinChannelDomain(spec, channel, field, rows);
+        // A theme can draw the same field again as a mark's edge or fill (a faint ink's darker
+        // outline): it must keep the colour's order, or each mark takes another series' edge.
+        if (channel === 'color') for (const twin of ['stroke', 'fill']) pinChannelDomain(spec, twin, field, rows);
     }
 }
 
@@ -559,6 +628,7 @@ export function addVegaLiteInteractions(
             templateSemantics.neutralizeContinuousColor ? templateSemantics.continuousColorFocus : undefined,
             selectableMarks,
             spec.config,
+            pageTextInk(spec),
         )
         : false;
     if (needsSemanticPresentation && !instrumented) return null;
@@ -598,6 +668,7 @@ export function addVegaLiteInteractions(
         renderSelectionStyles: templateSemantics.renderSelectionStyles,
         selectionBoundary: templateSemantics.selectionBoundary,
         continuousColorFocus: templateSemantics.continuousColorFocus,
+        annotationDesign: templateSemantics.annotationDesign,
         navigationChannels: [...requestedNavigationAxes],
         geoNavigation: templateSemantics.geoNavigation ?? false,
         geoLevels: templateSemantics.geoLevels,
@@ -733,7 +804,10 @@ export function injectVegaGeoNavigationSignals(
     // fit (the whole sphere) does not depend on the rotation, so it holds its size.
     if (isGlobeProjection(projection.type)) {
         const authored = Array.isArray(projection.rotate) ? projection.rotate : [0, 0, 0];
-        vegaSpec.signals.push({ name: GEO_ROTATE_SIGNAL, value: authored });
+        // A globe that hides its far side declares the signal itself, at the same rotation.
+        if (!vegaSpec.signals.some((signal: any) => signal?.name === GEO_ROTATE_SIGNAL)) {
+            vegaSpec.signals.push({ name: GEO_ROTATE_SIGNAL, value: authored });
+        }
         projection.rotate = { signal: GEO_ROTATE_SIGNAL };
     }
     const result: Partial<Record<'x' | 'y', import('./contracts').VegaNavigationAxis>> = {};
@@ -764,8 +838,20 @@ export function vegaGeoFocusSource(vegaSpec: Record<string, any>): string | unde
         }
         return false;
     };
+    // The lines a map draws over its regions (the disputed borders, its routes) are no region to focus.
+    const lines = (name: string | undefined): boolean => {
+        const seen = new Set<string>();
+        for (let dataset = name ? byName.get(name) : undefined; dataset && !seen.has(dataset.name); dataset = byName.get(dataset.source)) {
+            seen.add(dataset.name);
+            if (dataset.format?.feature === DISPUTED_FEATURE) return true;
+            // A mesh of borders is lines, not regions.
+            if (typeof dataset.format?.mesh === 'string') return true;
+            if (Array.isArray(dataset.values) && dataset.values[0]?.[ROUTE_DATUM] === true) return true;
+        }
+        return false;
+    };
     const shapes = (Array.isArray(vegaSpec.marks) ? vegaSpec.marks : [])
-        .filter((mark: any) => mark?.type === 'shape' && typeof mark.from?.data === 'string');
+        .filter((mark: any) => mark?.type === 'shape' && typeof mark.from?.data === 'string' && !lines(mark.from.data));
     return (shapes.find((mark: any) => keyed(mark.from.data)) ?? shapes[shapes.length - 1])?.from.data;
 }
 
@@ -918,8 +1004,11 @@ function applyCompiledHoverStyles(
         for (const [channel, value] of Object.entries(hoverStyle)) {
             if (channel === 'opacity' && (value === 'contrast' || value === 'spotlight')) {
                 const currentOpacity = Array.isArray(update.opacity) ? update.opacity : [update.opacity];
+                // A data-driven opacity is the author's; the receded level's signal is Flint's own.
                 if (value === 'spotlight' && currentOpacity.some((entry: any) =>
-                    entry?.field !== undefined || entry?.signal !== undefined || entry?.condition?.field !== undefined
+                    entry?.field !== undefined
+                    || (entry?.signal !== undefined && !String(entry.signal).includes(DIM_SIGNAL))
+                    || entry?.condition?.field !== undefined
                 )) continue;
                 const numericValues = currentOpacity
                     .map((entry: any) => entry?.value)
@@ -1016,6 +1105,8 @@ export function injectVegaInteractionStore(
     vegaSpec.signals = [
         ...(Array.isArray(vegaSpec.signals) ? vegaSpec.signals : []),
         { name: STYLE_SIGNAL, value: {} },
+        { name: DIM_SIGNAL, value: plan?.dimOpacity ?? DEFAULT_DIM_OPACITY },
+        { name: DIM_RELATIVE_SIGNAL, value: false },
     ];
     const instrumentLegends = (scope: Record<string, any>): void => {
         for (const legend of scope.legends ?? []) {

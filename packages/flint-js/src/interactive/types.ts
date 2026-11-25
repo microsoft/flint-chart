@@ -2,8 +2,11 @@ import type { CategoryViewport, ChartAssemblyInput, ChartWarning } from '../core
 import type { ChartState, FlintInteractionEventDetail, InteractionContext, InteractionDef, SemanticTarget } from './interactions';
 import type { CanvasInteractionAction, CanvasInteractionEvent } from './language/events';
 import type { ChartUpdate, ChartUpdateResult } from './language/updates';
-import type { AssistedTargetingOptions } from '../core/interaction-spec';
+import type { AssistedTargetingOptions, InteractionDefaults } from '../core/interaction-spec';
 import type { InteractionResetGesture } from './reset';
+import type { VegaInteractiveRendererOptions } from '../vegalite/interactive';
+import type { EChartsInteractiveRendererOptions } from '../echarts/interactive';
+import type { HighchartsRendererOptions } from '../highcharts/interactive';
 
 export type {
     AssistedTargetingOptions,
@@ -17,6 +20,11 @@ export type ViewportState = Partial<Record<ViewportChannel, number>>;
 export interface ViewportGeometry {
     offset: number;
     extent: number;
+    /**
+     * Where the chart keeps room for a horizontal rail inside its own drawing, in px from its top:
+     * under the axis, above a source line at the foot. Undefined: the rail goes below the chart.
+     */
+    railTop?: number;
 }
 
 export type ChartUpdateComposition = 'auto';
@@ -128,11 +136,33 @@ export interface InteractiveChartSurfaceOptions {
     /** Presets assist by default; false disables it and maxDistance overrides eligible presets. */
     assistedTargeting?: boolean | AssistedTargetingOptions;
     keyboardTargeting?: boolean;
+    /** The baseline every chart has: a nearest-mark tooltip, a legend click that dims, a dense chart's zoom. Defaults to on. */
+    defaults?: InteractionDefaults;
     /** Warnings known before the mount; the surface reports them with the mount's own. */
     warnings?: readonly ChartWarning[];
 }
 
 export type InteractiveBackend = 'vegalite' | 'echarts' | 'chartjs' | 'plotly' | 'highcharts';
+
+/**
+ * Each backend's interactive renderer factory, as `flint-chart/<backend>/interactive` exports it
+ * (`createVegaInteractiveRenderer`, `createEChartsInteractiveRenderer`,
+ * `createChartjsInteractiveRenderer`, `createPlotlyInteractiveRenderer`,
+ * `createHighchartsInteractiveRenderer`). A factory given here is
+ * used in place of the one the entry would load, so an app bundles only the backends it imports.
+ */
+export interface InteractiveRenderers {
+    vegalite?: (options?: VegaInteractiveRendererOptions) => InteractiveRendererAdapter;
+    echarts?: (options?: EChartsInteractiveRendererOptions) => InteractiveRendererAdapter;
+    chartjs?: () => InteractiveRendererAdapter;
+    plotly?: () => InteractiveRendererAdapter;
+    highcharts?: (options?: HighchartsRendererOptions) => InteractiveRendererAdapter;
+}
+
+/** How an entry loads each backend's renderer factory when the host passes none. */
+export type InteractiveRendererLoaders = {
+    [B in InteractiveBackend]?: () => Promise<NonNullable<InteractiveRenderers[B]>>;
+};
 
 export interface BuildInteractiveChartOptions extends InteractiveChartSurfaceOptions {
     backend: InteractiveBackend;
@@ -150,6 +180,12 @@ export interface BuildInteractiveChartOptions extends InteractiveChartSurfaceOpt
      * ceiling on the sides given, so the chart lays out for that room.
      */
     availableSize?: { width?: number; height?: number };
+    /**
+     * Renderer factories to draw with, by backend, in place of the ones the entry loads. With
+     * `flint-chart/react/<backend>` (or `flint-chart/interactive/<backend>`) only that backend is
+     * loaded; pass another here to draw with it too.
+     */
+    renderers?: InteractiveRenderers;
 }
 
 export interface InteractiveChartSurface {

@@ -17,6 +17,11 @@ export default defineConfig({
     // NOTE: order matters — longer aliases must come first so 'flint-chart/test-data'
     // is matched before the bare 'flint-chart' substring alias.
     alias: [
+      // One backend's entries (`flint-chart/react/vegalite`, `flint-chart/interactive/echarts`, …).
+      {
+        find: /^flint-chart\/(react|interactive)\/(vegalite|echarts|chartjs|plotly)$/,
+        replacement: path.resolve(__dirname, '../packages/flint-js/src') + '/$1/$2.ts',
+      },
       {
         find: 'flint-chart/interactive',
         replacement: path.resolve(__dirname, '../packages/flint-js/src/interactive/index.ts'),
@@ -32,6 +37,15 @@ export default defineConfig({
       {
         find: 'flint-chart/test-data',
         replacement: path.resolve(__dirname, '../packages/flint-js/src/test-data/index.ts'),
+      },
+      // The boundaries Flint's renderers load on a map's first draw.
+      {
+        find: /^flint-chart\/geo\/lazy\/([\w-]+)$/,
+        replacement: path.resolve(__dirname, '../packages/flint-js/src/geo/lazy') + '/$1.js',
+      },
+      {
+        find: 'flint-chart/geo',
+        replacement: path.resolve(__dirname, '../packages/flint-js/src/geo/index.ts'),
       },
       {
         find: 'flint-chart',

@@ -31,7 +31,7 @@ const flintJsRoot = resolve(here, '../../../packages/flint-js');
 const excelBackendBundle = join(flintJsRoot, 'dist/excel/index.js');
 
 /** In-memory job queue + results. */
-/** @type {Array<{ id: number, kind: 'artifact' | 'program', artifact?: any, data?: any[], renderOptions: any, enqueuedAt: number }>} */
+/** @type {Array<{ id: number, kind: 'artifact' | 'program' | 'workbook', artifact?: any, data?: any[], sheets?: any[], overview?: any, renderOptions: any, enqueuedAt: number }>} */
 const queue = [];
 const results = new Map(); // id -> { name, pngBase64 }
 const programSources = new Map(); // id -> validated evaluation-only Office.js source
@@ -117,15 +117,14 @@ async function startServer() {
       }));
     }
 
-    // --- code version (for the pane's auto-reload) ---
+    // --- code versions: the pane reloads only for its own files; the backend is re-imported per job ---
     if (req.method === 'GET' && path === '/version') {
       workerLastSeenAt = Date.now();
       let v = 0;
       for (const f of ['officejs/taskpane.js', 'officejs/taskpane.html']) {
         try { v = Math.max(v, statSync(join(here, f)).mtimeMs); } catch { /* ignore */ }
       }
-      v = Math.max(v, backendSnapshot().version);
-      return send(res, 200, JSON.stringify({ version: Math.round(v) }));
+      return send(res, 200, JSON.stringify({ version: Math.round(v), backend: Math.round(backendSnapshot().version) }));
     }
 
     // --- task pane announces itself on load ---
@@ -173,7 +172,7 @@ async function startServer() {
       }
       const job = queue.shift();
       if (!job) return send(res, 204, '');
-      const description = job.kind === 'artifact' ? job.artifact?.chartType : 'generated Office.js';
+      const description = job.kind === 'artifact' ? job.artifact?.chartType : job.kind === 'workbook' ? `workbook of ${job.sheets.length} charts` : 'generated Office.js';
       console.log(`[job ${job.id}] dispatched to task pane (${description})`);
       return send(res, 200, JSON.stringify(job));
     }
@@ -184,11 +183,13 @@ async function startServer() {
       results.set(body.id, {
         name: body.name,
         pngBase64: body.pngBase64,
+        fileBase64: body.fileBase64,
         inspection: body.inspection,
         error: body.error,
       });
       programSources.delete(body.id);
       if (body.error) console.log(`[job ${body.id}] ERROR from task pane: ${body.error}`);
+      else if (body.fileBase64) console.log(`[job ${body.id}] received workbook (${body.fileBase64.length} b64 chars)`);
       else console.log(`[job ${body.id}] received PNG (${(body.pngBase64 || '').length} b64 chars)`);
       return send(res, 200, JSON.stringify({ ok: true }));
     }
@@ -214,6 +215,25 @@ async function startServer() {
       }
       const id = nextId++;
       queue.push({ id, kind: 'artifact', artifact, renderOptions, enqueuedAt: Date.now() });
+      return send(res, 200, JSON.stringify({ id }));
+    }
+
+    // --- a workbook of native charts, one sheet each, exported as .xlsx ---
+    if (req.method === 'POST' && path === '/enqueue-workbook') {
+      const payload = JSON.parse(await readBody(req));
+      const sheets = payload?.sheets;
+      if (!Array.isArray(sheets) || sheets.length === 0 || !payload.overview) {
+        return send(res, 400, JSON.stringify({ error: 'Expected { sheets: [{ name, artifact }], overview }.' }));
+      }
+      for (const sheet of sheets) {
+        if (typeof sheet?.name !== 'string' || sheet.artifact?.schema !== 'flint.excel.chart/v1') {
+          return send(res, 422, JSON.stringify({ error: 'Every sheet needs a name and a flint.excel.chart/v1 artifact.' }));
+        }
+        const blockedReason = BLOCKED_CHART_TYPES.get(String(sheet.artifact.chartType ?? '').toLowerCase());
+        if (blockedReason) return send(res, 422, JSON.stringify({ error: blockedReason }));
+      }
+      const id = nextId++;
+      queue.push({ id, kind: 'workbook', sheets, overview: payload.overview, renderOptions: {}, enqueuedAt: Date.now() });
       return send(res, 200, JSON.stringify({ id }));
     }
 
