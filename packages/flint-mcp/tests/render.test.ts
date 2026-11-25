@@ -34,7 +34,7 @@ function pngDimensions(buffer: Buffer): { width: number; height: number } {
 }
 
 describe('renderChart → PNG', () => {
-  for (const backend of ['vegalite', 'echarts', 'chartjs'] as const) {
+  for (const backend of ['vegalite', 'echarts', 'chartjs', 'highcharts'] as const) {
     it(`renders a ${backend} bar chart to a non-trivial PNG`, async () => {
       const res = await renderChart(sales, backend, { format: 'png' });
       expect(res.backend).toBe(backend);
@@ -47,10 +47,29 @@ describe('renderChart → PNG', () => {
       expect(Array.isArray(res.warnings)).toBe(true);
     });
   }
+
+  it('renders a faceted highcharts chart to a composite PNG', async () => {
+    const facetedSales: ChartAssemblyInput = {
+      ...sales,
+      chart_spec: {
+        ...sales.chart_spec,
+        encodings: {
+          x: { field: 'region' },
+          y: { field: 'revenue' },
+          column: { field: 'region' },
+        },
+      },
+    };
+    const res = await renderChart(facetedSales, 'highcharts', { format: 'png' });
+    expect(res.backend).toBe('highcharts');
+    expect(res.mimeType).toBe('image/png');
+    expect(res.buffer).toBeInstanceOf(Buffer);
+    expect(res.buffer!.length).toBeGreaterThan(1000);
+  });
 });
 
 describe('renderChart → SVG', () => {
-  for (const backend of ['vegalite', 'echarts'] as const) {
+  for (const backend of ['vegalite', 'echarts', 'highcharts'] as const) {
     it(`renders a ${backend} bar chart to SVG markup`, async () => {
       const res = await renderChart(sales, backend, { format: 'svg' });
       expect(res.mimeType).toBe('image/svg+xml');

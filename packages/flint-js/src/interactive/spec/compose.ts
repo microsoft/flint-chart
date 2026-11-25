@@ -49,7 +49,7 @@ export function composeInteractiveOptions(input: ComposeInput, options: ComposeO
         });
         return false;
     });
-    if (options.backend !== 'vegalite' && specInteractions.length + code.length > 0) {
+    if (options.backend !== 'vegalite' && options.backend !== 'highcharts' && specInteractions.length + code.length > 0) {
         warnings.push({
             severity: code.length > 0 ? 'warning' : 'info',
             code: 'interactions_ignored',

@@ -1,9 +1,32 @@
 // Hand-drawn sketch primitives for the talk deck, ported from the video (promo-en/render/lib.js):
 // perfect-freehand strokes with a gentle wobble, watercolour washes, and Kalam lettering.
-import { getStroke } from 'perfect-freehand';
-
 type Ctx = CanvasRenderingContext2D;
 type Pt = [number, number];
+
+function getStroke(pts: (Pt | number[])[], options: any = {}): Pt[] {
+  if (pts.length < 2) return [];
+  const size = options.size ?? 4;
+  const left: Pt[] = [];
+  const right: Pt[] = [];
+  for (let i = 0; i < pts.length; i++) {
+    const p0 = pts[Math.max(0, i - 1)];
+    const p1 = pts[Math.min(pts.length - 1, i + 1)];
+    const dx = p1[0] - p0[0];
+    const dy = p1[1] - p0[1];
+    const len = Math.hypot(dx, dy) || 1;
+    const nx = -dy / len;
+    const ny = dx / len;
+    const t = options.start?.taper && i < pts.length * 0.2
+      ? (i / (pts.length * 0.2))
+      : (options.end?.taper && i > pts.length * 0.8
+        ? ((pts.length - 1 - i) / (pts.length * 0.2))
+        : 1);
+    const halfWidth = (size / 2) * Math.max(0.2, t);
+    left.push([pts[i][0] + nx * halfWidth, pts[i][1] + ny * halfWidth]);
+    right.push([pts[i][0] - nx * halfWidth, pts[i][1] - ny * halfWidth]);
+  }
+  return [...left, ...right.reverse()];
+}
 
 export const C = {
   paper: '#fbfbf8',

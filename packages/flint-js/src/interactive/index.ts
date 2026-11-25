@@ -10,6 +10,7 @@ const ALL_RENDERERS: InteractiveRendererLoaders = {
     echarts: () => import('../echarts/interactive').then((m) => m.createEChartsInteractiveRenderer),
     chartjs: () => import('../chartjs/interactive').then((m) => m.createChartjsInteractiveRenderer),
     plotly: () => import('../plotly/interactive').then((m) => m.createPlotlyInteractiveRenderer),
+    highcharts: () => import('../highcharts/interactive').then((m) => m.createHighchartsInteractiveRenderer),
 };
 
 /**

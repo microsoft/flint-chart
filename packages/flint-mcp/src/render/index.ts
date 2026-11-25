@@ -10,6 +10,7 @@ import { renderVegaLite } from './vegalite.js';
 import { installFlintTextMeasurer } from './fonts.js';
 import { renderECharts } from './echarts.js';
 import { renderChartjs } from './chartjs.js';
+import { renderHighcharts } from './highcharts.js';
 import type {
   RenderBackend,
   RenderFormat,
@@ -43,6 +44,7 @@ export const RENDERABLE_BACKENDS: readonly RenderBackend[] = [
   'vegalite',
   'echarts',
   'chartjs',
+  'highcharts',
 ];
 
 /**
@@ -82,7 +84,19 @@ export async function renderChart(
   // metadata and are safe to remove for every backend.
   const w = width ?? spec?.width ?? undefined;
   const h = height ?? spec?.height ?? undefined;
+  const isFacet = spec?._facet;
+  const facetPanels = spec?._facetPanels;
+  const facetRows = spec?._facetRows;
+  const facetCols = spec?._facetCols;
+  const facetColHeaderPerRow = spec?._facetColHeaderPerRow;
   stripPrivateKeys(spec);
+  if (backend === 'highcharts' && (isFacet || facetPanels)) {
+    spec._facet = true;
+    spec._facetPanels = facetPanels;
+    spec._facetRows = facetRows;
+    spec._facetCols = facetCols;
+    spec._facetColHeaderPerRow = facetColHeaderPerRow;
+  }
 
   let artifact: Omit<RenderResult, 'warnings'>;
   switch (backend) {
@@ -106,6 +120,15 @@ export async function renderChart(
       break;
     case 'chartjs':
       artifact = await renderChartjs(spec, {
+        scale,
+        background,
+        width: w ?? 400,
+        height: h ?? 320,
+      });
+      break;
+    case 'highcharts':
+      artifact = await renderHighcharts(spec, {
+        format,
         scale,
         background,
         width: w ?? 400,

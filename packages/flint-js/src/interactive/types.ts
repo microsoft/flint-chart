@@ -6,6 +6,7 @@ import type { AssistedTargetingOptions, InteractionDefaults } from '../core/inte
 import type { InteractionResetGesture } from './reset';
 import type { VegaInteractiveRendererOptions } from '../vegalite/interactive';
 import type { EChartsInteractiveRendererOptions } from '../echarts/interactive';
+import type { HighchartsRendererOptions } from '../highcharts/interactive';
 
 export type {
     AssistedTargetingOptions,
@@ -141,12 +142,13 @@ export interface InteractiveChartSurfaceOptions {
     warnings?: readonly ChartWarning[];
 }
 
-export type InteractiveBackend = 'vegalite' | 'echarts' | 'chartjs' | 'plotly';
+export type InteractiveBackend = 'vegalite' | 'echarts' | 'chartjs' | 'plotly' | 'highcharts';
 
 /**
  * Each backend's interactive renderer factory, as `flint-chart/<backend>/interactive` exports it
  * (`createVegaInteractiveRenderer`, `createEChartsInteractiveRenderer`,
- * `createChartjsInteractiveRenderer`, `createPlotlyInteractiveRenderer`). A factory given here is
+ * `createChartjsInteractiveRenderer`, `createPlotlyInteractiveRenderer`,
+ * `createHighchartsInteractiveRenderer`). A factory given here is
  * used in place of the one the entry would load, so an app bundles only the backends it imports.
  */
 export interface InteractiveRenderers {
@@ -154,6 +156,7 @@ export interface InteractiveRenderers {
     echarts?: (options?: EChartsInteractiveRendererOptions) => InteractiveRendererAdapter;
     chartjs?: () => InteractiveRendererAdapter;
     plotly?: () => InteractiveRendererAdapter;
+    highcharts?: (options?: HighchartsRendererOptions) => InteractiveRendererAdapter;
 }
 
 /** How an entry loads each backend's renderer factory when the host passes none. */

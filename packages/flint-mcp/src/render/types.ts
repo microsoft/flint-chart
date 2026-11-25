@@ -4,7 +4,7 @@
 import type { ChartWarning } from 'flint-chart';
 
 /** Rendering backends that can produce an artifact. */
-export type RenderBackend = 'vegalite' | 'echarts' | 'chartjs';
+export type RenderBackend = 'vegalite' | 'echarts' | 'chartjs' | 'highcharts';
 
 /** Output artifact format. */
 export type RenderFormat = 'png' | 'svg';

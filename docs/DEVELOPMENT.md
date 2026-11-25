@@ -40,6 +40,7 @@ flint-chart/
 │   │   ├── src/vegalite/  Vega-Lite backend
 │   │   ├── src/echarts/   ECharts backend
 │   │   ├── src/chartjs/   Chart.js backend
+│   │   ├── src/highcharts/ Highcharts backend
 │   │   └── src/test-data/ gallery fixtures
 │   ├── flint-py/          Python port preview (PyPI package planned later)
 │   └── flint-mcp/         npm package `flint-chart-mcp`

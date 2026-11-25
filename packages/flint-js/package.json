@@ -60,6 +60,11 @@
       "import": "./dist/chartjs/index.js",
       "require": "./dist/chartjs/index.cjs"
     },
+    "./highcharts": {
+      "types": "./dist/highcharts/index.d.ts",
+      "import": "./dist/highcharts/index.js",
+      "require": "./dist/highcharts/index.cjs"
+    },
     "./excel": {
       "types": "./dist/excel/index.d.ts",
       "import": "./dist/excel/index.js",
@@ -100,6 +105,11 @@
       "import": "./dist/interactive/plotly.js",
       "require": "./dist/interactive/plotly.cjs"
     },
+    "./interactive/highcharts": {
+      "types": "./dist/interactive/highcharts.d.ts",
+      "import": "./dist/interactive/highcharts.js",
+      "require": "./dist/interactive/highcharts.cjs"
+    },
     "./render": {
       "types": "./dist/render/index.d.ts",
       "import": "./dist/render/index.js",
@@ -139,6 +149,11 @@
       "import": "./dist/react/plotly.js",
       "require": "./dist/react/plotly.cjs"
     },
+    "./react/highcharts": {
+      "types": "./dist/react/highcharts.d.ts",
+      "import": "./dist/react/highcharts.js",
+      "require": "./dist/react/highcharts.cjs"
+    },
     "./vegalite/interactive": {
       "types": "./dist/vegalite/interactive.d.ts",
       "import": "./dist/vegalite/interactive.js",
@@ -153,6 +168,11 @@
       "types": "./dist/chartjs/interactive.d.ts",
       "import": "./dist/chartjs/interactive.js",
       "require": "./dist/chartjs/interactive.cjs"
+    },
+    "./highcharts/interactive": {
+      "types": "./dist/highcharts/interactive.d.ts",
+      "import": "./dist/highcharts/interactive.js",
+      "require": "./dist/highcharts/interactive.cjs"
     },
     "./plotly/interactive": {
       "types": "./dist/plotly/interactive.d.ts",
@@ -231,6 +251,7 @@
     "d3-time": "^3.1.0",
     "d3-time-format": "^4.1.0",
     "echarts": "^6.1.0",
+    "highcharts": "^13.1.1",
     "plotly.js-dist-min": "^2.35.0",
     "vega": "^6.2.0",
     "vega-lite": "^5.0.0 || ^6.0.0",

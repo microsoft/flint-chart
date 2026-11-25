@@ -58,6 +58,9 @@ export * from './echarts';
 
 // Chart.js backend: assembleChartjs, templates, spec instantiation
 export * from './chartjs';
+
+// Highcharts backend: assembleHighcharts, templates, spec instantiation
+export * from './highcharts';
 export * from './plotly';
 
 // Excel backend: assembleExcel + Excel chart spec types

@@ -7,15 +7,15 @@ description: "Use when: the user asks to make or render charts with flint-chart,
 
 You write a `ChartAssemblyInput`: the data, the `semantic_types` of its
 fields, and a `chart_spec` naming the chart type and which field goes on
-which channel. Flint compiles it to Vega-Lite, ECharts, Chart.js or Plotly and
-decides the rest (scales, formats, layout, colours) from the semantic types.
+which channel. Flint compiles it to Vega-Lite, ECharts, Chart.js, Highcharts or
+Plotly and decides the rest (scales, formats, layout, colours) from the semantic types.
 
 ## What you produce (and what you do NOT)
 
 Your output is the **spec**: the `chart_spec` and `semantic_types` of a
 `ChartAssemblyInput`. You reference data columns **by name**. The host
 passes the resulting input to `assembleVegaLite`, `assembleECharts`,
-or `assembleChartjs` to get a backend spec.
+`assembleChartjs`, or `assembleHighcharts` to get a backend spec.
 
 **You write the input spec, not the output spec.** And critically:
 
@@ -110,7 +110,7 @@ Use the binding mode that matches the runtime. Do not mix them.
 3. **Generated application or notebook code: bind runtime variables.** If the
   user asks you to add Flint to code, write normal data-loading code first and
   pass a real runtime value, e.g. `data: { values: rows }`, to
-  `assembleVegaLite`, `assembleECharts`, or `assembleChartjs`. This variable
+  `assembleVegaLite`, `assembleECharts`, `assembleChartjs`, or `assembleHighcharts`. This variable
   pattern is for generated code, not for MCP tool calls.
   - Parse CSV with a real parser (`d3.csvParse`, Papa Parse, `pandas`), never
     `line.split(',')`: quoted values such as `"Korea, Rep."` shift every later
@@ -136,6 +136,7 @@ a second category, a waterfall's Type column), its `chartProperties` with
 values and defaults, and the interaction presets it supports. Use names
 exactly as listed. Vega-Lite draws every type; the other backends draw a
 subset.
+Highcharts draws a subset: Scatter Plot, Bar, Grouped Bar, Stacked Bar, Line, Area, Pie, Doughnut, Histogram, Radar, Heatmap, Waterfall and Sunburst.
 
 Without the tool, these are the Vega-Lite types and their channels; each
 type's properties and guidance are in the chart reference,

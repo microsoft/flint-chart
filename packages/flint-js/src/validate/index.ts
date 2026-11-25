@@ -39,15 +39,18 @@ import { assembleChartjs } from '../chartjs/assemble';
 import { cjsGetTemplateDef } from '../chartjs/templates';
 import { assemblePlotly } from '../plotly/assemble';
 import { plGetTemplateDef } from '../plotly/templates';
+import { assembleHighcharts } from '../highcharts/assemble';
+import { hcGetTemplateDef } from '../highcharts/templates';
 
 /** Backends whose inputs can be validated and assembled. */
-export type ValidationBackend = 'vegalite' | 'echarts' | 'chartjs' | 'plotly';
+export type ValidationBackend = 'vegalite' | 'echarts' | 'chartjs' | 'plotly' | 'highcharts';
 
 export const VALIDATION_BACKENDS: readonly ValidationBackend[] = [
     'vegalite',
     'echarts',
     'chartjs',
     'plotly',
+    'highcharts',
 ];
 
 /** Default cap on inline data rows. */
@@ -100,6 +103,7 @@ const ASSEMBLERS: Record<ValidationBackend, (input: ChartAssemblyInput) => any> 
     echarts: assembleECharts,
     chartjs: assembleChartjs,
     plotly: assemblePlotly,
+    highcharts: assembleHighcharts,
 };
 
 const TEMPLATE_LOOKUP: Record<
@@ -110,6 +114,7 @@ const TEMPLATE_LOOKUP: Record<
     echarts: ecGetTemplateDef,
     chartjs: cjsGetTemplateDef,
     plotly: plGetTemplateDef,
+    highcharts: hcGetTemplateDef,
 };
 
 const FIELD_SORT: Record<ValidationBackend, boolean> = {
@@ -117,6 +122,7 @@ const FIELD_SORT: Record<ValidationBackend, boolean> = {
     echarts: false,
     chartjs: false,
     plotly: false,
+    highcharts: false,
 };
 
 /**
@@ -338,7 +344,7 @@ function admitSpecInteractions(
     assembled: unknown,
 ): { admitted: readonly CanvasInteractionDef[]; warnings: ChartWarning[] } {
     if (!input.interaction_spec) return { admitted: [], warnings: [] };
-    if (backend !== 'vegalite') {
+    if (backend !== 'vegalite' && backend !== 'highcharts') {
         return {
             admitted: [],
             warnings: [{

@@ -20,8 +20,9 @@ Use it as an [MCP server](https://microsoft.github.io/flint-chart/#/mcp) with yo
 agent, or as an [npm library](https://www.npmjs.com/package/flint-chart) in your
 app. Flint supports **52 chart types across 5 rendering backends**
 ([Vega-Lite](https://vega.github.io/vega-lite/), [ECharts](https://echarts.apache.org/),
-[Chart.js](https://www.chartjs.org/), [Plotly](https://plotly.com/javascript/) and
-native Excel charts), with **14 preset themes** and **23 interaction presets**.
+[Chart.js](https://www.chartjs.org/), [Highcharts](https://www.highcharts.com/),
+[Plotly](https://plotly.com/javascript/) and native Excel charts), with
+**14 preset themes** and **23 interaction presets**.
 
 <p align="center">
   <a href="https://microsoft.github.io/flint-chart/#/gallery"><img src="docs/figs/flint-chart-wall.png" alt="A wall of charts drawn by Flint from real data, each in a different preset theme: a globe of the Ring of Fire, a route map of Magellan's voyage, a US choropleth, ridgelines, a calendar heatmap, a waterfall, violins, a radar, a bump chart, a population pyramid, and everyday bar, line, scatter, area and donut charts." width="100%"></a>
@@ -142,8 +143,8 @@ each part against the others and composes a complete spec for the backend.
 - [Project site](https://microsoft.github.io/flint-chart/): gallery, live editor, themes and interactions
 - [API reference](docs/api-reference.md), with backend references for
   [Vega-Lite](docs/reference-vegalite.md), [ECharts](docs/reference-echarts.md),
-  [Chart.js](docs/reference-chartjs.md), [Plotly](docs/reference-plotly.md) and
-  [Excel](docs/reference-excel.md)
+  [Chart.js](docs/reference-chartjs.md), [Highcharts](docs/reference-highcharts.md),
+  [Plotly](docs/reference-plotly.md) and [Excel](docs/reference-excel.md)
 - [Theme guide](docs/theme-spec.md), [interaction spec](docs/interaction-spec.md)
   and [interaction API](docs/interaction-api.md)
 - [MCP server guide](https://microsoft.github.io/flint-chart/#/mcp) and [agent skills](agent-skills/)
@@ -170,6 +171,34 @@ a chart template or a theme, or share what you build.
 
 Join the [Flint Discord](https://discord.gg/hnm4Y8YX8) to ask questions, share
 your charts and follow releases.
+
+<details>
+<summary>Repository layout</summary>
+
+```
+flint-chart/
+├── packages/
+│   ├── flint-js/       npm package `flint-chart` (TypeScript)
+│   │   └── src/
+│   │       ├── core/         semantics, themes, layout, decisions, shared types
+│   │       ├── chart-types/  shared chart definitions and template metadata
+│   │       ├── interactive/  interaction presets and runtime
+│   │       ├── react/        the `<FlintChart>` React component
+│   │       ├── vegalite/     Vega-Lite backend
+│   │       ├── echarts/      ECharts backend
+│   │       ├── chartjs/      Chart.js backend
+│   │       ├── highcharts/   Highcharts backend
+│   │       ├── plotly/       Plotly backend
+│   │       ├── excel/        native Excel backend
+│   │       └── test-data/    fixtures and stress-test generators
+│   ├── flint-mcp/      MCP server `flint-chart-mcp`, MCP App UI, and tests
+│   └── flint-py/       Python port preview
+├── site/               Vite + React project site, gallery, editor, and docs
+├── agent-skills/       chart, theme, and interaction authoring skills for agents
+├── docs/               user, API, backend, and architecture documentation
+└── design-docs/        design proposals and implementation research
+```
+</details>
 
 <details>
 <summary>Flint WeChat group</summary>
