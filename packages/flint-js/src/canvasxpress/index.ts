@@ -14,7 +14,7 @@ export { assembleCanvasXpress } from './assemble';
 
 // CX native-spec types + data builders
 export type { CanvasXpressSpec, CanvasXpressData } from './spec';
-export { buildYMatrix, distinctValues } from './spec';
+export { buildYMatrix, distinctValues, resolveMatrixReduce } from './spec';
 
 // CX template registry
 export {

@@ -18,6 +18,9 @@
  * the `color`/`group` channel supplies `vars`, and the measure fills the matrix.
  */
 
+import { ChannelSemantics, ChartEncoding } from '../core/types';
+import { resolveDisplayAggregate } from '../core/field-semantics';
+
 /** The object handed to `new CanvasXpress(target, spec)`, minus the DOM target. */
 export interface CanvasXpressSpec {
     /** CanvasXpress graph type, e.g. 'Bar', 'Line', 'Area', 'Scatter2D'. */
@@ -67,6 +70,25 @@ export function distinctValues(table: any[], field: string): string[] {
 }
 
 /**
+ * The reduce op `buildYMatrix` should use for a measure channel: the measure's
+ * semantic display aggregate — additive types (counts, amounts) sum, intensive
+ * types (rates, ratios, temperatures) average — falling back to `'sum'` when the
+ * channel carries no measure semantics. Thin wrapper over `resolveDisplayAggregate`
+ * so bar/line/area resolve the collision reduction identically.
+ *
+ * @param measure  The measure channel's resolved semantics (e.g. `channelSemantics.y`).
+ * @param encoding The measure channel's user encoding, for its declared `aggregate`.
+ * @returns `'sum'` or `'average'`.
+ * @public
+ */
+export function resolveMatrixReduce(
+    measure: ChannelSemantics | undefined,
+    encoding?: ChartEncoding,
+): 'sum' | 'average' {
+    return resolveDisplayAggregate(measure, encoding?.aggregate) ?? 'sum';
+}
+
+/**
  * Build a y-matrix from tabular rows.
  *
  * @param table        Post-overflow data rows (ctx.table).
@@ -74,6 +96,11 @@ export function distinctValues(table: any[], field: string): string[] {
  * @param valueField    Field whose values fill the matrix (the measure).
  * @param seriesField   Optional field whose values become `vars` (the color/group split);
  *                      when absent, a single row keyed by `valueField` is produced.
+ * @param reduce        How several rows on one (series, category) cell are combined:
+ *                      `'sum'` totals them (the additive default), `'average'` takes their
+ *                      arithmetic mean (for intensive measures). Callers resolve this from the
+ *                      measure channel's semantics via `resolveDisplayAggregate`. Either way a
+ *                      single-row cell keeps its own value unchanged. Defaults to `'sum'`.
  * @returns A CanvasXpressData y-matrix, nulls where a (series, category) pair is absent.
  */
 export function buildYMatrix(
@@ -81,6 +108,7 @@ export function buildYMatrix(
     categoryField: string,
     valueField: string,
     seriesField?: string,
+    reduce: 'sum' | 'average' = 'sum',
 ): CanvasXpressData {
     const smps = distinctValues(table, categoryField);
     const smpIndex = new Map(smps.map((s, i) => [s, i]));
@@ -88,6 +116,8 @@ export function buildYMatrix(
     const varIndex = new Map(vars.map((v, i) => [v, i]));
 
     const matrix: (number | null)[][] = vars.map(() => smps.map(() => null));
+    // Count rows per cell so 'average' can divide; unused (stays 0) for 'sum'.
+    const counts: number[][] = vars.map(() => smps.map(() => 0));
     for (const row of table) {
         const ci = smpIndex.get(String(row[categoryField]));
         if (ci == null) continue;
@@ -95,7 +125,25 @@ export function buildYMatrix(
         if (ri == null) continue;
         const raw = row[valueField];
         const num = raw == null || raw === '' ? null : Number(raw);
-        matrix[ri][ci] = Number.isNaN(num as number) ? null : num;
+        if (num == null || Number.isNaN(num)) continue;
+        // Several rows on one (series, category) cell are reduced rather than
+        // letting the last row silently overwrite the earlier ones. We accumulate
+        // the sum here and divide at the end for 'average'. Callers that need a
+        // declared operation set `aggregate` on the measure, which collapses each
+        // cell to one row upstream (assemble.ts / core/aggregate) — this then runs
+        // over exactly one value and the reduce op is a no-op.
+        const prev = matrix[ri][ci];
+        matrix[ri][ci] = prev == null ? num : prev + num;
+        counts[ri][ci] += 1;
+    }
+
+    if (reduce === 'average') {
+        for (let ri = 0; ri < vars.length; ri++) {
+            for (let ci = 0; ci < smps.length; ci++) {
+                const n = counts[ri][ci];
+                if (n > 1 && matrix[ri][ci] != null) matrix[ri][ci] = (matrix[ri][ci] as number) / n;
+            }
+        }
     }
 
     return { y: { vars, smps, data: matrix } };

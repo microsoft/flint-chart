@@ -33,6 +33,7 @@ import {
     InstantiateContext,
 } from '../core/types';
 import { cxGetTemplateDef } from './templates';
+import { applyAggregation, resolveImplicitAggregation } from '../core/aggregate';
 import { resolveChannelSemantics, convertTemporalData } from '../core/resolve-semantics';
 import { computeLayout, resolveBaseSize } from '../core/compute-layout';
 import { normalizeStaticSeries } from '../core/static-series';
@@ -77,9 +78,25 @@ export function assembleCanvasXpress(input: ChartAssemblyInput): CanvasXpressSpe
         semanticTypes,
         template.chart,
     );
-    const encodings = normalized.encodings;
-    const data = normalized.data;
     const staticSeries = normalized.staticSeries;
+
+    // ── AGGREGATION: collapse rows before semantic resolution ─────────────
+    // Mirrors the ECharts assembler (core/aggregate), so aggregation behaves
+    // identically across backends. Two cases:
+    //   • implicit — a one-mark-per-key chart with several rows on a key gets a
+    //     semantic default aggregate (and a warning) rather than overplotting.
+    //   • explicit — an encoding's `aggregate` derives the `${field}_${op}`
+    //     columns the templates reference. Without this step that column never
+    //     exists, so the templates read `undefined` → NaN → all-null measures.
+    const implicit = resolveImplicitAggregation(
+        template.chart,
+        normalized.encodings,
+        normalized.data,
+        semanticTypes,
+    );
+    const encodings = implicit.encodings;
+    const aggregationWarnings = implicit.warnings;
+    const data = applyAggregation(encodings, normalized.data);
 
     // ── PHASE 0: Resolve semantics (shared, target-agnostic) ──────────────
     // Temporal fields are converted once and threaded through, exactly as the
@@ -154,6 +171,9 @@ export function assembleCanvasXpress(input: ChartAssemblyInput): CanvasXpressSpe
 
     spec.graphType = spec.graphType || defaultGraphType(chartType);
     spec._dataLength = table.length;
+    if (aggregationWarnings.length) {
+        spec._warnings = [...(spec._warnings ?? []), ...aggregationWarnings];
+    }
     return spec;
 }
 

@@ -15,7 +15,7 @@
  */
 
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
-import { buildYMatrix } from '../spec';
+import { buildYMatrix, resolveMatrixReduce } from '../spec';
 import { encodingField, facetLayoutTopology, continuousColorSpectrum } from './channel-kind';
 
 /**
@@ -393,6 +393,9 @@ function buildBarInstantiate(mode: 'Bar' | 'Stacked' | 'auto') {
         const categoryField = channelSemantics[categoryAxis]?.field;
         const valueField = channelSemantics[valueAxis]?.field;
         if (!categoryField || !valueField) return;
+        // How duplicate (series, category) cells combine: additive measures sum,
+        // intensive ones (rates/ratios) average. See resolveMatrixReduce.
+        const valueReduce = resolveMatrixReduce(channelSemantics[valueAxis], (encodings as any)?.[valueAxis]);
 
         // A TEMPORAL (Date) band axis: thin the date labels so they never collide.
         // UNLIKE Line/Area (which snap labels to nice calendar boundaries via
@@ -468,7 +471,7 @@ function buildBarInstantiate(mode: 'Bar' | 'Stacked' | 'auto') {
         }
 
         spec.graphType = graphType;
-        spec.data = buildYMatrix(table, categoryField, valueField, seriesField);
+        spec.data = buildYMatrix(table, categoryField, valueField, seriesField, valueReduce);
 
         const isHorizontal = categoryAxis === 'y';
         spec.config = {

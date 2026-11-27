@@ -12,7 +12,7 @@
  */
 
 import { ChartTemplateDef } from '../../core/types';
-import { buildYMatrix, distinctValues } from '../spec';
+import { buildYMatrix, distinctValues, resolveMatrixReduce } from '../spec';
 import { encodingField, facetLayoutTopology, continuousColorSpectrum } from './channel-kind';
 
 /** @private */
@@ -196,6 +196,8 @@ function buildLineInstantiate(extraConfig?: Record<string, unknown>) {
 
         const colorField = channelSemantics.color?.field;
         const encs = (encodings as any) || {};
+        // Duplicate (series, category) cells: additive measures sum, intensive average.
+        const valueReduce = resolveMatrixReduce(channelSemantics[valueAxis], encs[valueAxis]);
         const isHorizontalAxis = categoryAxis === 'y';
 
         // Faceting (small multiples): a column/row channel splits the line into one
@@ -256,7 +258,7 @@ function buildLineInstantiate(extraConfig?: Record<string, unknown>) {
         const detailField = channelSemantics.detail?.field ?? encodingField(encs.detail);
         if (detailField && !colorField) {
             spec.graphType = 'Line';
-            spec.data = buildYMatrix(table, categoryField, valueField, detailField);
+            spec.data = buildYMatrix(table, categoryField, valueField, detailField, valueReduce);
             const lineCount = (spec.data as any).y.vars.length;
             spec.config = {
                 ...spec.config,
@@ -278,7 +280,7 @@ function buildLineInstantiate(extraConfig?: Record<string, unknown>) {
         }
 
         spec.graphType = 'Line';
-        spec.data = buildYMatrix(table, categoryField, valueField, colorField);
+        spec.data = buildYMatrix(table, categoryField, valueField, colorField, valueReduce);
 
         // strokeDash channel → a PER-POINT dash (solid actual / dashed forecast). Bound as a
         // sample annotation (data.x) + patternBy, so the engine dashes each line SEGMENT by

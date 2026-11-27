@@ -12,7 +12,7 @@
  */
 
 import { ChartTemplateDef } from '../../core/types';
-import { buildYMatrix, distinctValues } from '../spec';
+import { buildYMatrix, distinctValues, resolveMatrixReduce } from '../spec';
 import { encodingField, facetLayoutTopology } from './channel-kind';
 
 /** @private */
@@ -234,6 +234,8 @@ function buildAreaInstantiate(graphType: 'Area' | 'Streamgraph') {
         const categoryField = channelSemantics.x?.field;
         const valueField = channelSemantics.y?.field;
         if (!categoryField || !valueField) return;
+        // Duplicate (series, category) cells: additive measures sum, intensive average.
+        const valueReduce = resolveMatrixReduce(channelSemantics.y, (encodings as any)?.y);
 
         const colorField = channelSemantics.color?.field;
 
@@ -276,7 +278,7 @@ function buildAreaInstantiate(graphType: 'Area' | 'Streamgraph') {
         }
 
         spec.graphType = graphType;
-        spec.data = buildYMatrix(table, categoryField, valueField, colorField);
+        spec.data = buildYMatrix(table, categoryField, valueField, colorField, valueReduce);
 
         spec.config = {
             ...spec.config,
