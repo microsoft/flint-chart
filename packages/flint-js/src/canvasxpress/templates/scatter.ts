@@ -18,13 +18,15 @@
  */
 
 import { ChartTemplateDef } from '../../core/types';
-import { CanvasXpressData } from '../spec';
+import { CanvasXpressMatrixData } from '../spec';
 import { isCategorical, encodingField, facetLayoutTopology, continuousColorSpectrum } from './channel-kind';
 
-/** Scatter data: a y-matrix of [x,y] points plus z annotations for the legend channels. */
-interface ScatterData extends CanvasXpressData {
-    z?: Record<string, (string | number)[]>;
-}
+/**
+ * Scatter data: the y-matrix of [x,y] points plus the `z` legend annotations and
+ * optional `data2`/`x` the grid and Dotplot builders use. The matrix data block
+ * already models all of these, so scatter builds that shape directly.
+ */
+type ScatterData = CanvasXpressMatrixData;
 
 /** Distinct values of a field, in first-seen order. @private */
 function distinct(table: any[], field: string): string[] {

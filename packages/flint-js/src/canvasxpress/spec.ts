@@ -41,16 +41,52 @@ export interface CanvasXpressSpec {
     _dataLength?: number;
 }
 
-/** CanvasXpress y-matrix data block. */
-export interface CanvasXpressData {
+/**
+ * CanvasXpress y-matrix data block — Cartesian charts (bar/line/area/scatter/
+ * heatmap/dotplot/statistical). `z` carries the per-point (per-var) legend
+ * annotations (colour/size/shape/facet) the scatter and statistical templates emit.
+ */
+export interface CanvasXpressMatrixData {
     y: {
         vars: string[];
         smps: string[];
         data: (number | null)[][];
+        /** Parallel matrix some configs read by name (e.g. `sizeByData: 'data2'`). */
+        data2?: (number | null)[][];
     };
-    /** Optional per-sample annotations (x) — unused by the core four, kept for parity. */
-    x?: Record<string, (string | number)[]>;
+    /** Optional per-sample annotations (facet / grouping / stage values). */
+    x?: Record<string, (string | number | null)[]>;
+    /** Optional per-variable (per-point) annotations driving colorBy/sizeBy/shapeBy. */
+    z?: Record<string, (string | number | null)[]>;
 }
+
+/** Venn data block (Venn Diagram template). */
+export interface CanvasXpressVennData {
+    venn: { data: Record<string, number>; legend?: Record<string, string> };
+}
+
+/** Node/edge data block (Network Graph template). */
+export interface CanvasXpressNetworkData {
+    nodes: unknown[];
+    edges: unknown[];
+}
+
+/** Track data block (Genome Browser template). */
+export interface CanvasXpressGenomeData {
+    tracks: unknown[];
+}
+
+/**
+ * The `data` block handed to the engine. A discriminated union over the shapes the
+ * templates actually emit: the y-matrix form (most charts), plus the self-describing
+ * Venn/Network/Genome forms that have no `y` matrix. Narrow on the present key
+ * (`'y' in data`, `'venn' in data`, `'nodes' in data`, `'tracks' in data`).
+ */
+export type CanvasXpressData =
+    | CanvasXpressMatrixData
+    | CanvasXpressVennData
+    | CanvasXpressNetworkData
+    | CanvasXpressGenomeData;
 
 /**
  * Distinct values of `field` across the table, in encounter order.
@@ -109,7 +145,7 @@ export function buildYMatrix(
     valueField: string,
     seriesField?: string,
     reduce: 'sum' | 'average' = 'sum',
-): CanvasXpressData {
+): CanvasXpressMatrixData {
     const smps = distinctValues(table, categoryField);
     const smpIndex = new Map(smps.map((s, i) => [s, i]));
     const vars = seriesField ? distinctValues(table, seriesField) : [valueField];
@@ -177,7 +213,7 @@ export function buildYMatrixFaceted(
     seriesField: string | undefined,
     facetField: string,
     reduce: 'sum' | 'average' = 'sum',
-): CanvasXpressData {
+): CanvasXpressMatrixData {
     // Samples = distinct (category, facet) pairs, in encounter order.
     const sampleIndex = new Map<string, number>();
     const smps: string[] = [];        // display label = the category
