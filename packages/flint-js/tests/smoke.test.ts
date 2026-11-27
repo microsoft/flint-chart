@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
   assembleVegaLite,
   assembleECharts,
@@ -9,6 +9,7 @@ import {
   assemblePlotly,
   assembleExcel,
   assembleImageCharts,
+  assembleCanvasXpress,
 } from '../src';
 import { renderSvg } from '../src/render';
 
@@ -52,6 +53,52 @@ describe('public API smoke', () => {
     const option = assembleECharts(INPUT) as any;
     expect(option).toBeDefined();
     expect(typeof option).toBe('object');
+  });
+
+  it('assembleCanvasXpress returns a CanvasXpress spec for the four core chart types', () => {
+    // Scatter: one point per row, the two axis fields as the samples.
+    const scatter = assembleCanvasXpress(INPUT) as any;
+    expect(scatter.graphType).toBe('Scatter2D');
+    expect(scatter.data.y.smps).toEqual(['weight', 'mpg']);
+    expect(scatter.data.y.vars).toHaveLength(DATA.length);
+    expect(scatter.config.colorBy).toBe('origin');
+
+    // Bar / Line / Area: the category axis becomes the samples, the measure fills the matrix.
+    const categorical = (chartType: string) => assembleCanvasXpress({
+      data: { values: [
+        { Category: 'A', Value: 10 },
+        { Category: 'B', Value: 20 },
+        { Category: 'C', Value: 15 },
+      ] },
+      semantic_types: { Category: 'Category', Value: 'Quantity' },
+      chart_spec: { chartType, encodings: { x: 'Category', y: 'Value' } },
+    }) as any;
+
+    for (const [chartType, graphType] of [['Bar Chart', 'Bar'], ['Line Chart', 'Line'], ['Area Chart', 'Area']]) {
+      const spec = categorical(chartType);
+      expect(spec.graphType).toBe(graphType);
+      expect(spec.data.y.smps).toEqual(['A', 'B', 'C']);
+      expect(spec.data.y.data).toEqual([[10, 20, 15]]);
+    }
+  });
+
+  it('assembleCanvasXpress rejects an unknown chart type', () => {
+    expect(() => assembleCanvasXpress({
+      ...INPUT,
+      chart_spec: { ...INPUT.chart_spec, chartType: 'No Such Chart' },
+    })).toThrow(/Unknown CanvasXpress chart type/);
+  });
+
+  it('the CanvasXpress renderer names the install when the optional engine is missing', async () => {
+    // `canvasxpress` is an optional peer dependency: simulate it being absent.
+    vi.doMock('canvasxpress', () => { throw new Error('Cannot find package canvasxpress'); });
+    try {
+      const { createCanvasXpressInteractiveRenderer } = await import('../src/canvasxpress/interactive');
+      const renderer = createCanvasXpressInteractiveRenderer();
+      await expect(renderer.mount({} as any, INPUT as any)).rejects.toThrow(/npm install canvasxpress/);
+    } finally {
+      vi.doUnmock('canvasxpress');
+    }
   });
 
   it('assembleChartjs returns a config object', () => {

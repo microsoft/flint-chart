@@ -49,6 +49,9 @@ export { genDateTests, genDateYearTests, genDateMonthTests, genDateYearMonthTest
 export { genSemanticContextTests, genSnapToBoundTests } from './semantic-tests';
 export { genMapTests, genChoroplethTests } from './map-tests';
 export { genGanttTests, genBulletTests, genKpiCardTests } from './gantt-bullet-tests';
+export { genKaplanMeierTests } from './km-tests';
+export { genVolcanoTests, genVennTests, genNetworkTests, genClusteredHeatmapTests, genCorrelationTests, genSankeyTests, genChordTests, genCircosTests, genLoessTests, genSplomTests, genGenomeTests, genUpSetTests, genOncoprintTests } from './sci-tests';
+export { genScatter3dTests, genBubbleTests, genTagCloudTests, genTreeTests } from './cx-gallery-tests';
 export { genTableTests } from './table-tests';
 export {
     OMNI_VIZ_ROWS,
@@ -98,6 +101,9 @@ import { genDensityContourTests } from './density-2d-tests';
 import { genViolinTests } from './violin-tests';
 import { genMapTests, genChoroplethTests } from './map-tests';
 import { genGanttTests, genBulletTests, genKpiCardTests } from './gantt-bullet-tests';
+import { genKaplanMeierTests } from './km-tests';
+import { genVolcanoTests, genVennTests, genNetworkTests, genClusteredHeatmapTests, genCorrelationTests, genSankeyTests, genChordTests, genCircosTests, genLoessTests, genSplomTests, genGenomeTests, genUpSetTests, genOncoprintTests } from './sci-tests';
+import { genScatter3dTests, genBubbleTests, genTagCloudTests, genTreeTests } from './cx-gallery-tests';
 import { genTableTests } from './table-tests';
 import { genLineTests } from './line-tests';
 import { genSparklineTests } from './sparkline-tests';
@@ -192,6 +198,24 @@ export const TEST_GENERATORS: Record<string, () => TestCase[]> = {
     'Gantt Chart': genGanttTests,
     'Bullet Chart': genBulletTests,
     'KPI Card': genKpiCardTests,
+    'Kaplan-Meier': genKaplanMeierTests,
+    'Volcano Plot': genVolcanoTests,
+    'Venn Diagram': genVennTests,
+    'UpSet Plot': genUpSetTests,
+    'Oncoprint': genOncoprintTests,
+    'Network Graph': genNetworkTests,
+    'Clustered Heatmap': genClusteredHeatmapTests,
+    'Correlation Matrix': genCorrelationTests,
+    'Sankey Diagram': genSankeyTests,
+    'Chord Diagram': genChordTests,
+    'Circos Plot': genCircosTests,
+    'Loess Fit': genLoessTests,
+    'SPLOM': genSplomTests,
+    'Scatter 3D': genScatter3dTests,
+    'Bubble Chart': genBubbleTests,
+    'Tag Cloud': genTagCloudTests,
+    'Tree': genTreeTests,
+    'Genome Browser': genGenomeTests,
     'Table': genTableTests,
     'Facet: Columns': genFacetColumnTests,
     'Facet: Rows': genFacetRowTests,

@@ -3,14 +3,16 @@ import {
   assembleECharts,
   assembleChartjs,
   assemblePlotly,
+  assembleCanvasXpress,
   cjsGetTemplateDef,
   ecGetTemplateDef,
   vlGetTemplateDef,
   plGetTemplateDef,
+  cxGetTemplateDef,
   type ChartAssemblyInput,
 } from 'flint-chart';
 
-export type PreviewBackend = 'vegalite' | 'echarts' | 'chartjs' | 'plotly';
+export type PreviewBackend = 'vegalite' | 'echarts' | 'chartjs' | 'plotly' | 'canvasxpress';
 
 /** A backend's template def (or `undefined` when it has no template for a type). */
 type TemplateDef = ReturnType<typeof vlGetTemplateDef>;
@@ -58,6 +60,12 @@ export const BACKENDS: Record<PreviewBackend, BackendAdapter> = {
     label: 'Plotly',
     assemble: assemblePlotly,
     getTemplateDef: plGetTemplateDef,
+  },
+  canvasxpress: {
+    id: 'canvasxpress',
+    label: 'CanvasXpress',
+    assemble: assembleCanvasXpress,
+    getTemplateDef: cxGetTemplateDef,
   },
 };
 

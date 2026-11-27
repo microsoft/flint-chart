@@ -60,6 +60,9 @@ export * from './echarts';
 export * from './chartjs';
 export * from './plotly';
 
+// CanvasXpress backend: assembleCanvasXpress, templates, spec types
+export * from './canvasxpress';
+
 // Excel backend: assembleExcel + Excel chart spec types
 export * from './excel';
 

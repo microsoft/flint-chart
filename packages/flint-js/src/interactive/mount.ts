@@ -16,6 +16,7 @@ const FACTORY_NAMES: Record<InteractiveBackend, string> = {
     echarts: 'createEChartsInteractiveRenderer',
     chartjs: 'createChartjsInteractiveRenderer',
     plotly: 'createPlotlyInteractiveRenderer',
+    canvasxpress: 'createCanvasXpressInteractiveRenderer',
 };
 
 function missingRenderer(backend: InteractiveBackend): string {
@@ -134,6 +135,18 @@ export function mountChartWith(
                     async mount(chartContainer, chartInput) {
                         const createPlotlyInteractiveRenderer = await factory('plotly');
                         return createPlotlyInteractiveRenderer().mount(chartContainer, await sized(chartInput));
+                    },
+                },
+                { className, ariaLabel, chartId, updates, interactions, warnings },
+            );
+        case 'canvasxpress':
+            return mountInteractiveChartSurface(
+                container,
+                chart,
+                {
+                    async mount(chartContainer, chartInput) {
+                        const createCanvasXpressInteractiveRenderer = await factory('canvasxpress');
+                        return createCanvasXpressInteractiveRenderer({ renderer }).mount(chartContainer, await sized(chartInput));
                     },
                 },
                 { className, ariaLabel, chartId, updates, interactions, warnings },

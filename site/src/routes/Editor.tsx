@@ -313,6 +313,7 @@ const OUTPUT_LANG: Record<Backend, string> = {
   echarts: 'ECharts option',
   chartjs: 'Chart.js config',
   plotly: 'Plotly figure',
+  canvasxpress: 'CanvasXpress spec',
 };
 
 /**
