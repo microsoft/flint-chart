@@ -917,15 +917,36 @@ export function genCircosTests(): TestCase[] {
                 Expression: +(2 + gi * 2 + rng() * 6).toFixed(2),
                 Methylation: +(rng() * 5).toFixed(2),
                 CopyNumber: +(1 + rng() * 6).toFixed(2),
+                Source: '',
+                Target: '',
             });
         }
     });
+    // Explicit cross-segment relationships supplied as data — the backend draws
+    // ribbons ONLY from these source/target bindings, never from row position.
+    const relationships: Array<[string, string]> = [
+        ['A1', 'B5'], ['A8', 'C3'], ['B2', 'C11'], ['B14', 'A6'], ['C7', 'A12'],
+    ];
+    relationships.forEach(([src, tgt], i) => {
+        rows[i].Source = src;
+        rows[i].Target = tgt;
+    });
+    // Record<string, any> so TS does not excess-property-check the source/target
+    // channels (the pattern the other relationship generators use — see genChord).
+    const encodingMap: Record<string, any> = {
+        x: makeEncodingItem('Sample'),
+        color: makeEncodingItem('Group'),
+        source: makeEncodingItem('Source'),
+        target: makeEncodingItem('Target'),
+    };
     const meta = {
         Sample: { type: Type.String, semanticType: 'Category' as const, levels: [] },
         Group: { type: Type.String, semanticType: 'Category' as const, levels: groups },
         Expression: { type: Type.Number, semanticType: 'Quantity' as const, levels: [] },
         Methylation: { type: Type.Number, semanticType: 'Quantity' as const, levels: [] },
         CopyNumber: { type: Type.Number, semanticType: 'Quantity' as const, levels: [] },
+        Source: { type: Type.String, semanticType: 'Category' as const, levels: [] },
+        Target: { type: Type.String, semanticType: 'Category' as const, levels: [] },
     };
     return [{
         title: 'Multi-track Circos (segments, tracks & ribbons)',
@@ -937,9 +958,10 @@ export function genCircosTests(): TestCase[] {
         tags: ['circos', 'circular', 'tracks', 'connections', 'scientific', 'gallery'],
         chartType: 'Circos Plot',
         data: rows,
-        fields: ['Sample', 'Group', 'Expression', 'Methylation', 'CopyNumber'].map((f) => makeField(f)),
+        fields: ['Sample', 'Group', 'Expression', 'Methylation', 'CopyNumber', 'Source', 'Target']
+            .map((f) => makeField(f)),
         metadata: meta,
-        encodingMap: { x: makeEncodingItem('Sample'), color: makeEncodingItem('Group') },
+        encodingMap,
     }];
 }
 

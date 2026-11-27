@@ -8,9 +8,12 @@
  *
  * Each row is a sample placed around the ring; a `color`/group channel splits the
  * ring into segments (`segregateSamplesBy`), and every NUMERIC column becomes a
- * concentric data track (`data.y.vars`, one ring each). A handful of cross-segment
- * connection ribbons (`circularConnections` = `[color, sampleA, sampleB]`) are
- * synthesised deterministically so the plot reads as a relationship diagram.
+ * concentric data track (`data.y.vars`, one ring each). Connection ribbons
+ * (`circularConnections` = `[color, sampleA, sampleB]`) are drawn ONLY from
+ * explicit relationship data supplied via the `source`/`target` channels — each
+ * row binding both names a ribbon between those two samples. Without that data no
+ * ribbons are drawn; the library never synthesises relationships that were not in
+ * the input (gallery examples carry their own `source`/`target` columns).
  */
 
 import { ChartTemplateDef } from '../../core/types';
@@ -37,7 +40,7 @@ const RIBBON_COLORS = [
 export const cxCircosDef: ChartTemplateDef = {
     chart: 'Circos Plot',
     template: { graphType: 'Circular', data: { y: { vars: [], smps: [], data: [] } }, config: {} },
-    channels: ['x', 'color'],
+    channels: ['x', 'color', 'source', 'target'],
     markCognitiveChannel: 'length',
     declareLayoutMode: () => ({ axisFlags: {} }),
 
@@ -47,12 +50,15 @@ export const cxCircosDef: ChartTemplateDef = {
         const encs = (encodings as any) || {};
         const sampleField = channelSemantics.x?.field ?? encodingField(encs.x);
         const groupField = channelSemantics.color?.field ?? encodingField(encs.color);
+        const sourceField = channelSemantics.source?.field ?? encodingField(encs.source);
+        const targetField = channelSemantics.target?.field ?? encodingField(encs.target);
         if (!sampleField) return;
 
         // Every numeric column is a concentric data track; the group is a per-sample
         // segment annotation.
         const trackFields = Object.keys(table[0]).filter(
-            (k) => k !== sampleField && k !== groupField && typeof table[0][k] === 'number',
+            (k) => k !== sampleField && k !== groupField && k !== sourceField
+                && k !== targetField && typeof table[0][k] === 'number',
         );
         if (!trackFields.length) return;
 
@@ -61,16 +67,20 @@ export const cxCircosDef: ChartTemplateDef = {
         const x: Record<string, string[]> = {};
         if (groupField) x[groupField] = table.map((r: any) => String(r[groupField]));
 
-        // Deterministic cross-segment ribbons: link samples a fixed stride apart.
+        // Connection ribbons come ONLY from explicit relationship data: each row that
+        // binds both source and target names a ribbon between those two samples. No
+        // source/target channels → no ribbons (never synthesised from row position).
+        const sampleSet = new Set(smps);
         const connections: Array<[string, string, string]> = [];
-        if (smps.length > 3) {
-            const n = Math.min(6, Math.floor(smps.length / 4));
-            const stride = Math.max(1, Math.floor(smps.length / (n + 1)));
-            for (let i = 0; i < n; i++) {
-                const a = smps[(i * stride) % smps.length];
-                const b = smps[(i * stride + Math.floor(smps.length / 2) + i) % smps.length];
-                if (a !== b) connections.push([RIBBON_COLORS[i % RIBBON_COLORS.length], a, b]);
-            }
+        if (sourceField && targetField) {
+            table.forEach((r: any, i: number) => {
+                const a = r[sourceField] == null ? '' : String(r[sourceField]);
+                const b = r[targetField] == null ? '' : String(r[targetField]);
+                if (!a || !b || a === b) return;
+                // Only link samples that actually sit on the ring.
+                if (!sampleSet.has(a) || !sampleSet.has(b)) return;
+                connections.push([RIBBON_COLORS[i % RIBBON_COLORS.length], a, b]);
+            });
         }
 
         spec.graphType = 'Circular';
