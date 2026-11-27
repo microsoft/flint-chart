@@ -67,7 +67,13 @@ export const cxRegressionDef: ChartTemplateDef = {
         const vars: string[] = [];
         const data: (number | null)[][] = [];
         const z: Record<string, (string | number | null)[]> = {};
-        const strAnno = [colorField, facetField].filter((f, i, a) => f && a.indexOf(f) === i) as string[];
+        // Colour/facet are string annotations; the size field is numeric and handled
+        // separately below. Exclude size here (and dedupe) so a field shared between
+        // size and colour/facet is populated exactly once — as a number — rather than
+        // appended twice (which doubled the annotation length and broke alignment).
+        const strAnno = [colorField, facetField].filter(
+            (f, i, a) => f && a.indexOf(f) === i && f !== sizeField,
+        ) as string[];
         for (const f of strAnno) z[f] = [];
         if (sizeField) z[sizeField] = [];
         for (let i = 0; i < table.length; i++) {

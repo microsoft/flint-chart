@@ -24,19 +24,28 @@ export const cxDensityContourDef: ChartTemplateDef = {
         const yField = channelSemantics.y?.field;
         if (!xField || !yField) return;
 
+        const colorField = channelSemantics.color?.field;
+
         const toNum = (raw: any) => {
             const n = raw == null || raw === '' ? null : Number(raw);
             return Number.isNaN(n as number) ? null : n;
         };
         const vars: string[] = [];
         const data: (number | null)[][] = [];
+        // Carry the colour grouping as a per-point `z` annotation so colorBy can
+        // tint the overlaid raw observations (a colour binding was otherwise
+        // silently ignored).
+        const z: Record<string, (string | null)[]> = {};
+        if (colorField) z[colorField] = [];
         for (let i = 0; i < table.length; i++) {
             vars.push('p' + (i + 1));
             data.push([toNum(table[i][xField]), toNum(table[i][yField])]);
+            if (colorField) z[colorField].push(table[i][colorField] == null ? null : String(table[i][colorField]));
         }
 
+        const y = { vars, smps: [xField, yField], data };
         spec.graphType = 'Contour';
-        spec.data = { y: { vars, smps: [xField, yField], data } };
+        spec.data = colorField ? { y, z } : { y };
         spec.config = {
             ...spec.config,
             graphType: 'Contour',
@@ -48,7 +57,8 @@ export const cxDensityContourDef: ChartTemplateDef = {
             contourFilled: true,
             // Overlay the raw observations the density was estimated from.
             showContourDataPoints: true,
-            showLegend: false,
+            ...(colorField ? { colorBy: colorField } : {}),
+            showLegend: !!colorField,
         };
     },
 };

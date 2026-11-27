@@ -66,24 +66,48 @@ function buildCategoricalGrid(
     colorField: string | undefined,
     sizeIsNumeric: boolean,
     colorIsNumeric: boolean,
+    facetField?: string,
+    facetIsColumn?: boolean,
+    facetColumns?: number,
 ): { data: ScatterData; config: Record<string, any> } {
     const xCats = distinct(table, xField);
-    const yCats = distinct(table, yField);
     // Size wins the cell value (bubble grid); otherwise colour fills the cell.
     const valueField = sizeField || colorField;
     const sized = !!sizeField || !valueField; // bubbles for size or bare count
+
+    // Samples are the y categories, or — when faceting — the distinct (yCat, facet)
+    // pairs so each facet becomes its own panel of the grid (segregateSamplesBy).
+    // Keying the grid only on (x, y) merged rows from different facets into one grid.
+    const sampleKeys: string[] = [];        // the key used to look cells up
+    const smps: string[] = [];              // display label = the y category
+    const facetAnno: string[] = [];         // facet value per sample
+    const seenSample = new Set<string>();
+    for (const row of table) {
+        const yv = String(row[yField]);
+        const fac = facetField ? String(row[facetField]) : '';
+        const key = yv + '\u0000' + fac;
+        if (!seenSample.has(key)) {
+            seenSample.add(key);
+            sampleKeys.push(key);
+            smps.push(yv);
+            facetAnno.push(fac);
+        }
+    }
+
     const agg = new Map<string, number>();
     for (const row of table) {
-        const key = String(row[xField]) + '\u0000' + String(row[yField]);
+        const fac = facetField ? String(row[facetField]) : '';
+        const key = String(row[xField]) + '\u0000' + String(row[yField]) + '\u0000' + fac;
         const raw = valueField ? Number(row[valueField]) : 1;
         const add = Number.isNaN(raw) ? 0 : raw;
         agg.set(key, (agg.get(key) || 0) + add);
     }
     const empty = valueField && !sized ? null : 0;
-    // y.data is [var][smp] = [xCat][yCat].
-    const matrix = xCats.map((xv) => yCats.map((yv) => agg.get(xv + '\u0000' + yv) ?? empty));
+    // y.data is [var][smp] = [xCat][(yCat,facet)].
+    const matrix = xCats.map((xv) => sampleKeys.map((sk) => agg.get(xv + '\u0000' + sk) ?? empty));
 
-    const data: any = { y: { vars: xCats, smps: yCats, data: matrix } };
+    const data: any = { y: { vars: xCats, smps, data: matrix } };
+    if (facetField) data.x = { [facetField]: facetAnno };
     // This grid is a categorical×categorical SCATTER rendered through Heatmap, so
     // draw the cells as circles (a dot grid), not filled square tiles: oval cell
     // shape and no cell box. The size case is already circular (sizeBy bubbles);
@@ -94,6 +118,15 @@ function buildCategoricalGrid(
         shapeByShape: 'oval',
         heatmapCellBox: false,
     };
+    // Faceting: segregate the (yCat, facet) samples into one panel per facet value.
+    if (facetField) {
+        const nGroups = new Set(facetAnno).size;
+        config.segregateSamplesBy = [facetField];
+        config.layoutTopology = facetLayoutTopology(nGroups, !!facetIsColumn, facetColumns);
+        config.layoutAdjust = false;
+        config.stripTextColor = 'rgb(0,0,0)';
+        config.stripBackgroundColor = 'rgb(255,255,255)';
+    }
     if (sized) {
         // `data2` is the parallel matrix `sizeByData` reads; it isn't part of
         // Flint's structural y type, so the object is `any`.
@@ -156,6 +189,9 @@ function buildDotplotStrip(
     idField: string | undefined,
     sizeIsNumeric: boolean,
     colorIsNumeric: boolean,
+    facetField?: string,
+    facetIsColumn?: boolean,
+    facetColumns?: number,
 ): { data: ScatterData; config: Record<string, any> } {
     const toNum = (raw: any) => {
         const n = raw == null || raw === '' ? null : Number(raw);
@@ -168,6 +204,9 @@ function buildDotplotStrip(
     const x: Record<string, any[]> = { [catField]: table.map((row) => String(row[catField])) };
     if (colorField && colorField !== catField) x[colorField] = table.map((row) => row[colorField]);
     if (sizeField && sizeField !== catField) x[sizeField] = table.map((row) => toNum(row[sizeField]));
+    // Faceting: carry the facet field as a sample annotation so panels can segregate
+    // by it (otherwise row/column facets were merged into a single strip).
+    if (facetField && facetField !== catField) x[facetField] = table.map((row) => String(row[facetField]));
 
     const config: Record<string, any> = {
         graphType: 'Dotplot',
@@ -180,6 +219,15 @@ function buildDotplotStrip(
     // Default Dotplot puts the grouping on the X-axis (value on Y); when the
     // category was the y channel, flip to a horizontal strip.
     if (catOnY) config.graphOrientation = 'horizontal';
+    // A column/row facet splits the strip into one panel per value.
+    if (facetField) {
+        const nGroups = new Set(table.map((row) => String(row[facetField]))).size;
+        config.segregateSamplesBy = [facetField];
+        config.layoutTopology = facetLayoutTopology(nGroups, !!facetIsColumn, facetColumns);
+        config.layoutAdjust = false;
+        config.stripTextColor = 'rgb(0,0,0)';
+        config.stripBackgroundColor = 'rgb(255,255,255)';
+    }
     if (colorField) {
         config.colorBy = colorField;
         // A continuous colour channel gets the sign-aware spectrum (light-grey →
@@ -207,6 +255,8 @@ function buildDotplotStrip(
  * @param yField     Field plotted on the y axis (quantitative).
  * @param annotations Map of z-annotation name → source field, for color/size/shape.
  * @param idField    Optional field to use as the point id; defaults to the row index.
+ * @param xIsTemporal True when the x axis is a date axis (coordinates parsed to epoch ms).
+ * @param yIsTemporal True when the y axis is a date axis (coordinates parsed to epoch ms).
  * @returns ScatterData with y.vars (point ids), y.smps ([xField,yField]), y.data ([x,y] rows), and z annotations.
  * @private
  */
@@ -216,21 +266,35 @@ function buildScatterData(
     yField: string,
     annotations: Record<string, string>,
     idField?: string,
+    xIsTemporal?: boolean,
+    yIsTemporal?: boolean,
 ): ScatterData {
     const vars: string[] = [];
     const data: (number | null)[][] = [];
     const z: Record<string, (string | number)[]> = {};
     for (const name of Object.keys(annotations)) z[name] = [];
 
+    // A temporal axis arrives as normalized date strings (convertTemporalData), which
+    // Number() turns to NaN; parse those to epoch ms so the points plot and the engine
+    // prints date ticks (xAxisTime/yAxisTime), mirroring the streamgraph builder. A
+    // numeric axis keeps its real numbers.
+    const makeCoord = (isTemporal?: boolean) => (raw: any): number | null => {
+        if (raw == null || raw === '') return null;
+        if (isTemporal && typeof raw !== 'number') {
+            const t = Date.parse(String(raw));
+            return Number.isNaN(t) ? null : t;
+        }
+        const n = Number(raw);
+        return Number.isNaN(n) ? null : n;
+    };
+    const xCoord = makeCoord(xIsTemporal);
+    const yCoord = makeCoord(yIsTemporal);
+
     for (let i = 0; i < table.length; i++) {
         const row = table[i];
         vars.push(idField != null ? String(row[idField]) : String(i + 1));
 
-        const toNum = (raw: any) => {
-            const n = raw == null || raw === '' ? null : Number(raw);
-            return Number.isNaN(n as number) ? null : n;
-        };
-        data.push([toNum(row[xField]), toNum(row[yField])]);
+        data.push([xCoord(row[xField]), yCoord(row[yField])]);
 
         for (const [name, field] of Object.entries(annotations)) {
             z[name].push(row[field]);
@@ -268,6 +332,14 @@ export const cxScatterPlotDef: ChartTemplateDef = {
         const xCat = isCategorical(ctx, 'x');
         const yCat = isCategorical(ctx, 'y');
 
+        // Faceting: a column/row channel segregates the points into one panel per
+        // value. Resolved up front so the native-grid and Dotplot branches below can
+        // preserve the facet dimension too, not just the Scatter2D path.
+        const encsEarly = (encodings as any) || {};
+        const colFacetEarly = channelSemantics.column?.field ?? encodingField(encsEarly.column);
+        const rowFacetEarly = channelSemantics.row?.field ?? encodingField(encsEarly.row);
+        const facetFieldEarly = colFacetEarly || rowFacetEarly;
+
         // Both axes categorical → a numeric Scatter2D can't render it (CanvasXpress
         // date-parses the category strings → blank). Emit the native Heatmap grid
         // (sized bubbles for size, colour-filled cells for colour, count otherwise).
@@ -275,6 +347,7 @@ export const cxScatterPlotDef: ChartTemplateDef = {
             const grid = buildCategoricalGrid(
                 table, xField, yField, sizeFieldEarly, colorFieldEarly, sizeIsNumeric,
                 channelSemantics.color?.type === 'quantitative',
+                facetFieldEarly, !!colFacetEarly, (chartProperties as any)?.facetColumns,
             );
             spec.graphType = 'Heatmap';
             spec.data = grid.data;
@@ -292,6 +365,7 @@ export const cxScatterPlotDef: ChartTemplateDef = {
                 table, catField, valField, /* catOnY */ yCat,
                 colorFieldEarly, sizeFieldEarly, channelSemantics.id?.field, sizeIsNumeric,
                 channelSemantics.color?.type === 'quantitative',
+                facetFieldEarly, !!colFacetEarly, (chartProperties as any)?.facetColumns,
             );
             spec.graphType = 'Dotplot';
             spec.data = strip.data;
@@ -323,8 +397,13 @@ export const cxScatterPlotDef: ChartTemplateDef = {
         // tooltips/selection off vars); otherwise fall back to a positional id.
         const idField = channelSemantics.id?.field;
 
+        // A continuous axis may be temporal (Date); its coordinates are parsed to
+        // epoch ms and the engine is told to print date ticks (xAxisTime/yAxisTime).
+        const xIsTemporal = channelSemantics.x?.type === 'temporal';
+        const yIsTemporal = channelSemantics.y?.type === 'temporal';
+
         spec.graphType = 'Scatter2D';
-        spec.data = buildScatterData(table, xField, yField, annotations, idField);
+        spec.data = buildScatterData(table, xField, yField, annotations, idField, xIsTemporal, yIsTemporal);
 
         spec.config = {
             ...spec.config,
@@ -335,6 +414,8 @@ export const cxScatterPlotDef: ChartTemplateDef = {
             yAxisTitle: yField,
             showLegend: !!(colorField || sizeField || shapeField),
         };
+        if (xIsTemporal) spec.config.xAxisTime = true;
+        if (yIsTemporal) spec.config.yAxisTime = true;
         if (colorField) {
             spec.config.colorBy = colorField;
             // Continuous colour: sequential spectrum for one-directional data,

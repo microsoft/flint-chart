@@ -148,3 +148,78 @@ export function buildYMatrix(
 
     return { y: { vars, smps, data: matrix } };
 }
+
+/**
+ * Build a y-matrix that preserves a facet dimension alongside a color/group series.
+ *
+ * Samples are the distinct (category, facet) pairs (so the same category in two
+ * facets is two samples that keep the same `smps` label); `vars` are the series
+ * (one row per color/group value); and `data.x[facetField]` carries each sample's
+ * facet value so the caller can `segregateSamplesBy: [facetField]` into one panel
+ * per facet. Colliding (series, category, facet) cells reduce by `reduce` exactly
+ * as `buildYMatrix` does. This is the faceted counterpart used when BOTH a series
+ * and a facet are bound — the plain builder keys only on (series, category), which
+ * merged rows from different facets onto one another.
+ *
+ * @param table        Data rows.
+ * @param categoryField Field whose values label the banded axis (`smps`).
+ * @param valueField    Measure field filling the matrix.
+ * @param seriesField   Color/group field whose values become `vars` (the series).
+ * @param facetField    Field whose values segregate the samples into panels.
+ * @param reduce        How duplicate cells combine (`'sum'` | `'average'`). Defaults to `'sum'`.
+ * @returns A CanvasXpressData y-matrix with an `x[facetField]` sample annotation.
+ * @public
+ */
+export function buildYMatrixFaceted(
+    table: any[],
+    categoryField: string,
+    valueField: string,
+    seriesField: string | undefined,
+    facetField: string,
+    reduce: 'sum' | 'average' = 'sum',
+): CanvasXpressData {
+    // Samples = distinct (category, facet) pairs, in encounter order.
+    const sampleIndex = new Map<string, number>();
+    const smps: string[] = [];        // display label = the category
+    const facetAnno: string[] = [];   // the facet value per sample (x annotation)
+    for (const row of table) {
+        const cat = String(row[categoryField]);
+        const fac = String(row[facetField]);
+        const key = cat + '\u0000' + fac;
+        if (!sampleIndex.has(key)) {
+            sampleIndex.set(key, smps.length);
+            smps.push(cat);
+            facetAnno.push(fac);
+        }
+    }
+
+    const vars = seriesField ? distinctValues(table, seriesField) : [valueField];
+    const varIndex = new Map(vars.map((v, i) => [v, i]));
+
+    const matrix: (number | null)[][] = vars.map(() => smps.map(() => null));
+    const counts: number[][] = vars.map(() => smps.map(() => 0));
+    for (const row of table) {
+        const key = String(row[categoryField]) + '\u0000' + String(row[facetField]);
+        const ci = sampleIndex.get(key);
+        if (ci == null) continue;
+        const ri = seriesField ? varIndex.get(String(row[seriesField])) : 0;
+        if (ri == null) continue;
+        const raw = row[valueField];
+        const num = raw == null || raw === '' ? null : Number(raw);
+        if (num == null || Number.isNaN(num)) continue;
+        const prev = matrix[ri][ci];
+        matrix[ri][ci] = prev == null ? num : prev + num;
+        counts[ri][ci] += 1;
+    }
+
+    if (reduce === 'average') {
+        for (let ri = 0; ri < vars.length; ri++) {
+            for (let ci = 0; ci < smps.length; ci++) {
+                const n = counts[ri][ci];
+                if (n > 1 && matrix[ri][ci] != null) matrix[ri][ci] = (matrix[ri][ci] as number) / n;
+            }
+        }
+    }
+
+    return { y: { vars, smps, data: matrix }, x: { [facetField]: facetAnno } };
+}

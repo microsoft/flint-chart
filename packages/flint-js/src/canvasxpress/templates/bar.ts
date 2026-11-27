@@ -15,7 +15,7 @@
  */
 
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
-import { buildYMatrix, resolveMatrixReduce } from '../spec';
+import { buildYMatrix, buildYMatrixFaceted, resolveMatrixReduce } from '../spec';
 import { encodingField, facetLayoutTopology, continuousColorSpectrum } from './channel-kind';
 
 /**
@@ -470,10 +470,36 @@ function buildBarInstantiate(mode: 'Bar' | 'Stacked' | 'auto') {
             return;
         }
 
+        const isHorizontal = categoryAxis === 'y';
+
+        // A color/group series AND a facet: pivot the series into `vars` while keeping
+        // each (category, facet) a distinct sample, then segregate the samples into one
+        // panel per facet. The plain buildYMatrix keys only on (series, category), so
+        // rows from different facets overwrote each other into a single unfaceted chart.
+        if (facetField && seriesField) {
+            const nGroups = new Set(table.map((row: any) => String(row[facetField]))).size;
+            spec.graphType = graphType;
+            spec.data = buildYMatrixFaceted(table, categoryField, valueField, seriesField, facetField, valueReduce);
+            spec.config = {
+                ...spec.config,
+                graphType,
+                graphOrientation: isHorizontal ? 'horizontal' : 'vertical',
+                smpTitle: categoryField,
+                xAxisTitle: valueField,
+                showLegend: true,
+                segregateSamplesBy: [facetField],
+                layoutTopology: facetLayoutTopology(nGroups, !!colFacet, chartProperties?.facetColumns),
+                layoutAdjust: false,
+                stripTextColor: 'rgb(0,0,0)',
+                stripBackgroundColor: 'rgb(255,255,255)',
+                ...scaleConfig,
+            };
+            return;
+        }
+
         spec.graphType = graphType;
         spec.data = buildYMatrix(table, categoryField, valueField, seriesField, valueReduce);
 
-        const isHorizontal = categoryAxis === 'y';
         spec.config = {
             ...spec.config,
             graphType,

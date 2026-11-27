@@ -12,7 +12,7 @@
  */
 
 import { ChartTemplateDef } from '../../core/types';
-import { buildYMatrix, distinctValues, resolveMatrixReduce } from '../spec';
+import { buildYMatrix, buildYMatrixFaceted, distinctValues, resolveMatrixReduce } from '../spec';
 import { encodingField, facetLayoutTopology } from './channel-kind';
 
 /** @private */
@@ -274,6 +274,33 @@ function buildAreaInstantiate(graphType: 'Area' | 'Streamgraph') {
             spec.graphType = graphType;
             spec.data = facet.data;
             spec.config = { ...spec.config, ...facet.config, ...temporalLabels };
+            return;
+        }
+
+        // A colour series AND a facet: pivot the series into `vars` while keeping each
+        // (category, facet) a distinct sample, then segregate the samples into one panel
+        // per facet. The plain buildYMatrix keys only on (series, category), so rows from
+        // different facets overwrote each other into one unfaceted chart.
+        if (facetField && colorField) {
+            const nGroups = new Set(table.map((row: any) => String(row[facetField]))).size;
+            spec.graphType = graphType;
+            spec.data = buildYMatrixFaceted(table, categoryField, valueField, colorField, facetField, valueReduce);
+            spec.config = {
+                ...spec.config,
+                graphType,
+                graphOrientation: 'vertical',
+                smpTitle: categoryField,
+                xAxisTitle: valueField,
+                showLegend: true,
+                ...(graphType === 'Area' ? { areaType: 'stacked' } : {}),
+                connectNullData: true,
+                segregateSamplesBy: [facetField],
+                layoutTopology: facetLayoutTopology(nGroups, !!colFacet, chartProperties?.facetColumns),
+                layoutAdjust: false,
+                stripTextColor: 'rgb(0,0,0)',
+                stripBackgroundColor: 'rgb(255,255,255)',
+                ...temporalLabels,
+            };
             return;
         }
 

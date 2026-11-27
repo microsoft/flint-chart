@@ -56,6 +56,10 @@ export const cxSankeyDef: ChartTemplateDef = {
         });
         const x: Record<string, unknown[]> = {};
         for (const stage of stages) x[stage] = table.map((r: any) => r[stage]);
+        // The colour grouping may reference a field that is NOT one of the stages;
+        // carry it as a per-sample annotation too, otherwise config.colorBy names a
+        // field absent from the data and the ribbon colour legend can't resolve.
+        if (colorField && !x[colorField]) x[colorField] = table.map((r: any) => r[colorField]);
 
         spec.graphType = 'Sankey';
         spec.data = { y: { vars: [weightField], smps, data: [weights] }, x };
